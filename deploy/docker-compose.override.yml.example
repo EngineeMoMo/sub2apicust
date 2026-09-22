@@ -1,0 +1,48 @@
+# =============================================================================
+# 定制部署覆盖文件模板
+# =============================================================================
+# 用法（在服务器的部署目录里）：
+#   1. cp docker-compose.override.yml.example docker-compose.override.yml
+#   2. 把下面的 <你的用户名或组织>/<仓库名> 换成你私有仓的 GHCR 路径（全小写）
+#   3. docker compose pull && docker compose up -d
+#
+# docker compose 会自动合并 docker-compose.yml + docker-compose.override.yml。
+# 真正的 docker-compose.override.yml 已被 .gitignore 排除，不会进仓库。
+# =============================================================================
+
+services:
+  sub2api:
+    # 方案 A（默认）：用 CI 推到 GHCR 的定制镜像
+    # 覆盖掉上游 compose 里的 image: weishaw/sub2api:latest
+    image: ghcr.io/<你的用户名或组织>/<仓库名>:latest
+    # 想钉死某个版本以便精确回滚，用 sha 标签，例如：
+    # image: ghcr.io/<你>/<仓库名>:sha-1c0a69c
+
+    # -------------------------------------------------------------------------
+    # 方案 B（备选）：不走 CI，直接在这台服务器上用源码构建
+    # 需要把整个 fork 仓库放到服务器上，且 context 指向仓库根。
+    # 用这个就把上面的 image: 那两行删掉/注释掉，换成下面：
+    # build:
+    #   context: ..          # 仓库根（Dockerfile 在那）
+    #   dockerfile: Dockerfile
+    #   args:
+    #     GOPROXY: https://goproxy.cn,direct
+    # image: sub2api-custom:local
+    # -------------------------------------------------------------------------
+
+    # [CUSTOM] 关闭 App 内「在线更新」，避免误更新到上游开源版；见项目根 CUSTOMIZATIONS.md / SYNC.md。
+    # 这两个变量需要在这里显式传入容器（上游 compose 的 environment 列表没有它们）。
+    environment:
+      # true = 彻底关闭在线更新：不查上游、前端不出现「立即更新」、应用/回滚接口拒绝。
+      - DISABLE_ONLINE_UPDATE=true
+      # 可选：把更新检查指向你自己的仓库（需你在该仓库发布 GitHub Release 才有意义）。
+      # 留空则沿用上游默认；配合 DISABLE_ONLINE_UPDATE=true 时本项不生效。
+      # - UPDATE_GITHUB_REPO=your-org/your-repo
+
+# 说明：
+# - GHCR 私有镜像 pull 前需先在本机登录：
+#     echo <GHCR_PAT> | docker login ghcr.io -u <你的用户名> --password-stdin
+#   （PAT 需要 read:packages 权限）
+# - 端口、密钥、网关调优等仍走 .env，不要写在这里。
+# - 🔴 定制版一律走「git merge + CI 构建镜像 + docker compose pull」升级，见项目根 SYNC.md。
+#   上面的 DISABLE_ONLINE_UPDATE=true 已从后端关掉 App 内在线更新这条路。

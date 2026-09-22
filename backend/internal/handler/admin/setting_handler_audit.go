@@ -344,6 +344,10 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.HideCcsImportButton != after.HideCcsImportButton {
 		changed = append(changed, "hide_ccs_import_button")
 	}
+	// [CUSTOM] 见 CUSTOMIZATIONS.md
+	if before.HideSynarouteImportButton != after.HideSynarouteImportButton {
+		changed = append(changed, "hide_synaroute_import_button")
+	}
 	if before.DefaultConcurrency != after.DefaultConcurrency {
 		changed = append(changed, "default_concurrency")
 	}

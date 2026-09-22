@@ -409,6 +409,16 @@
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
               </button>
+              <!-- [CUSTOM] Import to SynaRoute Button（登记见 CUSTOMIZATIONS.md） -->
+              <button
+                v-if="!publicSettings?.hide_synaroute_import_button"
+                @click="importToSynaRoute(row)"
+                data-testid="import-to-synaroute"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-400"
+              >
+                <Icon name="upload" size="sm" />
+                <span class="text-xs">{{ t('keys.importToSynaRoute') }}</span>
+              </button>
               <!-- Toggle Status Button -->
               <button
                 @click="toggleKeyStatus(row)"
@@ -1234,6 +1244,8 @@ import {
   buildCcSwitchImportDeeplink,
   type CcSwitchClientType
 } from '@/utils/ccswitchImport'
+// [CUSTOM] SynaRoute 深链接导入，登记见 CUSTOMIZATIONS.md
+import { buildSynaRouteImportDeeplink } from '@/utils/synaRouteImport'
 
 // Helper to format date for datetime-local input
 const formatDateTimeLocal = (isoDate: string): string => {
@@ -2072,6 +2084,31 @@ const handleCcsClientSelect = (clientType: CcSwitchClientType) => {
   }
   showCcsClientSelect.value = false
   pendingCcsRow.value = null
+}
+
+// [CUSTOM] 一键导入到 SynaRoute（synaroute:// 深链接），形态对齐上面的 CCS 导入。
+// 登记见项目根 CUSTOMIZATIONS.md。
+const importToSynaRoute = (row: ApiKey) => {
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const providerName = (publicSettings.value?.site_name || 'sub2api').trim() || 'sub2api'
+  const deeplink = buildSynaRouteImportDeeplink({
+    platform: row.group?.platform,
+    baseUrl,
+    apiKey: row.key,
+    name: providerName
+  })
+
+  try {
+    window.open(deeplink, '_self')
+    // 未安装 SynaRoute 时协议处理器不会接管，窗口仍保持焦点——据此提示。
+    setTimeout(() => {
+      if (document.hasFocus()) {
+        appStore.showError(t('keys.synaRouteNotInstalled'))
+      }
+    }, 100)
+  } catch {
+    appStore.showError(t('keys.synaRouteNotInstalled'))
+  }
 }
 
 const closeCcsClientSelect = () => {

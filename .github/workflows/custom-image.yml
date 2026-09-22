@@ -1,0 +1,104 @@
+name: Build custom image (GHCR)
+
+# 本 fork 专用的镜像构建：用根 Dockerfile 构建并推到本仓库的 GHCR。
+# 与上游复杂的 release.yml（GoReleaser 多架构矩阵）无关，互不干扰。
+# 触发：push 到 main、打 v* tag、或手动。
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    # 只改文档时不必重建镜像
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: '构建架构（linux/amd64 或 linux/amd64,linux/arm64）'
+        required: false
+        default: 'linux/amd64'
+        type: string
+
+concurrency:
+  group: custom-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write   # 推 GHCR 需要
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 让 resolve-version.sh 能读到 tag（虽然我们也显式传 VERSION）
+
+      - name: Read VERSION
+        id: ver
+        run: |
+          BASE="$(tr -d '\r\n' < backend/cmd/server/VERSION)"
+          SHORT="$(git rev-parse --short HEAD)"
+          echo "version=${BASE}-custom.${SHORT}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 镜像名必须全小写；owner/repo 可能含大写，这里统一转小写
+      - name: Compute image name
+        id: img
+        run: echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata (tags/labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.img.outputs.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ steps.ver.outputs.version }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ steps.ver.outputs.date }}
+
+      - name: Summary
+        run: |
+          {
+            echo "### 定制镜像已推送 🐳"
+            echo ""
+            echo "版本: \`${{ steps.ver.outputs.version }}\`"
+            echo ""
+            echo "拉取："
+            echo '```bash'
+            echo "docker pull ${{ steps.img.outputs.name }}:latest"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

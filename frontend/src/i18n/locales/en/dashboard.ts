@@ -111,6 +111,7 @@ export default {
     copyToClipboard: 'Copy to clipboard',
     copied: 'Copied!',
     importToCcSwitch: 'Import to CCS',
+    importToSynaRoute: 'Import to SynaRoute',
     enable: 'Enable',
     disable: 'Disable',
     nameLabel: 'Name',
@@ -269,6 +270,7 @@ export default {
     ipBlacklistHint: 'One IP or CIDR per line. These IPs will be blocked from using this key.',
     ipRestrictionEnabled: 'IP restriction enabled',
     ccSwitchNotInstalled: 'CC-Switch is not installed or the protocol handler is not registered. Please install CC-Switch first or manually copy the API key.',
+    synaRouteNotInstalled: 'SynaRoute is not installed or the protocol handler is not registered. Please install SynaRoute first or manually copy the API key.',
     ccsClientSelect: {
       title: 'Select Client',
       description: 'Please select the client type to import to CC-Switch:',

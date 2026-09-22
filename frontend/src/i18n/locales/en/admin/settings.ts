@@ -669,7 +669,9 @@ export default {
         compactHome: 'Compact Home Page',
         compactHomeHint: 'Show a restrained site identity page when no custom home page content is set.',
         hideCcsImportButton: 'Hide CCS Import Button',
-        hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page'
+        hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page',
+        hideSynarouteImportButton: 'Hide SynaRoute Import Button',
+        hideSynarouteImportButtonHint: 'When enabled, the "Import to SynaRoute" button will be hidden on the API Keys page'
       },
       purchase: {
         title: 'Recharge / Subscription Page',

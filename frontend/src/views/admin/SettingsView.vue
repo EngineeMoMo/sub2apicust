@@ -6613,6 +6613,21 @@
                 </div>
                 <Toggle v-model="form.hide_ccs_import_button" />
               </div>
+
+              <!-- [CUSTOM] Hide SynaRoute Import Button（登记见 CUSTOMIZATIONS.md） -->
+              <div
+                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+              >
+                <div>
+                  <label class="font-medium text-gray-900 dark:text-white">{{
+                    t("admin.settings.site.hideSynarouteImportButton")
+                  }}</label>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ t("admin.settings.site.hideSynarouteImportButtonHint") }}
+                  </p>
+                </div>
+                <Toggle v-model="form.hide_synaroute_import_button" />
+              </div>
             </div>
           </div>
 
@@ -9631,6 +9646,7 @@ const form = reactive<SettingsForm>({
   compact_home_enabled: false,
   backend_mode_enabled: false,
   hide_ccs_import_button: false,
+  hide_synaroute_import_button: false, // [CUSTOM] 见 CUSTOMIZATIONS.md
   payment_enabled: false,
   risk_control_enabled: false,
   cyber_session_block_enabled: false,
@@ -11288,6 +11304,7 @@ async function saveSettings() {
       compact_home_enabled: form.compact_home_enabled,
       backend_mode_enabled: form.backend_mode_enabled,
       hide_ccs_import_button: form.hide_ccs_import_button,
+      hide_synaroute_import_button: form.hide_synaroute_import_button, // [CUSTOM] 见 CUSTOMIZATIONS.md
       table_default_page_size: form.table_default_page_size,
       table_page_size_options: form.table_page_size_options,
       custom_menu_items: form.custom_menu_items,

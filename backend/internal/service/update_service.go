@@ -25,6 +25,8 @@ import (
 var (
 	ErrNoUpdateAvailable         = infraerrors.Conflict("ALREADY_UP_TO_DATE", "no update available; current version is latest")
 	ErrRollbackVersionNotAllowed = infraerrors.BadRequest("ROLLBACK_VERSION_NOT_ALLOWED", "version is not in the allowed rollback list")
+	// [CUSTOM] 在线更新被部署配置关闭时返回，见 CUSTOMIZATIONS.md
+	ErrOnlineUpdateDisabled = infraerrors.Conflict("ONLINE_UPDATE_DISABLED", "online update is disabled by deployment configuration")
 )
 
 const (
@@ -65,15 +67,28 @@ type UpdateService struct {
 	githubClient   GitHubReleaseClient
 	currentVersion string
 	buildType      string // "source" for manual builds, "release" for CI builds
+	// [CUSTOM] 见 CUSTOMIZATIONS.md：更新源仓库（默认上游）与在线更新总开关，均由环境变量驱动
+	githubRepo          string
+	disableOnlineUpdate bool
 }
 
 // NewUpdateService creates a new UpdateService
 func NewUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, version, buildType string) *UpdateService {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md
+	// UPDATE_GITHUB_REPO 覆盖更新检查所用的仓库（如 "yourorg/yourrepo"）；缺省沿用上游常量。
+	repo := strings.TrimSpace(os.Getenv("UPDATE_GITHUB_REPO"))
+	if repo == "" {
+		repo = githubRepo
+	}
+	// DISABLE_ONLINE_UPDATE=true 时彻底关闭在线更新：不查上游、拒绝应用/回滚。
+	disableUpdate := strings.EqualFold(strings.TrimSpace(os.Getenv("DISABLE_ONLINE_UPDATE")), "true")
 	return &UpdateService{
-		cache:          cache,
-		githubClient:   githubClient,
-		currentVersion: version,
-		buildType:      buildType,
+		cache:               cache,
+		githubClient:        githubClient,
+		currentVersion:      version,
+		buildType:           buildType,
+		githubRepo:          repo,
+		disableOnlineUpdate: disableUpdate,
 	}
 }
 
@@ -86,6 +101,7 @@ type UpdateInfo struct {
 	Cached         bool         `json:"cached"`
 	Warning        string       `json:"warning,omitempty"`
 	BuildType      string       `json:"build_type"` // "source" or "release"
+	Disabled       bool         `json:"disabled"`   // [CUSTOM] 在线更新是否被部署配置关闭，见 CUSTOMIZATIONS.md
 }
 
 // ReleaseInfo contains GitHub release details
@@ -131,6 +147,18 @@ type GitHubAsset struct {
 
 // CheckUpdate checks for available updates
 func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInfo, error) {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md：在线更新关闭时直接返回「已是最新」，不联网查询上游，
+	// 前端因此不会出现「立即更新」按钮。
+	if s.disableOnlineUpdate {
+		return &UpdateInfo{
+			CurrentVersion: s.currentVersion,
+			LatestVersion:  s.currentVersion,
+			HasUpdate:      false,
+			BuildType:      s.buildType,
+			Disabled:       true,
+		}, nil
+	}
+
 	// Try cache first
 	if !force {
 		if cached, err := s.getFromCache(ctx); err == nil && cached != nil {
@@ -163,6 +191,10 @@ func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInf
 // PerformUpdate downloads and applies the update
 // Uses atomic file replacement pattern for safe in-place updates
 func (s *UpdateService) PerformUpdate(ctx context.Context) error {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md：即便有人直接调 API，也在服务端拒绝在线更新。
+	if s.disableOnlineUpdate {
+		return ErrOnlineUpdateDisabled
+	}
 	info, err := s.CheckUpdate(ctx, true)
 	if err != nil {
 		return err
@@ -281,6 +313,10 @@ func (s *UpdateService) applyReleaseAssets(ctx context.Context, releaseAssets []
 
 // Rollback restores the previous version
 func (s *UpdateService) Rollback() error {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md
+	if s.disableOnlineUpdate {
+		return ErrOnlineUpdateDisabled
+	}
 	exePath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to get executable path: %w", err)
@@ -307,6 +343,10 @@ func (s *UpdateService) Rollback() error {
 // strictly older than the current version (the current version itself is excluded),
 // newest first. Draft and prerelease entries are skipped.
 func (s *UpdateService) ListRollbackVersions(ctx context.Context) ([]RollbackVersion, error) {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md：关闭在线更新时不联网、返回空列表。
+	if s.disableOnlineUpdate {
+		return []RollbackVersion{}, nil
+	}
 	releases, err := s.fetchRollbackCandidates(ctx)
 	if err != nil {
 		return nil, err
@@ -327,6 +367,10 @@ func (s *UpdateService) ListRollbackVersions(ctx context.Context) ([]RollbackVer
 // The target must be one of the versions returned by ListRollbackVersions;
 // anything else (including the current version) is rejected.
 func (s *UpdateService) RollbackToVersion(ctx context.Context, version string) error {
+	// [CUSTOM] 见 CUSTOMIZATIONS.md
+	if s.disableOnlineUpdate {
+		return ErrOnlineUpdateDisabled
+	}
 	target := strings.TrimPrefix(strings.TrimSpace(version), "v")
 	if target == "" {
 		return ErrRollbackVersionNotAllowed
@@ -363,7 +407,7 @@ func (s *UpdateService) RollbackToVersion(ctx context.Context, version string) e
 // fetchRollbackCandidates fetches recent releases and keeps the newest
 // maxRollbackVersions entries strictly older than the current version.
 func (s *UpdateService) fetchRollbackCandidates(ctx context.Context) ([]*GitHubRelease, error) {
-	releases, err := s.githubClient.FetchRecentReleases(ctx, githubRepo, rollbackFetchPageSize)
+	releases, err := s.githubClient.FetchRecentReleases(ctx, s.githubRepo, rollbackFetchPageSize) // [CUSTOM] 可配置更新源，见 CUSTOMIZATIONS.md
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +444,7 @@ func (s *UpdateService) fetchRollbackCandidates(ctx context.Context) ([]*GitHubR
 }
 
 func (s *UpdateService) fetchLatestRelease(ctx context.Context) (*UpdateInfo, error) {
-	release, err := s.githubClient.FetchLatestRelease(ctx, githubRepo)
+	release, err := s.githubClient.FetchLatestRelease(ctx, s.githubRepo) // [CUSTOM] 可配置更新源，见 CUSTOMIZATIONS.md
 	if err != nil {
 		return nil, err
 	}

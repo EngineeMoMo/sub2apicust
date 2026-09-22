@@ -158,6 +158,7 @@ type SystemSettings struct {
 	HomeContent                 string
 	CompactHomeEnabled          bool
 	HideCcsImportButton         bool
+	HideSynarouteImportButton   bool // [CUSTOM] 见 CUSTOMIZATIONS.md
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
 	TableDefaultPageSize        int
@@ -356,6 +357,7 @@ type PublicSettings struct {
 	HomeContent                         string
 	CompactHomeEnabled                  bool
 	HideCcsImportButton                 bool
+	HideSynarouteImportButton           bool // [CUSTOM] 见 CUSTOMIZATIONS.md
 
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
