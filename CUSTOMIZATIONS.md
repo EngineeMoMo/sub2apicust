@@ -24,6 +24,9 @@
 - `frontend/src/utils/synaRouteImport.ts` — 纯函数：URL 构造 + 由 platform 推导分类/协议/端点（镜像 `ccswitchImport.ts`）
 - `frontend/src/utils/__tests__/synaRouteImport.spec.ts` — 单测（11 用例，已过）
 
+### 部署文档（2026-09-22）
+- `deploy/DEPLOY_CUSTOM.md` — 定制版 GHCR 镜像部署清单（登录/起服/升级/回滚/迁移）
+
 ## 二、接线改动（会冲突，重点核对）
 
 > 这些是为了把「新增文件」挂进系统而**必须编辑上游文件**的地方。
