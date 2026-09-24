@@ -92,11 +92,16 @@ export default defineConfig(({ mode }) => {
       injectPublicSettings(backendUrl)
     ],
   resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
+    // [CUSTOM] 数组形式的 alias，支持「影子替换」上游页面/组件而不改上游文件本身。
+    // 覆盖项必须放在 '@' 之前(先匹配先生效)。见 CUSTOMIZATIONS.md。
+    alias: [
+      // —— 页面覆盖示例：取消注释即用你 custom/ 下的同名文件替换上游 HomeView，
+      //    上游 src/views/HomeView.vue 一个字都不用改，merge 不冲突。
+      // { find: /^@\/views\/HomeView\.vue$/, replacement: resolve(__dirname, 'src/custom/views/HomeView.vue') },
+      { find: '@', replacement: resolve(__dirname, 'src') },
       // 使用 vue-i18n 运行时版本，避免 CSP unsafe-eval 问题
-      'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js'
-    }
+      { find: 'vue-i18n', replacement: 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js' }
+    ]
   },
   define: {
     // 启用 vue-i18n JIT 编译，在 CSP 环境下处理消息插值

@@ -13,6 +13,8 @@ import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import { getSetupStatus } from '@/api/setup'
 import { resolveCompletedSetupRedirectPath } from './setupRedirect'
 import { resolveRouteDocumentTitle } from './title'
+// [CUSTOM] 新增页面的路由集中在 custom/routes.ts, 见 CUSTOMIZATIONS.md
+import { customRoutes } from '@/custom/routes'
 
 /**
  * Route definitions with lazy loading
@@ -714,6 +716,9 @@ const routes: RouteRecordRaw[] = [
       requiresPayment: true
     }
   },
+
+  // [CUSTOM] 定制新增页面, 见 CUSTOMIZATIONS.md。放在 404 兜底前, 确保能被匹配。
+  ...customRoutes,
 
   // ==================== 404 Not Found ====================
   {

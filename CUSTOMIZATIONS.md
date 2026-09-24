@@ -28,6 +28,14 @@
 - `deploy/DEPLOY_CUSTOM.md` — 定制版 GHCR 镜像部署清单（登录/起服/升级/回滚/迁移）
 - `deploy/update.sh` — Docker 下的一键更新脚本（`pull && up -d` + 健康自检 + 旧镜像清理；带标签参数可回滚）。用户明确选择「Docker 镜像更新」而非启用 App 内按钮（那按钮是 systemd 安装用的原地换二进制，Docker 下权限失败且会被 pull 覆盖）。
 
+### 前端定制叠加层（换肤 + 新增/替换页面）（2026-09-24）
+用户方向：「换肤 + 少数页面」。设计为 `frontend/src/custom/` 叠加层，把冲突面收敛到 4 个接缝文件（见下节）。
+- `frontend/src/custom/theme.css` — 品牌色 CSS 变量层（`--color-primary-*`，通道值）。换肤只改这里。默认值=上游 Teal，视觉零变化。
+- `frontend/src/custom/routes.ts` — 新增页面路由集中处（`customRoutes`）。
+- `frontend/src/custom/views/CustomDemoView.vue` — 脚手架演示页（验证链路用，可删）。
+- `frontend/src/custom/README.md` — 叠加层三种用法 + 影子替换代价说明。
+- 新增页面/影子替换页放 `custom/views/`、`custom/components/`（本身零冲突）。
+
 ## 二、接线改动（会冲突，重点核对）
 
 > 这些是为了把「新增文件」挂进系统而**必须编辑上游文件**的地方。
@@ -47,6 +55,15 @@
   `setting_public.go`（公共 key 列表 + 公共结构体 + 两处映射）、`setting_update.go`
 - `internal/handler/dto/settings.go`（两个 DTO）、`setting_handler.go`
 - `internal/handler/admin/setting_handler.go`、`setting_handler_update.go`（req 结构体 + 两处映射）、`setting_handler_audit.go`
+
+### 前端定制叠加层的 4 个接缝（2026-09-24）
+> 全部打 `[CUSTOM]` 注释。**已跑通完整 `pnpm run build`**（含 check:i18n + vue-tsc + vite build），
+> 产物 CSS 确含 `--color-primary-500: 20 184 166` 定义与 `rgb(var(--color-primary-500)/…)` 引用，
+> 演示路由 `custom-demo` 已进产物 → 换肤与路由链路验证通过。
+- `frontend/tailwind.config.js` — `primary` 色阶改为 `rgb(var(--color-primary-*) / <alpha-value>)`（引用 theme.css 变量）。⚠️ 上游若改 primary 色阶会冲突；解冲突时保留变量引用形式。
+- `frontend/vite.config.ts` — `resolve.alias` 由对象改为**数组形式**，并留「影子替换」注释示例（覆盖项须在 `'@'` 之前）。
+- `frontend/src/main.ts` — `import './style.css'` 后加 `import './custom/theme.css'`。
+- `frontend/src/router/index.ts` — import `customRoutes` + 在 404 兜底前 `...customRoutes` 展开。
 
 参考锚点：全仓搜 `HideCcsImportButton` / `hide_ccs_import_button` 就是本功能每一处的镜像位置。
 
