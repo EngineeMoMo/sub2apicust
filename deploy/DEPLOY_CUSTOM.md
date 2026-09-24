@@ -101,24 +101,33 @@ docker compose -f docker-compose.local.yml -f docker-compose.override.yml logs s
 
 ## 四、升级（走定制流程，不走 App 内更新）
 
-日常升级 = 在私有仓合上游 / 改代码 → CI 出新 `latest` 镜像 → 服务器重新 pull：
+日常升级 = 在私有仓合上游 / 改代码 → CI 出新 `latest` 镜像 → 服务器重新 pull。
+把 `update.sh` 一起放到部署目录后，一条命令即可（等价于 App 内「立即更新」，但走镜像方式）：
 
 ```bash
-s2 pull && s2 up -d      # s2 为上面的别名
+./update.sh            # 拉 :latest 并重建 + 健康自检 + 清理旧镜像
+```
+
+不用脚本时的等价手动命令（`s2` 为前面的别名）：
+```bash
+s2 pull && s2 up -d
 ```
 
 镜像里的前端已 embed，无需单独处理。
 
+> 说明：App 内那个「立即更新」按钮是给**二进制/systemd 安装**设计的（原地换二进制），
+> Docker 部署里用不了（容器内非 root 改不了 /app，且会被下次 pull 覆盖），因此已用
+> `DISABLE_ONLINE_UPDATE=true` 关闭。`update.sh` 是 Docker 下的等价替代。
+
 ## 五、回滚
 
-镜像每个提交都有 `sha-xxxxxxx` 标签，回滚就是把 override 的 `image:` 钉到旧标签再 `up -d`：
+镜像每个提交都有 `sha-xxxxxxx` 标签，回滚只需带标签跑一次脚本（会自动改 override 的 `image:` 并备份原文件）：
 
-```yaml
-image: ghcr.io/enginemomo/sub2apicust:sha-1c0a69c
-```
 ```bash
-s2 pull && s2 up -d
+./update.sh sha-1c0a69c     # 或 ./update.sh v0.2.8
 ```
+
+手动方式：把 override 的 `image:` 改到旧标签，再 `s2 pull && s2 up -d`。
 
 ## 六、数据备份/迁移
 
