@@ -43,10 +43,10 @@
 - 上游同步：**2026-09-26 已合并上游 0.2.8 快照（a3eb7ef30，207 提交）→ 零冲突、11 处关键定制全存活、VERSION 0.2.8**。合并后 `pnpm run build` 通过；后端 `api_contract_test.go` 新增的 CCS 夹具已镜像 SynaRoute（全后端 hide_ccs = hide_synaroute = 20）。
   - ⚠️ 该快照是**上次成功拉到的** 0.2.8；当日 github 从本机拉不动，快照之后若有更新的上游提交未纳入 —— 下次网络好时 `git fetch upstream` 增量再同步即可。
 - 前端：`pnpm run build` 通过（typecheck + i18n + vite）。本机预览：`pnpm -C frontend run dev` → :3000（无后端时仅外观预览，数据页会跳登录）。
-- 🔴 后端**仍未在本机编译**（无 Go）：`go build -tags embed` + `go test -tags=unit`（含 `api_contract_test`）**必须由 CI 验证**后才可信；前端已本机验证。
+- ✅ **CI 已验证（2026-09-26）**：0.2.8 合并提交 `58b154f53` 的三条 workflow 全绿 —— Build custom image(GHCR) / CI(单测，含 `api_contract_test`) / Security Scan。即后端已编译通过、单测通过、**0.2.8-custom 镜像已推到 GHCR**。
 
 ## 五、待办 / 下一步
-- [ ] **CI 验证**：确认 `custom-image.yml` 构建绿（后端 Go 编译过）+ 后端单测（`api_contract_test` 等）通过；红了把日志发我修。
+- [x] **CI 已全绿**（提交 `58b154f53`）：镜像构建 + 单测 + 安全扫描均 success，0.2.8-custom 镜像已在 GHCR。
 - [ ] 后端改动经 CI 的 Go 编译 + 单测验证。
 - [ ] 用户按 `deploy/DEPLOY_CUSTOM.md` 部署新镜像；后台设置站点名 + 上传 logo（建议透明底 PNG/SVG，≤300KB，约 80×80）。
 - [ ] SYNC.md 里「更新源指向自己仓库」（`UPDATE_GITHUB_REPO` + 自发 Release）尚未启用，按需再做。
