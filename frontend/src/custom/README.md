@@ -1,7 +1,8 @@
 # `custom/` —— 定制叠加层（换肤 + 新增/替换页面）
 
-本目录是本 fork 的**前端定制专区**：上游 sub2api 永远不会创建或修改这里的文件，
-所以放这里的东西 **merge 上游时零冲突**。规则见项目根 `CUSTOMIZATIONS.md`。
+本目录是本 fork 的**前端定制专区**，用于降低与上游的文本冲突面。
+不能保证未来零冲突或零维护：路由、store、公共类和插槽仍依赖上游契约。
+规则见项目根 `CUSTOMIZATIONS.md`，逐次同步核对见 [`UPGRADE.md`](./UPGRADE.md)。
 
 ## 三种定制怎么放
 
@@ -30,7 +31,11 @@
 - 每次 merge 上游后，**逐个打开你替换过的页面**冒烟验证；
 - 每加一个替换/新增，去 `CUSTOMIZATIONS.md` 登记。
 
-## 接缝文件（唯一和上游共用、需要每次 merge 核对的 4 处）
+## 接缝文件（每次 merge 都需核对）
 `tailwind.config.js`（引用变量）、`vite.config.ts`（alias 数组）、
 `src/main.ts`（import theme.css）、`src/router/index.ts`（展开 customRoutes）。
 都打了 `[CUSTOM]` 标记，搜这个词即可定位。
+
+雾钛青增加 `AuthLayout.vue`、`AppLayout.vue`、`AppHeader.vue` 三个最小展示接缝。
+独立 `/brand` 复用原路由入口，不替换 `/`，不复制业务页；全部视觉规则放 `theme.css`。
+品牌名称和站点图标仍读取公开设置，M 展示素材为原批准位图，不是新绘制矢量。

@@ -4,6 +4,12 @@
 import type { RouteRecordRaw } from 'vue-router'
 
 export const customRoutes: RouteRecordRaw[] = [
+  {
+    path: '/brand',
+    name: 'BrandHome',
+    component: () => import('@/custom/views/BrandHomeView.vue'),
+    meta: { title: '品牌首页', requiresAuth: false }
+  },
   // —— 脚手架演示，确认整条链路(路由+主题)通了。验证后可直接删掉这一项。
   {
     path: '/custom-demo',

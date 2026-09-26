@@ -6,16 +6,31 @@
 > 维护最常见、也最难发现的失效——本表是唯一防线。
 >
 > 维护约定：
-> - 优先**新增文件**（新 handler / 新 Vue 组件 / 新 service），新文件永不冲突。
+> - 优先**新增文件**，降低文本冲突面；仍须核对上游依赖，不能保证永不冲突。
 > - 不得不改上游文件时，改动**尽量小、尽量集中**，并在下方「接线改动」逐处登记。
 > - 配置类定制（`.env` / `config.yaml` / `docker-compose.override.yml`）走 gitignore，
 >   不进本 fork，不登记在这里；它们记在你的私有 ops 仓。
 
 ---
 
-## 一、新增文件（低风险，merge 不冲突）
+## 一、新增文件（低冲突，仍需验证依赖契约）
 
 > 格式：`路径` — 用途 — 引入日期
+
+### 品牌实施交接计划（2026-09-26）
+- `BRAND_IMPLEMENTATION.md` — 已获用户确认的雾钛青方向、素材与色表、真实代码接线、实施阶段、验收及 fork 维护边界。实施及验收进度见文末第 9 节。
+- `AGENTS.md` — 当前任务入口更新为读取该计划；SynaRoute 保留紫色，后续在其工程独立统一基础规范。
+
+
+### 真实页面结构还原（2026-09-27）
+- 新增 `custom/brand/useWorkspaceHeading.ts`：从原页头抽取同一套路由／计费模式／自定义菜单标题计算，保留管理员菜单隔离；`custom/components/WorkspaceHeading.vue` 在正文承载标题及操作插槽。
+- `components/layout/AppHeader.vue`：顶部改为站点／页面路径；账户、公告、余额、移动菜单事件不变。`AppLayout.vue`：新增正文标题、`page-actions` 插槽、折叠状态钩子；原内容插槽保留。
+- `components/layout/AuthLayout.vue`：现有品牌信息移至顶部品牌栏，保留原认证 default/footer、设置加载和 URL 消毒；登录业务未复制。
+- `components/layout/TablePageLayout.vue`：新增统一面板包裹 filters/table/pagination；actions 插槽和移动检测不变。
+- `views/user/KeysView.vue`：原刷新／列设置／创建按钮整块迁至 `page-actions`，仅增加筛选／搜索样式钩子；事件、ref、权限、API、字段、SynaRoute 导入不变。`views/user/__tests__/KeysView.spec.ts`：AppLayoutStub 渲染新插槽，保留24项原测试。
+- `custom/theme.css`：原稿字体、224/72侧栏、独立正文标题、统一筛选表格分页面板、认证顶部品牌栏与大屏比例；覆盖 scoped 表头／sticky列背景时不改定位、语义色或错误态，无新增 !important。
+- 新增 `custom/__tests__/workspace-heading.spec.ts`，扩展 upgrade-contract；定向61项测试、ESLint、类型检查和前端构建通过。详见 BRAND_IMPLEMENTATION 第15节。
+- 维护成本：本轮扩大展示接缝，不是零冲突；同步上游逐项核对 `custom/UPGRADE.md`，不得整文件覆盖上游新功能。
 
 ### SynaRoute 深链接一键导入（2026-09-22）
 按 SynaRoute 文档「深链接一键导入」（`synaroute://`）在 API Keys 页面加「导入到 SynaRoute」按钮，
@@ -25,18 +40,35 @@
 - `frontend/src/utils/__tests__/synaRouteImport.spec.ts` — 单测（11 用例，已过）
 
 ### 部署文档（2026-09-22）
+- `deploy/LOCAL_DOCKER_RUNBOOK.md` — 2026-09-26本机Docker Hub授权超时的证据、原因边界、代理预检／进程级设置及部署验收清单；不改变生产配置。
 - `deploy/DEPLOY_CUSTOM.md` — 定制版 GHCR 镜像部署清单（登录/起服/升级/回滚/迁移）
 - `deploy/update.sh` — Docker 下的一键更新脚本（`pull && up -d` + 健康自检 + 旧镜像清理；带标签参数可回滚）。用户明确选择「Docker 镜像更新」而非启用 App 内按钮（那按钮是 systemd 安装用的原地换二进制，Docker 下权限失败且会被 pull 覆盖）。
 
 ### 前端定制叠加层（换肤 + 新增/替换页面）（2026-09-24）
 用户方向：「换肤 + 少数页面」。设计为 `frontend/src/custom/` 叠加层，把冲突面收敛到 4 个接缝文件（见下节）。
-- `frontend/src/custom/theme.css` — 品牌变量层：`--color-primary-*`（电光蓝，500=#1e8bff）+ `--color-dark-*`（深海军蓝底，减压抑）+ `.dark body` 电光蓝径向光晕。换肤只改这里；logo/站点名走管理员后台设置（无需改码）。
+- `frontend/src/custom/theme.css` — 品牌变量层：`--color-primary-*`（雾钛青，500=#096B68）+ `--color-dark-*`（炭青，950=#162124）；移除 body 双径向光晕。新增 brand 语义变量及 btn-primary / input / card-glass / 深色 text-gradient 公共覆盖；夜间主按钮 #A1D9CE + #173B38，日间 #096B68 + 白字。认证页原有装饰仍保留。不改 gray/teal 分类色、Logo、默认深色和业务组件。公共类、图表与高亮需随上游升级复查；无后端时业务页未验收，见 BRAND_IMPLEMENTATION.md 第 9 节。换肤只改这里；logo/站点名走管理员后台设置（无需改码）。
+- 2026-09-26 修复补充（仍仅 theme.css）：使用 html.dark .text-gradient 提高明确主题作用域的优先级，移除夜间文字渐变，避免 AuthLayout 懒加载 scoped 样式将标题变回透明深色渐变；普通输入边框/焦点排除 input-error，明确保留错误红边/焦点；btn-primary 内 animate-spin 继承按钮前景，避免浅青底白色加载图标。真实 Docker 页验证见 BRAND_IMPLEMENTATION.md 第 11 节。
 - `frontend/src/custom/routes.ts` — 新增页面路由集中处（`customRoutes`）。
 - `frontend/src/custom/views/CustomDemoView.vue` — 脚手架演示页（验证链路用，可删）。
 - `frontend/src/custom/README.md` — 叠加层三种用法 + 影子替换代价说明。
-- 新增页面/影子替换页放 `custom/views/`、`custom/components/`（本身零冲突）。
+- 新增页面/影子替换页放 `custom/views/`、`custom/components/`（降低文本冲突面，仍需复核上游依赖）。
 
 ## 二、接线改动（会冲突，重点核对）
+
+### 2026-09-27 展示接缝补充
+- 本轮 AppHeader／AppLayout／AuthLayout 接缝已扩大，并新增 TablePageLayout、KeysView 和 KeysView 测试 stub 接缝；逐处内容见上方「真实页面结构还原」。旧条目中“未改业务页”“仅三个类名”的范围描述已由本轮更新取代；只移动展示节点，不改业务处理。
+- 合并后按 frontend/src/custom/UPGRADE.md 保留新插槽并跑61项定向回归，不以CSS换色测试代替结构验收。
+
+### 雾钛青品牌页面（2026-09-26，未提交／已本机部署，未发布生产）
+- 新增 `frontend/src/custom/views/BrandHomeView.vue`；`custom/routes.ts` 增加 `/brand`，不抢占 `/`，沿用原守卫。
+- 新增 `frontend/src/custom/components/BrandPanel.vue`、`BrandThemeToggle.vue`、`brand/copy.ts`：品牌展示、中英文案、主动切换主题；挂载不改变默认深色。
+- 新增 `frontend/src/custom/assets/mofa-mark.webp`：原批准透明 M 位图，保留狮子／皇冠，非矢量重绘；站点名称与图标仍走公开设置。
+- 新增 `frontend/src/custom/__tests__/brand.spec.ts`、`upgrade-contract.spec.ts`；补 `custom/UPGRADE.md` 并纠正 README 零冲突承诺。
+- `frontend/src/components/layout/AuthLayout.vue`：品牌面板／主题按钮／品牌页链接及 mofa-auth 样式钩子；保留 default/footer 插槽、设置加载和 sanitizeUrl。
+- `frontend/src/components/layout/AppLayout.vue`：mofa-workspace、mofa-workspace-backdrop、mofa-workspace-main 三类；保留 sidebar/header/slot 及侧栏折叠偏移。
+- `frontend/src/components/layout/AppHeader.vue`：mofa-workspace-header、mofa-page-heading 两类；保留所有原事件和业务组件。
+- 全部视觉规则在 `frontend/src/custom/theme.css`：认证双栏／手机堆叠、品牌首屏、控制台公共外观、长站名截断／换行；不改语义 teal 分类色，不改 SynaRoute。
+- 本节更新此前“认证装饰保留／四接缝”历史描述：此轮另增三个布局接缝；装饰节点保留但由主题隐藏。未新增依赖或改业务页／后端。验证及尚未完成项见 BRAND_IMPLEMENTATION 第12节。
 
 > 这些是为了把「新增文件」挂进系统而**必须编辑上游文件**的地方。
 > 每次 merge 后逐条确认改动还在。所有改动都带 `[CUSTOM]` 注释便于 merge 时定位。
@@ -101,7 +133,7 @@
 **merge 后如何验证**：① `DISABLE_ONLINE_UPDATE=true` 起容器后，管理员版本徽标只显示当前版本、无「立即更新」；调用 `POST /api/v1/admin/system/update` 返回 `ONLINE_UPDATE_DISABLED`。② 不设该变量时行为与上游一致（能查到更新）。🔴 本机无 Go，未编译，见下方待验证。
 
 ### 品牌默认深色主题（2026-09-26）
-**为什么**：品牌是深蓝底 + 银色 + 电光蓝（logo/海报），首屏应呈现深色才对味。
+**为什么**：最初基于深蓝品牌设为默认深色；2026-09-26 换肤时用户明确要求保留该策略，已有用户选择仍优先。
 **改了什么**（`frontend/src/main.ts` 的 `initThemeClass`，带 `[CUSTOM]` 注释）：
 未显式选择过主题（`localStorage` 无 `theme`）时**默认深色**；原上游是「跟随系统 `prefers-color-scheme`」。
 用户手动切换过（存了 `theme`）仍以其选择为准 —— 只改「没选过」时的兜底方向。
@@ -129,3 +161,13 @@
 - [ ] 若改过 schema：`go generate ./ent` 无未提交变更
 - [ ] 若改过前端依赖：`pnpm-lock.yaml` 已同步
 - [ ] CI 构建出的镜像能起来 + 冒烟测试（登录、发一个请求）
+
+### 认证页第二次排版调整（2026-09-27，本机时间）
+- 用户否决分散大屏布局后，AuthLayout.vue仅新增main.mofa-auth-content包住BrandPanel与原认证表单，保留default/footer插槽、设置读取与认证业务，带[CUSTOM]标记。
+- theme.css重排为1120px统一双栏面板，左侧品牌区、右侧无嵌套卡片表单；标题42px上限、核心M180px、手机单栏。所有选择器限定mofa-auth，不更改业务页或独立品牌首页。
+- upgrade-contract.spec.ts补mofa-auth-content契约；同步上游需保留此容器及原认证插槽。
+
+### 多模型品牌标识（2026-09-27，本机时间）
+- 新增 frontend/src/custom/assets/mofa-mark-flat.png：从原mofa-mark.webp透明轮廓派生，保留M／狮子／皇冠；扁平#096B68标志＋#E4F1EE底，512px PNG、16313字节。非矢量重绘，不新增依赖或上游代码接缝。
+- 本机配置site_name=魔法家族、site_subtitle=多模型 API 服务，site_logo使用上述图片data URL。名称仍走上游管理员设置，不在代码里硬编码GPT或品牌名。生产未修改，部署到其他环境需配置这三项。
+- 设置表单有无关字段规范化风险，保存请求被阻止，最终仅本机数据库三键事务更新并重启应用清缓存；其余277行精确比对不变，完整管理员设置响应前后也仅3字段不同。详见BRAND_IMPLEMENTATION第17节。

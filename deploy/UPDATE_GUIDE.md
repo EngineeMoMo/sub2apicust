@@ -1,5 +1,7 @@
 # 日常更新操作手册（定制版 sub2api）
 
+> [CUSTOM] **Windows本机源码构建**另见 [LOCAL_DOCKER_RUNBOOK.md](LOCAL_DOCKER_RUNBOOK.md)：已记录Docker Hub授权超时与代理预检。本文下方仍是服务器镜像更新流程；不要把本机127.0.0.1:7897代理配置带到生产。
+
 > 速查卡：以后升级 / 回滚照这份敲即可。完整部署、首次平移、数据备份/恢复见 [DEPLOY_CUSTOM.md](DEPLOY_CUSTOM.md)。
 >
 > 你的环境（已确认）：部署目录 `/sub2api-deploy`，compose 用 `docker-compose.local.yml`，

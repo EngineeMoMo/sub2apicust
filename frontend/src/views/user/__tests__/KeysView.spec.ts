@@ -140,7 +140,8 @@ const createApiKey = (): ApiKey => ({
 })
 
 const AppLayoutStub = {
-  template: '<div><slot /></div>',
+  // [CUSTOM] 按真实布局呈现正文操作插槽，保留原密钥事件回归。
+  template: '<div><slot name="page-actions" /><slot /></div>',
 }
 
 const TablePageLayoutStub = {

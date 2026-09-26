@@ -1,25 +1,22 @@
 <template>
+  <!-- [CUSTOM] 筛选、表格与分页统一面板；原插槽及移动模式逻辑保留。 -->
   <div class="table-page-layout" :class="{ 'mobile-mode': isMobile }">
-    <!-- 固定区域：操作按钮 -->
-    <div v-if="$slots.actions" class="layout-section-fixed">
+    <div v-if="$slots.actions" class="layout-section-fixed mofa-table-actions">
       <slot name="actions" />
     </div>
 
-    <!-- 固定区域：搜索和过滤器 -->
-    <div v-if="$slots.filters" class="layout-section-fixed">
-      <slot name="filters" />
-    </div>
-
-    <!-- 滚动区域：表格 -->
-    <div class="layout-section-scrollable">
-      <div class="card table-scroll-container">
-        <slot name="table" />
+    <div class="mofa-data-panel">
+      <div v-if="$slots.filters" class="layout-section-fixed mofa-data-filters">
+        <slot name="filters" />
       </div>
-    </div>
-
-    <!-- 固定区域：分页器 -->
-    <div v-if="$slots.pagination" class="layout-section-fixed">
-      <slot name="pagination" />
+      <div class="layout-section-scrollable">
+        <div class="card table-scroll-container">
+          <slot name="table" />
+        </div>
+      </div>
+      <div v-if="$slots.pagination" class="layout-section-fixed mofa-data-pagination">
+        <slot name="pagination" />
+      </div>
     </div>
   </div>
 </template>
