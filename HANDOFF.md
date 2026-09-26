@@ -38,15 +38,15 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
-- 分支 `main`，最新提交 `83457c64a`（品牌换肤：电光蓝 + 默认深色），已推 `origin/main`；工作树干净。
+- 分支 `main`：**已合并上游 0.2.8**（VERSION=0.2.8）并叠加全部定制，已推 `origin/main`；工作树干净。
 - fork 接线：`origin`=https://github.com/EngineeMoMo/sub2apicust.git ；`upstream`=Wei-Shaw/sub2api（**push 已禁用**，只读）。
-- 上游同步：落后本地上游快照 **207 提交**（约 0.2.8 era）。**2026-09-26 实测** `git merge-tree` 合并演算 = **零冲突 + 11 处关键定制全存活**。
-  - ⚠️ 该演算针对**上次拉到的上游快照**；当日 github.com 从本机**拉不动**（连接重置/超时），**最新上游未复验**。
+- 上游同步：**2026-09-26 已合并上游 0.2.8 快照（a3eb7ef30，207 提交）→ 零冲突、11 处关键定制全存活、VERSION 0.2.8**。合并后 `pnpm run build` 通过；后端 `api_contract_test.go` 新增的 CCS 夹具已镜像 SynaRoute（全后端 hide_ccs = hide_synaroute = 20）。
+  - ⚠️ 该快照是**上次成功拉到的** 0.2.8；当日 github 从本机拉不动，快照之后若有更新的上游提交未纳入 —— 下次网络好时 `git fetch upstream` 增量再同步即可。
 - 前端：`pnpm run build` 通过（typecheck + i18n + vite）。本机预览：`pnpm -C frontend run dev` → :3000（无后端时仅外观预览，数据页会跳登录）。
-- 后端 SynaRoute + 关在线更新改动：**仍未编译**，待 CI 的 Go 构建/单测。
+- 🔴 后端**仍未在本机编译**（无 Go）：`go build -tags embed` + `go test -tags=unit`（含 `api_contract_test`）**必须由 CI 验证**后才可信；前端已本机验证。
 
 ## 五、待办 / 下一步
-- [ ] 网络恢复后 `git fetch upstream` 重拉 → 重跑 merge-tree 复验最新上游 → 正式 `git merge upstream/main`（0.2.8）→ 推送触发 CI。
+- [ ] **CI 验证**：确认 `custom-image.yml` 构建绿（后端 Go 编译过）+ 后端单测（`api_contract_test` 等）通过；红了把日志发我修。
 - [ ] 后端改动经 CI 的 Go 编译 + 单测验证。
 - [ ] 用户按 `deploy/DEPLOY_CUSTOM.md` 部署新镜像；后台设置站点名 + 上传 logo（建议透明底 PNG/SVG，≤300KB，约 80×80）。
 - [ ] SYNC.md 里「更新源指向自己仓库」（`UPDATE_GITHUB_REPO` + 自发 Release）尚未启用，按需再做。

@@ -55,6 +55,7 @@
   `setting_public.go`（公共 key 列表 + 公共结构体 + 两处映射）、`setting_update.go`
 - `internal/handler/dto/settings.go`（两个 DTO）、`setting_handler.go`
 - `internal/handler/admin/setting_handler.go`、`setting_handler_update.go`（req 结构体 + 两处映射）、`setting_handler_audit.go`
+- 🆕(0.2.8 合并引入) `internal/server/api_contract_test.go` —— 上游新增的 API 契约测试，含 `hide_ccs_import_button` 夹具 2 处（`require.JSONEq` 全量比对响应）。已镜像补 `hide_synaroute_import_button`，否则我们多出的键会让断言变红。判据：全后端 `hide_ccs` 与 `hide_synaroute` 命中数恒等（当前各 20）。
 
 ### 前端定制叠加层的 4 个接缝（2026-09-24）
 > 全部打 `[CUSTOM]` 注释。**已跑通完整 `pnpm run build`**（含 check:i18n + vue-tsc + vite build），
