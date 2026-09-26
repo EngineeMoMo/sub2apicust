@@ -1,37 +1,40 @@
 /* [CUSTOM] 品牌主题变量层 —— 换肤只改这个文件，见项目根 CUSTOMIZATIONS.md。
  *
- * 原理：tailwind.config.js 里的 `primary` 色阶已改为引用下面这些 CSS 变量
+ * 原理：tailwind.config.js 里的 `primary` 色阶，以及 glow/glow-lg 阴影、gradient-primary、
+ * mesh-gradient、glow 动画，都已改为引用下面这些 CSS 变量
  * （rgb(var(--color-primary-500) / <alpha-value>) 形式，保留 bg-primary-500/50 这类透明度）。
  * 所以全站品牌色 = 改下面的值，一处生效，且上游几乎不动这些行 → merge 零冲突。
  *
  * 值是「R G B」空格分隔的通道值（不是 #hex），这是 Tailwind 透明度修饰符要求的格式。
- * 默认值 = 上游当前的 Teal 青色，所以在你改动前视觉零变化。
+ * 当前值 = 魔法家族 GPT中转站品牌「电光蓝」（对齐 logo/海报的发光蓝）。
  * 换肤：把下面 --color-primary-* 换成你的品牌色通道值即可（可用在线工具把 hex 转成 "R G B"）。
  */
 
 :root {
-  /* 主品牌色（当前 = Teal 青色，#f0fdfa … #042f2e） */
-  --color-primary-50: 240 253 250;
-  --color-primary-100: 204 251 241;
-  --color-primary-200: 153 246 228;
-  --color-primary-300: 94 234 212;
-  --color-primary-400: 45 212 191;
-  --color-primary-500: 20 184 166;
-  --color-primary-600: 13 148 136;
-  --color-primary-700: 15 118 110;
-  --color-primary-800: 17 94 89;
-  --color-primary-900: 19 78 74;
-  --color-primary-950: 4 47 46;
+  /* 主品牌色 = 电光蓝（#eff6ff … #0e2149，500=#1877f0） */
+  --color-primary-50: 239 246 255;
+  --color-primary-100: 214 233 254;
+  --color-primary-200: 179 212 253;
+  --color-primary-300: 125 180 251;
+  --color-primary-400: 64 144 247;
+  --color-primary-500: 24 119 240;
+  --color-primary-600: 17 96 213;
+  --color-primary-700: 18 75 176;
+  --color-primary-800: 20 61 138;
+  --color-primary-900: 22 53 113;
+  --color-primary-950: 14 33 73;
 }
 
-/* 如需深色模式用不同品牌色，取消注释并改值（.dark 是 Tailwind darkMode:'class' 的开关类）：
+/* 如需深色模式用更亮的品牌色，取消注释并改值（.dark 是 Tailwind darkMode:'class' 的开关类）：
 .dark {
-  --color-primary-500: 45 212 191;
+  --color-primary-500: 64 144 247;
 }
 */
 
-/* 注意（如实说明范围）：tailwind.config.js 里少数「烘焙了品牌色」的效果不吃上面的变量，
- * 想彻底换肤需一并改它们（都在 tailwind.config.js，各一处）：
- *   boxShadow.glow / glow-lg、backgroundImage.gradient-primary / mesh-gradient、keyframes.glow。
- * 常规按钮/文字/边框等 bg-primary-* / text-primary-* 已全部走变量，改上面即可。
+/* 说明（如实标注残留范围）：
+ * - tailwind.config.js 的 glow / glow-lg 阴影、gradient-primary、mesh-gradient、glow 动画，
+ *   现已一并引用上面的 --color-primary-* 变量 → 改上面即可全部跟着变。
+ * - 少数上游组件里写死的 `teal-*` / `#14b8a6`（platformColors.ts 的 deepseek、若干模型徽标、
+ *   渠道监控配色、onboarding 引导气泡）是「按厂商/分类区分」的语义色，不是品牌主色，
+ *   刻意不改（改了会与别的蓝色分类撞色、丢语义）。品牌主色一律走 primary-*，已全部变蓝。
  */

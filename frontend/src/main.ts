@@ -25,9 +25,9 @@ function initIOSViewportZoomFix() {
 
 function initThemeClass() {
   const savedTheme = localStorage.getItem('theme')
-  const shouldUseDark =
-    savedTheme === 'dark' ||
-    (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  // [CUSTOM] 品牌默认深色：未显式选择过主题时默认深色（对齐深蓝品牌）。
+  // 用户一旦手动切换（localStorage 存了 'theme'）仍以其选择为准。见 CUSTOMIZATIONS.md（三）。
+  const shouldUseDark = savedTheme ? savedTheme === 'dark' : true
   document.documentElement.classList.toggle('dark', shouldUseDark)
 }
 

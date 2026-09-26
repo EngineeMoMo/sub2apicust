@@ -30,7 +30,7 @@
 
 ### 前端定制叠加层（换肤 + 新增/替换页面）（2026-09-24）
 用户方向：「换肤 + 少数页面」。设计为 `frontend/src/custom/` 叠加层，把冲突面收敛到 4 个接缝文件（见下节）。
-- `frontend/src/custom/theme.css` — 品牌色 CSS 变量层（`--color-primary-*`，通道值）。换肤只改这里。默认值=上游 Teal，视觉零变化。
+- `frontend/src/custom/theme.css` — 品牌色 CSS 变量层（`--color-primary-*`，通道值）。换肤只改这里。当前值=魔法家族品牌电光蓝（500=#1877f0），logo/站点名走管理员后台设置（无需改码）。
 - `frontend/src/custom/routes.ts` — 新增页面路由集中处（`customRoutes`）。
 - `frontend/src/custom/views/CustomDemoView.vue` — 脚手架演示页（验证链路用，可删）。
 - `frontend/src/custom/README.md` — 叠加层三种用法 + 影子替换代价说明。
@@ -60,10 +60,19 @@
 > 全部打 `[CUSTOM]` 注释。**已跑通完整 `pnpm run build`**（含 check:i18n + vue-tsc + vite build），
 > 产物 CSS 确含 `--color-primary-500: 20 184 166` 定义与 `rgb(var(--color-primary-500)/…)` 引用，
 > 演示路由 `custom-demo` 已进产物 → 换肤与路由链路验证通过。
-- `frontend/tailwind.config.js` — `primary` 色阶改为 `rgb(var(--color-primary-*) / <alpha-value>)`（引用 theme.css 变量）。⚠️ 上游若改 primary 色阶会冲突；解冲突时保留变量引用形式。
+- `frontend/tailwind.config.js` — `primary` 色阶 + glow/glow-lg 阴影、gradient-primary、mesh-gradient、glow 动画均改为引用 theme.css 变量（`rgb(var(--color-primary-*) / …)`）。⚠️ 上游若改 primary 色阶/这些效果会冲突；解冲突时保留变量引用形式。
 - `frontend/vite.config.ts` — `resolve.alias` 由对象改为**数组形式**，并留「影子替换」注释示例（覆盖项须在 `'@'` 之前）。
 - `frontend/src/main.ts` — `import './style.css'` 后加 `import './custom/theme.css'`。
 - `frontend/src/router/index.ts` — import `customRoutes` + 在 404 兜底前 `...customRoutes` 展开。
+
+### 品牌换肤：上游文件里写死的品牌色 teal → 品牌变量（2026-09-26）
+> 全站 `primary-*` 已走变量；但少数上游文件把品牌 teal **写死在 CSS / Tailwind arbitrary value 里**，
+> 都是「首屏可见的品牌装饰」，逐处改为引用 `--color-primary-*`（带 `[CUSTOM]`）。已跑通 `pnpm run build`。
+> ⚠️ 与**语义分类色**区分：`platformColors.ts` 的 deepseek、模型徽标、渠道监控状态色等 `teal-*` 是「按厂商/状态区分」的语义色，**刻意不改**（改了会撞色/丢语义）。
+- `frontend/src/views/HomeView.vue` — 背景网格线、`.terminal-window` dark 光晕的 teal → `rgb(var(--color-primary-500)/…)`。（`.code-url` 的 teal 是终端 demo 语法高亮色，非品牌，保留。）
+- `frontend/src/components/layout/AuthLayout.vue` — 登录/注册页背景网格线 teal → 变量。
+- `frontend/src/styles/onboarding.css` — 引导高亮 outline + 引导「下一步」按钮底色/hover（teal / #14b8a6 / #0d9488）→ 变量。
+- 残留（内部页、低优先，暂留并登记）：`KeyUsageView.vue`（图表线 `#14b8a6`、焦点环 `rgba(20,184,166)`）、`SubscriptionsView.vue`（emerald→teal 装饰渐变）、`platformColors.ts` `ACCENT_DEFAULT`。
 
 参考锚点：全仓搜 `HideCcsImportButton` / `hide_ccs_import_button` 就是本功能每一处的镜像位置。
 
@@ -85,7 +94,15 @@
 **配置**（走 gitignore 的 override，不进仓库）：`deploy/docker-compose.override.yml` 的 `environment` 加 `DISABLE_ONLINE_UPDATE=true`（可选 `UPDATE_GITHUB_REPO`）。模板见 `deploy/docker-compose.override.yml.example`。
 **merge 后如何验证**：① `DISABLE_ONLINE_UPDATE=true` 起容器后，管理员版本徽标只显示当前版本、无「立即更新」；调用 `POST /api/v1/admin/system/update` 返回 `ONLINE_UPDATE_DISABLED`。② 不设该变量时行为与上游一致（能查到更新）。🔴 本机无 Go，未编译，见下方待验证。
 
-- 除上面这一处外：无。
+### 品牌默认深色主题（2026-09-26）
+**为什么**：品牌是深蓝底 + 银色 + 电光蓝（logo/海报），首屏应呈现深色才对味。
+**改了什么**（`frontend/src/main.ts` 的 `initThemeClass`，带 `[CUSTOM]` 注释）：
+未显式选择过主题（`localStorage` 无 `theme`）时**默认深色**；原上游是「跟随系统 `prefers-color-scheme`」。
+用户手动切换过（存了 `theme`）仍以其选择为准 —— 只改「没选过」时的兜底方向。
+**merge 后如何验证**：① 清掉 `localStorage.theme` 首次访问 → 深色。② 手动切浅色后刷新 → 仍浅色。
+**回退**：把该行改回 `savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)` 即可。
+
+- 除上面两处外：无。
 
 ## 四、依赖 / 构建相关
 

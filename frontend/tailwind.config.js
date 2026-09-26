@@ -68,20 +68,23 @@ export default {
       boxShadow: {
         glass: '0 8px 32px rgba(0, 0, 0, 0.08)',
         'glass-sm': '0 4px 16px rgba(0, 0, 0, 0.06)',
-        glow: '0 0 20px rgba(20, 184, 166, 0.25)',
-        'glow-lg': '0 0 40px rgba(20, 184, 166, 0.35)',
+        // [CUSTOM] glow 阴影引用品牌变量(src/custom/theme.css),换肤一处生效。见 CUSTOMIZATIONS.md
+        glow: '0 0 20px rgb(var(--color-primary-500) / 0.25)',
+        'glow-lg': '0 0 40px rgb(var(--color-primary-500) / 0.35)',
         card: '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
         'card-hover': '0 10px 40px rgba(0, 0, 0, 0.08)',
         'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+        // [CUSTOM] gradient-primary 引用品牌变量,见 CUSTOMIZATIONS.md
+        'gradient-primary': 'linear-gradient(135deg, rgb(var(--color-primary-500)) 0%, rgb(var(--color-primary-600)) 100%)',
         'gradient-dark': 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         'gradient-glass':
           'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+        // [CUSTOM] mesh-gradient 引用品牌变量,见 CUSTOMIZATIONS.md
         'mesh-gradient':
-          'radial-gradient(at 40% 20%, rgba(20, 184, 166, 0.12) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 50%), radial-gradient(at 0% 50%, rgba(20, 184, 166, 0.08) 0px, transparent 50%)'
+          'radial-gradient(at 40% 20%, rgb(var(--color-primary-500) / 0.12) 0px, transparent 50%), radial-gradient(at 80% 0%, rgb(var(--color-primary-400) / 0.08) 0px, transparent 50%), radial-gradient(at 0% 50%, rgb(var(--color-primary-500) / 0.08) 0px, transparent 50%)'
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -119,8 +122,9 @@ export default {
           '100%': { backgroundPosition: '200% 0' }
         },
         glow: {
-          '0%': { boxShadow: '0 0 20px rgba(20, 184, 166, 0.25)' },
-          '100%': { boxShadow: '0 0 30px rgba(20, 184, 166, 0.4)' }
+          // [CUSTOM] glow 动画引用品牌变量,见 CUSTOMIZATIONS.md
+          '0%': { boxShadow: '0 0 20px rgb(var(--color-primary-500) / 0.25)' },
+          '100%': { boxShadow: '0 0 30px rgb(var(--color-primary-500) / 0.4)' }
         }
       },
       backdropBlur: {
