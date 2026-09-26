@@ -30,7 +30,7 @@
 
 ### 前端定制叠加层（换肤 + 新增/替换页面）（2026-09-24）
 用户方向：「换肤 + 少数页面」。设计为 `frontend/src/custom/` 叠加层，把冲突面收敛到 4 个接缝文件（见下节）。
-- `frontend/src/custom/theme.css` — 品牌色 CSS 变量层（`--color-primary-*`，通道值）。换肤只改这里。当前值=魔法家族品牌电光蓝（500=#1877f0），logo/站点名走管理员后台设置（无需改码）。
+- `frontend/src/custom/theme.css` — 品牌变量层：`--color-primary-*`（电光蓝，500=#1e8bff）+ `--color-dark-*`（深海军蓝底，减压抑）+ `.dark body` 电光蓝径向光晕。换肤只改这里；logo/站点名走管理员后台设置（无需改码）。
 - `frontend/src/custom/routes.ts` — 新增页面路由集中处（`customRoutes`）。
 - `frontend/src/custom/views/CustomDemoView.vue` — 脚手架演示页（验证链路用，可删）。
 - `frontend/src/custom/README.md` — 叠加层三种用法 + 影子替换代价说明。
@@ -61,7 +61,7 @@
 > 全部打 `[CUSTOM]` 注释。**已跑通完整 `pnpm run build`**（含 check:i18n + vue-tsc + vite build），
 > 产物 CSS 确含 `--color-primary-500: 20 184 166` 定义与 `rgb(var(--color-primary-500)/…)` 引用，
 > 演示路由 `custom-demo` 已进产物 → 换肤与路由链路验证通过。
-- `frontend/tailwind.config.js` — `primary` 色阶 + glow/glow-lg 阴影、gradient-primary、mesh-gradient、glow 动画均改为引用 theme.css 变量（`rgb(var(--color-primary-*) / …)`）。⚠️ 上游若改 primary 色阶/这些效果会冲突；解冲突时保留变量引用形式。
+- `frontend/tailwind.config.js` — `primary` + `dark` 色阶、glow/glow-lg、gradient-primary、mesh-gradient、glow 动画均改为引用 theme.css 变量。⚠️ 上游若改 primary/dark 色阶或这些效果会冲突；解冲突时保留变量引用形式。
 - `frontend/vite.config.ts` — `resolve.alias` 由对象改为**数组形式**，并留「影子替换」注释示例（覆盖项须在 `'@'` 之前）。
 - `frontend/src/main.ts` — `import './style.css'` 后加 `import './custom/theme.css'`。
 - `frontend/src/router/index.ts` — import `customRoutes` + 在 404 兜底前 `...customRoutes` 展开。
@@ -77,7 +77,7 @@
 
 ### 交接文档进仓（.gitignore 例外）（2026-09-26）
 > 交接协议要 `CLAUDE.md`（每会话自动加载 → 引导读 HANDOFF.md）随仓库共享，但上游 `.gitignore:122` 默认忽略它。
-- `.gitignore` — 末尾加 `[CUSTOM]` 块 `!CLAUDE.md`（last-match-wins 覆盖第 122 行）。⚠️ 仅此一行例外；`.claude/`（第 123 行）仍忽略、不受影响。上游若重排 .gitignore 需确认该例外仍在末尾且生效。
+- `.gitignore` — 末尾加 `[CUSTOM]` 块 `!CLAUDE.md` + `!AGENTS.md`（last-match-wins 覆盖上游第 122/130 行的忽略，让交接入口进仓）。⚠️ `.claude/` 仍忽略、不受影响。上游若重排 .gitignore 需确认该例外仍在末尾且生效。
 - 随之进仓的共享文档：`CLAUDE.md`（项目规则 + 交接协议）、`HANDOFF.md`（交接中枢：用户要求/准则/状态/待办）。
 
 参考锚点：全仓搜 `HideCcsImportButton` / `hide_ccs_import_button` 就是本功能每一处的镜像位置。

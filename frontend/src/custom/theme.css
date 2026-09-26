@@ -1,40 +1,50 @@
 /* [CUSTOM] 品牌主题变量层 —— 换肤只改这个文件，见项目根 CUSTOMIZATIONS.md。
  *
- * 原理：tailwind.config.js 里的 `primary` 色阶，以及 glow/glow-lg 阴影、gradient-primary、
- * mesh-gradient、glow 动画，都已改为引用下面这些 CSS 变量
- * （rgb(var(--color-primary-500) / <alpha-value>) 形式，保留 bg-primary-500/50 这类透明度）。
- * 所以全站品牌色 = 改下面的值，一处生效，且上游几乎不动这些行 → merge 零冲突。
- *
- * 值是「R G B」空格分隔的通道值（不是 #hex），这是 Tailwind 透明度修饰符要求的格式。
- * 当前值 = 魔法家族 GPT中转站品牌「电光蓝」（对齐 logo/海报的发光蓝）。
- * 换肤：把下面 --color-primary-* 换成你的品牌色通道值即可（可用在线工具把 hex 转成 "R G B"）。
+ * tailwind.config.js 的 primary / dark 色阶、以及 glow/gradient/mesh 效果都引用下面这些变量
+ * （rgb(var(--color-xxx) / <alpha-value>) 形式，保留透明度修饰符）。改这里 = 全站生效、merge 零冲突。
+ * 值是「R G B」通道值（非 #hex），这是 Tailwind 透明度修饰符要求的格式。
  */
 
 :root {
-  /* 主品牌色 = 电光蓝（#eff6ff … #0e2149，500=#1877f0） */
-  --color-primary-50: 239 246 255;
-  --color-primary-100: 214 233 254;
-  --color-primary-200: 179 212 253;
-  --color-primary-300: 125 180 251;
-  --color-primary-400: 64 144 247;
-  --color-primary-500: 24 119 240;
-  --color-primary-600: 17 96 213;
-  --color-primary-700: 18 75 176;
-  --color-primary-800: 20 61 138;
-  --color-primary-900: 22 53 113;
-  --color-primary-950: 14 33 73;
+  /* 主品牌色 = 电光蓝（提亮版，500=#1e8bff，比原来更亮更发光，对齐海报） */
+  --color-primary-50: 236 245 255;
+  --color-primary-100: 208 231 255;
+  --color-primary-200: 165 213 255;
+  --color-primary-300: 110 186 255;
+  --color-primary-400: 61 160 255;
+  --color-primary-500: 30 139 255;
+  --color-primary-600: 17 110 224;
+  --color-primary-700: 16 86 179;
+  --color-primary-800: 18 67 138;
+  --color-primary-900: 20 54 110;
+  --color-primary-950: 13 34 74;
+
+  /* 深色模式底色 = 深海军蓝（比上游 slate 更蓝、最深档更亮，减压抑；对齐 logo 深蓝） */
+  --color-dark-50: 243 246 251;
+  --color-dark-100: 230 236 245;
+  --color-dark-200: 203 214 232;
+  --color-dark-300: 163 182 210;
+  --color-dark-400: 117 144 181;
+  --color-dark-500: 74 103 149;
+  --color-dark-600: 51 80 122;
+  --color-dark-700: 34 58 95;
+  --color-dark-800: 23 40 74;
+  --color-dark-900: 16 29 58;
+  --color-dark-950: 10 19 39;
 }
 
-/* 如需深色模式用更亮的品牌色，取消注释并改值（.dark 是 Tailwind darkMode:'class' 的开关类）：
-.dark {
-  --color-primary-500: 64 144 247;
+/* 深色模式：整站底部叠一层电光蓝径向光晕，呈现海报那种深蓝科技发光感（非死黑压抑）。
+   只加 background-image（光晕），不动 body 的 bg-color；固定不随滚动。 */
+.dark body {
+  background-image:
+    radial-gradient(1200px 600px at 12% -8%, rgb(var(--color-primary-500) / 0.14), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(var(--color-primary-400) / 0.10), transparent 55%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
-*/
 
-/* 说明（如实标注残留范围）：
- * - tailwind.config.js 的 glow / glow-lg 阴影、gradient-primary、mesh-gradient、glow 动画，
- *   现已一并引用上面的 --color-primary-* 变量 → 改上面即可全部跟着变。
- * - 少数上游组件里写死的 `teal-*` / `#14b8a6`（platformColors.ts 的 deepseek、若干模型徽标、
- *   渠道监控配色、onboarding 引导气泡）是「按厂商/分类区分」的语义色，不是品牌主色，
- *   刻意不改（改了会与别的蓝色分类撞色、丢语义）。品牌主色一律走 primary-*，已全部变蓝。
+/* 说明：
+ * - 想再调亮/暗：改上面 --color-dark-950/900（底色）与 --color-primary-400/500（主色/发光）。
+ * - 想回浅色默认：见 CUSTOMIZATIONS.md「品牌默认深色主题」，把 main.ts 那行改回跟随系统即可。
+ * - 上游组件里写死的 teal（platformColors 的 deepseek 等）是语义分类色，刻意不改。
  */
