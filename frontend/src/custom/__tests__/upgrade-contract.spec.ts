@@ -6,6 +6,7 @@ import sidebar from '@/components/layout/AppSidebar.vue?raw'
 import tableLayout from '@/components/layout/TablePageLayout.vue?raw'
 import main from '@/main.ts?raw'
 import router from '@/router/index.ts?raw'
+import paymentView from '@/views/user/PaymentView.vue?raw'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -14,6 +15,10 @@ import brandHome from '@/custom/views/BrandHomeView.vue?raw'
 import { customRoutes } from '@/custom/routes'
 
 describe('雾钛青与上游布局的升级契约', () => {
+  it('充值页在纵向flex正文中占满可用宽度，同时保留原最大宽度', () => {
+    expect(paymentView).toContain('class="mx-auto max-w-4xl space-y-6"')
+    expect(theme).toMatch(/\.mofa-workspace-main\s*>\s*\.mx-auto\.max-w-4xl\s*\{\s*width:\s*100%;\s*\}/)
+  })
   it('认证页展示接缝不替代业务和页脚插槽', () => {
     for (const hook of ['mofa-auth', 'mofa-auth-content', 'mofa-auth-form', 'mofa-auth-card']) {
       expect(authLayout).toContain(hook)

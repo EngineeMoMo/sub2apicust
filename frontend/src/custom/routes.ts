@@ -5,6 +5,12 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/intelligence',
+    name: 'Intelligence',
+    component: () => import('@/custom/views/IntelligenceView.vue'),
+    meta: { title: '智力效率', requiresAuth: true, requiresAdmin: false }
+  },
+  {
     path: '/brand',
     name: 'BrandHome',
     component: () => import('@/custom/views/BrandHomeView.vue'),

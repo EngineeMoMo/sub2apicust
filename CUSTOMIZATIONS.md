@@ -17,6 +17,22 @@
 
 > 格式：`路径` — 用途 — 引入日期
 
+### 智力效率页面（2026-09-27）
+- 最新说明区精简：按用户指定仅保留IQ可比性与低样本／缺失数据两段，移除说明标题、来源归属、费用字段及直连提示；英文同步。数据获取及刷新逻辑不变。
+- **修正版部署证据**：本机8080已运行`cfa0a12c8bf6`，三服务healthy，HTTP实际加载`IntelligenceView-C0f1Aymd.js`，新对比／排序控件、去外链／去频率元素和充值width规则已核验；76项回归与前端构建／Go embed编译通过。280项设置摘要及分组2／套餐0等条数不变；数据库备份583628字节，旧镜像保留，详见HANDOFF与output/brand/intelligence-ux-deploy-record.json。未跑Go单测，真实浏览器验收仍待。
+- **本轮可读性修正（优先于下方初版描述）**：移除「查看源站」按钮、JSON外链和所有刷新间隔文案，保留纯文本来源归属、源更新时间、手动刷新及原30分钟轮询。矩阵默认仍为数据源首次出现顺序；新增模型名称／指定档位分数降序，缺失最后、同分保留源序，不计算跨档位综合分。
+- `custom/components/IntelligenceComparison.vue` 替代并删除未提交初版`IntelligencePlot.vue`：不用无标签散点图，改为模型名＋三个独立指标条／精确数值，默认high档、可切全部档位与按分数／耗时／费用排序，每页12组合，缺失指标不丢整行。手机改纵向条目；三个指标单位不同，页面明确不跨列比较条长；图表不再依赖Chart.js。
+- `custom/theme.css` 新增 `.mofa-workspace-main > .mx-auto.max-w-4xl { width: 100%; }`：适配原充值页在定制纵向flex正文里的居中面板，保留max-w-4xl最大宽度，避免空态随内容收窄。没有修改PaymentView、后端支付查询或订阅规则。`custom/__tests__/upgrade-contract.spec.ts` 登记该上游root class依赖；升级如改变结构需复核。
+- 本轮只读核验：groups中「测试分组1」为active/subscription，日100／周500／月2000；subscription_plans仍0条。`PaymentConfigService.ListPlansForSale`只查for_sale=true套餐，checkout-info也用此方法，所以创建分组不自动上架。应在 `/admin/orders/plans` 新建关联分组的售卖套餐；不伪造价格、不自动创建订单。
+- `frontend/src/custom/views/IntelligenceView.vue` — 认证后 `/intelligence` 页面：模型图标、分数条矩阵、三指标条形对比、模型搜索／评测环境／样本筛选、中英文及来源说明。
+- `frontend/src/custom/intelligence/{data,copy,useIntelligence}.ts` — 固定读取用户指定 Codex Radar JSON；schema=2 校验、模型×harness×effort 去重，缺失不当零分；页面打开每30分钟读取、手动刷新、15秒超时、同页请求去重、隐藏页暂停、回前台过期补取、失败保留本次挂载上次成功数据。不是服务端定时任务，不持久化跨重载缓存，不携带本站凭据。
+- `frontend/src/custom/components/IntelligenceIcon.vue` / `IntelligenceComparison.vue` — 线性雷达入口图标、原生HTML三指标条形对比；沿用已有ModelIcon，分页／精确数值／样本／聚合方式／缺失值，主题直接取CSS变量，无canvas和theme observer。
+- `frontend/src/custom/__tests__/intelligence.spec.ts` / `intelligence-view.spec.ts` — 数据、轮询、超时、卸载、失败保留、零值／缺失、跨环境、筛选、图表明细与中英文回归。
+- 既有定制文件接线：`custom/routes.ts` 注册认证路由，`custom/brand/useWorkspaceHeading.ts` 提供中英文标题；全部新增视觉规则在 `custom/theme.css`，含深色黑色品牌图标对比度修正，不改 SynaRoute 或原语义 teal。
+- **上游接缝**：`frontend/src/components/layout/AppSidebar.vue` 新增 `[CUSTOM]` 图标／文案 import，`useI18n` 取 locale，`buildSelfNavItems` 添加 `/intelligence`，用户与管理员个人区共用。合并需保留入口、认证守卫、侧栏折叠和移动端行为。
+- **订阅不重复造轮子**：原 `PaymentView.vue` 已有充值／订阅Tab、套餐购买与续费入口，本轮未改支付业务或数据库；本机只读SQL确认 `subscription_plans` 总数和上架数均0，须由用户提供套餐售价／额度／周期／分组后配置，不照搬参考截图。
+- 验证：真实接口解析24模型／89组合／24矩阵行／15低样本组合；70项定制与订阅定向测试通过，定向ESLint与构建通过。后续用户授权本机Docker发布完成：8080镜像`1a7a31d0e424`，Docker内前端构建与Go embed编译成功，三服务healthy；HTTP实际入口引用`IntelligenceView-Cob7bqKS.js`并含源JSON地址，主题CSS含新矩阵规则；数据条数与全部280项设置摘要不变。备份与构建日志见HANDOFF及output/brand/intelligence-deploy-record.json。浏览器工具认证失败，真实浏览器视觉验收仍待；未跑Go单测、未提交推送、未部署生产。
+
 ### 品牌实施交接计划（2026-09-26）
 - `BRAND_IMPLEMENTATION.md` — 已获用户确认的雾钛青方向、素材与色表、真实代码接线、实施阶段、验收及 fork 维护边界。实施及验收进度见文末第 9 节。
 - `AGENTS.md` — 当前任务入口更新为读取该计划；SynaRoute 保留紫色，后续在其工程独立统一基础规范。

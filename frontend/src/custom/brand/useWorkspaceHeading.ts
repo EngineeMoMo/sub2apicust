@@ -5,10 +5,11 @@ import { useAppStore, useAuthStore } from '@/stores'
 import { useAdminSettingsStore } from '@/stores/adminSettings'
 import { resolveRouteMetaKeys } from '@/router/title'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
+import { intelligenceCopy } from '@/custom/intelligence/copy'
 
 export function useWorkspaceHeading() {
   const route = useRoute()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const appStore = useAppStore()
   const authStore = useAuthStore()
   const adminSettingsStore = useAdminSettingsStore()
@@ -18,6 +19,7 @@ export function useWorkspaceHeading() {
   }))
 
   const pageTitle = computed(() => {
+    if (route.name === 'Intelligence') return intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title
     if (route.name === 'CustomPage') {
       const id = route.params.id as string
       const publicItems = appStore.cachedPublicSettings?.custom_menu_items ?? []
@@ -33,6 +35,7 @@ export function useWorkspaceHeading() {
   })
 
   const pageDescription = computed(() => {
+    if (route.name === 'Intelligence') return intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].description
     const descKey = routeMetaKeys.value.descriptionKey
     if (descKey) {
       return t(descKey)

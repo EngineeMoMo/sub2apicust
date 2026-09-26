@@ -72,3 +72,15 @@ try {
 - 旧镜像标签：sub2apicust:before-brand-20260926；镜像回退和数据库回退是不同操作，不自动恢复数据库。
 - 上述本地备份与配置已Git忽略，不提交凭据或数据库。
 - 本次成功部署镜像前缀9c8c1dfb87bc，属于历史证据，不应当作下一次升级的固定目标。
+
+## 7. 本轮智力效率发布记录
+
+**最新可读性修正版（优先于本节初版记录）**：当前8080镜像`cfa0a12c8bf6`，仅应用容器重建，三服务healthy；数据库／Redis容器ID、用户1／分组2／套餐0、280项设置摘要保持。前端构建／Go embed编译通过，新HTTP入口`index-BW6NgO3M.js`引用`IntelligenceView-C0f1Aymd.js`，条形对比、矩阵排序、移除源站链接／频率元素及充值width规则均验证。回退tag`sub2apicust:before-intelligence-ux-20260927-022446`，dump `output/brand/before-intelligence-ux-20260927-022446.dump`（583628字节，pg_restore目录校验通过），构建日志与部署记录分别为同目录`docker-intelligence-ux-20260927-022446.log`／`intelligence-ux-deploy-record.json`。76项定向回归通过，未跑Go单测；浏览器连接仍不可用，未声明完成真实视觉验收。未创建套餐或订单，未推送或生产部署。
+
+- 用户要求「重新发docker」，范围按本机解释并执行，未动生产。代理授权预检HTTP200，实际compose build进程设置HTTP_PROXY／HTTPS_PROXY／NO_PROXY；首轮构建成功，无盲目重试。
+- 镜像从`b4fa2d8e97a1`切到`1a7a31d0e424`；使用原compose项目和配置执行`up -d --no-deps --no-build --wait --wait-timeout 120 sub2api`，只替换应用容器。三服务healthy，数据库／Redis容器ID及app_data挂载不变。
+- Docker内前端构建／类型检查／国际化3测与Go embed编译通过，未执行Go单测。`/health`=200/ok；HTTP入口`index-CYZhTaMW.js`确实引用`IntelligenceView-Cob7bqKS.js`，新chunk包含Codex Radar源地址，CSS包含矩阵样式。
+- 更新前后users=1、api_keys=0、groups=1、subscription_plans=0、settings=280，各计数与全部设置聚合摘要一致；不展示具体设置值，不制造测试订单。
+- 回退镜像`sub2apicust:before-intelligence-20260927-015820`；数据库备份`output/brand/before-intelligence-20260927-015820.dump`，582060字节，`pg_restore --list`校验通过。部署记录`output/brand/intelligence-deploy-record.json`，基线`intelligence-before.json`，构建日志`docker-intelligence-20260927-015820.log`，均在output/brand且Git忽略。
+- 若用户要求镜像回退，先将上述旧镜像重新tag为`sub2apicust:local-theme`，再使用原compose仅重建sub2api；不要自动恢复数据库，不删除卷。上述hash和备份名是本次实证，下次部署仍须重新取证。
+- 浏览器控制工具仍不可用，本轮未做真实浏览器登录与视觉验收；HTTP状态和资源校验不是交互验收。

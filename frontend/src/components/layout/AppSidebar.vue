@@ -199,6 +199,9 @@ import { sanitizeUrl } from '@/utils/url'
 import { FeatureFlags, makeSidebarFlag } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
 import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
+// [CUSTOM] 智力效率入口与图标，业务组件留在 custom 叠加层。
+import IntelligenceIcon from '@/custom/components/IntelligenceIcon.vue'
+import { intelligenceCopy } from '@/custom/intelligence/copy'
 
 interface NavItem {
   path: string
@@ -236,7 +239,7 @@ function applyFeatureFlags(items: NavItem[]): NavItem[] {
   return out
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -734,6 +737,8 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/affiliate', label: t('nav.affiliate'), icon: UsersIcon, hideInSimpleMode: true, featureFlag: flagAffiliate },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
+    // [CUSTOM] 用户与管理员个人区共用，沿用认证路由守卫。
+    { path: '/intelligence', label: intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title, icon: IntelligenceIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
       label: item.label,
