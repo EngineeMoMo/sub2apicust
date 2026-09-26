@@ -162,3 +162,6 @@ issues/
 .vite/
 # 本地闭源插件开发目录及构建产物不进入 Sub2API 仓库
 /plugins/
+
+# [CUSTOM] 交接文档 CLAUDE.md 需进仓共享(上游第122行默认忽略它)。末尾例外,last-match-wins。见 HANDOFF.md / CUSTOMIZATIONS.md
+!CLAUDE.md

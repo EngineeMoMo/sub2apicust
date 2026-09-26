@@ -74,6 +74,11 @@
 - `frontend/src/styles/onboarding.css` — 引导高亮 outline + 引导「下一步」按钮底色/hover（teal / #14b8a6 / #0d9488）→ 变量。
 - 残留（内部页、低优先，暂留并登记）：`KeyUsageView.vue`（图表线 `#14b8a6`、焦点环 `rgba(20,184,166)`）、`SubscriptionsView.vue`（emerald→teal 装饰渐变）、`platformColors.ts` `ACCENT_DEFAULT`。
 
+### 交接文档进仓（.gitignore 例外）（2026-09-26）
+> 交接协议要 `CLAUDE.md`（每会话自动加载 → 引导读 HANDOFF.md）随仓库共享，但上游 `.gitignore:122` 默认忽略它。
+- `.gitignore` — 末尾加 `[CUSTOM]` 块 `!CLAUDE.md`（last-match-wins 覆盖第 122 行）。⚠️ 仅此一行例外；`.claude/`（第 123 行）仍忽略、不受影响。上游若重排 .gitignore 需确认该例外仍在末尾且生效。
+- 随之进仓的共享文档：`CLAUDE.md`（项目规则 + 交接协议）、`HANDOFF.md`（交接中枢：用户要求/准则/状态/待办）。
+
 参考锚点：全仓搜 `HideCcsImportButton` / `hide_ccs_import_button` 就是本功能每一处的镜像位置。
 
 ## 三、上游文件的行为修改（高风险，A 方案应尽量为空）
