@@ -4,7 +4,7 @@
 镜像由私有仓的 `.github/workflows/custom-image.yml` 在 push 到 `main` 时构建并推送到：
 
 ```
-ghcr.io/enginemomo/sub2apicust        # 镜像名全小写
+ghcr.io/engineemomo/sub2apicust        # 镜像名全小写
 ```
 
 标签：`latest`（main 最新）、`sha-<7位提交>`（可精确回滚）、`vX.Y.Z`（打 tag 时）。
@@ -49,7 +49,7 @@ chmod 600 .env
 ```yaml
 services:
   sub2api:
-    image: ghcr.io/enginemomo/sub2apicust:latest   # 或钉某个 sha-xxxx / vX.Y.Z
+    image: ghcr.io/engineemomo/sub2apicust:latest   # 或钉某个 sha-xxxx / vX.Y.Z
     environment:
       - DISABLE_ONLINE_UPDATE=true
 ```
@@ -158,7 +158,7 @@ cd ~/sub2api-deploy
 # 1) 先备份数据库(必须)。DB 在容器里(服务名 postgres):
 s2 exec -T postgres pg_dump -U sub2api sub2api | gzip > backup-before-0.2.8-$(date +%F).sql.gz
 # 2) 把镜像指到定制 0.2.8: 改 docker-compose.override.yml 的 image: 那行为
-#    ghcr.io/enginemomo/sub2apicust:sha-58b154f   (钉 sha 比 latest 稳,升级/回滚都确定)
+#    ghcr.io/engineemomo/sub2apicust:sha-58b154f   (钉 sha 比 latest 稳,升级/回滚都确定)
 # 3) 拉取并重建(迁移在启动时自动跑):
 s2 pull && s2 up -d
 s2 logs -f sub2api        # 看到正常监听即迁移完成
