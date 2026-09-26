@@ -44,6 +44,7 @@
   - ⚠️ 该快照是**上次成功拉到的** 0.2.8；当日 github 从本机拉不动，快照之后若有更新的上游提交未纳入 —— 下次网络好时 `git fetch upstream` 增量再同步即可。
 - 前端：`pnpm run build` 通过（typecheck + i18n + vite）。本机预览：`pnpm -C frontend run dev` → :3000（无后端时仅外观预览，数据页会跳登录）。
 - ✅ **CI 已验证（2026-09-26）**：0.2.8 合并提交 `58b154f53` 的三条 workflow 全绿 —— Build custom image(GHCR) / CI(单测，含 `api_contract_test`) / Security Scan。即后端已编译通过、单测通过、**0.2.8-custom 镜像已推到 GHCR**。
+- **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/enginemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
 - [x] **CI 已全绿**（提交 `58b154f53`）：镜像构建 + 单测 + 安全扫描均 success，0.2.8-custom 镜像已在 GHCR。
