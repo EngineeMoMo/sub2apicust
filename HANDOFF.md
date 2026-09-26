@@ -49,7 +49,7 @@
 - [x] **CI 已全绿**（提交 `58b154f53`）：镜像构建 + 单测 + 安全扫描均 success，0.2.8-custom 镜像已在 GHCR。
 - [ ] 后端改动经 CI 的 Go 编译 + 单测验证。
 - [ ] 用户按 `deploy/DEPLOY_CUSTOM.md` **第七节**（0.2.7→0.2.8 原地升级：备份 → 切镜像 → 启动自动迁移 → 回滚）部署；后台设置站点名 + 上传 logo（透明底 PNG/SVG，≤300KB，约 80×80）。
-- [ ] 「在线更新按钮指向自己仓库」：**Docker 下按钮做不了真升级**——更新机制是二进制原地替换（`update_service.go` 已核实），容器重启即还原，且我们 CI 出的是镜像、非 Release 二进制资产。可选做成「有新版通知器」（需自发 GitHub Release + 一处 `[CUSTOM]` 改动），待用户定；Docker 正解仍是 `update.sh` / `docker compose pull`。
+- [ ] 「在线更新按钮指向自己仓库」（已核实 `update_service.go` / `system_handler.go` / `sysutil/restart.go` / compose `restart: unless-stopped`）：机制=下载 Release **预编译二进制** → 原地换容器**可写层**里的 `/app/sub2api` → 提示重启；`restart: unless-stopped` 重启后即跑新二进制 —— **所以上游 Docker 下按钮确实能升级**（我早前说"Docker 做不了、重启即还原"是错的，已更正：是**镜像 pull/重建**才还原，普通重启不会）。但对**定制 fork 不适用**：① 换的二进制只在可写层，下次 `docker compose pull`（部署定制必做）会被镜像覆盖回去；② 按钮下的是预编译二进制——指上游 = 用开源版**覆盖你的定制二进制**，指自己仓 = 我们 CI 只出镜像、无二进制资产。Docker 正解仍是 `update.sh`。可选：做「有新版通知器」（自发 Release + 一处 [CUSTOM]），待用户定。
 
 ## 六、文档地图
 - [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md) — **定制唯一权威清单**（新增文件 / 接线改动 / 行为修改 / 自检清单）。
