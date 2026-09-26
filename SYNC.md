@@ -4,7 +4,7 @@
 定制策略为「配置 + 新增功能」，尽量不改上游核心逻辑。
 
 - 上游（只读）：`upstream` → https://github.com/Wei-Shaw/sub2api.git
-- 你的私有仓：`origin` → （建仓后填）
+- 你的私有仓：`origin` → https://github.com/EngineeMoMo/sub2apicust.git
 - 定制清单：见 [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md)
 
 ---
@@ -15,7 +15,7 @@
 - [x] `git remote rename origin upstream`（上游只读）
 - [x] `git remote set-url --push upstream DISABLED_NO_PUSH_TO_UPSTREAM`（防误推上游）
 - [x] `git config rerere.enabled true`（记住冲突解法）
-- [ ] 建私有仓并设为 `origin`：
+- [x] 建私有仓并设为 `origin`（已完成：EngineeMoMo/sub2apicust，已 `push -u origin main`）：
   ```bash
   # 方式一：已有私有空仓
   git remote add origin <你的私有仓地址>
