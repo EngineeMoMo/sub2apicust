@@ -48,8 +48,8 @@
 ## 五、待办 / 下一步
 - [x] **CI 已全绿**（提交 `58b154f53`）：镜像构建 + 单测 + 安全扫描均 success，0.2.8-custom 镜像已在 GHCR。
 - [ ] 后端改动经 CI 的 Go 编译 + 单测验证。
-- [ ] 用户按 `deploy/DEPLOY_CUSTOM.md` 部署新镜像；后台设置站点名 + 上传 logo（建议透明底 PNG/SVG，≤300KB，约 80×80）。
-- [ ] SYNC.md 里「更新源指向自己仓库」（`UPDATE_GITHUB_REPO` + 自发 Release）尚未启用，按需再做。
+- [ ] 用户按 `deploy/DEPLOY_CUSTOM.md` **第七节**（0.2.7→0.2.8 原地升级：备份 → 切镜像 → 启动自动迁移 → 回滚）部署；后台设置站点名 + 上传 logo（透明底 PNG/SVG，≤300KB，约 80×80）。
+- [ ] 「在线更新按钮指向自己仓库」：**Docker 下按钮做不了真升级**——更新机制是二进制原地替换（`update_service.go` 已核实），容器重启即还原，且我们 CI 出的是镜像、非 Release 二进制资产。可选做成「有新版通知器」（需自发 GitHub Release + 一处 `[CUSTOM]` 改动），待用户定；Docker 正解仍是 `update.sh` / `docker compose pull`。
 
 ## 六、文档地图
 - [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md) — **定制唯一权威清单**（新增文件 / 接线改动 / 行为修改 / 自检清单）。

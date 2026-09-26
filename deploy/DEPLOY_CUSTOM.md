@@ -137,3 +137,46 @@ s2 down
 cd .. && tar czf sub2api-deploy.tar.gz sub2api-deploy/
 # 拷到新机解包，重新 docker login ghcr.io 后 s2 up -d
 ```
+
+## 七、现有部署原地升级 0.2.7 → 0.2.8-custom（含迁移与回滚）
+
+> 把**已在跑的 0.2.7** 平移到定制 0.2.8。与全新部署不同，重点是**数据库迁移**与**回滚**。
+
+**迁移怎么跑（已核实 `backend/internal/setup/setup.go` → `repository.ApplyMigrations`）**：
+- 应用**启动时自动执行** SQL 迁移，无需手动命令——只要 `up -d`，容器起来就迁移。
+- 幂等：已应用的迁移按「文件名 + SHA256」记录在 `schema_migrations` 表，重启不重复跑。
+- 多实例安全：用 PostgreSQL advisory lock 串行化。
+- **前向单向**：没有 down 迁移；回滚靠「切回旧镜像 + 必要时备份恢复」，不靠反向迁移。
+
+**0.2.8 的库变更（已核实：仅 1 条且为增量）**：`240_affiliate_ledger_operation_id.sql`
+——给 `user_affiliate_ledger` 加可空列 `operation_id` + 一个部分唯一索引，均 `IF NOT EXISTS`。
+纯增量、非破坏、执行快；旧版 0.2.7 代码会**忽略**这个多出来的列 —— 这正是回滚安全的前提。
+
+### 升级步骤（`s2` = 你在「三」里的 compose 别名；默认库用户/库名均为 `sub2api`）
+```bash
+cd ~/sub2api-deploy
+# 1) 先备份数据库(必须)。DB 在容器里(服务名 postgres):
+s2 exec -T postgres pg_dump -U sub2api sub2api | gzip > backup-before-0.2.8-$(date +%F).sql.gz
+# 2) 把镜像指到定制 0.2.8: 改 docker-compose.override.yml 的 image: 那行为
+#    ghcr.io/enginemomo/sub2apicust:sha-58b154f   (钉 sha 比 latest 稳,升级/回滚都确定)
+# 3) 拉取并重建(迁移在启动时自动跑):
+s2 pull && s2 up -d
+s2 logs -f sub2api        # 看到正常监听即迁移完成
+```
+**验证**：能登录、老数据都在；管理员页版本显示 0.2.8。
+### 回滚（240 是增量变更，迁移已跑过也安全）
+切回 0.2.7 镜像即可——旧代码忽略新列，不需要反向迁移：
+```bash
+# 把 override 的 image: 改回 0.2.7(上游 weishaw/sub2api:0.2.7 或你之前的定制 sha), 然后:
+s2 pull && s2 up -d
+```
+`schema_migrations` 里那条 240 记录会留着（无害）。**仅当**你怀疑迁移本身出问题，才用备份恢复：
+```bash
+s2 down && s2 up -d postgres        # 只先起库
+gunzip -c backup-before-0.2.8-YYYY-MM-DD.sql.gz | s2 exec -T postgres psql -U sub2api sub2api
+s2 up -d                            # 再起全部
+```
+
+> ⚠️ 升级/回滚都**钉 `sha-` 标签**（不要用 `latest`），两端都指向确定镜像，避免 latest 漂移。
+> 若你在 `.env` 改过 `POSTGRES_USER`/`POSTGRES_DB`，把上面命令里的 `sub2api` 换成你的值。
+
