@@ -38,6 +38,7 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+- **发布CI修正**：功能提交9edc7a7bb已推送并核实远端；镜像运行36375045453成功（sha-9edc7a7），安全扫描成功，Go lint成功，但前端CI因ProxyAdBanner空模板触发vue/valid-template-root失败。已改为render返回null的兼容组件并补推；升级应使用修正提交镜像，不能把首轮CI描述为全绿。
 - **2026-09-28 包号与推广清理提交发布**：用户授权提交推送origin/main供手动升级；fetch确认提交前HEAD与origin/main一致。已用Go 1.27.0 Docker对本轮Go文件执行gofmt，124项前端定制关联回归全部通过，diff空白检查通过；此前本机Docker前端及Go embed构建通过。此次推送须核对对应SHA的CI／GHCR结果，不沿用旧CI；Go单测与lint以本次CI为准。生产不操作。
 - **2026-09-28 本机Docker部署完成（优先于下方未部署记录）**：用户授权本机验证；启动原Docker Desktop，代理授权接口200，实际构建进程设置代理，前端构建／3项i18n／类型检查及Go embed编译成功。原项目仅替换应用容器，PostgreSQL和Redis复用，三服务healthy，health=ok；镜像与运行容器一致为d0c2c1d46026d0699ce3e153c4aba9c102e707275e84320990549512265bf5a8。数据库custom_dedicated_accounts表存在；HTTP入口index-B18iYC10.js引用两张包号页面，新首页及用量页资源不含上游仓库推广链接；两类包号接口未登录均401。地址http://127.0.0.1:8080，待用户真实登录／带数据验证，未执行Go单测、不制造调用费用。回退镜像sub2apicust:before-dedicated-20260928-112340，数据库备份output/brand/before-dedicated-20260928-112340.dump已pg_restore目录校验，构建日志output/brand/docker-dedicated-build.log。未提交推送、未操作生产。
 - **2026-09-28 上游推广清理（源码，未部署）**：移除AppHeader管理员GitHub菜单及HomeView／KeyUsageView页脚仓库链接；ProxyAdBanner改为空兼容组件，禁用代理管理／创建账号／编辑账号三处代理购买广告。保留客服配置、OAuth、合规和运维帮助及LICENSE，不动包号未提交工作。新增5项推广回归测试和vue-tsc -b通过；未浏览器验收、未重建镜像、未提交推送或部署。审计边界见CUSTOMIZATIONS。

@@ -5,7 +5,7 @@
 - 上游接缝 frontend/src/components/layout/AppHeader.vue：移除管理员GitHub菜单项，保留客服配置与其他操作，添加中文 [CUSTOM] 标记。
 - 上游接缝 frontend/src/views/HomeView.vue：移除页脚仓库链接及githubUrl常量，保留站点文档与版权，添加 [CUSTOM] 标记。
 - 上游接缝 frontend/src/views/KeyUsageView.vue：移除页脚仓库链接及githubUrl常量，保留站点文档与版权，添加 [CUSTOM] 标记。
-- 上游接缝 frontend/src/components/common/ProxyAdBanner.vue：移除广告模板及无用脚本，保留含 [CUSTOM] 注释的空模板；兼容ProxiesView、CreateAccountModal、EditAccountModal三处调用，不再展示sub2api.io/proxyip广告。
+- 上游接缝 frontend/src/components/common/ProxyAdBanner.vue：移除广告模板，改为含 [CUSTOM] 注释且render返回null的兼容组件（空模板不符合vue/valid-template-root）；兼容ProxiesView、CreateAccountModal、EditAccountModal三处调用，不再展示sub2api.io/proxyip广告。
 - 新增 frontend/src/custom/__tests__/promotion-removal.spec.ts：5项测试覆盖空广告组件、三个入口不含仓库推广、客服／站点文档／版权保留。Vitest及vue-tsc -b通过。
 - 审计范围为frontend/src的Vue／TS外链及推广关键词；frontend/backend源码未命中截图QQ号码，客服来自appStore.contactInfo。保留管理员合规文档、支付帮助、TLS采集工具、GitHub开发者设置和OAuth功能链接，不删LICENSE。未读取运行站点数据库，无法判断自定义首页／菜单／客服配置是否另含推广。
 - 2026-09-28已部署本机验证（详见HANDOFF），用户随后授权与包号一起提交推送；同步后检查四处接缝。生产由用户手动升级。
