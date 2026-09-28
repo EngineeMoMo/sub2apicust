@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-09-28 游客发布最终核验（优先于下方待CI状态）**：功能9a31787de及测试初始化修正fa45b2023均已推送origin/main，ls-remote确认完整代码SHA为fa45b2023c01e5c84084dcbcb32d5a7c5bbe213a。该SHA的CI36424788919全部成功（含Go Unit与Integration、前端、Go lint、shell、release-helpers），安全扫描36424789053成功，GHCR36424788938成功；镜像日志确认latest及sha-fa45b20已发布，digest=sha256:69083ada3ce6432eaee2357e57fa384aa0804d125444cc33998e742c601d1d44。证据output/guest-release-fa45b20。新增SQLite测试按现有用例开启外键并限制单连接，已由本次CI验证；本机此前ea6e3a5ecc3c仍含相同业务源码，后续仅测试及文档变化，不为此重复重建本机。用户备份服务器后可在/sub2api-deploy运行./update.sh sha-fa45b20；生产未操作。179项本机定向回归和全量lint通过，product-samples未跟踪文件保留且未提交。本次收口文档使用[skip ci]，不将其当成另一个镜像版本。
+
 - **游客发布CI修正**：代码9a31787de已推送origin/main，CI36423807298前端／Go lint／shell／release-helpers通过，Go单测仅新增TestPublicPlansAnonymousCatalog失败：SQLite外键开关未启用、ent建表报错；Integration skipped。已参照现有PaymentConfig测试开启PRAGMA并将测试连接池限定单连接，未改运行时代码。安全扫描36423807397成功，首轮镜像仍构建中；需要查修正提交对应CI后再给更新版本，不将首轮描述为全绿。
 
 - **2026-09-28 游客功能提交收口**：用户授权提交推送并更新。本轮范围为游客官网／公开套餐／FAQ／游客控制台预览和响应式修复；product-samples保持未跟踪，不混入本次业务发布，共享交接历史保留。代理fetch确认提交前HEAD与origin/main一致；全量前端lint和179项定向回归通过，新增Go测试仅修正gofmt空格。本机8080已运行本轮响应式修复；Go embed此前Docker编译通过，Go单测与远端镜像发布结果必须查本次代码提交CI，当前不宣称通过。生产仍由用户手动更新。
@@ -122,6 +124,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+- [x] **游客功能发布验证**：代码fa45b2023的CI（含Go单测／集成）、安全扫描、GHCR全绿；使用镜像sha-fa45b20。旧记录「Go单测仍待」已由本条取代。
+- [ ] **游客功能生产更新**：由用户备份后在/sub2api-deploy执行./update.sh sha-fa45b20；生产首页配置、完整登录选购与支付恢复仍需用户验收，不自动下单或部署。
 - [ ] **游客适配复核**：宽屏偏左问题已修并部署8080（ea6e3a5ecc3c），请用户以截图对应窗口刷新确认；不把旧版无溢出检查等同完整视觉验收。
 
 - 魔法配方创作扩展：待用户体验生图／视频配方并确认视觉；需另行授权模型实测（8份共32个设计样例，建议至少64次，尚未执行）。仍需验证系统剪贴板与TXT下载落地；本轮不部署。

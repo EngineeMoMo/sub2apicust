@@ -1,5 +1,18 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-09-28 游客功能已验证版本
+
+代码提交 `fa45b2023c01e5c84084dcbcb32d5a7c5bbe213a` 的 CI（含Go单测／集成）、安全扫描及GHCR构建全部通过，发布镜像 `ghcr.io/engineemomo/sub2apicust:sha-fa45b20`。本次包括公开官网／真实套餐／FAQ、游客控制台及宽屏手机适配；不开放个人数据接口。
+
+服务器由用户操作：先备份数据库与部署配置，并记录当前镜像标签，再执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-fa45b20
+```
+
+更新后检查 `/health`、首页游客入口、`/preview`、`/plans`、`/faq` 和登录回跳；如配置了自定义 `home_content`，其优先级仍保留。未执行生产更新或真实支付验收。后续仅文档提交不生成新镜像，不能替换此处已验证标签。
+
 > [CUSTOM] **Windows本机源码构建**另见 [LOCAL_DOCKER_RUNBOOK.md](LOCAL_DOCKER_RUNBOOK.md)：已记录Docker Hub授权超时与代理预检。本文下方仍是服务器镜像更新流程；不要把本机127.0.0.1:7897代理配置带到生产。
 
 > 速查卡：以后升级 / 回滚照这份敲即可。完整部署、首次平移、数据备份/恢复见 [DEPLOY_CUSTOM.md](DEPLOY_CUSTOM.md)。
