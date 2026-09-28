@@ -38,6 +38,7 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+- **2026-09-28 发布最终核验（优先于此前状态）**：功能9edc7a7bb及CI修正a1b91372e均已推送origin/main；ls-remote核实修正完整SHA a1b91372e55f23f4592ab1f95b9e043c57e4b498。本地全量前端lint、推广5测通过，此前124项关联回归通过。修正SHA的GHCR运行36375537015成功，日志确认sha-a1b9137及latest已发布，manifest digest 076905e07d5966cfc9c4f2cabdce4c1c0b3d8d4adee7cfed4368c78d0f2f10e2；安全扫描36375537029成功。CI36375537042前端、golangci-lint、shell和release-helpers成功，最后查询Go Unit tests仍in_progress、Integration tests pending，不能宣称全绿。建议待本次CI成功后，用户备份并在/sub2api-deploy执行 ./update.sh sha-a1b9137；生产未操作。
 - **发布CI修正**：功能提交9edc7a7bb已推送并核实远端；镜像运行36375045453成功（sha-9edc7a7），安全扫描成功，Go lint成功，但前端CI因ProxyAdBanner空模板触发vue/valid-template-root失败。已改为render返回null的兼容组件并补推；升级应使用修正提交镜像，不能把首轮CI描述为全绿。
 - **2026-09-28 包号与推广清理提交发布**：用户授权提交推送origin/main供手动升级；fetch确认提交前HEAD与origin/main一致。已用Go 1.27.0 Docker对本轮Go文件执行gofmt，124项前端定制关联回归全部通过，diff空白检查通过；此前本机Docker前端及Go embed构建通过。此次推送须核对对应SHA的CI／GHCR结果，不沿用旧CI；Go单测与lint以本次CI为准。生产不操作。
 - **2026-09-28 本机Docker部署完成（优先于下方未部署记录）**：用户授权本机验证；启动原Docker Desktop，代理授权接口200，实际构建进程设置代理，前端构建／3项i18n／类型检查及Go embed编译成功。原项目仅替换应用容器，PostgreSQL和Redis复用，三服务healthy，health=ok；镜像与运行容器一致为d0c2c1d46026d0699ce3e153c4aba9c102e707275e84320990549512265bf5a8。数据库custom_dedicated_accounts表存在；HTTP入口index-B18iYC10.js引用两张包号页面，新首页及用量页资源不含上游仓库推广链接；两类包号接口未登录均401。地址http://127.0.0.1:8080，待用户真实登录／带数据验证，未执行Go单测、不制造调用费用。回退镜像sub2apicust:before-dedicated-20260928-112340，数据库备份output/brand/before-dedicated-20260928-112340.dump已pg_restore目录校验，构建日志output/brand/docker-dedicated-build.log。未提交推送、未操作生产。
@@ -97,6 +98,7 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+- [ ] 修正版镜像sha-a1b9137已发布，等待CI36375537042后端单测／集成测试完成；仅此项仍未确认。生产升级仍由用户手动备份执行，不沿用首轮失败CI或旧镜像标签。
 - [ ] 本次包号发布：核对功能提交对应CI和GHCR成功后提供固定sha镜像标签；生产由用户备份并手动升级，真实账号联调仍待。
 - [ ] 本机新版已部署：用户验证包号管理／我的专属账号及推广清理；此前“授权部署后验收”现进入验收阶段。真实账号隔离、额度采样、续期撤销仍待联调；Go单测仍待执行。
 - [ ] 推广清理：授权部署后验收用户菜单、首页／用量页脚及三处代理选择区域；当前仅源码变化，运行站点未更新。
