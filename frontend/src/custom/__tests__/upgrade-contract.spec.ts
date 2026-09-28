@@ -12,6 +12,7 @@ import { resolve } from 'node:path'
 
 const theme = readFileSync(resolve(process.cwd(), 'src/custom/theme.css'), 'utf8')
 import brandHome from '@/custom/views/BrandHomeView.vue?raw'
+import publicLayout from '@/custom/components/PublicLayout.vue?raw'
 import { customRoutes } from '@/custom/routes'
 
 describe('雾钛青与上游布局的升级契约', () => {
@@ -52,13 +53,13 @@ describe('雾钛青与上游布局的升级契约', () => {
     }
   })
 
-  it('沿用原主题和路由接线，不抢占根首页', () => {
+  it('沿用原主题与根路由，公开首页复用游客布局', () => {
     expect(main.indexOf("import './custom/theme.css'")).toBeGreaterThan(main.indexOf("import './style.css'"))
     expect(router).toContain('...customRoutes')
     const brandRoute = customRoutes.find(route => route.path === '/brand')
     expect(brandRoute?.meta?.requiresAuth).toBe(false)
     expect(customRoutes.some(route => route.path === '/')).toBe(false)
-    expect(brandHome).toContain("appStore.fetchPublicSettings()")
+    expect(publicLayout).toContain("app.fetchPublicSettings()")
     expect(brandHome).toContain('to="/keys"')
     expect(brandHome).toContain('to="/usage"')
   })

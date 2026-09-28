@@ -296,6 +296,62 @@ async function mountSubscriptionPlanList(planCount: number) {
   return wrapper
 }
 
+// [CUSTOM] 游客选择只恢复套餐，不能自动创建订单或覆盖续费。
+describe('游客套餐回跳', () => {
+  async function mountGuest(query: Record<string, unknown>, enabled = true) {
+    vi.useRealTimers()
+    routeState.path = '/purchase'
+    routeState.query = query
+    window.localStorage.clear()
+    appStoreState.setPublicSettings({ subscription_enabled: enabled })
+    createOrder.mockReset()
+    showError.mockReset()
+    getCheckoutInfo.mockResolvedValue(checkoutInfoWithPlansFixture())
+    const wrapper = shallowMount(PaymentView, { global: { stubs: { AppLayout: { template: '<div><slot /></div>' }, Teleport: true, Transition: false } } })
+    await flushPromises()
+    return wrapper
+  }
+
+  it('按确切ID选中套餐，不下单', async () => {
+    const wrapper = await mountGuest({ tab: 'subscription', plan: '7' })
+    expect(wrapper.findComponent(SubscriptionPlanCard).exists()).toBe(false)
+    expect(wrapper.text()).toContain('Starter')
+    expect(showError).not.toHaveBeenCalled()
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it.each(['999', '0', '1e3', ['7']])('失效或非法ID %s 提示重新选择', async plan => {
+    const wrapper = await mountGuest({ tab: 'subscription', plan })
+    expect(showError).toHaveBeenCalledWith('所选套餐已下架或无效，请重新选择。')
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('续费分组优先于游客的无效ID', async () => {
+    const wrapper = await mountGuest({ tab: 'subscription', group: '3', plan: '999' })
+    expect(wrapper.text()).toContain('Starter')
+    expect(showError).not.toHaveBeenCalled()
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('恢复支付参数存在时不处理游客选择', async () => {
+    const wrapper = await mountGuest({ tab: 'subscription', plan: '999', resume_token: 'existing' })
+    expect(showError).not.toHaveBeenCalled()
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('订阅关闭时不恢复套餐', async () => {
+    const wrapper = await mountGuest({ tab: 'subscription', plan: '7' }, false)
+    expect(wrapper.text()).not.toContain('Starter')
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+    appStoreState.setPublicSettings(undefined)
+  })
+})
+
 describe('PaymentView help text', () => {
   beforeEach(() => {
     vi.useRealTimers()

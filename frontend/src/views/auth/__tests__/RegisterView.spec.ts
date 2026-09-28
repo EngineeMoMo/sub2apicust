@@ -1,6 +1,8 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import RegisterView from '@/views/auth/RegisterView.vue'
+// [CUSTOM] 验证注册保留游客选购目标。
+const guestRoute = vi.hoisted(() => ({ query: {} as Record<string, unknown> }))
 
 const {
   getPublicSettingsMock,
@@ -42,7 +44,7 @@ const publicSettings = {
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: pushMock }),
-  useRoute: () => ({ query: {} })
+  useRoute: () => guestRoute
 }))
 
 vi.mock('vue-i18n', () => ({
@@ -97,6 +99,7 @@ function mountRegister() {
 
 describe('RegisterView', () => {
   beforeEach(() => {
+    guestRoute.query = {}
     getPublicSettingsMock.mockReset()
     registerMock.mockReset()
     showErrorMock.mockReset()
@@ -206,6 +209,26 @@ describe('RegisterView', () => {
     })
     expect(pushMock).toHaveBeenCalledWith('/email-verify')
     expect(registerMock).not.toHaveBeenCalled()
+  })
+
+  // [CUSTOM] 普通注册和邮件验证都保留安全的站内目标。
+  it.each([false, true])('preserves the selected plan when email verification is %s', async verifyEmail => {
+    guestRoute.query = { redirect: '/purchase?tab=subscription&plan=7' }
+    getPublicSettingsMock.mockResolvedValueOnce({ ...publicSettings, turnstile_enabled: false, email_verify_enabled: verifyEmail })
+    const wrapper = mountRegister()
+    await flushPromises()
+    await wrapper.get('#email').setValue('user@example.com')
+    await wrapper.get('#password').setValue('secret-123')
+    await wrapper.get('#confirmPassword').setValue('secret-123')
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+    if (verifyEmail) {
+      expect(JSON.parse(sessionStorage.getItem('register_data')!).pending_redirect).toBe('/purchase?tab=subscription&plan=7')
+      expect(pushMock).toHaveBeenCalledWith('/email-verify')
+    } else {
+      expect(pushMock).toHaveBeenCalledWith('/purchase?tab=subscription&plan=7')
+    }
+    wrapper.unmount()
   })
 
   it('keeps the optional affiliate invitation field before Turnstile', async () => {

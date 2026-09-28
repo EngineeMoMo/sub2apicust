@@ -15,6 +15,8 @@ import { resolveCompletedSetupRedirectPath } from './setupRedirect'
 import { resolveRouteDocumentTitle } from './title'
 // [CUSTOM] 新增页面的路由集中在 custom/routes.ts, 见 CUSTOMIZATIONS.md
 import { customRoutes } from '@/custom/routes'
+// [CUSTOM] 游客预览子页同样受后台模式限制，不放开真实控制台路由。
+import { isPreviewPath } from '@/custom/guest/preview'
 
 /**
  * Route definitions with lazy loading
@@ -823,6 +825,17 @@ router.beforeEach(async (to, _from, next) => {
 
   // If route doesn't require auth, allow access
   if (!requiresAuth) {
+    // [CUSTOM] 游客官网等待公开设置，避免冷启动绕过后台模式。
+    if (['/home', '/brand', '/plans', '/faq'].includes(to.path) || isPreviewPath(to.path)) {
+      if (!appStore.publicSettingsLoaded) {
+        try { await appStore.fetchPublicSettings() }
+        catch (error) { console.warn('Failed to load public settings for guest page', error) }
+      }
+      if (appStore.backendModeEnabled && !authStore.isAdmin) {
+        next('/login')
+        return
+      }
+    }
     // If already authenticated and trying to access login/register, redirect to appropriate dashboard
     if (authStore.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
       // In backend mode, non-admin users should NOT be redirected away from login

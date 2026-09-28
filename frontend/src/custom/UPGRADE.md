@@ -2,11 +2,20 @@
 
 本文件只描述维护操作，不授权提交、推送或部署。定制降低冲突面，但不保证未来零冲突。
 
+**最新：2026-09-28游客适配修正**：8080镜像ea6e3a5ecc3c，三服务健康，证据output/preview-responsive-20260928；theme.css游客工作区使用满宽和对称弹性边距，不能恢复1280px上限。升级时检查320／390／768／1024／1440／2031／2560宽度下的左右留白、顶栏操作和字段排列，不只检查横向溢出。
+
+**最新运行状态（2026-09-28游客控制台预览）**：8080已按后续用户授权运行ecb3961845e8；入口index-C4UWqsIx.js和GuestPreviewView-D-VurzQx.js确认新预览已打包。三服务健康，业务计数／设置摘要／数据卷保持，浏览器入口和登录取消／真实套餐通过；证据output/preview-20260928-175007，回退sub2apicust:before-preview-20260928-175007。此条优先于下方旧镜像与未部署描述，生产未改。
+
+**最新运行状态（2026-09-28游客官网）**：本机8080运行镜像`e7a582285cbd`，入口`index-C6kd8wBQ.js`，游客套餐／FAQ真实HTTP和浏览器通过；下方旧镜像记录均为历史。Go embed编译通过，Go单测及完整支付联调仍待。回退镜像`sub2apicust:before-guest-20260928-171257`，数据库备份及验收证据在output/guest-20260928-171257。生产未改。
+
 ## 展示层边界
+
+- 2026-09-28新增游客控制台预览：保留首页主CTA、公共导航、custom/routes的 `/preview/:section?` 及router/index.ts后台模式的isPreviewPath接缝。预览不挂载真实账户布局；公开套餐／FAQ保留embedded支持。回归guest-preview.spec.ts与feature-access.spec.ts。179项定向测试及构建通过，本轮新预览仅4175验收，尚未进入上方8080运行镜像。
 
 - 推广清理：保留AppHeader、HomeView、KeyUsageView的 [CUSTOM] 移除标记；ProxyAdBanner保持空兼容组件。回归运行 pnpm exec vitest run src/custom/__tests__/promotion-removal.spec.ts；不要误删客服配置、GitHub OAuth、合规及运维帮助或LICENSE。
 
-- `/brand` 独立公开入口，不抢占 `/`；后台模式仍受上游路由守卫限制。
+- 2026-09-28游客官网：`/` 仍重定向 `/home`，HomeView在自定义内容为空、正常站点模式下复用BrandHomeView；`/brand` 同组件，另有 `/plans`／`/faq`。此条优先于此前“独立品牌页不改变首页”的历史约定。后台模式仍限制公开入口，详见 `GUEST_PORTAL.md`。
+- 升级核对新增公共目录只读白名单、订阅／支付开关、游客登录取消、注册与邮箱回跳、`plan` 不覆盖支付恢复／`group`续费；不要公开原结账或订单接口。上游接缝逐处登记在根CUSTOMIZATIONS的2026-09-28游客章节。
 - `brand/` 管理中英文案；`components/` 管理品牌面板和主动主题切换；`assets/mofa-mark.webp` 是原批准透明 M 位图。
 - 不复制登录业务、控制台页面、API、权限或数据模型。全部视觉规则在 `theme.css`，不重染上游语义 teal 分类色。
 - 主题按钮挂载只读取当前主题，用户点击才保存；默认深色仍由上游 main.ts 现有定制初始化。

@@ -1,61 +1,40 @@
 <template>
-  <div class="mofa-brand-home">
-    <header class="mofa-brand-mast">
-      <router-link to="/brand" class="mofa-brand-lockup">
-        <img :src="siteLogo" :alt="siteName" width="42" height="42">
-        <span>{{ siteName }}<small>MODEL ACCESS / WORKSPACE</small></span>
-      </router-link>
-      <nav class="mofa-brand-nav" :aria-label="copy.home">
-        <BrandThemeToggle />
-        <router-link :to="authStore.isAuthenticated ? '/dashboard' : '/login'" class="btn btn-secondary">
-          {{ authStore.isAuthenticated ? copy.workspace : copy.login }}
-        </router-link>
-      </nav>
-    </header>
-    <main class="mofa-brand-main">
-      <BrandPanel :site-name="siteName">
-        <template #actions>
-          <router-link to="/dashboard" class="btn btn-primary">{{ copy.workspace }}<Icon name="arrowRight" size="sm" /></router-link>
-          <router-link to="/keys" class="btn btn-secondary">{{ copy.accessAction }}</router-link>
-        </template>
-      </BrandPanel>
-      <section class="mofa-products" :aria-label="copy.sectionTitle">
-        <div class="mofa-products-heading"><h2>{{ copy.sectionTitle }}</h2><p>{{ copy.sectionNote }}</p></div>
-        <div class="mofa-product-grid">
-          <article class="mofa-offering">
-            <span class="mofa-offering-number">01 / ACCESS</span>
-            <h3>{{ copy.accessTitle }}</h3>
-            <p>{{ copy.accessDescription }}</p>
-            <router-link to="/keys">{{ copy.accessAction }}<Icon name="arrowRight" size="sm" /></router-link>
-          </article>
-          <article class="mofa-offering">
-            <span class="mofa-offering-number">02 / USAGE</span>
-            <h3>{{ copy.usageTitle }}</h3>
-            <p>{{ copy.usageDescription }}</p>
-            <router-link to="/usage">{{ copy.usageAction }}<Icon name="arrowRight" size="sm" /></router-link>
-          </article>
-        </div>
-      </section>
-    </main>
-    <footer class="mofa-brand-footer"><span>© {{ new Date().getFullYear() }} {{ siteName }}</span><span>{{ copy.footer }}</span></footer>
-  </div>
+  <PublicLayout>
+    <h1 class="sr-only">{{ app.siteName }} · 多模型 API 服务</h1>
+    <BrandPanel :site-name="app.siteName">
+      <template #actions>
+        <router-link to="/plans" class="btn btn-primary">先看看订阅套餐</router-link>
+        <router-link to="/preview" class="btn btn-secondary">游客预览控制台</router-link>
+        <router-link to="/faq" class="btn btn-secondary">了解如何使用</router-link>
+      </template>
+    </BrandPanel>
+    <section class="mofa-public-section" aria-labelledby="access-title">
+      <h2 id="access-title">先了解服务，再决定如何接入</h2>
+      <p class="mofa-public-lead">这里提供多模型 API 接入服务。你可以先比较套餐、阅读接入说明；购买、充值和管理 API Key 时再登录。</p>
+      <div class="mofa-public-columns">
+        <article>
+          <h3>接入你的工具</h3>
+          <p>登录后创建 API Key，在支持相应接口的客户端中配置服务地址与密钥。模型和可用范围以实际套餐及控制台为准。</p>
+          <GuestAction to="/keys">管理 API Key</GuestAction>
+        </article>
+        <article>
+          <h3>按需使用与管理</h3>
+          <p>在账户中查看用量、余额和订单。余额充值与订阅套餐是不同的购买方式，购买前请先阅读套餐权益。</p>
+          <div class="mofa-public-actions">
+            <GuestAction to="/usage">查看用量</GuestAction>
+            <GuestAction v-if="app.cachedPublicSettings?.payment_enabled" to="/purchase" message="充值需要关联你的账户。请先登录，再确认金额与支付方式。">账户充值</GuestAction>
+            <GuestAction to="/orders">我的订单</GuestAction>
+          </div>
+        </article>
+      </div>
+    </section>
+  </PublicLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
-import { useAuthStore } from '@/stores/auth'
-import { sanitizeUrl } from '@/utils/url'
-import Icon from '@/components/icons/Icon.vue'
 import BrandPanel from '@/custom/components/BrandPanel.vue'
-import BrandThemeToggle from '@/custom/components/BrandThemeToggle.vue'
-import { useBrandCopy } from '@/custom/brand/copy'
-
-const appStore = useAppStore()
-const authStore = useAuthStore()
-const copy = useBrandCopy()
-const siteName = computed(() => appStore.siteName || 'Sub2API')
-const siteLogo = computed(() => sanitizeUrl(appStore.siteLogo || '', { allowRelative: true, allowDataUrl: true }) || '/logo.svg')
-
-onMounted(() => appStore.fetchPublicSettings())
+import PublicLayout from '@/custom/components/PublicLayout.vue'
+import GuestAction from '@/custom/components/GuestAction.vue'
+const app = useAppStore()
 </script>

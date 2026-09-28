@@ -2,8 +2,28 @@
 // router/index.ts 只在 404 兜底前 `...customRoutes` 展开一次 —— 那是唯一接缝。
 // 往这里加你自己的页面即可（component 用懒加载，指向 custom/views/ 下的 .vue）。
 import type { RouteRecordRaw } from 'vue-router'
+import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
+  {
+    path: '/preview/:section?',
+    name: 'GuestPreview',
+    component: () => import('@/custom/views/GuestPreviewView.vue'),
+    meta: { title: '游客预览控制台', requiresAuth: false },
+    beforeEnter: to => !to.params.section || previewSections.some(item => item.id === to.params.section) ? true : '/preview'
+  },
+  {
+    path: '/plans',
+    name: 'PublicPlans',
+    component: () => import('@/custom/views/PublicPlansView.vue'),
+    meta: { title: '订阅套餐', requiresAuth: false }
+  },
+  {
+    path: '/faq',
+    name: 'PublicFaq',
+    component: () => import('@/custom/views/PublicFaqView.vue'),
+    meta: { title: '常见问题', requiresAuth: false }
+  },
   {
     path: '/dedicated-accounts',
     name: 'DedicatedAccounts',

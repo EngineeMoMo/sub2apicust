@@ -52,6 +52,8 @@ func RegisterPaymentRoutes(
 	// persisted-state compatibility path for staggered upgrades.
 	public := v1.Group("/payment/public")
 	{
+		// [CUSTOM] 游客套餐目录仅返回展示字段，不开放结账或账户接口。
+		public.GET("/plans", paymentHandler.GetPublicPlans(settingService))
 		public.POST("/orders/verify", paymentHandler.VerifyOrderPublic)
 		public.POST("/orders/resolve", paymentHandler.ResolveOrderPublicByResumeToken)
 	}

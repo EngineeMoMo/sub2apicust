@@ -260,6 +260,8 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] 游客套餐选择只恢复页面，不触发下单。
+import { selectedPublicPlanID } from '@/custom/guest/navigation'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
@@ -1159,7 +1161,16 @@ onMounted(async () => {
         removeRecoverySnapshot()
       }
     }
+    // [CUSTOM] 在恢复流程清理查询参数前保存优先级。
+    const hasPaymentRecovery = paymentPhase.value !== 'select' || hasWechatResumeQuery(route.query) || !!route.query.resume_token || !!route.query.wechat_resume_token
     await resumeWechatPaymentFromQuery()
+    // [CUSTOM] 支付恢复和既有续费参数优先于游客套餐参数。
+    if (!hasPaymentRecovery && !route.query.group && route.query.plan !== undefined && subscriptionEnabled.value) {
+      activeTab.value = 'subscription'
+      const planID = selectedPublicPlanID(route.query.plan)
+      selectedPlan.value = checkout.value.plans.find(plan => plan.id === planID) ?? null
+      if (!selectedPlan.value) appStore.showError('所选套餐已下架或无效，请重新选择。')
+    }
     // balance_disabled → the tabs watcher above moves activeTab to the subscription tab (when enabled).
     // Handle renewal navigation: ?tab=subscription&group=123 (ignored when subscriptions are disabled)
     if (route.query.tab === 'subscription' && subscriptionEnabled.value) {

@@ -112,12 +112,40 @@ describe('feature route guard', () => {
   })
 
   beforeEach(() => {
+    appStore.backendModeEnabled = false
     authStore.isAuthenticated = true
     authStore.isAdmin = false
     authStore.isSimpleMode = false
     appStore.publicSettingsLoaded = false
     appStore.cachedPublicSettings = null
     appStore.fetchPublicSettings.mockReset()
+  })
+
+  // [CUSTOM] 使用实际注册的路由守卫验证游客入口。
+  it.each(['/home', '/brand', '/plans', '/faq', '/preview', '/preview/keys', '/preview/plans', '/preview/faq'])('匿名可访问 %s', async path => {
+    authStore.isAuthenticated = false
+    appStore.publicSettingsLoaded = true
+    const { navigation, next } = runGuard({ requiresAuth: false }, path)
+    await navigation
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it.each(['/home', '/brand', '/plans', '/faq', '/preview', '/preview/keys', '/preview/plans', '/preview/faq'])('冷启动确认后台模式后拦截 %s', async path => {
+    authStore.isAuthenticated = false
+    appStore.fetchPublicSettings.mockImplementation(async () => {
+      appStore.backendModeEnabled = true
+      appStore.publicSettingsLoaded = true
+    })
+    const { navigation, next } = runGuard({ requiresAuth: false }, path)
+    await navigation
+    expect(next).toHaveBeenCalledWith('/login')
+  })
+
+  it.each(['/keys', '/usage', '/orders', '/purchase'])('个人页 %s 仍要求登录', async path => {
+    authStore.isAuthenticated = false
+    const { navigation, next } = runGuard({}, path)
+    await navigation
+    expect(next).toHaveBeenCalledWith({ path: '/login', query: { redirect: path } })
   })
 
   it('waits for the first public-settings request before deciding payment access', async () => {

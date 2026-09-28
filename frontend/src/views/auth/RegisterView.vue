@@ -354,7 +354,7 @@
       <p class="text-gray-500 dark:text-dark-400">
         {{ t('auth.alreadyHaveAccount') }}
         <router-link
-          to="/login"
+          :to="{ path: '/login', query: { redirect: safeGuestRedirect(route.query.redirect) } }"
           class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
         >
           {{ t('auth.signIn') }}
@@ -365,6 +365,8 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] 游客选购目标贯穿注册和邮箱验证。
+import { safeGuestRedirect } from '@/custom/guest/navigation'
 import { computed, ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -1058,6 +1060,8 @@ async function handleRegister(): Promise<void> {
       sessionStorage.setItem(
         'register_data',
         JSON.stringify({
+          // [CUSTOM] 复用邮箱验证已有的站内回跳字段。
+          pending_redirect: typeof route.query.redirect === 'string' ? safeGuestRedirect(route.query.redirect) : undefined,
           email: formData.email,
           password: formData.password,
           turnstile_token:
@@ -1093,7 +1097,8 @@ async function handleRegister(): Promise<void> {
     appStore.showSuccess(t('auth.accountCreatedSuccess', { siteName: siteName.value }))
 
     // Redirect to dashboard
-    await router.push('/dashboard')
+    // [CUSTOM] 注册后回到已选套餐，仍由用户确认下单。
+    await router.push(safeGuestRedirect(route.query.redirect))
   } catch (error: unknown) {
     // Handle registration error
     errorMessage.value = buildRegistrationErrorMessage(error, t('auth.registrationFailed'))

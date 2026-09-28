@@ -1,5 +1,49 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+### 魔法配方创作扩展（2026-09-28）
+- 新增独立样品07-image-prompt.md、08-video-prompt.md；site目录接入creative分类、媒体字段默认值与对应工具引导，按钮明确仅整理模板。无上游业务文件修改、无新依赖或模型接口。
+- 2026-09-28创作配方更新：新增07-image-prompt.md与08-video-prompt.md，现为工作3份、大学3份、创作2份。主按钮改为“整理并生成提示词”，明确本地模板组装、不调用模型；结果与教程按文字／生图／视频分别引导。构建与语法检查完成，30项core／DOM测试全通过；真实浏览器验证创作筛选2项、两份虚构示例及正确目标工具提示，桌面和390px无外层横向溢出。本机4178服务已重启（session75587），用户旧页未刷新。未调用模型、未验证媒体效果、未提交推送或部署生产；真实系统剪贴板与下载落地仍待验证。
+
+## 2026-09-28 游客控制台预览入口
+
+- **响应式修正**：只改theme.css游客选择器：去掉main的1280px上限、弹性对称内边距、字段等宽网格和480px双列、手机顶栏避免操作另起一行；不改认证／账户数据逻辑。七档320–2560px几何检查、65项定向回归通过，已部署8080镜像ea6e3a5ecc3c。证据output/preview-responsive-20260928；无新增上游接缝。
+
+- **本机部署补充**：用户后续授权后，8080已运行ecb3961845e8，前端及Go embed构建通过、三服务healthy。新预览入口及真实套餐／登录提示取消经浏览器验证；业务计数、设置摘要和原数据卷不变。备份／构建／验证记录见output/preview-20260928-175007。此条替代下方本轮未部署状态；未提交推送或部署生产。
+
+- 新增 `frontend/src/custom/guest/preview.ts`、`custom/views/GuestPreviewView.vue`、`custom/__tests__/guest-preview.spec.ts`；首页主CTA和PublicLayout导航新增 `/preview`，custom/routes注册可选功能子路由。独立只读布局不导入真实账户页面；公共套餐和FAQ支持embedded以保留预览侧栏。
+- 上游接缝 `frontend/src/router/index.ts` 的 `[CUSTOM]` 公共入口后台模式检查加入isPreviewPath；`router/__tests__/feature-access.spec.ts`补充预览子页访问与后台模式拦截。未开放真实账户路由。所有新增样式仅在custom/theme.css。
+- 本轮179项定向测试、3项国际化测试、类型检查、相关ESLint和生产构建通过；4175浏览器实测入口／登录取消／真实套餐／FAQ搜索及响应式。新预览尚未同步8080 Docker镜像，未提交推送／生产部署。
+
+## 2026-09-28 游客官网、公开套餐与FAQ
+
+- **本机部署更新**：2026-09-28用户授权Docker部署，运行镜像`e7a582285cbd`，前端及Go embed编译通过，三服务健康。公开目录读取既有1个在售套餐，4个个人接口匿名401；浏览器套餐→登录携带目标及FAQ搜索通过。下方“后端未编译、8080尚未更新”为源码实现阶段历史状态；Go单测仍未运行，完整登录购买待验收。证据output/guest-20260928-171257，旧镜像和594458字节数据库备份保留。仅内置自动同步的Codex版本键变化，其余279项设置逐项一致。未提交推送或生产部署。
+
+- 新增后端 `backend/internal/handler/custom_public_plans.go`／`custom_public_plans_test.go`：只读字段白名单接口、在售过滤、支付／订阅／后台模式边界；后端本机未编译未运行测试，等待本轮未来提交CI。
+- 新增前端 `custom/guest/{api,navigation,faq}.ts`、`custom/components/{PublicLayout,GuestAction}.vue`、`custom/views/{PublicPlansView,PublicFaqView}.vue`、`custom/__tests__/guest*.spec.ts` 和 `custom/GUEST_PORTAL.md`；修改已有BrandHomeView、custom/routes.ts、theme.css及升级契约。FAQ四类十二题，不增加数据库或管理后台。
+- 上游接缝逐处登记（均有 `[CUSTOM]` 标记）：
+  - `backend/internal/server/routes/payment.go`：仅注册 `GET /payment/public/plans`，原认证接口不变。
+  - `frontend/src/router/index.ts`：四个公共页面冷启动等待设置，并保留后台模式限制。
+  - `frontend/src/views/HomeView.vue`：自定义内容优先，正常站点默认游客官网；紧凑首页不再覆盖此入口。
+  - `frontend/src/components/layout/AppSidebar.vue`：个人区新增公开FAQ入口。
+  - `frontend/src/views/user/PaymentView.vue`：按 `plan` 恢复套餐，支付恢复和原 `group` 续费优先；不自动下单。
+  - `frontend/src/views/auth/LoginView.vue`：三种登录成功回跳使用站内校验，注册入口携带返回目标。
+  - `frontend/src/views/auth/RegisterView.vue`：注册／返回登录／邮箱验证保存选购目标；无目标时保持原行为。
+  - `frontend/src/views/auth/EmailVerifyView.vue`：邮箱验证完成及返回注册采用站内目标。
+  - 相关上游测试：`views/__tests__/HomeView.compact.spec.ts`、`router/__tests__/feature-access.spec.ts`、`views/user/__tests__/PaymentView.spec.ts`、`views/auth/__tests__/RegisterView.spec.ts`，分别覆盖首页优先级、真实守卫、套餐回跳、注册目标保留。
+- 验证：163项定向前端测试、类型检查、相关ESLint及前端构建通过；后端新增测试未运行，真实套餐和支付联调待更新后端后验收。Vite 4175预览不等于8080新版镜像；未提交／推送／部署，未修改品牌配置及其他任务样品。
+
+## 2026-09-28 魔法配方内容样品
+
+- 使用教程：site/template.html、app.js、theme.css、ui.test.cjs及README／DESIGN新增四步折叠教程、顶部／结果入口与常见问题；页面不调用模型，教程往返不清除材料。27项回归通过，真实浏览器确认往返和390px布局，无上游业务文件改动。
+
+- 页面内确认框：site/app.js、template.html、theme.css、ui.test.cjs及README／DESIGN更新；覆盖／清空不再使用原生confirm，支持模态焦点、取消及跨配方保护。24项核心／DOM测试通过，真实浏览器验证取消与键盘、390px浅色布局。只作用于独立原型，无上游业务接缝；未触碰并行的中转站业务修改。
+
+- 独立交互原型product-samples/magic-recipes/site/：catalog.mjs字段与示例，build.mjs从上层Markdown生成单页并嵌入既有Logo，core.cjs／app.js提供纯本地生成和交互，template.html／theme.css仅影响独立页面，serve.mjs仅绑定127.0.0.1:4178；package.json无新增依赖。index.html是gitignored构建产物。core.test.cjs／ui.test.cjs共19项通过，后者复用frontend的jsdom。没有修改上游业务文件或原站主题；复制系统落地、TXT真实下载及模型实测仍待，不宣称已上线。PRODUCT.md／DESIGN.md记录原型边界，不替代母品牌决策或用户最终技术选型。
+
+- 大学扩展（用户已排除其他学段）：product-samples/magic-recipes/{04-student-understand,05-student-mistake-review,06-student-revision-plan}.md现为0.2大学论文精读、编程实验复盘、期末复习；README同步。原低龄内容已替换，工作3份不变。只读内容草稿，无业务接缝；六份结构／链接和大学例子数值检查通过，未执行Python或外部模型／学生实测，不宣称提分或所有专业适配。
+
+- 新增product-samples/magic-recipes/{README,01-meeting-actions,02-requirements-acceptance,03-error-triage}.md：母品牌第三产品的内容评审样品，无运行时接缝、无依赖、无配置或上游业务代码改动。所有参考答案为人工编写，未外部模型实测；结构与链接检查不等于效果验证。不自动发布、不执行用户任务、不托管密钥。
+
 ## 2026-09-28 上游推广清理
 
 - 上游接缝 frontend/src/components/layout/AppHeader.vue：移除管理员GitHub菜单项，保留客服配置与其他操作，添加中文 [CUSTOM] 标记。

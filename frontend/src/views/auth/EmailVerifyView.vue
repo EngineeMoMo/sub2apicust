@@ -178,6 +178,8 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] 注册完成后的返回地址限于站内。
+import { safeGuestRedirect } from '@/custom/guest/navigation'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -743,7 +745,7 @@ async function handleVerify(): Promise<void> {
     appStore.showSuccess(t('auth.accountCreatedSuccess', { siteName: siteName.value }))
 
     // Redirect to dashboard
-    await router.push(pendingRedirect.value || '/dashboard')
+    await router.push(safeGuestRedirect(pendingRedirect.value))
   } catch (error: unknown) {
     errorMessage.value = buildRegistrationErrorMessage(error, t('auth.verifyFailed'))
 
@@ -763,7 +765,8 @@ function handleBack(): void {
   sessionStorage.removeItem('register_data')
 
   // Go back to registration
-  router.push('/register')
+  // [CUSTOM] 返回注册也保留选购目标。
+  router.push({ path: '/register', query: { redirect: safeGuestRedirect(pendingRedirect.value) } })
 }
 
 function buildEmailSuffixNotAllowedMessage(): string {

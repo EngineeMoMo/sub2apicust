@@ -12,6 +12,9 @@
     <div v-else v-html="homeContent"></div>
   </div>
 
+  <!-- [CUSTOM] 保留自定义首页优先级，正常站点默认提供游客官网。 -->
+  <BrandHomeView v-else-if="!appStore.backendModeEnabled" />
+
   <!-- Compact Home Page -->
   <div
     v-else-if="compactHomeEnabled"
@@ -487,6 +490,8 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] 游客官网入口。
+import BrandHomeView from '@/custom/views/BrandHomeView.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'

@@ -5,6 +5,7 @@ import HomeView from '../HomeView.vue'
 
 const { appStore, authStore } = vi.hoisted(() => ({
   appStore: {
+    backendModeEnabled: true,
     cachedPublicSettings: {} as Record<string, unknown>,
     siteName: 'Fallback site',
     siteLogo: '',
@@ -47,6 +48,7 @@ function mountHome(settings: Record<string, unknown> = {}) {
   return mount(HomeView, {
     global: {
       stubs: {
+        BrandHomeView: { template: '<div data-testid="guest-home" />' },
         RouterLink: RouterLinkStub,
         LocaleSwitcher: { template: '<div data-testid="locale-switcher" />' },
         Icon: { template: '<span data-testid="icon" />' },
@@ -68,6 +70,7 @@ function modelPlazaDestination(wrapper: ReturnType<typeof mountHome>) {
 
 describe('HomeView compact mode', () => {
   beforeEach(() => {
+    appStore.backendModeEnabled = true
     authStore.isAuthenticated = false
     authStore.isAdmin = false
     authStore.user = null
@@ -77,7 +80,14 @@ describe('HomeView compact mode', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList)
   })
 
+  // [CUSTOM] 正常模式的官网入口覆盖旧紧凑模式，但自定义首页优先。
+  it('renders the guest home in normal mode', () => {
+    appStore.backendModeEnabled = false
+    expect(mountHome({ compact_home_enabled: true }).find('[data-testid="guest-home"]').exists()).toBe(true)
+  })
+
   it('renders custom HTML ahead of compact mode', () => {
+    appStore.backendModeEnabled = false
     const wrapper = mountHome({
       compact_home_enabled: true,
       home_content: '<section id="custom-home">Custom home</section>',
