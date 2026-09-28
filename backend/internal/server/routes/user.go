@@ -26,6 +26,9 @@ func RegisterUserRoutes(
 	authenticated.Use(gin.HandlerFunc(auditLog))
 	{
 		// 用户接口
+		// [CUSTOM] 只读包号接口沿用用户认证及重查询限流。
+		authenticated.GET("/dedicated-accounts", panelRateLimiter.Heavy(), h.CustomDedicated.UserList)
+		authenticated.GET("/dedicated-accounts/:id/usage", panelRateLimiter.Heavy(), h.CustomDedicated.UserUsage)
 		user := authenticated.Group("/user")
 		{
 			user.GET("/profile", h.User.GetProfile)

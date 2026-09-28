@@ -164,6 +164,12 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			return
 		}
 		ctx := context.WithValue(c.Request.Context(), ctxkey.UserID, apiKey.User.ID)
+		// [CUSTOM] 记录原始用户/分组，备用路由不能绕过包号归属与有效期。
+		ctx, dedicatedErr := apiKeyService.CustomDedicatedContext(ctx, apiKey)
+		if dedicatedErr != nil {
+			AbortWithError(c, 403, "DEDICATED_ACCOUNT_UNAVAILABLE", "专属账号不可用，请联系管理员")
+			return
+		}
 		c.Request = c.Request.WithContext(ctx)
 		billingInfoRequest := c.Request.URL.Path == "/v1/sub2api/billing"
 		// Async image task polling only reads data that already belongs to the

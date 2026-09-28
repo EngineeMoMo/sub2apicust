@@ -31,6 +31,12 @@ func RegisterAdminRoutes(
 	admin.Use(gin.HandlerFunc(auditLog))
 	admin.Use(middleware.AdminComplianceGuard(settingService))
 	{
+		// [CUSTOM] 包号变更经过管理员认证、合规检查与审计。
+		admin.GET("/dedicated-accounts", h.CustomDedicated.AdminList)
+		admin.POST("/dedicated-accounts", h.CustomDedicated.Save)
+		admin.PUT("/dedicated-accounts/:id", h.CustomDedicated.Save)
+		admin.POST("/dedicated-accounts/:id/revoke", h.CustomDedicated.Revoke)
+
 		// 部署与运营合规确认
 		registerAdminComplianceRoutes(admin, h)
 

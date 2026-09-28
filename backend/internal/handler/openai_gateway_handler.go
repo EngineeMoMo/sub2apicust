@@ -2811,6 +2811,10 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 			ReasoningEffortMappings:     reasoningEffortMappings,
 			TurnStarted:                 recordTurnStart,
 			BeforeRequest: func(turn int, payload []byte, originalModel string) error {
+				// [CUSTOM] 长连接每轮重查包号，撤销/到期后不能继续借用原账号。
+				if err := h.gatewayService.CheckCustomDedicatedAccount(c.Request.Context(), account); err != nil {
+					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "专属账号不可用，请联系管理员", nil)
+				}
 				c.Set(securityAuditWSTurnContextKey, turn)
 				service.BeginOpsStreamTurn(c, turn)
 				setCyberTurnBody(turn, payload)

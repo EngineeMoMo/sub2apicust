@@ -71,6 +71,10 @@ func (s *OpenAIGatewayService) forwardAsChatCompletions(
 	defaultMappedModel string,
 	compatPromptCacheTenantIsolated bool,
 ) (*OpenAIForwardResult, error) {
+	// [CUSTOM] 等待并发槽后再次检查，避免等待期间到期/撤销或重新分配。
+	if dedicatedErr := s.CheckCustomDedicatedAccount(ctx, account); dedicatedErr != nil {
+		return nil, dedicatedErr
+	}
 	rememberOpenCodeInboundBody(c, body)
 	beginUpstreamResponseModelObservation(c)
 	ClearActualOpenAIUpstreamEndpoint(c)

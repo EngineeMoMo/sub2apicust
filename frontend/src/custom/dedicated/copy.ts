@@ -1,0 +1,42 @@
+export const dedicatedCopy = {
+  zh: {
+    title: '我的专属账号', adminTitle: '包号管理', description: '查看专属账号的可用状态与上游配额快照。', adminDescription: '将独立账号绑定给指定用户，并管理包号有效期。',
+    refresh: '刷新状态', loading: '正在读取…', loadError: '读取失败，请重试。', empty: '还没有专属账号', emptyHint: '管理员完成包号分配后，账号会显示在这里。', adminEmpty: '还没有包号记录',
+    quotaHint: '剩余比例来自上游最近一次采样，不是本站余额。刷新只读取快照，不发送模型请求；超过15分钟或窗口已重置时不显示旧比例。',
+    statusHint: '状态来自本站账号记录，不代表上游实时在线或所有模型均可调用。不可用时不会自动切换到共享账号。',
+    expires: '包号到期', lastUsed: '最近使用', sampled: '额度采样', checked: '状态读取', unknown: '暂不可获取', never: '暂无记录', remaining: '剩余', resets: '重置时间', noQuota: '暂无有效额度快照。正常请求产生上游额度信息后，再刷新查看。',
+    group: '专属分组', keyHint: '使用此账号时，请在密钥管理中选择对应专属分组。原有计费规则仍然生效。', keys: '管理密钥', contact: '如需续期或账号暂不可用，请联系管理员。',
+    previous: '上一页', next: '下一页', page: '页', create: '新增包号', edit: '修改 / 续期', cancel: '取消', save: '保存绑定', saving: '正在保存…', saved: '绑定已保存。', revoked: '包号已撤销；账号继续隔离，不会自动放回共享池。',
+    revoke: '撤销包号', revokeQuestion: '确认撤销这个包号？后续请求会被拒绝，已在处理的请求可能继续完成。', confirmRevoke: '确认撤销',
+    setupTitle: '先准备一个独立分组', setup: '在分组管理创建同平台的「标准专属分组」，不设置备用路由；账号只加入该分组，分组中只放此账号；在用户管理中仅授权给目标用户。存在其他用户的密钥、订阅或影子账号时不能绑定。',
+    setupLinks: '配置入口', groups: '分组管理', users: '用户管理', accounts: '账号管理',
+    billing: '包号不改变计费：仍使用分组倍率与用户余额。这里的到期时间仅控制账号使用权。',
+    platform: '平台', user: '指定用户', account: '上游账号', label: '用户可见别名', labelHint: '例如：我的 Claude 专属账号。不要填写邮箱、Token 或内部备注。', until: '到期时间（本机时区）',
+    search: '搜索', searchPlaceholder: '输入名称、邮箱或关键词', choose: '请选择', noChoices: '未找到匹配项，请调整搜索或检查配置。', searchHint: '每次显示前30项，请用关键词缩小范围。',
+    editHint: '账号和分组不可更换。转给其他用户前，须清理旧用户的分组授权与密钥；保存会重新激活该记录。',
+    validInput: '请完整选择用户、账号、分组，填写别名并选择未来的到期时间。',
+    modeError: '包号功能仅支持标准运行模式。', configError: '配置不满足独占条件。请按准备说明检查分组、授权、密钥、订阅及影子账号。', conflict: '账号或分组已有包号记录，请修改原记录。', saveError: '操作失败，请检查配置后重试。',
+    active: '生效中', expired: '已到期', revokedStatus: '已撤销', id: '记录',
+    statuses: { available: '正常', rate_limited: '限流中', unavailable: '暂不可用', configuration_error: '分配配置异常', expired: '已到期', revoked: '已撤销' } as Record<string, string>,
+    windows: { five_hour: '5小时额度', seven_day: '7天额度', seven_day_sonnet: 'Sonnet 7天额度', seven_day_fable: 'Fable 7天额度' } as Record<string, string>
+  },
+  en: {
+    title: 'My dedicated accounts', adminTitle: 'Dedicated accounts', description: 'Account availability and upstream quota snapshots.', adminDescription: 'Assign isolated accounts to users and manage access expiry.',
+    refresh: 'Refresh status', loading: 'Loading…', loadError: 'Could not load. Please retry.', empty: 'No dedicated accounts yet', emptyHint: 'Accounts appear here after an administrator assigns them.', adminEmpty: 'No assignments yet',
+    quotaHint: 'Remaining percentages come from upstream snapshots, not your site balance. Refresh does not send model requests. Snapshots older than 15 minutes or past their reset time are not shown as current.',
+    statusHint: 'Status reflects local account records, not live upstream health or availability of every model. Unavailable accounts do not fall back to the shared pool.',
+    expires: 'Access expires', lastUsed: 'Last used', sampled: 'Quota sampled', checked: 'Status read', unknown: 'Unavailable', never: 'No record', remaining: 'Remaining', resets: 'Resets at', noQuota: 'No current quota snapshot. Refresh after a normal request provides upstream quota information.',
+    group: 'Dedicated group', keyHint: 'Choose this group in API key management to use the account. Existing billing rules still apply.', keys: 'Manage API keys', contact: 'Contact the administrator for renewal or account issues.',
+    previous: 'Previous', next: 'Next', page: 'Page', create: 'New assignment', edit: 'Edit / renew', cancel: 'Cancel', save: 'Save assignment', saving: 'Saving…', saved: 'Assignment saved.', revoked: 'Assignment revoked. The account stays isolated and is not returned to the shared pool.',
+    revoke: 'Revoke', revokeQuestion: 'Revoke this assignment? New requests will be denied. Requests already in progress may finish.', confirmRevoke: 'Confirm revoke',
+    setupTitle: 'Prepare an isolated group first', setup: 'Create a standard exclusive group for the same platform, with no fallback routes. Add only this account, and remove it from other groups. Authorize only the target user. Other users’ keys, subscriptions, or shadow accounts prevent assignment.',
+    setupLinks: 'Configure', groups: 'Groups', users: 'Users', accounts: 'Accounts', billing: 'Billing is unchanged: group multipliers and user balance still apply. Expiry controls account access only.',
+    platform: 'Platform', user: 'Assigned user', account: 'Upstream account', label: 'User-facing label', labelHint: 'For example: My dedicated Claude account. Do not include email, tokens, or internal notes.', until: 'Expires at (local timezone)',
+    search: 'Search', searchPlaceholder: 'Name, email, or keyword', choose: 'Select an option', noChoices: 'No matches. Adjust your search or check configuration.', searchHint: 'Showing up to 30 results. Use a keyword to narrow the list.',
+    editHint: 'Account and group cannot change. Remove the previous user’s group access and keys before transferring. Saving reactivates this assignment.',
+    validInput: 'Select a user, account, group, label, and a future expiry.', modeError: 'Dedicated accounts require standard runtime mode.', configError: 'Isolation checks failed. Review the group, access, keys, subscriptions, and shadow accounts.', conflict: 'This account or group already has an assignment. Edit the existing record.', saveError: 'Operation failed. Check configuration and retry.',
+    active: 'Active', expired: 'Expired', revokedStatus: 'Revoked', id: 'Assignment',
+    statuses: { available: 'Active', rate_limited: 'Rate limited', unavailable: 'Unavailable', configuration_error: 'Assignment configuration error', expired: 'Expired', revoked: 'Revoked' } as Record<string, string>,
+    windows: { five_hour: '5-hour quota', seven_day: '7-day quota', seven_day_sonnet: 'Sonnet 7-day quota', seven_day_fable: 'Fable 7-day quota' } as Record<string, string>
+  }
+}

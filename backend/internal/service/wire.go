@@ -849,6 +849,8 @@ func ProvideAPIKeyService(
 
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
+	// [CUSTOM] 包号独占服务与调度保护。
+	NewCustomDedicatedService,
 	// Core services
 	ProvideAuthService,
 	NewPasskeyService,

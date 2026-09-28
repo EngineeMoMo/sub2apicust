@@ -75,6 +75,8 @@ try {
 
 ## 7. 本轮智力效率发布记录
 
+**2026-09-28最新部署（包号与推广清理，优先于历史记录）**：用户授权后启动Docker，代理授权200，compose build退出0，含前端及Go embed编译。仅重建应用容器，原数据库／Redis保留，三服务healthy，health=ok，镜像与容器一致d0c2c1d46026d0699ce3e153c4aba9c102e707275e84320990549512265bf5a8；包号表存在，接口未登录401，HTTP入口index-B18iYC10.js含包号页面。旧镜像sub2apicust:before-dedicated-20260928-112340；备份output/brand/before-dedicated-20260928-112340.dump已校验；构建日志output/brand/docker-dedicated-build.log。未跑Go单测／真实账号联调，待用户浏览器验收，生产未操作。
+
 **最新可读性修正版（优先于本节初版记录）**：当前8080镜像`cfa0a12c8bf6`，仅应用容器重建，三服务healthy；数据库／Redis容器ID、用户1／分组2／套餐0、280项设置摘要保持。前端构建／Go embed编译通过，新HTTP入口`index-BW6NgO3M.js`引用`IntelligenceView-C0f1Aymd.js`，条形对比、矩阵排序、移除源站链接／频率元素及充值width规则均验证。回退tag`sub2apicust:before-intelligence-ux-20260927-022446`，dump `output/brand/before-intelligence-ux-20260927-022446.dump`（583628字节，pg_restore目录校验通过），构建日志与部署记录分别为同目录`docker-intelligence-ux-20260927-022446.log`／`intelligence-ux-deploy-record.json`。76项定向回归通过，未跑Go单测；浏览器连接仍不可用，未声明完成真实视觉验收。未创建套餐或订单，未推送或生产部署。
 
 - 用户要求「重新发docker」，范围按本机解释并执行，未动生产。代理授权预检HTTP200，实际compose build进程设置HTTP_PROXY／HTTPS_PROXY／NO_PROXY；首轮构建成功，无盲目重试。

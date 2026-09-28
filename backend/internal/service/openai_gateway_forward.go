@@ -19,6 +19,10 @@ import (
 
 // Forward forwards request to OpenAI API
 func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, account *Account, body []byte) (*OpenAIForwardResult, error) {
+	// [CUSTOM] 等待并发槽后再次检查，避免等待期间到期/撤销或重新分配。
+	if dedicatedErr := s.CheckCustomDedicatedAccount(ctx, account); dedicatedErr != nil {
+		return nil, dedicatedErr
+	}
 	beginUpstreamResponseModelObservation(c)
 	ClearActualOpenAIUpstreamEndpoint(c)
 	if shouldForwardOpenAIResponsesViaRawChatCompletions(account) {

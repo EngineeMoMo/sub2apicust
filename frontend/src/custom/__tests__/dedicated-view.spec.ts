@@ -1,0 +1,145 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent } from 'vue'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { createI18n } from 'vue-i18n'
+import DedicatedAccountsView from '@/custom/views/DedicatedAccountsView.vue'
+import AdminDedicatedAccountsView from '@/custom/views/AdminDedicatedAccountsView.vue'
+import DedicatedPicker from '@/custom/components/DedicatedPicker.vue'
+import { dedicatedAPI, type DedicatedBinding, type DedicatedView } from '@/custom/dedicated/api'
+
+vi.mock('@/components/layout/AppLayout.vue', () => ({ default: defineComponent({ template: '<main><slot name="page-actions" /><slot /></main>' }) }))
+vi.mock('@/custom/dedicated/api', async importOriginal => {
+  const original = await importOriginal<typeof import('@/custom/dedicated/api')>()
+  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), choices: vi.fn() } }
+})
+const now = Date.parse('2026-09-28T08:00:00Z')
+const view: DedicatedView = { id: 1, label: '我的 Claude', platform: 'anthropic', group_id: 33, expires_at: new Date(now + 3600_000).toISOString(), status: 'available', last_used_at: null, sampled_at: new Date(now - 60_000).toISOString(), checked_at: new Date(now).toISOString(), quota_state: 'available', windows: [{ key: 'five_hour', remaining_percent: 65, resets_at: new Date(now + 60_000).toISOString(), stale: false }] }
+const binding: DedicatedBinding = { id: 1, label: '我的 Claude', user_id: 11, account_id: 22, group_id: 33, expires_at: view.expires_at, revoked_at: null, updated_at: view.checked_at }
+const globals = (locale = 'zh') => ({ plugins: [createI18n({ legacy: false, locale, messages: {} })], stubs: { RouterLink: { template: '<a><slot /></a>' } } })
+
+let wrapper: VueWrapper | undefined
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+  vi.setSystemTime(now)
+  vi.mocked(dedicatedAPI.mine).mockReset().mockResolvedValue([structuredClone(view)])
+  vi.mocked(dedicatedAPI.list).mockReset().mockResolvedValue([structuredClone(binding)])
+  vi.mocked(dedicatedAPI.choices).mockReset().mockResolvedValue([])
+  vi.mocked(dedicatedAPI.save).mockReset().mockResolvedValue(binding)
+  vi.mocked(dedicatedAPI.revoke).mockReset().mockResolvedValue(undefined)
+})
+afterEach(() => { wrapper?.unmount(); wrapper = undefined; vi.useRealTimers() })
+async function user(locale = 'zh') { wrapper = mount(DedicatedAccountsView, { global: globals(locale) }); await flushPromises(); return wrapper }
+async function admin() { wrapper = mount(AdminDedicatedAccountsView, { global: globals() }); await flushPromises(); return wrapper }
+
+function button(page: VueWrapper, label: string) { const found = page.findAll('button').find(item => item.text() === label); if (!found) throw new Error('Missing button: ' + label); return found }
+
+describe('用户专属账号页面', () => {
+  it('展示状态、剩余比例、重置时间和密钥入口', async () => {
+    const page = await user()
+    expect(page.text()).toContain('我的 Claude')
+    expect(page.text()).toContain('正常')
+    expect(page.text()).toContain('剩余 65.0%')
+    expect(page.get('progress').attributes('value')).toBe('65')
+    expect(page.text()).toContain('不是本站余额')
+  })
+  it('没有额度数据时不给出0或100%', async () => {
+    vi.mocked(dedicatedAPI.mine).mockResolvedValue([{ ...view, windows: [], sampled_at: null, quota_state: 'unknown' }])
+    const page = await user()
+    expect(page.find('progress').exists()).toBe(false)
+    expect(page.text()).toContain('暂无有效额度快照')
+    expect(page.text()).not.toContain('100%')
+  })
+  it('窗口在页面停留期间重置后隐藏旧百分比', async () => {
+    const page = await user()
+    await vi.advanceTimersByTimeAsync(90_000)
+    expect(page.find('progress').exists()).toBe(false)
+    expect(page.text()).toContain('暂不可获取')
+  })
+  it('撤销和到期账号不展示配额条', async () => {
+    vi.mocked(dedicatedAPI.mine).mockResolvedValue([{ ...view, status: 'revoked' }, { ...view, id: 2, expires_at: new Date(now - 1000).toISOString() }])
+    const page = await user()
+    expect(page.text()).toContain('已撤销')
+    expect(page.text()).toContain('已到期')
+    expect(page.find('progress').exists()).toBe(false)
+  })
+  it('空态说明管理员分配而不是售卖套餐', async () => {
+    vi.mocked(dedicatedAPI.mine).mockResolvedValue([])
+    const page = await user()
+    expect(page.text()).toContain('还没有专属账号')
+    expect(page.text()).toContain('管理员完成包号分配后')
+  })
+  it('请求失败清空旧账号数据，提供重试', async () => {
+    const page = await user()
+    vi.mocked(dedicatedAPI.mine).mockRejectedValue(new Error('token secret'))
+    await button(page, '刷新状态').trigger('click')
+    await flushPromises()
+    expect(page.text()).toContain('读取失败')
+    expect(page.text()).not.toContain('我的 Claude')
+    expect(page.text()).not.toContain('token secret')
+  })
+  it('支持英文展示', async () => { const page = await user('en'); expect(page.text()).toContain('Remaining 65.0%'); expect(page.text()).toContain('Active') })
+})
+
+describe('管理端包号操作', () => {
+  it('展示准备说明与原计费规则，不擅自改分组', async () => {
+    const page = await admin()
+    expect(page.text()).toContain('先准备一个独立分组')
+    expect(page.text()).toContain('仅控制账号使用权')
+    expect(page.text()).toContain('#22 / #33')
+    expect(dedicatedAPI.save).not.toHaveBeenCalled()
+  })
+  it('编辑记录保留绑定编号，提交ISO到期时间', async () => {
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    await page.get('input[type="text"]').setValue('续期 Claude')
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(dedicatedAPI.save).toHaveBeenCalledWith(1, expect.objectContaining({ user_id: 11, account_id: 22, group_id: 33, label: '续期 Claude', expires_at: view.expires_at }))
+    expect(page.text()).toContain('绑定已保存')
+  })
+  it('到期时间不合法时阻止提交', async () => {
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    await page.get('input[type="datetime-local"]').setValue('2020-01-01T00:00')
+    await page.get('form').trigger('submit')
+    expect(dedicatedAPI.save).not.toHaveBeenCalled()
+    expect(page.text()).toContain('未来的到期时间')
+  })
+  it('撤销必须确认，取消不发请求', async () => {
+    const page = await admin()
+    await button(page, '撤销包号').trigger('click')
+    expect(dedicatedAPI.revoke).not.toHaveBeenCalled()
+    await button(page, '取消').trigger('click')
+    expect(dedicatedAPI.revoke).not.toHaveBeenCalled()
+    await button(page, '撤销包号').trigger('click')
+    await button(page, '确认撤销').trigger('click')
+    await flushPromises()
+    expect(dedicatedAPI.revoke).toHaveBeenCalledWith(1)
+    expect(page.text()).toContain('继续隔离')
+  })
+  it('显示安全的配置错误，失败不收起表单', async () => {
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    vi.mocked(dedicatedAPI.save).mockRejectedValue({ code: 'DEDICATED_ACCOUNT_CONFIG', message: 'sensitive secret' })
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(page.text()).toContain('配置不满足独占条件')
+    expect(page.text()).not.toContain('sensitive secret')
+    expect(page.find('form').exists()).toBe(true)
+  })
+})
+
+describe('管理员搜索选择器', () => {
+  it('搜索结果保留编号并发出选择，失败只显示安全错误', async () => {
+    vi.mocked(dedicatedAPI.choices).mockResolvedValue([{ id: 11, label: '#11 · user' }])
+    wrapper = mount(DedicatedPicker, { props: { kind: 'users', modelValue: 0, label: '指定用户', platform: 'anthropic' }, global: globals() })
+    await flushPromises()
+    await wrapper.get('select').setValue('11')
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([11])
+    vi.mocked(dedicatedAPI.choices).mockRejectedValue(new Error('secret'))
+    await button(wrapper, '搜索').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('读取失败')
+    expect(wrapper.text()).not.toContain('secret')
+  })
+})

@@ -1171,3 +1171,68 @@ html .mofa-auth .mofa-auth-title {
   .mofa-intel-pagination { align-items: stretch; flex-direction: column; }
   .mofa-intel-pagination > div { justify-content: flex-end; }
 }
+
+/* [CUSTOM] 包号页面沿用品牌变量；新增界面样式集中于本主题层。 */
+.mofa-dedicated { width: 100%; max-width: 1180px; margin: 0 auto; color: rgb(var(--brand-text)); }
+.mofa-dedicated-note { color: rgb(var(--brand-muted)); font-size: .875rem; line-height: 1.7; max-width: 80ch; margin: 0 0 1.5rem; }
+.mofa-dedicated-note p + p { margin-top: .5rem; }
+.mofa-dedicated-account, .mofa-dedicated-form { background: rgb(var(--brand-surface)); border: 1px solid rgb(var(--brand-border)); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.mofa-dedicated-account header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.mofa-dedicated h2 { font-size: 1.125rem; font-weight: 650; overflow-wrap: anywhere; }
+.mofa-dedicated-account header p { color: rgb(var(--brand-muted)); margin-top: .4rem; font-size: .875rem; }
+.mofa-dedicated-status { font-size: .8125rem; border: 1px solid rgb(var(--brand-border)); border-radius: 99px; padding: .3rem .7rem; white-space: nowrap; }
+.mofa-dedicated-status[data-state="available"] { color: rgb(var(--brand-action)); border-color: currentColor; }
+.mofa-dedicated-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; padding: 1.5rem 0; margin-top: .5rem; border-bottom: 1px solid rgb(var(--brand-border)); }
+.mofa-dedicated-facts dt, .mofa-dedicated-quota p { color: rgb(var(--brand-muted)); font-size: .8125rem; }
+.mofa-dedicated-facts dd { margin-top: .375rem; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.mofa-dedicated-quotas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; padding: 1.5rem 0; }
+.mofa-dedicated-quota > div { display: flex; justify-content: space-between; gap: .75rem; align-items: baseline; }
+.mofa-dedicated-quota h3 { font-size: .875rem; font-weight: 550; }
+.mofa-dedicated-quota strong { font-size: .875rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mofa-dedicated progress { display: block; width: 100%; height: 6px; margin: .8rem 0; border: 0; border-radius: 3px; overflow: hidden; background: rgb(var(--brand-border)); accent-color: rgb(var(--brand-action)); }
+.mofa-dedicated progress::-webkit-progress-bar { background: rgb(var(--brand-border)); }
+.mofa-dedicated progress::-webkit-progress-value { background: rgb(var(--brand-action)); }
+.mofa-dedicated progress::-moz-progress-bar { background: rgb(var(--brand-action)); }
+.mofa-dedicated-account footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid rgb(var(--brand-border)); padding-top: 1rem; }
+.mofa-dedicated-account footer p { color: rgb(var(--brand-muted)); font-size: .8125rem; max-width: 65ch; }
+.mofa-dedicated-account footer a { flex-shrink: 0; }
+.mofa-dedicated-empty { padding: 3rem 1rem; text-align: center; border: 1px dashed rgb(var(--brand-border)); border-radius: 14px; margin: 1.5rem 0; }
+.mofa-dedicated-empty p { margin: .75rem 0; color: rgb(var(--brand-muted)); }
+.mofa-dedicated-pagination, .mofa-dedicated-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.mofa-dedicated-pagination { justify-content: flex-end; margin: 1.5rem 0; }
+.mofa-dedicated-setup { border-bottom: 1px solid rgb(var(--brand-border)); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+.mofa-dedicated-setup summary { cursor: pointer; font-weight: 600; padding: .5rem 0; }
+.mofa-dedicated-setup p { margin-top: .75rem; max-width: 85ch; font-size: .875rem; color: rgb(var(--brand-muted)); line-height: 1.7; }
+.mofa-dedicated-setup nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: .75rem; }
+.mofa-dedicated-setup a { text-decoration: underline; text-underline-offset: 3px; color: rgb(var(--brand-action)); font-size: .875rem; }
+.mofa-dedicated-form h2 { margin-bottom: 1.5rem; }
+.mofa-dedicated-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+.mofa-dedicated-field, .mofa-dedicated-picker { display: flex; flex-direction: column; min-width: 0; gap: .5rem; }
+.mofa-dedicated-field > span, .mofa-dedicated-picker legend { font-size: .875rem; font-weight: 600; margin-bottom: .35rem; }
+.mofa-dedicated input, .mofa-dedicated select { min-height: 42px; width: 100%; min-width: 0; padding: .55rem .75rem; border-radius: 8px; border: 1px solid rgb(var(--brand-border)); background: rgb(var(--brand-page)); color: rgb(var(--brand-text)); font-size: .875rem; }
+.mofa-dedicated input::placeholder { color: rgb(var(--brand-muted)); }
+.mofa-dedicated-picker p, .mofa-dedicated-field small { color: rgb(var(--brand-muted)); font-size: .75rem; line-height: 1.6; }
+.mofa-dedicated-search { display: flex; gap: .5rem; }
+.mofa-dedicated-search button { flex-shrink: 0; }
+.mofa-dedicated :disabled { opacity: .6; cursor: not-allowed; }
+.mofa-dedicated :focus-visible { outline: 2px solid rgb(var(--brand-focus)); outline-offset: 3px; }
+.mofa-dedicated-table-wrap { overflow-x: auto; border: 1px solid rgb(var(--brand-border)); border-radius: 12px; }
+.mofa-dedicated-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .875rem; }
+.mofa-dedicated-table th, .mofa-dedicated-table td { padding: 1rem; vertical-align: top; border-bottom: 1px solid rgb(var(--brand-border)); }
+.mofa-dedicated-table thead { color: rgb(var(--brand-muted)); }
+.mofa-dedicated-table th { font-weight: 600; }
+.mofa-dedicated-table tbody th { min-width: 140px; max-width: 260px; overflow-wrap: anywhere; }
+.mofa-dedicated-table small { display: block; color: rgb(var(--brand-muted)); font-weight: 400; margin-top: .35rem; }
+.mofa-dedicated-table tr:last-child td, .mofa-dedicated-table tr:last-child th { border-bottom: none; }
+.mofa-dedicated-confirm { margin-top: 1rem; min-width: 230px; max-width: 360px; }
+.mofa-dedicated-confirm p { margin-bottom: .75rem; }
+.mofa-dedicated-confirm button + button { margin-left: .5rem; }
+.mofa-dedicated-feedback { padding: 1rem; border: 1px solid rgb(var(--brand-border)); border-radius: 8px; margin-bottom: 1rem; }
+@media (max-width: 640px) {
+  .mofa-dedicated-account, .mofa-dedicated-form { padding: 1rem; }
+  .mofa-dedicated-facts, .mofa-dedicated-quotas { grid-template-columns: 1fr; gap: 1rem; }
+  .mofa-dedicated-facts > div { display: flex; justify-content: space-between; gap: 1rem; }
+  .mofa-dedicated-facts dd { margin-top: 0; text-align: right; }
+  .mofa-dedicated-account footer { align-items: flex-start; flex-direction: column; }
+  .mofa-dedicated-form-grid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -89,6 +89,10 @@ func sleepWithContext(ctx context.Context, d time.Duration) error {
 
 // Forward 转发请求到Claude API
 func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *Account, parsed *ParsedRequest) (result *ForwardResult, err error) {
+	// [CUSTOM] 等待并发槽后再次检查，避免等待期间到期/撤销或重新分配。
+	if dedicatedErr := s.CheckCustomDedicatedAccount(ctx, account); dedicatedErr != nil {
+		return nil, dedicatedErr
+	}
 	startTime := time.Now()
 	if parsed == nil {
 		return nil, fmt.Errorf("parse request: empty request")

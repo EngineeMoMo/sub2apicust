@@ -33,6 +33,10 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	promptCacheKey string,
 	defaultMappedModel string,
 ) (*OpenAIForwardResult, error) {
+	// [CUSTOM] 等待并发槽后再次检查，避免等待期间到期/撤销或重新分配。
+	if dedicatedErr := s.CheckCustomDedicatedAccount(ctx, account); dedicatedErr != nil {
+		return nil, dedicatedErr
+	}
 	// 工具 Schema 清洗必须先于所有分流：下游每条路径（原生 Anthropic 直通、
 	// Chat Completions 转换、Responses 转换）都会把 tools 原样带给上游，而
 	// xAI / Moonshot 等严格校验方会因 input_schema 里的 required:null 或

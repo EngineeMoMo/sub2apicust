@@ -441,6 +441,8 @@ var ErrNoAvailableCompactAccounts = errors.New("no available accounts support /r
 
 // OpenAIGatewayService handles OpenAI API gateway operations
 type OpenAIGatewayService struct {
+	// [CUSTOM] 包号独占校验，见 custom_dedicated_accounts.go。
+	customDedicated       *CustomDedicatedService
 	accountRepo           AccountRepository
 	usageLogRepo          UsageLogRepository
 	usageBillingRepo      UsageBillingRepository

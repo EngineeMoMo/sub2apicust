@@ -4,6 +4,8 @@
 
 ## 展示层边界
 
+- 推广清理：保留AppHeader、HomeView、KeyUsageView的 [CUSTOM] 移除标记；ProxyAdBanner保持空兼容组件。回归运行 pnpm exec vitest run src/custom/__tests__/promotion-removal.spec.ts；不要误删客服配置、GitHub OAuth、合规及运维帮助或LICENSE。
+
 - `/brand` 独立公开入口，不抢占 `/`；后台模式仍受上游路由守卫限制。
 - `brand/` 管理中英文案；`components/` 管理品牌面板和主动主题切换；`assets/mofa-mark.webp` 是原批准透明 M 位图。
 - 不复制登录业务、控制台页面、API、权限或数据模型。全部视觉规则在 `theme.css`，不重染上游语义 teal 分类色。
@@ -67,3 +69,11 @@ git diff --check
 ## 当前部署限制（本轮Docker发布后）
 
 当前本机8080运行`cfa0a12c8bf6`，含本轮矩阵排序、三指标对比、隐藏频率／外链、支付宽度修正；HTTP入口`index-BW6NgO3M.js`／智力chunk`IntelligenceView-C0f1Aymd.js`。品牌配置和用户新建分组保持，76项回归及Docker前端／Go embed构建通过；真实视觉仍待。改动尚未提交推送，生产未动。最近回退镜像`sub2apicust:before-intelligence-ux-20260927-022446`，dump583628字节，证据output/brand/intelligence-ux-deploy-record.json；网络预检仍遵循deploy/LOCAL_DOCKER_RUNBOOK.md。
+
+## 包号页面（2026-09-28）
+
+- 新路由：用户 /dedicated-accounts，管理 /admin/dedicated-accounts；侧栏入口、requiresAuth／requiresAdmin、WorkspaceHeading中英文接线必须共同保留。两菜单仅标准模式可见，后端也拒绝简易模式创建／使用包号。
+- 页面、选择器、API和文案位于custom；所有新增样式仅在theme.css的mofa-dedicated作用域，不覆盖上游账号管理界面。
+- 用户数据只能来自专用只读API，不能改成调用/admin/accounts或在前端过滤管理员响应。不得把unknown/stale转为零额度或100%。
+- 前端回归加入src/custom/__tests__/dedicated*.spec.ts（27项）；数据样例仅用于测试，不代表真实账号验收。
+- 后端迁移、归属和调度接缝逐处见根CUSTOMIZATIONS.md，操作／回滚约束见DEDICATED_ACCOUNTS.md。

@@ -762,6 +762,8 @@ func (s *GatewayService) TempUnscheduleRetryableError(ctx context.Context, accou
 
 // GatewayService handles API gateway operations
 type GatewayService struct {
+	// [CUSTOM] 包号独占校验，见 custom_dedicated_accounts.go。
+	customDedicated       *CustomDedicatedService
 	accountRepo           AccountRepository
 	groupRepo             GroupRepository
 	usageLogRepo          UsageLogRepository

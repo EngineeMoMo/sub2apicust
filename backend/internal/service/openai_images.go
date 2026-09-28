@@ -604,6 +604,10 @@ func (s *OpenAIGatewayService) ForwardImages(
 	parsed *OpenAIImagesRequest,
 	channelMappedModel string,
 ) (*OpenAIForwardResult, error) {
+	// [CUSTOM] 等待并发槽后再次检查，避免等待期间到期/撤销或重新分配。
+	if dedicatedErr := s.CheckCustomDedicatedAccount(ctx, account); dedicatedErr != nil {
+		return nil, dedicatedErr
+	}
 	if parsed == nil {
 		return nil, fmt.Errorf("parsed images request is required")
 	}

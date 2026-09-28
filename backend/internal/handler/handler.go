@@ -47,6 +47,8 @@ type AdminHandlers struct {
 
 // Handlers contains all HTTP handlers
 type Handlers struct {
+	// [CUSTOM] 包号管理与用户只读视图。
+	CustomDedicated  *CustomDedicatedHandler
 	Auth             *AuthHandler
 	User             *UserHandler
 	APIKey           *APIKeyHandler

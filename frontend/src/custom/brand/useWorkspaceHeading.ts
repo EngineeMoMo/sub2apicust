@@ -6,6 +6,7 @@ import { useAdminSettingsStore } from '@/stores/adminSettings'
 import { resolveRouteMetaKeys } from '@/router/title'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
 import { intelligenceCopy } from '@/custom/intelligence/copy'
+import { dedicatedCopy } from '@/custom/dedicated/copy'
 
 export function useWorkspaceHeading() {
   const route = useRoute()
@@ -19,6 +20,9 @@ export function useWorkspaceHeading() {
   }))
 
   const pageTitle = computed(() => {
+    const dedicated = dedicatedCopy[locale.value.startsWith('zh') ? 'zh' : 'en']
+    if (route.name === 'DedicatedAccounts') return dedicated.title
+    if (route.name === 'AdminDedicatedAccounts') return dedicated.adminTitle
     if (route.name === 'Intelligence') return intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title
     if (route.name === 'CustomPage') {
       const id = route.params.id as string
@@ -35,6 +39,9 @@ export function useWorkspaceHeading() {
   })
 
   const pageDescription = computed(() => {
+    const dedicated = dedicatedCopy[locale.value.startsWith('zh') ? 'zh' : 'en']
+    if (route.name === 'DedicatedAccounts') return dedicated.description
+    if (route.name === 'AdminDedicatedAccounts') return dedicated.adminDescription
     if (route.name === 'Intelligence') return intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].description
     const descKey = routeMetaKeys.value.descriptionKey
     if (descKey) {

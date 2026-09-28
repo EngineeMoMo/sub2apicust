@@ -2169,7 +2169,9 @@ func (s *OpenAIGatewayService) selectAccountWithScheduler(
 	platform string,
 	previousResponseCanMove bool,
 	useUpstreamTokenCost bool,
-) (*AccountSelectionResult, OpenAIAccountScheduleDecision, error) {
+) (dedicatedResult *AccountSelectionResult, dedicatedDecision OpenAIAccountScheduleDecision, dedicatedErr error) {
+	// [CUSTOM] 覆盖高级调度、粘性会话与图片回退的包号终检。
+	defer s.customDedicated.guardSelection(ctx, groupID, &dedicatedResult, &dedicatedErr)
 	selection, decision, err := s.selectAccountWithSchedulerOnce(ctx, groupID, previousResponseID, sessionHash, requestedModel, excludedIDs, requiredTransport, requiredCapability, requiredImageCapability, requireCompact, platform, previousResponseCanMove, useUpstreamTokenCost)
 	if err == nil || openAIProxyStreamQuarantineBypassed(ctx) {
 		return selection, decision, err

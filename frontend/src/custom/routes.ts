@@ -5,6 +5,18 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/dedicated-accounts',
+    name: 'DedicatedAccounts',
+    component: () => import('@/custom/views/DedicatedAccountsView.vue'),
+    meta: { title: '我的专属账号', requiresAuth: true, requiresAdmin: false }
+  },
+  {
+    path: '/admin/dedicated-accounts',
+    name: 'AdminDedicatedAccounts',
+    component: () => import('@/custom/views/AdminDedicatedAccountsView.vue'),
+    meta: { title: '包号管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/intelligence',
     name: 'Intelligence',
     component: () => import('@/custom/views/IntelligenceView.vue'),

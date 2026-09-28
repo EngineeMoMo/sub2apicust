@@ -1,5 +1,15 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-09-28 上游推广清理
+
+- 上游接缝 frontend/src/components/layout/AppHeader.vue：移除管理员GitHub菜单项，保留客服配置与其他操作，添加中文 [CUSTOM] 标记。
+- 上游接缝 frontend/src/views/HomeView.vue：移除页脚仓库链接及githubUrl常量，保留站点文档与版权，添加 [CUSTOM] 标记。
+- 上游接缝 frontend/src/views/KeyUsageView.vue：移除页脚仓库链接及githubUrl常量，保留站点文档与版权，添加 [CUSTOM] 标记。
+- 上游接缝 frontend/src/components/common/ProxyAdBanner.vue：移除广告模板及无用脚本，保留含 [CUSTOM] 注释的空模板；兼容ProxiesView、CreateAccountModal、EditAccountModal三处调用，不再展示sub2api.io/proxyip广告。
+- 新增 frontend/src/custom/__tests__/promotion-removal.spec.ts：5项测试覆盖空广告组件、三个入口不含仓库推广、客服／站点文档／版权保留。Vitest及vue-tsc -b通过。
+- 审计范围为frontend/src的Vue／TS外链及推广关键词；frontend/backend源码未命中截图QQ号码，客服来自appStore.contactInfo。保留管理员合规文档、支付帮助、TLS采集工具、GitHub开发者设置和OAuth功能链接，不删LICENSE。未读取运行站点数据库，无法判断自定义首页／菜单／客服配置是否另含推广。
+- 2026-09-28已部署本机验证（详见HANDOFF），用户随后授权与包号一起提交推送；同步后检查四处接缝。生产由用户手动升级。
+
 > 这是本 fork 的**唯一权威清单**。每一处偏离上游的改动都必须登记在这里。
 > 同步上游（`git merge upstream/main`）解冲突时，逐条对照本表核对：
 > **每一处定制是否仍然存在、是否被上游改动覆盖**。合并里定制被静默吞掉，是这类
@@ -14,6 +24,17 @@
 ---
 
 ## 一、新增文件（低冲突，仍需验证依赖契约）
+
+### Claude / ChatGPT-Codex 包号（2026-09-28，源码，未部署）
+- 使用与验收边界：`DEDICATED_ACCOUNTS.md`。仅标准模式；复用事先配置好的一账号／一标准专属分组／一授权用户，不自动搬号、不改变计费。
+- `backend/migrations/241_custom_dedicated_accounts.sql` — 包号独立表、账号及分组唯一约束、撤销保留隔离记录。外键限制硬删除；同步上游时核对迁移排序及清理流程，不能回退旧镜像后假设独占仍生效。
+- `backend/internal/service/custom_dedicated_accounts.go` — 绑定／续期／撤销、分页、服务端归属白名单、实时独占条件与到期校验；串行化写事务及失败关闭。
+- `backend/internal/service/custom_dedicated_quota.go` — 只读上游保存的真实被动快照；缺失／无效／过期不推测余量；不调用Codex生成探针。
+- `backend/internal/service/custom_dedicated_forward.go` — 两类Gateway共用转发前／WS每轮入口。
+- `backend/internal/handler/custom_dedicated_handler.go` — 管理与用户独立API，错误脱敏、用户身份过滤、分页验证。
+- `backend/internal/service/custom_dedicated_accounts_test.go`、`backend/internal/handler/custom_dedicated_handler_test.go` — SQLmock／归属／事务／额度／HTTP越权测试，本机未执行，待本轮CI。
+- `frontend/src/custom/dedicated/{api,copy}.ts`、`custom/components/DedicatedPicker.vue`、`custom/views/{DedicatedAccountsView,AdminDedicatedAccountsView}.vue` — 用户只读快照与管理操作，中英文、分页、续期、撤销确认；继承原AppLayout，样式仅custom/theme.css。
+- `frontend/src/custom/__tests__/dedicated*.spec.ts` — 27项新增前端回归；连同现有定制关联测试119项通过。Go编译／格式化／单测／真实数据库与浏览器验收仍待，不当成完整业务验收。
 
 > 格式：`路径` — 用途 — 引入日期
 
@@ -70,6 +91,39 @@
 - 新增页面/影子替换页放 `custom/views/`、`custom/components/`（降低文本冲突面，仍需复核上游依赖）。
 
 ## 二、接线改动（会冲突，重点核对）
+
+### 包号接缝（2026-09-28）
+| 文件 | 必须保留／核验的改动 |
+| --- | --- |
+| `backend/internal/service/api_key_service.go` | customDedicated依赖字段，不改变原构造器参数 |
+| `backend/internal/service/gateway_service.go` | Claude Gateway的customDedicated字段 |
+| `backend/internal/service/openai_gateway_service.go` | Codex Gateway的customDedicated字段 |
+| `backend/internal/service/wire.go` | NewCustomDedicatedService提供者 |
+| `backend/internal/handler/handler.go` | Handlers.CustomDedicated |
+| `backend/internal/handler/wire.go` | 新处理器提供者与ProvideHandlers参数／字段 |
+| `backend/cmd/server/wire_gen.go` | 与Wire提供者同步的显式初始化；重新生成后必须包含包号服务，不能漏装保护 |
+| `backend/internal/server/middleware/api_key_auth.go` | 在SimpleMode早退前写入原始身份并进行实时包号认证 |
+| `backend/internal/server/routes/admin.go` | 管理GET/POST/PUT/撤销，位于原管理员认证／合规／审计之后 |
+| `backend/internal/server/routes/user.go` | 用户列表与单条额度，只在JWT及Heavy限流下注册 |
+| `backend/internal/service/gateway_scheduling.go` | 两个公共选号入口defer终检；保留原始上下文，失败释放并发槽 |
+| `backend/internal/service/openai_gateway_scheduling.go` | 传统选号及负载感知终检 |
+| `backend/internal/service/openai_account_scheduler.go` | 高级调度统一包装层终检，覆盖粘性和图片回退 |
+| `backend/internal/service/gateway_forward.go` | Claude主转发前检查 |
+| `backend/internal/service/gateway_forward_as_chat_completions.go` | Claude Chat转换转发前检查 |
+| `backend/internal/service/gateway_forward_as_responses.go` | Claude Responses转换转发前检查 |
+| `backend/internal/service/gateway_count_tokens.go` | Claude计数转发前检查 |
+| `backend/internal/service/openai_gateway_forward.go` | Codex Responses主转发前检查 |
+| `backend/internal/service/openai_gateway_chat_completions.go` | Chat转换的共用内部转发前检查 |
+| `backend/internal/service/openai_gateway_messages.go` | Anthropic协议转换前检查 |
+| `backend/internal/service/openai_gateway_count_tokens.go` | 原生InputTokens和Anthropic计数两处检查 |
+| `backend/internal/service/openai_images.go` | 图片转发前检查 |
+| `backend/internal/handler/openai_gateway_handler.go` | WebSocket BeforeRequest每轮检查，拒绝沿用已撤销／到期账号 |
+| `frontend/src/components/layout/AppSidebar.vue` | 用户和管理菜单及copy导入，两项均hideInSimpleMode |
+| `frontend/src/custom/routes.ts` | 两个懒加载认证路由；管理页requiresAdmin |
+| `frontend/src/custom/brand/useWorkspaceHeading.ts` | 两个页面的中英文标题和描述 |
+| `frontend/src/custom/theme.css` | 仅追加mofa-dedicated作用域样式，保留现有主题与SynaRoute |
+
+同步上游时若新增可直接转发Claude／Codex的入口，必须复核其认证、选号和转发前保护；源码存在检查不等于所有未来入口自动安全。
 
 ### 2026-09-27 展示接缝补充
 - 本轮 AppHeader／AppLayout／AuthLayout 接缝已扩大，并新增 TablePageLayout、KeysView 和 KeysView 测试 stub 接缝；逐处内容见上方「真实页面结构还原」。旧条目中“未改业务页”“仅三个类名”的范围描述已由本轮更新取代；只移动展示节点，不改业务处理。

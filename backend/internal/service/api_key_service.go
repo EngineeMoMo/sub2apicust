@@ -283,6 +283,8 @@ type RateLimitCacheInvalidator interface {
 }
 
 type APIKeyService struct {
+	// [CUSTOM] 包号独占校验，见 custom_dedicated_accounts.go。
+	customDedicated           *CustomDedicatedService
 	apiKeyRepo                APIKeyRepository
 	userRepo                  UserRepository
 	groupRepo                 GroupRepository
