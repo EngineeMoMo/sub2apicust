@@ -4,9 +4,9 @@
 
 功能提交 `321fe9943b700384b10c2fc1368ed24c6b90eb97` 已推送origin/main：保留品牌首屏，新增互动产品展台／控制台产品坞、配方模型设置与显式登录配置、工坊独立源码及接入教程。未混入工作区待确认的包号专项修复；本机8080此前整工作区镜像不等于本次发布范围。
 
-**发布门槛**：[本轮镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632118)和[本轮CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632123)须成功。记录时镜像Build and push与Go Unit仍运行；frontend、Go lint、shell、release-helpers及安全扫描成功，不标全绿或镜像已可用。实际暂存源码已通过210项原站、54项配方及21项工坊测试与类型／lint／Vite构建。
+**发布门槛**：[本轮镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632118)已成功，实际标签 `ghcr.io/engineemomo/sub2apicust:sha-321fe99`、摘要 `sha256:c8dd5b34edacf29eec9e30f53f35f5de8c5898706b86715b81d70b8a73db4147`，从成功任务日志核验。[本轮CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632123)的Go Unit、frontend、Go lint、shell、release-helpers及安全扫描成功，集成仍运行；先确认集成成功，不把镜像发布等同全部CI通过。实际暂存源码已通过210项原站、54项配方及21项工坊测试与类型／lint／Vite构建。
 
-构建成功后，按既有workflow预期使用 `ghcr.io/engineemomo/sub2apicust:sha-321fe99`，先确认镜像已发布，再备份数据库与部署配置，记录当前标签，在服务器执行：
+集成成功后，备份数据库与部署配置，记录当前标签，在服务器执行（后续仅文档的skip-ci提交不生成新镜像，仍使用此功能标签）：
 
 ```bash
 cd /sub2api-deploy

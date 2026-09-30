@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+- **本轮镜像发布补充**：GHCR36712632118现success，实际标签sha-321fe99／摘要c8dd5b34edacf29eec9e30f53f35f5de8c5898706b86715b81d70b8a73db4147；Go Unit已成功，CI36712632123集成仍运行，不标全绿。此条覆盖下方“镜像运行中”，准确取证在HANDOFF与output/family-release-20260930；后续skip-ci文档不生成新镜像，生产未操作。
+
 - **2026-09-30 产品已推送321fe99**：用户授权的家族首页、配方／工坊与接入教程已提交origin/main，141文件，独立暂存快照285项与类型／lint／build通过。包号专项前后端及三个专用主题规则仍在工作区，不混入产品发布。GHCR36712632118与CI36712632123仍运行，安全扫描及frontend／Go lint／shell／release-helpers成功，不标镜像可用或全绿；终态以HANDOFF及本轮记录为准。三项MAGIC_*仓库Variables未设置，独立产品另行托管／配置并重建，当前生产入口禁用；不自动部署生产。
 
 ## 2026-09-30 用户再次否决旧卡片后优化产品入口
