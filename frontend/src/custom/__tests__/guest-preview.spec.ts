@@ -75,6 +75,16 @@ describe('游客控制台预览', () => {
     wrapper.unmount()
   })
 
+  it('接入教程在预览右侧展示，不跳离预览或请求账户数据', async () => {
+    const { wrapper, router } = await render('/preview/guide')
+    expect(router.currentRoute.value.path).toBe('/preview/guide')
+    expect(wrapper.findAll('main')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Claude Code 桌面端')
+    expect(wrapper.text()).toContain('Codex CLI 与桌面端')
+    expect(fetchPlans).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('无效预览地址返回概览', async () => {
     const { wrapper, router } = await render('/preview/unknown')
     expect(router.currentRoute.value.path).toBe('/preview')

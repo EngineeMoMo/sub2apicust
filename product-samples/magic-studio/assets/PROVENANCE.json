@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-30",
+  "tool": "内置 image_gen",
+  "assets": [
+    {
+      "id": "jade-bottle",
+      "file": "jade-bottle.png",
+      "prompt": "Use case: product-mockup. Asset type: original AI demonstration image for a visual prompt library, portrait 4:5. A single unbranded frosted jade-green glass skincare bottle with a brushed metal cap, standing on a pale limestone plinth. One fine leaf and soft water reflection, calm contemporary product photography, large soft side light, gentle natural shadow, accurate glass and condensation, warm gray studio background, restrained sage and ivory palette, bottle fully visible. No typography, logo, watermark, interface or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "paper-fox",
+      "file": "paper-fox.png",
+      "prompt": "Use case: stylized-concept. Asset type: original AI demonstration image for a visual prompt library, square. A charming small fox constructed from folded burnt-orange paper, precise creases, white paper chest, expressive clean silhouette, sitting on a warm pale mint studio floor. Tactile paper, refined three-dimensional craft, soft side light and delicate shadow. A single fox, generous space, no typography, logo, watermark, UI or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "rain-portrait",
+      "file": "rain-portrait.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: original AI demonstration image for a visual prompt library, portrait 4:5. Cinematic close portrait of a fictional adult East Asian woman adventurer wearing a simple charcoal waterproof coat, standing on a quiet rainy city street at blue hour. Short dark hair, natural face texture, dignified expression, tiny rain drops, cyan reflections and distant warm amber lights, shallow depth of field, believable photographic grain, no celebrity likeness, no text, no watermark, no UI.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "floating-island",
+      "file": "floating-island.png",
+      "prompt": "Use case: illustration-story. Asset type: original AI demonstration image for a visual prompt library, landscape 3:2. An expansive dreamlike landscape of floating green islands above an ocean of cloud, one tiny stone observatory and a quiet waterfall on the nearest island, warm dawn sun against pale blue and apricot sky, finely painted atmospheric editorial illustration, rich natural foliage, contemplative rather than epic, crisp foreground and soft distant mountains, no lettering, logo, watermark, interface or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "citrus-poster",
+      "file": "citrus-poster.png",
+      "prompt": "Use case: ads-marketing. Asset type: original AI demonstration image for a visual prompt library, portrait 4:5. Refined editorial still life of a sliced blood orange, whole mandarin, curving green leaf and a translucent pale peach glass dish, bold composition near the lower half with generous clean orange-red background at top for future typography. Hard afternoon sun and crisp diagonal shadow, vivid color, tactile photographic surfaces. No actual text, logo, watermark, UI, frames or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "coffee-still",
+      "file": "coffee-still.png",
+      "prompt": "Use case: product-mockup. Asset type: original AI demonstration image for a visual prompt library, square. A handmade celadon ceramic cup filled with dark coffee on a folded oatmeal linen napkin, one croissant edge, a small silver spoon, top-down contemporary café product photograph, natural morning window light, subtle ceramic glaze texture, balanced airy composition with warm neutral background and tiny muted teal accent. No text, logos, watermark, interface or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "mini-city",
+      "file": "mini-city.png",
+      "prompt": "Use case: stylized-concept. Asset type: original AI demonstration image for a visual prompt library, square. An exquisitely detailed miniature isometric coastal city block on a clean pale blue background, white curved buildings, terracotta roofs, tiny palm trees, one waterfront path, turquoise sea edge, little yellow tram, tasteful contemporary 3D editorial illustration, no labels, physically soft shadows, charming hand-crafted scale, architecture clearly readable. No typography, logos, watermark, UI or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    },
+    {
+      "id": "calm-room",
+      "file": "calm-room.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: original AI demonstration image for a visual prompt library, landscape 3:2. An uncluttered architect-designed living room, low pale sage fabric sofa, warm oak shelving, curved floor lamp, cream plaster walls, one large leafy plant, huge window showing soft woodland, subtle morning light, natural material texture, editorial interior photography, gentle depth and calm elegant composition, no people, no typography, logo, watermark, UI or collage.",
+      "kind": "原创AI视觉示例",
+      "templateVerification": "未在目标模型逐条验证"
+    }
+  ],
+  "brand": {
+    "file": "mofa-mark-flat.png",
+    "origin": "frontend/src/custom/assets/mofa-mark-flat.png，既有魔法家族标志；保留狮子／皇冠／M"
+  }
+}

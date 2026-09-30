@@ -1,0 +1,10 @@
+{
+  "name": "mofa-studio-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "test": "node --test core.test.mjs ui.test.mjs"
+  }
+}

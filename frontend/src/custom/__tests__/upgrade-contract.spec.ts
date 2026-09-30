@@ -12,6 +12,7 @@ import { resolve } from 'node:path'
 
 const theme = readFileSync(resolve(process.cwd(), 'src/custom/theme.css'), 'utf8')
 import brandHome from '@/custom/views/BrandHomeView.vue?raw'
+import apiLanding from '@/custom/views/ApiLandingView.vue?raw'
 import publicLayout from '@/custom/components/PublicLayout.vue?raw'
 import { customRoutes } from '@/custom/routes'
 
@@ -42,6 +43,8 @@ describe('雾钛青与上游布局的升级契约', () => {
     expect(appLayout).toContain('<WorkspaceHeading>')
     expect(appLayout).toContain('<slot name="page-actions" />')
     expect(appHeader).toContain('toggleMobileSidebar')
+    expect(appHeader).toContain('<FamilyProductSwitcher v-if="user" />')
+    expect(appHeader).toContain('// [CUSTOM] 产品切换实现位于叠加层')
   })
 
   it('主题依赖的上游公共类仍存在，变化时提示人工复核', () => {
@@ -60,8 +63,9 @@ describe('雾钛青与上游布局的升级契约', () => {
     expect(brandRoute?.meta?.requiresAuth).toBe(false)
     expect(customRoutes.some(route => route.path === '/')).toBe(false)
     expect(publicLayout).toContain("app.fetchPublicSettings()")
-    expect(brandHome).toContain('to="/keys"')
-    expect(brandHome).toContain('to="/usage"')
+    expect(brandHome).toContain('<FamilyHomeView />')
+    expect(apiLanding).toContain('to="/keys"')
+    expect(apiLanding).toContain('to="/usage"')
   })
 
   it('视觉层不使用构建 hash、强制覆盖或概念稿专用运行时', () => {

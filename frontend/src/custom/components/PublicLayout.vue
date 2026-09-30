@@ -7,8 +7,10 @@
         <span>{{ app.siteName }}<small>多模型 API 服务</small></span>
       </router-link>
       <nav class="mofa-brand-nav" aria-label="官网导航">
-        <router-link to="/home">产品介绍</router-link>
+        <router-link to="/family">家族首页</router-link>
+        <router-link to="/api">魔法 API</router-link>
         <router-link to="/plans">订阅套餐</router-link>
+        <router-link to="/guide">接入教程</router-link>
         <router-link to="/faq">常见问题</router-link>
         <router-link v-if="!auth.isAuthenticated" to="/preview">游客预览</router-link>
         <router-link v-if="app.cachedPublicSettings?.model_plaza_enabled && (auth.isAuthenticated || !app.cachedPublicSettings?.model_plaza_require_auth)" to="/model-plaza">模型广场</router-link>

@@ -724,6 +724,8 @@ const flagBatchImageAccess = () => canUseBatchImage.value
 // 可用渠道紧挨渠道状态之上，让用户"先看自己能用什么、再看对应状态"。
 function buildSelfNavItems(withDashboard: boolean): NavItem[] {
   const items: NavItem[] = []
+  // [CUSTOM] 家族首页复用本站登录，不向独立产品转交登录令牌。
+  items.push({ path: '/family', label: '家族首页', icon: DashboardIcon })
   if (withDashboard) {
     items.push({ path: '/dashboard', label: t('nav.dashboard'), icon: DashboardIcon })
   }
@@ -745,6 +747,8 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/intelligence', label: intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title, icon: IntelligenceIcon },
     // [CUSTOM] 控制台内嵌帮助页，保留侧栏；游客仍可访问公开 /faq。
     { path: '/help/faq', label: '常见问题', icon: ChannelIcon },
+    // [CUSTOM] 接入教程保留控制台侧栏，同时提供无需登录的公开入口。
+    { path: '/help/guide', label: '接入教程', icon: ChannelIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
       label: item.label,

@@ -8,6 +8,7 @@ type NavigationGuard = (
 
 const routerHarness = vi.hoisted(() => ({
   guard: null as NavigationGuard | null,
+  scroll: null as null | ((to: { path: string; hash: string }, from: unknown, savedPosition: unknown) => unknown),
 }))
 
 const authStore = vi.hoisted(() => ({
@@ -33,13 +34,16 @@ const appStore = vi.hoisted(() => ({
 
 vi.mock('vue-router', () => ({
   createWebHistory: vi.fn(() => ({})),
-  createRouter: vi.fn(() => ({
-    beforeEach: vi.fn((guard: NavigationGuard) => {
-      routerHarness.guard = guard
-    }),
-    afterEach: vi.fn(),
-    onError: vi.fn(),
-  })),
+  createRouter: vi.fn(options => {
+    routerHarness.scroll = options.scrollBehavior
+    return {
+      beforeEach: vi.fn((guard: NavigationGuard) => {
+        routerHarness.guard = guard
+      }),
+      afterEach: vi.fn(),
+      onError: vi.fn(),
+    }
+  }),
 }))
 
 vi.mock('@/stores/auth', () => ({
@@ -111,6 +115,16 @@ describe('feature route guard', () => {
     await import('@/router')
   })
 
+  it.each(['/guide', '/help/guide', '/preview/guide'])('%s 的教程目录滚动到章节', path => {
+    expect(routerHarness.scroll?.({ path, hash: '#guide-codex' }, {}, null)).toEqual({ el: '#guide-codex' })
+  })
+
+  it('教程外页面及未知锚点保留置顶，浏览器返回优先恢复原位置', () => {
+    expect(routerHarness.scroll?.({ path: '/faq', hash: '#guide-codex' }, {}, null)).toEqual({ top: 0 })
+    expect(routerHarness.scroll?.({ path: '/guide', hash: '#unknown' }, {}, null)).toEqual({ top: 0 })
+    expect(routerHarness.scroll?.({ path: '/guide', hash: '#guide-codex' }, {}, { top: 120 })).toEqual({ top: 120 })
+  })
+
   beforeEach(() => {
     appStore.backendModeEnabled = false
     authStore.isAuthenticated = true
@@ -122,7 +136,7 @@ describe('feature route guard', () => {
   })
 
   // [CUSTOM] 使用实际注册的路由守卫验证游客入口。
-  it.each(['/home', '/brand', '/plans', '/faq', '/preview', '/preview/keys', '/preview/plans', '/preview/faq'])('匿名可访问 %s', async path => {
+  it.each(['/home', '/brand', '/family', '/api', '/plans', '/faq', '/guide', '/preview', '/preview/keys', '/preview/plans', '/preview/faq', '/preview/guide'])('匿名可访问 %s', async path => {
     authStore.isAuthenticated = false
     appStore.publicSettingsLoaded = true
     const { navigation, next } = runGuard({ requiresAuth: false }, path)
@@ -130,7 +144,7 @@ describe('feature route guard', () => {
     expect(next).toHaveBeenCalledWith()
   })
 
-  it.each(['/home', '/brand', '/plans', '/faq', '/preview', '/preview/keys', '/preview/plans', '/preview/faq'])('冷启动确认后台模式后拦截 %s', async path => {
+  it.each(['/home', '/brand', '/family', '/api', '/plans', '/faq', '/guide', '/preview', '/preview/keys', '/preview/plans', '/preview/faq', '/preview/guide'])('冷启动确认后台模式后拦截 %s', async path => {
     authStore.isAuthenticated = false
     appStore.fetchPublicSettings.mockImplementation(async () => {
       appStore.backendModeEnabled = true
@@ -146,6 +160,26 @@ describe('feature route guard', () => {
     const { navigation, next } = runGuard({}, path)
     await navigation
     expect(next).toHaveBeenCalledWith({ path: '/login', query: { redirect: path } })
+  })
+
+  it.each(['/family', '/api'])('后台模式中已登录非管理员不能访问 %s', async path => {
+    appStore.backendModeEnabled = true
+    appStore.publicSettingsLoaded = true
+    const { navigation, next } = runGuard({ requiresAuth: false }, path)
+    await navigation
+    expect(next).toHaveBeenCalledWith('/login')
+  })
+
+  it('有效站内会话可直接进入配方选择页，未登录时保留完整回跳目标', async () => {
+    const path = '/connect/recipes?origin=https%3A%2F%2Frecipes.test&nonce=abc&kind=text'
+    appStore.publicSettingsLoaded = true
+    let attempt = runGuard({}, path)
+    await attempt.navigation
+    expect(attempt.next).toHaveBeenCalledWith()
+    authStore.isAuthenticated = false
+    attempt = runGuard({}, path)
+    await attempt.navigation
+    expect(attempt.next).toHaveBeenCalledWith({ path: '/login', query: { redirect: path } })
   })
 
   it('waits for the first public-settings request before deciding payment access', async () => {

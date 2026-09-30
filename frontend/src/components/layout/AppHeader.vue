@@ -19,6 +19,9 @@
         </div>
       </div>
 
+      <!-- [CUSTOM] 登录后的家族产品胶囊；保留原账户操作，不自动跨产品授权。 -->
+      <FamilyProductSwitcher v-if="user" />
+
       <!-- Right: Announcements + Docs + Language + Subscriptions + Balance + User Dropdown -->
       <div class="flex min-w-0 items-center gap-1 sm:gap-3">
         <!-- Announcement Bell -->
@@ -239,6 +242,8 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import { useWorkspaceHeading } from '@/custom/brand/useWorkspaceHeading'
+// [CUSTOM] 产品切换实现位于叠加层，原页头仅增加装配接缝。
+import FamilyProductSwitcher from '@/custom/components/FamilyProductSwitcher.vue'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import SubscriptionProgressMini from '@/components/common/SubscriptionProgressMini.vue'
 import AnnouncementBell from '@/components/common/AnnouncementBell.vue'

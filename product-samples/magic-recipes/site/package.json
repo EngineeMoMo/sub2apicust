@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "mofa-recipes-prototype",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test core.test.cjs model.test.cjs magic-connect.test.cjs ui.test.cjs",
+    "start": "node build.mjs && node serve.mjs"
+  }
+}

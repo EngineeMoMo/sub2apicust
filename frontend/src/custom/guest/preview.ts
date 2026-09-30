@@ -16,6 +16,7 @@ export const previewSections: PreviewSection[] = [
   { id: 'subscriptions', label: '我的订阅', icon: 'clock', description: '查看自己购买的套餐、有效期与已用额度。', target: '/subscriptions', action: '查看我的订阅', columns: ['订阅', '状态', '有效期', '已用额度'] },
   { id: 'balance', label: '余额与充值', icon: 'creditCard', description: '充值关联你的账户，确认金额和支付方式后再下单。', target: '/purchase', action: '账户充值', columns: ['账户余额', '充值金额', '支付方式'] },
   { id: 'orders', label: '我的订单', icon: 'document', description: '核对自己的充值与订阅订单，查看支付及处理状态。', target: '/orders', action: '查看我的订单', columns: ['订单号', '类型', '金额', '状态'] },
+  { id: 'guide', label: '接入教程', icon: 'book', description: '了解 Claude Code、Codex 和常用客户端的接入步骤。', target: '/guide', action: '阅读接入教程', columns: [] },
   { id: 'faq', label: '常见问题', icon: 'book', description: '查看入门、充值、接入与排错说明。', target: '/faq', action: '阅读常见问题', columns: [] }
 ]
 

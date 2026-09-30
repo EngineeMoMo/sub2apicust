@@ -32,7 +32,8 @@
         <div class="mofa-guest-notice"><Icon name="eye" size="sm" aria-hidden="true" /><p><strong>你正在浏览控制台预览。</strong>个人数据不会在这里加载；套餐与常见问题可以直接查看。</p></div>
 
         <PublicPlansView v-if="section.id === 'plans'" embedded />
-        <PublicFaqView v-else-if="section.id === 'faq'" embedded />
+        <PublicFaqView v-else-if="section.id === 'faq'" embedded guide-target="/preview/guide" />
+        <PublicGuideView v-else-if="section.id === 'guide'" embedded scope="preview" />
         <template v-else-if="section.id === 'overview'">
           <div class="mofa-guest-heading"><h1>先看看你的工作空间</h1><p>从获取密钥到管理用量，左侧菜单带你了解每个功能。无需注册，也不展示任何人的账户数据。</p></div>
           <section class="mofa-guest-summary" aria-label="账户信息预览">
@@ -76,6 +77,7 @@ import BrandThemeToggle from '@/custom/components/BrandThemeToggle.vue'
 import GuestAction from '@/custom/components/GuestAction.vue'
 import PublicPlansView from '@/custom/views/PublicPlansView.vue'
 import PublicFaqView from '@/custom/views/PublicFaqView.vue'
+import PublicGuideView from '@/custom/views/PublicGuideView.vue'
 import { previewPath, previewSections } from '@/custom/guest/preview'
 
 const app = useAppStore()

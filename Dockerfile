@@ -22,6 +22,10 @@ ARG NPM_CONFIG_REGISTRY=
 # it on the native host arch instead of under QEMU emulation for the target.
 FROM --platform=${BUILDPLATFORM} ${NODE_IMAGE} AS frontend-builder
 ARG NPM_CONFIG_REGISTRY
+# [CUSTOM] 家族产品入口与配方回传来源仅在前端构建时注入，不能包含密钥。
+ARG VITE_MAGIC_RECIPES_URL=
+ARG VITE_MAGIC_RECIPES_ORIGIN=
+ARG VITE_MAGIC_STUDIO_URL=
 
 WORKDIR /app/frontend
 
@@ -41,7 +45,10 @@ RUN --mount=type=cache,id=sub2api-pnpm-store,target=/root/.local/share/pnpm/stor
 # Copy only that subtree to keep the build dependency minimal.
 COPY frontend/ ./
 COPY docs/legal/ /app/docs/legal/
-RUN pnpm run build
+# [CUSTOM] 公开产品地址及授权来源写入前端构建，不作为运行容器环境配置。
+RUN VITE_MAGIC_RECIPES_URL="${VITE_MAGIC_RECIPES_URL}" \
+    VITE_MAGIC_RECIPES_ORIGIN="${VITE_MAGIC_RECIPES_ORIGIN}" \
+    VITE_MAGIC_STUDIO_URL="${VITE_MAGIC_STUDIO_URL}" pnpm run build
 
 # -----------------------------------------------------------------------------
 # Stage 2: Backend Builder

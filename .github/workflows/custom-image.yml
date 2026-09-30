@@ -85,10 +85,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # [CUSTOM] 非敏感公开来源由仓库 Variables 配置，空值不伪造产品上线地址。
           build-args: |
             VERSION=${{ steps.ver.outputs.version }}
             COMMIT=${{ github.sha }}
             DATE=${{ steps.ver.outputs.date }}
+            VITE_MAGIC_RECIPES_URL=${{ vars.MAGIC_RECIPES_URL }}
+            VITE_MAGIC_RECIPES_ORIGIN=${{ vars.MAGIC_RECIPES_ORIGIN }}
+            VITE_MAGIC_STUDIO_URL=${{ vars.MAGIC_STUDIO_URL }}
 
       - name: Summary
         run: |

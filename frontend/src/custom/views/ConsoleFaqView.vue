@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="mofa-public"><PublicFaqView embedded hide-title /></div>
+    <div class="mofa-public"><PublicFaqView embedded hide-title guide-target="/help/guide" /></div>
   </AppLayout>
 </template>
 

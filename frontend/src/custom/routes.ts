@@ -6,6 +6,30 @@ import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/family',
+    name: 'FamilyHome',
+    component: () => import('@/custom/views/FamilyHomeView.vue'),
+    meta: { title: '家族首页', requiresAuth: false }
+  },
+  {
+    path: '/api',
+    name: 'ApiLanding',
+    component: () => import('@/custom/views/ApiLandingView.vue'),
+    meta: { title: '魔法 API', requiresAuth: false }
+  },
+  {
+    path: '/connect/recipes',
+    name: 'RecipeConnect',
+    component: () => import('@/custom/views/RecipeConnectView.vue'),
+    meta: { title: '连接魔法配方', requiresAuth: true, requiresAdmin: false }
+  },
+  {
+    path: '/help/guide',
+    name: 'ConsoleGuide',
+    component: () => import('@/custom/views/ConsoleGuideView.vue'),
+    meta: { title: '接入教程', requiresAuth: true }
+  },
+  {
     path: '/help/faq',
     name: 'ConsoleFaq',
     component: () => import('@/custom/views/ConsoleFaqView.vue'),
@@ -23,6 +47,12 @@ export const customRoutes: RouteRecordRaw[] = [
     name: 'PublicPlans',
     component: () => import('@/custom/views/PublicPlansView.vue'),
     meta: { title: '订阅套餐', requiresAuth: false }
+  },
+  {
+    path: '/guide',
+    name: 'PublicGuide',
+    component: () => import('@/custom/views/PublicGuideView.vue'),
+    meta: { title: '接入教程', requiresAuth: false }
   },
   {
     path: '/faq',

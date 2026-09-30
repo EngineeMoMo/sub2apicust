@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T07:56:36Z",
+  "title": "魔法工坊设计规范",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "深色浅雾青"
+      },
+      "accent-light": {
+        "role": "primary",
+        "displayName": "浅色雾钛青"
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "炭青页面底"
+      },
+      "bg-light": {
+        "role": "neutral",
+        "displayName": "雾白页面底"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "深色面板"
+      },
+      "surface-light": {
+        "role": "neutral",
+        "displayName": "浅色面板"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "深色说明文字"
+      },
+      "muted-light": {
+        "role": "neutral",
+        "displayName": "浅色说明文字"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "页面主标题",
+        "purpose": "发现、Skills、玩法、收藏及历史的唯一h1；窄屏尺寸见DESIGN.md。"
+      },
+      "headline": {
+        "displayName": "复用条目标题",
+        "purpose": "当前条目的具体名称。"
+      },
+      "body": {
+        "displayName": "中文系统正文",
+        "purpose": "界面基础文字，局部控件与说明按实际密度缩小。"
+      },
+      "prompt": {
+        "displayName": "完整提示词",
+        "purpose": "只读可复制文本。"
+      },
+      "command": {
+        "displayName": "官方安装命令",
+        "purpose": "仅官方命令的等宽阅读。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "overlay-dark",
+        "value": "0 16px 40px #07121555",
+        "purpose": "默认深色toast和dialog。"
+      },
+      {
+        "name": "overlay-light",
+        "value": "0 16px 40px #19352f14",
+        "purpose": "浅色toast和dialog。"
+      },
+      {
+        "name": "selected-card",
+        "value": "0 0 0 2px var(--accent)",
+        "purpose": "当前选中卡片的强调环。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "card-hover",
+        "value": "transform .45s cubic-bezier(.16,1,.3,1)",
+        "purpose": "卡片图像从默认尺寸缩放至1.045；减少动画偏好关闭过渡。"
+      },
+      {
+        "name": "motion-demo",
+        "value": "12s linear infinite",
+        "purpose": "二维运镜按播放后运行；默认暂停，后台页面暂停，减少动画偏好关闭。"
+      },
+      {
+        "name": "push",
+        "value": "0%,100%: scale(1); 50%: scale(1.2)",
+        "purpose": "产品缓慢推进的二维示意。"
+      },
+      {
+        "name": "pan",
+        "value": "0%,100%: scale(1.15) translateX(-5%); 50%: scale(1.15) translateX(5%)",
+        "purpose": "横向巡游的二维示意。"
+      },
+      {
+        "name": "breathe",
+        "value": "0%,100%: scale(1.03); 50%: scale(1.08)",
+        "purpose": "轻微呼吸的二维示意。"
+      },
+      {
+        "name": "drift",
+        "value": "0%,100%: scale(1.13) translate(-3%,2%); 50%: scale(1.2) translate(3%,-2%)",
+        "purpose": "漂浮飞行的二维示意。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "ultrawide-gallery",
+        "value": "2150px"
+      },
+      {
+        "name": "wide-workspace",
+        "value": "1650px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1200px"
+      },
+      {
+        "name": "stacked-workspace",
+        "value": "900px"
+      },
+      {
+        "name": "phone",
+        "value": "600px"
+      },
+      {
+        "name": "narrow-phone",
+        "value": "359px"
+      }
+    ],
+    "focus": {
+      "outline": "2px solid var(--accent)",
+      "outlineOffset": "4px",
+      "purpose": "全局键盘焦点；搜索使用focus-within边框。"
+    },
+    "source": {
+      "date": "2026-09-30",
+      "css": "theme.css",
+      "markup": "index.html",
+      "behavior": "app.mjs",
+      "contract": "SURFACE.md",
+      "brand": "../../BRAND_IMPLEMENTATION.md 第16–18节",
+      "scope": "只归档magic-studio本地已实现表面；不生成新色阶、不改母品牌及运行代码。"
+    },
+    "evidence": {
+      "tests": ".impeccable/review/tests.log",
+      "testCount": 21,
+      "qa": ".impeccable/review/QA.md",
+      "firstReview": ".impeccable/review/finish-review.md",
+      "verdict": ".impeccable/review/finish-verdict.md",
+      "verdictScope": "ship仅覆盖首轮三项修复，三项resolved；不是全产品或生产批准。",
+      "scanner": "引擎不可用exit127，没有扫描通过结论。",
+      "provenance": "assets/PROVENANCE.json",
+      "assetCheck": ".impeccable/review/asset-check.log"
+    }
+  },
+  "components": [
+    {
+      "name": "主复制按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "复制完整或使用提示词；图标与文字并列。",
+      "html": "<button class=\"ds-primary\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V3H3v13h5\"/></svg>复制完整提示词</button>",
+      "css": ".ds-primary{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:8px;min-height:46px;padding:10px 16px;font-weight:600;font-size:14px;background:var(--accent);color:var(--on-accent);cursor:pointer}.ds-primary:hover{filter:brightness(.94)}.ds-primary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}.ds-primary:disabled{cursor:wait;opacity:.6}.ds-primary svg{flex:none}"
+    },
+    {
+      "name": "次级确认按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "恢复示例确认及清除最近浏览等次级操作。",
+      "html": "<button class=\"ds-secondary\">保留我的内容</button>",
+      "css": ".ds-secondary{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:8px;min-height:46px;padding:10px 16px;font-weight:600;font-size:14px;background:var(--surface-2);color:var(--text);cursor:pointer}.ds-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}"
+    },
+    {
+      "name": "图标收藏操作",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "卡片与复用区的独立收藏操作，用可访问名称表达用途。",
+      "html": "<button class=\"ds-icon\" aria-label=\"收藏：一瓶清透的夏天\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 3h12v18l-6-4-6 4V3Z\"/></svg></button>",
+      "css": ".ds-icon{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text);border-radius:9px;cursor:pointer}.ds-icon:hover{background:var(--hover)}.ds-icon:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}.ds-icon[aria-pressed=\"true\"]{color:var(--accent)}.ds-icon[aria-pressed=\"true\"] svg{fill:var(--accent);stroke:var(--accent)}"
+    },
+    {
+      "name": "材料字段",
+      "kind": "input",
+      "refersTo": "input-material",
+      "description": "替换当前条目材料；本页内保留，不持久化。",
+      "html": "<label class=\"ds-material\">产品主体<input value=\"无品牌玉绿色磨砂护肤瓶\" maxlength=\"300\" autocomplete=\"off\"></label>",
+      "css": ".ds-material{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:block;font-size:13px;color:var(--muted);margin-bottom:12px}.ds-material input{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:block;width:100%;margin-top:5px;min-height:44px;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:9px 10px;font-size:14px;color:var(--text);caret-color:var(--accent)}.ds-material input:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}"
+    },
+    {
+      "name": "搜索字段",
+      "kind": "input",
+      "description": "发现资源的主检索输入；焦点进入时显示雾钛青边框。",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"10.8\" cy=\"10.8\" r=\"6.8\"/><path d=\"m16 16 4.5 4.5\"/></svg><input type=\"search\" placeholder=\"搜效果、提示词、风格或工具…\" aria-label=\"搜索灵感\" maxlength=\"160\" autocomplete=\"off\"><kbd>/</kbd></label>",
+      "css": ".ds-search{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:10px;background:var(--field);padding:0 14px;min-height:48px;color:var(--muted)}.ds-search:focus-within{border-color:var(--accent)}.ds-search input{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;width:100%;min-width:0;background:transparent;border:0;outline:none;padding:10px 0;color:var(--text);font-size:16px;caret-color:var(--accent)}.ds-search input::placeholder{color:var(--muted);opacity:1}.ds-search kbd{font:13px/1.5 inherit;border:1px solid var(--line);padding:0 7px;border-radius:4px}.ds-search svg{flex:none}"
+    },
+    {
+      "name": "用途筛选",
+      "kind": "chip",
+      "refersTo": "chip-category",
+      "description": "图片／视频之外的用途维度，选中状态以aria-pressed表达。",
+      "html": "<div class=\"ds-categories\" role=\"group\" aria-label=\"按用途筛选\"><button aria-pressed=\"true\">全部用途</button><button aria-pressed=\"false\">电商产品</button></div>",
+      "css": ".ds-categories{display:flex;gap:7px;flex-wrap:wrap}.ds-categories button{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;background:transparent;color:var(--muted);border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:14px;min-height:44px;cursor:pointer}.ds-categories button[aria-pressed=\"true\"]{background:var(--surface-2);border-color:var(--accent);color:var(--accent)}.ds-categories button:hover{border-color:var(--accent)}.ds-categories button:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}"
+    },
+    {
+      "name": "当前导航",
+      "kind": "nav",
+      "refersTo": "nav-current",
+      "description": "家族工作区主导航，当前区域与资源类型切换保持同步。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主导航\"><button aria-current=\"page\">发现</button><button>Skills·工作流</button><button>新玩法</button></nav>",
+      "css": ".ds-nav{display:flex;gap:6px;overflow-x:auto}.ds-nav button{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;border:0;background:transparent;padding:10px 16px;border-radius:9px;color:var(--muted);white-space:nowrap;min-height:44px;cursor:pointer;font-size:16px}.ds-nav button:hover{background:var(--hover);color:var(--text)}.ds-nav button[aria-current=\"page\"]{background:var(--surface-2);color:var(--accent);font-weight:600}.ds-nav button:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}"
+    },
+    {
+      "name": "Skill资源卡",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "非图片资源显示官方工具名和摘要，选中采用雾钛青环。",
+      "html": "<article class=\"ds-skill\"><button class=\"ds-skill-open\" aria-label=\"查看：给短片加上清晰字幕\" aria-pressed=\"true\"><div class=\"ds-skill-visual\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m8 5-6 7 6 7m8-14 6 7-6 7M14 3l-4 18\"/></svg><span>Remotion</span></div><div class=\"ds-skill-caption\"><h3>给短片加上清晰字幕</h3><p class=\"ds-summary\">使用官方字幕技能，让助手在项目里处理字幕节奏与排版。</p><p>字幕剪辑 · Skill</p></div></button></article>",
+      "css": ".ds-skill{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;position:relative;overflow:hidden;border-radius:14px;background:var(--surface);color:var(--text);box-shadow:0 0 0 2px var(--accent)}.ds-skill-open{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:block;width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:0;cursor:pointer}.ds-skill-open:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}.ds-skill-visual{padding:24px 16px 16px;color:var(--accent)}.ds-skill-visual svg{width:36px;height:36px;margin-bottom:24px;display:block}.ds-skill-visual span{font-size:20px;font-weight:600}.ds-skill-caption{padding:0 46px 14px 14px}.ds-skill-caption h3{margin:0;font-size:15px;line-height:1.55;font-weight:600}.ds-skill-caption p{margin:4px 0 0;color:var(--muted);font-size:12px}.ds-skill-caption .ds-summary{font-size:14px;line-height:1.75;margin-top:12px;margin-bottom:15px}"
+    },
+    {
+      "name": "复用区固定操作行",
+      "kind": "custom",
+      "refersTo": "workbench",
+      "description": "桌面长内容内滚动时仍可复制、下载和分享；手机随正文显示。",
+      "html": "<div class=\"ds-bench\"><div class=\"ds-bench-actions\"><button class=\"ds-bench-copy\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V3H3v13h5\"/></svg>复制完整提示词</button><button class=\"ds-bench-icon\" aria-label=\"下载提示词文本\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5\"/></svg></button><button class=\"ds-bench-icon\" aria-label=\"复制条目链接\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3h7v7m0-7L10 14m0-11H3v18h18v-7\"/></svg></button></div><p>复制后在目标工具使用，当前页面不调用生成模型。</p></div>",
+      "css": ".ds-bench{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;background:var(--surface);color:var(--text);border-radius:14px;padding:20px}.ds-bench-actions{display:flex;gap:7px;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.ds-bench-copy{font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;border:0;border-radius:8px;min-height:46px;padding:10px 16px;font-weight:600;font-size:14px;background:var(--accent);color:var(--on-accent);cursor:pointer}.ds-bench-copy:hover{filter:brightness(.94)}.ds-bench-icon{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text);border-radius:9px;cursor:pointer;flex:none}.ds-bench-icon:hover{background:var(--hover)}.ds-bench button:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}.ds-bench p{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.7}.ds-bench svg{flex:none}"
+    }
+  ],
+  "narrative": {
+    "northStar": "魔法家族 · 雾钛青",
+    "overview": "这是既有母品牌的实现归档，没有另选母品牌世界或批准新的概念稿。继承依据为根目录 BRAND_IMPLEMENTATION.md 第16–18节、现有狮冠M和本目录 PRODUCT.md：保留M／狮子／皇冠、雾钛青、默认深色及浅色配套、中文系统字体。具体工作区策略留在 SURFACE.md；本文件的布局数值仅约束魔法工坊当前表面，不推广到中转站、配方或SynaRoute。\n\n当前视觉由低彩度界面与原创图片共同组成。界面用背景、面板、字段的明度差和细线区分层级；雾钛青用于选择、复制、来源链接和焦点。图片承担主要色彩，Skill／工作流以工具名和线性图标表达，避免伪造生成结果。",
+    "keyCharacteristics": [
+      "继承狮冠M与雾钛青日夜主题。",
+      "图片先呈现效果，文字始终标明媒介与验证状态。",
+      "细线、适度圆角、可见焦点与明确中文操作。",
+      "桌面保留复制操作，手机显式返回灵感与筛选。"
+    ],
+    "rules": [
+      {
+        "name": "品牌继承",
+        "body": "复用既有雾钛青与狮冠M，不把本产品素材色彩转换为新的家族主色；SynaRoute既有紫色不在本归档范围内。",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do 保留既有狮冠M、雾钛青与默认深色，切换浅色时同时替换整组界面token。",
+      "Do 用图片呈现效果，同时持续显示原创示例、二维示意、未实测或未运行等真实状态。",
+      "Do 维持桌面固定复制操作与手机显式返回，返回保留筛选和当前页材料。",
+      "Do 保留可见焦点、有效dialog名称、原生键盘退出、减少动画偏好及准确失败回退。",
+      "Do 在新增资源和素材时补验证状态、真实官方出处与来源metadata。"
+    ],
+    "donts": [
+      "Don't 以本产品归档重定母品牌、改SynaRoute紫色或重设计其他家族产品。",
+      "Don't 把原创图、二维视频示意或复制操作成功写成目标模型／Skill效果已验证。",
+      "Don't 用 user.png、skills.png或 width-320.png替代本轮有效截图。",
+      "Don't 把三项修复的ship评分扩展成全产品生产批准或自动扫描通过。",
+      "Don't 持久化私人材料、把材料放进分享链接、创建未授权定时任务或在此文档中虚构统计。"
+    ]
+  }
+}

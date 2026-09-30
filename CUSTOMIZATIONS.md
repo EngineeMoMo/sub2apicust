@@ -1,5 +1,93 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+- **2026-09-30 产品发布整理**：用户授权提交推送本轮家族首页、配方／工坊与接入教程；未确认前保留包号专项前后端及三个专用主题规则在工作区，不混入默认产品发布。实际提交、CI及镜像摘要见HANDOFF最新状态；独立产品另行托管与公开入口配置，不自动部署生产。
+
+## 2026-09-30 用户再次否决旧卡片后优化产品入口
+
+- 保留原BrandPanel及账号／授权边界；FamilyHomeView改为tablist＋四个tabpanel的互动展台，默认配方／已知锚点，支持左右键／Home／End／循环焦点和手机两列。每个面板仍只有真实登录或打开动作，不在预览时调用API或弹新窗口，说明详情可展开。
+- 新增custom/components/FamilyProductMark.vue，复用原M以及专属几何图标；FamilyProductVisual重排配方结构示意／既有原创图例／接入与路由关系，caption及alt保留。FamilyProductAction加箭头，FamilyProductSwitcher换产品标识，保留原站API当前态与独立地址禁用规则；所有新增视觉仍只在custom/theme.css，无本轮新增上游业务接缝。
+- family/SURFACE.md记录被否决的旧版与本轮局部方向；family-home增加4项展台与键盘回归，family-header增加可选夹具目录／原M数据嵌入及完整实际公告、语言、订阅组件装配回归（数据／账户／国际化模拟，无凭据）。三项收尾修复：配方浮签／caption正常流，工坊独立图片区与caption分离，页头右侧max-content保宽／不足第二行。252项回归、类型／lint／构建及最终Docker94dba406证据见HANDOFF与output/family-deck-20260930。独立Verdict三项resolved、ship仅限修复评分，不等于用户视觉或真实登录批准；继承检查No changes，未重写母品牌、未宣称检测器通过。未提交推送或生产部署。
+
+## 2026-09-30 用户纠正品牌首页与控制台产品切换（最新方向）
+
+- 最终本机8080运行d02c6ac5689c，四容器healthy、数据／设置不变；317项原站＋54项配方定向通过。独立审查五项P2修复复核均resolved，ship只限修复清单；真实登录授权与用户视觉待验，未提交推送／生产部署。准确镜像及备份见HANDOFF，不能沿用下方初版状态。
+- 文档继承检查为No changes，既有母品牌设计系统未重写；只读范围及结论归档output/family-layout-20260930/documentation-check.md。检测引擎不可用，不登记检测通过。
+
+- 用户否决账户摘要首页。FamilyHomeView恢复原BrandPanel狮冠M、文案与原三条CTA，下方通栏API＋配方／工坊／SynaRoute展示；PublicLayout普通登录／注册恢复原默认API控制台，匿名产品仅携带站内/dashboard?product=id，不自动跳外部。新增FamilyProductAction／Visual／Switcher、family/PRODUCT.md／SURFACE.md、header／switcher定向测试；所有视觉仍只改custom/theme.css。
+- 上游新接缝逐处：AppHeader.vue模板仅在user存在时装配FamilyProductSwitcher，script新增import，均标[CUSTOM]；原账户、公告、移动菜单保留。Dockerfile在既有[CUSTOM]ARG与RUN追加VITE_MAGIC_STUDIO_URL；custom-image.yml在既有[CUSTOM]build-args追加MAGIC_STUDIO_URL Variables公开配置，不含凭据。保留原router、AppSidebar与登录处理，不增加后端接口或账号系统。
+- products.ts为工坊增加与配方一致的URL安全校验；生产没有地址则禁用，本机DEV默认4179，非DEV只接受显式双方回环HTTP。工坊首版已完成，入口不等于通用SSO／统一退出。新增studio-jade-bottle.webp／studio-paper-fox.webp是原工坊thumb资产的原样副本，来源见其PROVENANCE.json及SURFACE.md，没有新增模型请求。
+- 本机Docker补充：新增配方site/Dockerfile、deploy/docker-compose.family-local.yml.example／FAMILY_LOCAL_DOCKER.md，serve.mjs仅增加容器HOST／PORT读取。配方容器非root／只读／无能力／仅回环4178，精确4178两来源CORS；原库／Redis／app_data保留。叠加层显式配置4178配方及4179工坊预览，工坊不是本轮Docker容器。实际镜像、备份、验证与未验项以HANDOFF最新四／五为准，不将下方初版“未部署／工坊仅规划”当现状。没有提交推送或生产部署。
+
+## 2026-09-30 同批成员多专属分组（未发布，覆盖严格单组历史）
+
+- 后续现场反馈：用户明确两位成员已选全仍失败，不能把漏选作为本次结论。只读线上公开资源证实管理页尚无本轮config_issue／expected_updated_at；已发布HEAD中的SQL确实拒绝多组账号，不依赖成员数量。具体线上后端SHA与数据未取得，修正仍未发布；证据及待办见HANDOFF最新状态，本次只补文档，不新增运行时接缝。
+
+- 用户明确允许账号多个专属组并确认同批成员使用；一账号一条有效包号保留，241／242唯一性及历史隔离标记不改。新增backend/internal/service/custom_dedicated_groups.go：关联组范围、实际Key组授权、认证阶段关联绑定／历史标记查询；custom_dedicated_accounts.go的结构查询不再拒绝所有其他组，而验证关联组为同平台标准专属、单账号、无备用路由及名单外授权／订阅，保存检查关联组非成员未停用Key。Check在原始用户／Key组身份下核验实际组，认证、选号／转发、WS原接缝复用；不会只让保存成功却令其他组请求403。
+- custom_dedicated_members.go移除成员在原Save事务清理原账号关联专属组授权并停用Key，保留无关组／余额；相关mock及PG回归同步。具体诊断将合法多组改为通过，非法关联组报告account_unsafe_groups或related_group_other_accounts，并提示同批共用者加入同一条包号。config.ts、copy.ts及dedicated-view.spec.ts同步中英文规则与失败文案。均属custom文件／新增文件，无新增上游运行时接缝、样式或迁移。
+- 46项前端（含原授权弹窗4项）／相关lint／类型，Docker包号service／handler定向及embed编译通过；隔离PG30个保存场景及原多人回归通过，覆盖同账号多组的认证／选号、拒绝非成员和错组、移除／撤销／删除／重分配与历史隔离。日志output/dedicated-config-20260930/{multi-build,multi-postgres}.log，生产未取证，未提交推送部署。截图两位同组只选一位的失败已隔离复现，不能据此认定线上本次payload；还需确定用户指授权弹窗还是包号绑定保存。
+
+## 2026-09-30 包号配置400具体诊断（未发布）
+
+- 新增backend/internal/service/custom_dedicated_config.go及config_test／config_postgres_test：保留原完整性查询，失败后仅在保存事务内诊断首个失败项，白名单19类检查＋最多10项编号，不读取缓存，不更改权限。custom_dedicated_accounts.go的Save返回具体诊断；custom_dedicated_handler.go错误转换保留原错误及元数据，不再以通用常量覆盖。仅管理员保存路径返回内部资源编号，普通用户原不可用响应保持。两处均为既有custom新增文件，不新增上游业务接缝。
+- 新增frontend/src/custom/dedicated/config.ts及dedicated-config.spec.ts；AdminDedicatedAccountsView.showError按已知诊断键显示中英文原因／编号，非法原始字段不展示，旧版响应回退原提示。dedicated-view增加保存失败回归，后端原mock及handler测试同步。没有新增样式、迁移或外部依赖。
+- 42项前端定向测试、相关ESLint、vue-tsc，Docker包号service／handler测试及embed编译通过；临时PostgreSQL真实23个新增保存场景＋原多人测试通过。日志output/dedicated-config-20260930/{build,postgres}.log。生产未取证，不能认定用户本次根因；需要请求账号／组／成员编号，用户只确认发生在线上。未提交推送部署，不包含其他线程未提交内容的发布授权。
+
+## 2026-09-30 魔法家族统一首页（源码完成，未发布）
+
+- 新增custom/family/products.ts、views/FamilyHomeView.vue与ApiLandingView.vue、FAMILY_PORTAL.md、family-products.spec.ts及family-home.spec.ts。BrandHomeView改为家族装配壳，原API内容保留/api；custom/routes注册/family与/api，PublicLayout导航增加家族与API入口，family登录／注册带站内回跳，不改原登录核心。仅custom/theme.css增加mofa-family作用域，无新依赖或后端业务修改。
+- 上游接缝逐处登记：router/index.ts公开页等待名单新增/family、/api（保留后台模式限制）；AppSidebar.vue个人区新增家族首页（用户与管理员共用，不代替原菜单）；Dockerfile前端stage新增两个ARG和RUN注入；.github/workflows/custom-image.yml的build-args新增仓库公开Variables MAGIC_RECIPES_URL／MAGIC_RECIPES_ORIGIN。均有[CUSTOM]标记。实际变量／域名未设置、Docker／CI未运行，不等于镜像已发布。
+- 产品地址仅已配置HTTPS或同源相对路径，不允许凭据／参数／片段／协议相对／通配；生产空地址禁用配方，本机DEV才明确4178预览。配方model-ui.js接受经过原白名单验证的api_site来源提示，template.html新增底部新窗口家族入口、独立theme.css仅补返回链接可见性；不导出JWT／Key、不自动打开产品／授权或运行模型，回到首页不丢当前材料。ui.test.cjs增加允许／恶意来源与安全链接断言。
+- SynaRoute走已有/keys导入，不假冒桌面SSO；工坊禁用规划入口，无通用跨产品账号或单点退出。UPGRADE、site/README与HANDOFF四／五同步最新接线事实，覆盖旧咨询“无构建ARG”的结论，但保留历史记录与其他任务改动。
+- 237项前端定向＋54项Node（合计291）及类型／相关lint／Vite生产构建、workflow YAML解析通过，额外覆盖公开来源不得自动预填本机登录地址，本机hint仅限本机HTTP预览。浏览器首页1280深色／390浅色、匿名回跳、API介绍与配方预填／取消及390登录控件无外层溢出、两页错误日志空；证据output/family-20260930-*.log及本线程family-home／family-recipes截图。配方最终136797字节，4178 session86473；4175原Vite保持，8080与生产未更新、未提交推送。真实账号／Key导入闭环、CORS、独立产品SSO及收费运行未验，不用模拟登录或静态构建替代。
+
+## 2026-09-30 魔法工坊独立本地产品（定时任务关闭）
+
+- 用户后续授权先做产品、定时先不启用；新增product-samples/magic-studio内的PRODUCT／SURFACE／README／DESIGN与.impeccable/design.json、package／静态页面／独立theme.css、catalog／core／icons／app模块、Node静态服务与core／ui测试。16条资源与4个玩法覆盖图片／视频、Skills·工作流；复用变量、中英模板、复制／TXT／脱敏ID分享、收藏／历史／主题、大图与二维运镜。设计归档仅实际token／断点／组件及品牌继承，不重定母品牌。没有上游运行时接缝、生成API或自动搜索／调度，现有产品不重设计。
+- assets包含8张内置image_gen原创PNG、对应full／thumb WebP及既有狮冠M；PROVENANCE.json保存精确prompt／来源，prepare-assets.py嵌入元数据并压缩，verify-assets.py只读检查25张位图来源通过。外部方法保留Google／Runway／ComfyUI／Remotion官方出处；提示词未逐条目标模型实测，Skill未安装执行、视频不是生成视频。
+- 21项Node／jsdom／HTTP定向通过，浏览器多尺寸与真实复制／TXT下载／ID分享／收藏重开等证据在该目录.impeccable/review。设计扫描器不可用，不冒充扫描通过；独立审查首轮三项P2已修（资源类型跨区匹配／手机返回保留材料／dialog名称），同审查者Verdict Pass为ship、三项均resolved，结论仅覆盖这三项修复，记录finish-review.md／finish-verdict.md。更新HANDOFF四／五及CLAUDE最新授权，PLAN保留历史规划并标注首版已实施。仅本机4179，未提交推送／Docker／生产部署，保留并行修改。
+
+## 2026-09-30 魔法配方部署说明（文档）
+
+- 导航核查补充：源码官网导航／首页与控制台侧栏尚未添加到配方首页的产品入口，/connect/recipes仅为反向登录选择页；建议待用户确认最终地址与新增入口后再实施。本轮仅更新HANDOFF现状／待办，没有导航或运行时改动；线上自定义菜单未读取，不以源码检查替代线上配置取证。
+
+- 更新product-samples/magic-recipes/site/README.md发布方案：单文件静态托管与原站登录选择页分别发布，独立来源构建许可＋API CORS两层配置，备份／验收与同源路径备选边界。核实当前Docker／CI没有VITE_MAGIC_RECIPES_ORIGIN构建接线且.env.*排除，记录待实施；没有修改Dockerfile、workflow、原API配置或服务器，也没有部署／提交推送。
+- HANDOFF四／五记录咨询与待确认域名、站点管理工具；官方Nginx／Vite／MDN资料用于部署取证，不代表实际服务器配置已验证。没有新增运行时定制或上游接缝，既有模型测试结果未重跑也未改写。
+
+## 2026-09-30 魔法配方复用魔法 API 登录选择（源码完成）
+
+- 新增frontend/src/custom/recipes/connect.ts、custom/views/RecipeConnectView.vue、custom/__tests__/recipe-connect.spec.ts及recipe-connect-view.spec.ts；custom/routes.ts注册/connect/recipes并要求登录。只用原keysAPI获取本人现有密钥，所选Key只读GET /models；原登录、账号密码／JWT、所有后端权限及计费逻辑保持。不自动创建／改绑Key或扩大权限，无新增上游接缝。原站新增样式只在custom/theme.css的mofa-recipe-connect作用域；并行教程、包号及其他修改未覆盖。
+- 独立product-samples/magic-recipes/site新增magic-connect.cjs／magic-connect.test.cjs，build.mjs嵌入；template.html新增登录入口、model-ui.js配对接收并导入私有连接Map，独立theme.css补样式，package.json与ui.test.cjs纳入回归。登录入口仅官方域名或本机HTTP；精确来源／窗口／随机nonce／用途／五分钟期限及一次性接受，API Key仅内存、无账号凭据回传、不自动发生成请求，手动配置仍在。
+- 生产只允许同源或构建环境VITE_MAGIC_RECIPES_ORIGIN的精确来源，本机站额外允许4178；实际env仍gitignore，不添加通配、不放松COOP等安全头。两端需一起发布；目录存在不等于模型能力实测。教程、PRODUCT、DESIGN、两级README、UPGRADE与HANDOFF四／五同步更新。
+- 51项Node＋99项原站定向（含新增授权／选择25项和国际化3项）测试、类型、相关lint、生产构建通过。浏览器4178入口／1280布局、4175匿名登录目标保留及无配方控制台错误已验证；本轮视口覆盖未生效，新增手机控件与真实登录后选择／跨窗口闭环未实测。证据output/recipes-login-20260930-*.log及本线程recipes-api-login-desktop-20260930.png。本机4178 session18607已重启，用户旧页不刷新；未调用真实付费模型、未更新8080镜像／生产、未提交推送。
+
+## 2026-09-30 第四产品规划草案
+
+- 新增 `product-samples/magic-studio/PLAN.md`：按用户「先规划」要求记录暂名魔法工坊、图片／视频分类、Skills·工作流、新玩法、定期发现与审核、分阶段模型接入。仅文档，无运行时／上游接缝；母品牌雾钛青／狮冠M／默认深色与SynaRoute不改。
+- 外部官方来源只做网页取证，不安装执行或调用模型；16／40条为未来内容目标，每日／每周频率尚未启用。更新HANDOFF四／五及CLAUDE入口，保留其他未提交工作，未提交推送或部署。
+
+## 2026-09-30 魔法配方自带模型设置（独立原型）
+
+- 新增product-samples/magic-recipes/site/model.cjs、model-ui.js、model.test.cjs与fixtures/model-mock.mjs；template.html增加页内模型配置及运行／追问／图片结果区，build.mjs嵌入模块，app.js仅发配方失效与整理完成事件，样式留在独立site/theme.css。文字与生图分别连接，视频不误发文字请求。无上游业务接缝、无新依赖或真实配置文件。
+- 兼容Chat Completions／Responses文字和Images API生图；仅运行或追问直连用户地址，所有配置和Key均仅当前页内存。远程HTTPS、本机指定HTTP；不带Cookie／不跟随API重定向／不自动重试，纯文本显示模型回答，错误不回显服务商原始内容。中止、超时及配方切换隔离已覆盖；停止等待不等于服务端取消。
+- 语法、构建、44项定向测试通过；浏览器本机模拟接口验证文字两格式、追问与图片显示，1280／390／320布局无外层溢出，实际服务权限／CORS与模型效果未验证。证据output/recipes-model-20260930-tests.log及本线程截图，最终4178 session64858。模拟生图只返回既有Logo，未用真实模型或扣费；未提交推送／生产部署，其他并行业务改动保留。更新上层README、07／08范围说明、site产品／设计／使用文档以覆盖旧无模型边界。
+
+## 2026-09-30 包号专项修复（待发布，覆盖下方审查待修状态）
+
+- 上游新接缝：`backend/internal/service/api_key_service.go`的APIKeyService.Update，在repo.Update前以[CUSTOM]标记统一核验专属资格，覆盖显式启用与扩额／重置额度／清除或延长到期的隐式激活。非包号原路径保持，停用仍可执行。
+- 定制service：结构、保存与当前成员请求校验分离；运行时忽略非成员旧Key状态，保留独占及非成员授权检查。移除Key使用inactive，保存兼容历史disabled。Save要求expected_updated_at，撤销恢复需reactivate确认；custom handler映射409／400。AdminList增config_status，先关闭列表rows再检查，兼容单数据库连接。
+- 定制前端：列表单列同时显示绑定状态及配置诊断；保存传原始版本，冲突提示刷新重开，撤销恢复checkbox明确确认。恢复控件与诊断文案样式仅theme.css。新增custom_dedicated_key_update_test.go测试适配器并扩展既有Go／Vue回归；无新迁移。
+- 验证终态及证据见HANDOFF四与output/dedicated-fix-20260930。未提交推送部署，未触碰product-samples；生产历史请求根因仍未确定。
+- 最终验证：40项前端定向＋3项国际化、typecheck／相关lint／build通过；Docker定向Go service／handler、embed编译及隔离PostgreSQL65项service测试通过。未全量Go／本轮CI／真实管理员浏览器验收，8080未更新。
+
+## 2026-09-30 包号专项审查（未修复／未发布）
+
+- 新增deploy/DEDICATED_AUDIT.md，记录三类隔离数据库复现缺陷及管理页诊断缺口；审计探针／日志在gitignored的output/dedicated-audit-20260930，不新增运行时接缝。19个既有service测试＋1个四子场景审计测试执行完成，审计断言坏行为，不能称缺陷已修复。当前成员移除补丁不宜单独发布；本轮不修改业务逻辑、不提交推送部署，详见HANDOFF最新状态。
+
+## 2026-09-30 包号成员移除修复（待发布）
+
+- 仅改现有定制service `custom_dedicated_accounts.go`／`custom_dedicated_members.go`：保存时事务内撤销被移除成员的原组授权并停用原组Key；校验不计入disabled的历史Key，仍拒绝非成员授权和其他未停用Key。成功后刷新用户／组缓存，失败回滚；无新迁移、不放宽账号独占、不改变余额／其他组，不删除Key记录。
+- 更新定制copy中英文提示与排查说明；扩展现有sqlmock及真实PostgreSQL用例，覆盖原失败路径、自动清理、失败回滚、其他组不变与不自动重新启用Key。31前端测试／typecheck／相关lint、Docker Go定向测试及embed编译、19个service测试含真实SQL通过，证据output/member-removal-20260930。无上游新接缝，未提交推送或部署。
+
 ## 2026-09-30 控制台与多人包号（未发布）
 
 - **最新发布状态（覆盖本节历史未发布文字）**：43b715a15已推origin/main，GHCR36657101655及安全扫描36657101610成功，镜像sha-43b715a已发布、摘要dc36b117e524262faddf0c13f0dad5c9ff510e385e69ddc2860145a7ea6566af。CI36657101544前端／Go lint／shell／release-helpers／Go Unit通过，集成测试尚未结束，不标全绿；发布前核对终态。证据output/console-release-43b715a，生产未操作。
@@ -83,6 +171,14 @@
 ---
 
 ## 一、新增文件（低冲突，仍需验证依赖契约）
+
+### 客户端接入教程（2026-09-30，本地未发布）
+- `frontend/src/custom/views/PublicGuideView.vue` — 公开教程；按站点公开 API 基础地址展示 Anthropic 根地址及 OpenAI `/v1`，CLI／桌面端与常见第三方客户端步骤、官方文档、错误排查，不接触真实密钥。
+- `frontend/src/custom/views/ConsoleGuideView.vue` — AppLayout 内嵌相同教程，保留控制台侧栏。
+- `frontend/src/custom/__tests__/guide.spec.ts` — 路由边界、协议配置和地址占位符；预览与守卫测试增加教程路径。
+- 已有定制文件 `custom/routes.ts`、`custom/guest/preview.ts`、`custom/views/GuestPreviewView.vue`、`custom/components/PublicLayout.vue`、`custom/views/BrandHomeView.vue`、`custom/views/PublicFaqView.vue`、`custom/views/ConsoleFaqView.vue`、`custom/theme.css` 接入导航、FAQ往返、只读预览与响应式文档样式；所有样式只在 theme.css。教程scope确保控制台／预览中的套餐和FAQ链接不跳出对应浏览入口，GuestAction保护游客密钥操作。
+- **上游接缝**：`frontend/src/components/layout/AppSidebar.vue` 新增带 `[CUSTOM]` 的 `/help/guide` 入口；`frontend/src/router/index.ts` 将 `/guide` 纳入已有 `[CUSTOM]` 公开页后台模式检查，另新增限定三个教程路径及五个已知锚点的滚动逻辑，保留浏览器返回恢复与其他页面置顶。同步上游时核对两文件中的三处逻辑。
+- 80项定向前端、国际化3项、typecheck、相关ESLint与生产构建通过；浏览器验证1280深色／390浅色无外层溢出，游客登录取消、键盘折叠、章节滚动及预览FAQ往返。证据output/client-guide-20260930，截图在本线程visualizations目录；4175可预览。模型权限、客户端版本、桌面本地／云端与真实调用仍需单独验收，此轮不涉及后端与业务数据，未提交／部署。
 
 ### Claude / ChatGPT-Codex 包号（2026-09-28，源码，未部署）
 - 使用与验收边界：`DEDICATED_ACCOUNTS.md`。仅标准模式；复用事先配置好的一账号／一标准专属分组／一授权用户，不自动搬号、不改变计费。

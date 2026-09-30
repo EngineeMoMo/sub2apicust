@@ -739,10 +739,14 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior(_to, _from, savedPosition) {
+  scrollBehavior(to, _from, savedPosition) {
     // Scroll to saved position when using browser back/forward
     if (savedPosition) {
       return savedPosition
+    }
+    // [CUSTOM] 接入教程目录使用限定锚点，保留其他页面的原滚动行为。
+    if (['/guide', '/help/guide', '/preview/guide'].includes(to.path) && /^#guide-(prepare|claude|codex|others|troubleshoot)$/.test(to.hash)) {
+      return { el: to.hash }
     }
     // Scroll to top for new routes
     return { top: 0 }
@@ -825,8 +829,8 @@ router.beforeEach(async (to, _from, next) => {
 
   // If route doesn't require auth, allow access
   if (!requiresAuth) {
-    // [CUSTOM] 游客官网等待公开设置，避免冷启动绕过后台模式。
-    if (['/home', '/brand', '/plans', '/faq'].includes(to.path) || isPreviewPath(to.path)) {
+    // [CUSTOM] 家族首页、API介绍与游客入口等待公开设置，避免冷启动绕过后台模式。
+    if (['/home', '/brand', '/family', '/api', '/plans', '/faq', '/guide'].includes(to.path) || isPreviewPath(to.path)) {
       if (!appStore.publicSettingsLoaded) {
         try { await appStore.fetchPublicSettings() }
         catch (error) { console.warn('Failed to load public settings for guest page', error) }
