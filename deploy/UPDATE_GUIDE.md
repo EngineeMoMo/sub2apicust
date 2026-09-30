@@ -4,7 +4,7 @@
 
 功能提交 `25071d4d547c69d6c933bbcb0c276585b23b4b68` 已推送 origin/main：工坊三张等宽图片与鼠标／点按／键盘置顶、最新深发人像、家族首页独立皇冠图标、SynaRoute 官网与下载链接，以及发布地址配置说明。只包含 16 个家族相关文件，不包含工作区包号专项，未新增跨站 SSO 或一体化产品托管。实际暂存快照 72 项／8 文件、类型／相关 lint／Vite 构建通过；真实生产登录与模型授权仍需用户验收。
 
-**记录时发布尚未完成**：[镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764218)、[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764231)和[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764322)仍运行，不把旧提交的成功结果沿用到本轮。待三项成功并核对镜像任务日志中实际标签／摘要，再备份数据库和部署配置、记录旧标签后执行：
+**记录时发布尚未完成**：[镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764218)在 Build and push、[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764231)的 Go Unit 仍运行；[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764322)以及 CI 的前端／Go lint／shell／release-helpers 已成功，不标全部通过，不把旧提交的成功结果沿用到本轮。待三项成功并核对镜像任务日志中实际标签／摘要，再备份数据库和部署配置、记录旧标签后执行：
 
 ```bash
 cd /sub2api-deploy
