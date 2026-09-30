@@ -1,5 +1,20 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-09-30 多人包号与控制台版本
+
+代码 `43b715a15f599f5ae2125bc923849d57e4b3522c` 已推送；GHCR及安全扫描成功，镜像 `ghcr.io/engineemomo/sub2apicust:sha-43b715a` 已生成（摘要 `sha256:dc36b117e524262faddf0c13f0dad5c9ff510e385e69ddc2860145a7ea6566af`）。
+
+**发布门槛**：记录时[本轮CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36657101544)的集成测试仍在运行，Go单测、Go lint、前端及其他任务通过；请先确认该CI全部成功，不把镜像成功当作全量测试通过。
+
+通过后先备份数据库和部署配置，再在服务器执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-43b715a
+```
+
+本次新增迁移242（多成员与删除隔离），保持一账号一专属分组的独占规则。上线后检查登录隐藏游客入口、FAQ右侧正文、包号名称／多人／改绑／撤销后删除及任务费用显示。不要直接回滚旧单用户镜像；详细规则与回退边界见[包号排查说明](DEDICATED_TROUBLESHOOTING.md)。生产尚未由代理操作。
+
 ## 2026-09-28 游客功能已验证版本
 
 代码提交 `fa45b2023c01e5c84084dcbcb32d5a7c5bbe213a` 的 CI（含Go单测／集成）、安全扫描及GHCR构建全部通过，发布镜像 `ghcr.io/engineemomo/sub2apicust:sha-fa45b20`。本次包括公开官网／真实套餐／FAQ、游客控制台及宽屏手机适配；不开放个人数据接口。
