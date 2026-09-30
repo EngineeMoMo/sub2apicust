@@ -1,5 +1,22 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-09-30 家族产品与接入教程版本
+
+功能提交 `321fe9943b700384b10c2fc1368ed24c6b90eb97` 已推送origin/main：保留品牌首屏，新增互动产品展台／控制台产品坞、配方模型设置与显式登录配置、工坊独立源码及接入教程。未混入工作区待确认的包号专项修复；本机8080此前整工作区镜像不等于本次发布范围。
+
+**发布门槛**：[本轮镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632118)和[本轮CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36712632123)须成功。记录时镜像Build and push与Go Unit仍运行；frontend、Go lint、shell、release-helpers及安全扫描成功，不标全绿或镜像已可用。实际暂存源码已通过210项原站、54项配方及21项工坊测试与类型／lint／Vite构建。
+
+构建成功后，按既有workflow预期使用 `ghcr.io/engineemomo/sub2apicust:sha-321fe99`，先确认镜像已发布，再备份数据库与部署配置，记录当前标签，在服务器执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-321fe99
+```
+
+独立配方／工坊不随原站镜像自动托管。仓库 `MAGIC_RECIPES_URL`、`MAGIC_RECIPES_ORIGIN`、`MAGIC_STUDIO_URL` 尚未配置（只读API核对变量名称），本次生产入口将显示待配置并禁用；需先单独托管、确认HTTPS或同源路径、设置公开构建变量后重建。独立配方还需精确API CORS，不放松认证或来源限制，不把本机4178／4179地址用于生产。具体见 `frontend/src/custom/FAMILY_PORTAL.md`。
+
+更新后核查 `/health`、`/home`、`/family`、`/api`、`/guide`及真实登录后的产品切换。真实Key授权／计费及用户视觉批准仍待，不自动调用收费模型；后台自定义 `home_content` 仍可能覆盖默认首页。代理未操作生产。
+
 ## 2026-09-30 多人包号与控制台版本
 
 代码 `43b715a15f599f5ae2125bc923849d57e4b3522c` 已推送；GHCR及安全扫描成功，镜像 `ghcr.io/engineemomo/sub2apicust:sha-43b715a` 已生成（摘要 `sha256:dc36b117e524262faddf0c13f0dad5c9ff510e385e69ddc2860145a7ea6566af`）。
