@@ -4,7 +4,7 @@
     <BrandPanel :site-name="app.siteName">
       <template #actions>
         <router-link to="/plans" class="btn btn-primary">先看看订阅套餐</router-link>
-        <router-link to="/preview" class="btn btn-secondary">游客预览控制台</router-link>
+        <router-link v-if="!auth.isAuthenticated" to="/preview" class="btn btn-secondary">游客预览控制台</router-link>
         <router-link to="/faq" class="btn btn-secondary">了解如何使用</router-link>
       </template>
     </BrandPanel>
@@ -32,9 +32,10 @@
 </template>
 
 <script setup lang="ts">
-import { useAppStore } from '@/stores'
+import { useAppStore, useAuthStore } from '@/stores'
 import BrandPanel from '@/custom/components/BrandPanel.vue'
 import PublicLayout from '@/custom/components/PublicLayout.vue'
 import GuestAction from '@/custom/components/GuestAction.vue'
 const app = useAppStore()
+const auth = useAuthStore()
 </script>

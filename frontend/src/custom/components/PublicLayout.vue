@@ -10,7 +10,7 @@
         <router-link to="/home">产品介绍</router-link>
         <router-link to="/plans">订阅套餐</router-link>
         <router-link to="/faq">常见问题</router-link>
-        <router-link to="/preview">游客预览</router-link>
+        <router-link v-if="!auth.isAuthenticated" to="/preview">游客预览</router-link>
         <router-link v-if="app.cachedPublicSettings?.model_plaza_enabled && (auth.isAuthenticated || !app.cachedPublicSettings?.model_plaza_require_auth)" to="/model-plaza">模型广场</router-link>
         <BrandThemeToggle />
         <router-link v-if="auth.isAuthenticated" :to="auth.isAdmin ? '/admin/dashboard' : '/dashboard'" class="btn btn-primary">进入控制台</router-link>

@@ -1,7 +1,7 @@
 <template>
   <component :is="embedded ? 'div' : PublicLayout">
     <section class="mofa-public-intro">
-      <h1>常见问题</h1>
+      <h1 v-if="!hideTitle">常见问题</h1>
       <p class="mofa-public-lead">从了解服务到接入工具，先把基础问题弄清楚。</p>
       <label for="faq-search">搜索问题或关键词</label>
       <input id="faq-search" v-model="query" class="input mofa-faq-search" type="search" placeholder="例如：充值、API Key、额度" aria-controls="faq-results">
@@ -24,7 +24,7 @@
 import { computed, ref } from 'vue'
 import PublicLayout from '@/custom/components/PublicLayout.vue'
 import { faqGroups, searchFaq } from '@/custom/guest/faq'
-defineProps<{ embedded?: boolean }>()
+defineProps<{ embedded?: boolean; hideTitle?: boolean }>()
 const query = ref('')
 const results = computed(() => searchFaq(query.value))
 const groups = computed(() => faqGroups.map(name => ({ name, items: results.value.filter(item => item.group === name) })).filter(group => group.items.length))

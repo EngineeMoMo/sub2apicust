@@ -21,7 +21,8 @@ func customDedicatedTestBinding(now time.Time) CustomDedicatedBinding {
 }
 
 func customDedicatedTestRows(binding CustomDedicatedBinding) *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "user_id", "account_id", "group_id", "label", "expires_at", "revoked_at", "updated_at"}).AddRow(binding.ID, binding.UserID, binding.AccountID, binding.GroupID, binding.Label, binding.ExpiresAt, binding.RevokedAt, binding.UpdatedAt)
+	members, _ := json.Marshal(customDedicatedMembers(binding))
+	return sqlmock.NewRows([]string{"id", "user_id", "account_id", "group_id", "label", "expires_at", "revoked_at", "updated_at", "user_ids"}).AddRow(binding.ID, binding.UserID, binding.AccountID, binding.GroupID, binding.Label, binding.ExpiresAt, binding.RevokedAt, binding.UpdatedAt, string(members))
 }
 
 func TestCustomDedicatedAllowed(t *testing.T) {
@@ -58,9 +59,9 @@ func TestCustomDedicatedCheck(t *testing.T) {
 			require.NoError(t, err)
 			defer func() { _ = db.Close() }()
 			binding := customDedicatedTestBinding(now)
-			mock.ExpectQuery("SELECT .* FROM custom_dedicated_accounts WHERE group_id").WillReturnRows(customDedicatedTestRows(binding))
+			mock.ExpectQuery(`SELECT .* FROM custom_dedicated_accounts WHERE \(group_id`).WillReturnRows(customDedicatedTestRows(binding))
 			if test.authenticated && test.subject.UserID == 11 && test.subject.GroupID == 33 && test.accountID == 22 {
-				mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WithArgs(int64(22), int64(33), int64(11)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(test.valid))
+				mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WithArgs(int64(22), int64(33), "[11]").WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(test.valid))
 			}
 			ctx := context.Background()
 			if test.authenticated {
@@ -107,7 +108,7 @@ func TestCustomDedicatedViewOwnerFilter(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT "+customDedicatedColumns+" FROM custom_dedicated_accounts WHERE id=$1 AND user_id=$2")).WithArgs(int64(1), int64(999)).WillReturnError(sql.ErrNoRows)
+	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedViewSQL)).WithArgs(int64(1), int64(999)).WillReturnError(sql.ErrNoRows)
 	service := &CustomDedicatedService{db: db}
 	view, err := service.View(context.Background(), 999, 1, true)
 	require.ErrorIs(t, err, ErrDedicatedNotFound)
@@ -135,7 +136,7 @@ func TestCustomDedicatedSaveAndRevoke(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery("SELECT EXISTS.*custom_dedicated_accounts").WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
-	mock.ExpectQuery("INSERT INTO custom_dedicated_accounts").WithArgs(int64(11), int64(22), int64(33), "Claude 专属", binding.ExpiresAt).WillReturnRows(customDedicatedTestRows(binding))
+	mock.ExpectQuery("INSERT INTO custom_dedicated_accounts").WithArgs(int64(11), int64(22), int64(33), "Claude 专属", binding.ExpiresAt, "[11]").WillReturnRows(customDedicatedTestRows(binding))
 	mock.ExpectCommit()
 	saved, err := service.Save(context.Background(), 0, input)
 	require.NoError(t, err)

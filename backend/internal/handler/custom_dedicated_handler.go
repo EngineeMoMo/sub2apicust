@@ -37,7 +37,7 @@ func customDedicatedID(c *gin.Context) (int64, bool) {
 }
 
 func customDedicatedError(c *gin.Context, err error) {
-	for _, known := range []error{service.ErrDedicatedMode, service.ErrDedicatedInput, service.ErrDedicatedConfig, service.ErrDedicatedConflict, service.ErrDedicatedNotFound, service.ErrDedicatedAccess} {
+	for _, known := range []error{service.ErrDedicatedMode, service.ErrDedicatedInput, service.ErrDedicatedConfig, service.ErrDedicatedConflict, service.ErrDedicatedNotFound, service.ErrDedicatedAccess, service.ErrDedicatedDelete} {
 		if errors.Is(err, known) {
 			response.ErrorFrom(c, known)
 			return
@@ -51,7 +51,7 @@ func (h *CustomDedicatedHandler) AdminList(c *gin.Context) {
 	if !valid {
 		return
 	}
-	bindings, err := h.service.List(c.Request.Context(), 0, page)
+	bindings, err := h.service.AdminList(c.Request.Context(), page)
 	if err != nil {
 		customDedicatedError(c, err)
 		return
@@ -93,6 +93,18 @@ func (h *CustomDedicatedHandler) Revoke(c *gin.Context) {
 	response.Success(c, gin.H{"revoked": true})
 }
 
+func (h *CustomDedicatedHandler) Delete(c *gin.Context) {
+	id, valid := customDedicatedID(c)
+	if !valid {
+		return
+	}
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+		customDedicatedError(c, err)
+		return
+	}
+	response.Success(c, gin.H{"deleted": true})
+}
+
 func (h *CustomDedicatedHandler) UserList(c *gin.Context) {
 	subject, ok := middleware.GetAuthSubjectFromContext(c)
 	if !ok {
@@ -104,6 +116,9 @@ func (h *CustomDedicatedHandler) UserList(c *gin.Context) {
 		return
 	}
 	views, err := h.service.UserList(c.Request.Context(), subject.UserID, page)
+	if err == nil {
+		err = h.service.FillGroupNames(c.Request.Context(), subject.UserID, views)
+	}
 	if err != nil {
 		customDedicatedError(c, err)
 		return
@@ -126,5 +141,10 @@ func (h *CustomDedicatedHandler) UserUsage(c *gin.Context) {
 		customDedicatedError(c, err)
 		return
 	}
-	response.Success(c, view)
+	views := []service.CustomDedicatedView{*view}
+	if err := h.service.FillGroupNames(c.Request.Context(), subject.UserID, views); err != nil {
+		customDedicatedError(c, err)
+		return
+	}
+	response.Success(c, views[0])
 }

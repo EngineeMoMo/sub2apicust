@@ -1,6 +1,12 @@
 import { apiClient } from '@/api/client'
 
 export interface DedicatedBinding {
+  user_ids?: number[]
+  users?: Array<{ id: number; name: string }>
+  platform?: string
+  user_name?: string
+  account_name?: string
+  group_name?: string
   id: number
   user_id: number
   account_id: number
@@ -11,6 +17,7 @@ export interface DedicatedBinding {
   updated_at: string
 }
 export interface DedicatedInput {
+  user_ids?: number[]
   user_id: number
   account_id: number
   group_id: number
@@ -24,6 +31,7 @@ export interface DedicatedWindow {
   stale: boolean
 }
 export interface DedicatedView {
+  group_name?: string
   id: number
   label: string
   platform: string
@@ -39,6 +47,10 @@ export interface DedicatedView {
 export interface DedicatedChoice { id: number; label: string }
 export type ChoiceKind = 'users' | 'accounts' | 'groups'
 
+export function dedicatedDisplayName(name: string | undefined, id: number): string {
+  return name?.trim() ? `${name.trim()} #${id}` : `#${id}`
+}
+
 export const dedicatedAPI = {
   async mine(page = 1): Promise<DedicatedView[]> {
     return (await apiClient.get('/dedicated-accounts', { params: { page } })).data
@@ -53,6 +65,9 @@ export const dedicatedAPI = {
   },
   async revoke(id: number): Promise<void> {
     await apiClient.post('/admin/dedicated-accounts/' + id + '/revoke')
+  },
+  async remove(id: number): Promise<void> {
+    await apiClient.delete('/admin/dedicated-accounts/' + id)
   },
   async choices(kind: ChoiceKind, search: string, platform: string): Promise<DedicatedChoice[]> {
     const params = { page: 1, page_size: 30, search, status: 'active', ...(kind !== 'users' ? { platform } : {}), ...(kind === 'groups' ? { is_exclusive: true } : {}) }

@@ -1214,6 +1214,7 @@ html .mofa-auth .mofa-auth-title {
 .mofa-intel-score { position: relative; min-height: 76px; padding: 4px; }
 .mofa-intel-score strong { font-size: 22px; font-weight: 650; letter-spacing: -0.03em; }
 .mofa-intel-score small { display: block; margin-top: 6px; font-size: 11px; color: rgb(var(--brand-muted)); }
+.mofa-intel-score .mofa-intel-price { font-size: 12px; font-variant-numeric: tabular-nums; color: rgb(var(--brand-text)); }
 .mofa-intel-bar { display: block; height: 3px; margin-top: 7px; border-radius: 2px; background: rgb(var(--brand-border) / 0.5); }
 .mofa-intel-bar > span { display: block; height: 100%; background: rgb(var(--brand-action)); border-radius: 2px; }
 .mofa-intel-sample { display: inline-block; margin-top: 5px; padding: 1px 5px; border: 1px dashed rgb(var(--brand-muted)); border-radius: 4px; font-size: 10px; color: rgb(var(--brand-muted)); }

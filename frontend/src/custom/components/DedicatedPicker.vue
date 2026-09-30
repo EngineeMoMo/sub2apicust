@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { dedicatedAPI, type ChoiceKind, type DedicatedChoice } from '@/custom/dedicated/api'
 import { dedicatedCopy } from '@/custom/dedicated/copy'
 
-const props = defineProps<{ kind: ChoiceKind; modelValue: number; label: string; platform: string; disabled?: boolean }>()
+const props = defineProps<{ kind: ChoiceKind; modelValue: number; label: string; platform: string; disabled?: boolean; selectedLabel?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
 const { locale } = useI18n()
 const copy = computed(() => dedicatedCopy[locale.value.startsWith('zh') ? 'zh' : 'en'])
@@ -14,7 +14,7 @@ const busy = ref(false)
 const error = ref(false)
 let generation = 0
 const options = computed(() => props.modelValue && !choices.value.some(item => item.id === props.modelValue)
-  ? [{ id: props.modelValue, label: '#' + props.modelValue }, ...choices.value] : choices.value)
+  ? [{ id: props.modelValue, label: props.selectedLabel ? `${props.selectedLabel} #${props.modelValue}` : '#' + props.modelValue }, ...choices.value] : choices.value)
 async function search() {
   const current = ++generation
   busy.value = true

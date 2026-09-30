@@ -58,11 +58,13 @@
               <tbody><tr v-for="row in rows" :key="row.key">
                 <th scope="row"><div class="mofa-intel-model"><span class="mofa-intel-model-icon"><ModelIcon :model="row.model" size="24px" aria-hidden="true" /></span><span>{{ row.model }}<small>{{ row.harness }}</small></span></div></th>
                 <td v-for="effort in efforts" :key="effort">
-                  <template v-if="row.cells[effort] && row.cells[effort].iq !== null">
+                  <template v-if="row.cells[effort]">
                     <div class="mofa-intel-score" :class="{ 'is-small-sample': lowSample(row.cells[effort]) }">
                       <strong>{{ number(row.cells[effort].iq) }}</strong>
-                      <span class="mofa-intel-bar" aria-hidden="true"><span :style="{ width: `${(row.cells[effort].iq ?? 0) / scoreMax * 100}%` }" /></span>
+                      <span v-if="row.cells[effort].iq !== null" class="mofa-intel-bar" aria-hidden="true"><span :style="{ width: `${(row.cells[effort].iq ?? 0) / scoreMax * 100}%` }" /></span>
                       <small :aria-label="copy.passed">{{ number(row.cells[effort].passed) }} / {{ number(row.cells[effort].valid_tasks) }}</small>
+                      <small class="mofa-intel-price">{{ copy.cost }}：{{ row.cells[effort].average_price_usd === null ? '—' : '$' + number(row.cells[effort].average_price_usd, 4) }}</small>
+                      <small v-if="row.cells[effort].price_aggregation">{{ copy.aggregation }}：{{ row.cells[effort].price_aggregation }}</small>
                       <span v-if="lowSample(row.cells[effort])" class="mofa-intel-sample">{{ row.cells[effort].valid_tasks === null ? copy.unknown : copy.low }}</span>
                     </div>
                   </template>
@@ -97,7 +99,7 @@
           </div>
         </section>
       </template>
-      <aside class="mofa-intel-notes"><p>{{ copy.note }}</p><p>{{ copy.sampleNote }}</p></aside>
+      <aside class="mofa-intel-notes"><p>{{ copy.priceNote }}</p><p>{{ copy.note }}</p><p>{{ copy.sampleNote }}</p></aside>
     </div>
   </AppLayout>
 </template>

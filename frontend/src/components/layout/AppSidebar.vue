@@ -743,8 +743,8 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     // [CUSTOM] 用户与管理员个人区共用，沿用认证路由守卫。
     { path: '/intelligence', label: intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title, icon: IntelligenceIcon },
-    // [CUSTOM] 公开帮助页，不请求个人账户信息。
-    { path: '/faq', label: '常见问题', icon: ChannelIcon },
+    // [CUSTOM] 控制台内嵌帮助页，保留侧栏；游客仍可访问公开 /faq。
+    { path: '/help/faq', label: '常见问题', icon: ChannelIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
       label: item.label,

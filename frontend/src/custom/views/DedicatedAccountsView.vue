@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { dedicatedAPI, effectiveStatus, remainingQuota, type DedicatedView } from '@/custom/dedicated/api'
+import { dedicatedAPI, dedicatedDisplayName, effectiveStatus, remainingQuota, type DedicatedView } from '@/custom/dedicated/api'
 import { dedicatedCopy } from '@/custom/dedicated/copy'
 
 const { locale } = useI18n()
@@ -46,7 +46,7 @@ onBeforeUnmount(() => { generation++; clearInterval(timer) })
       <div v-else-if="!accounts.length" class="mofa-dedicated-empty"><h2>{{ copy.empty }}</h2><p>{{ copy.emptyHint }}</p></div>
       <section v-for="account in accounts" :key="account.id" class="mofa-dedicated-account" :aria-labelledby="'dedicated-' + account.id">
         <header>
-          <div><h2 :id="'dedicated-' + account.id">{{ account.label }}</h2><p>{{ account.platform === 'anthropic' ? 'Claude' : account.platform === 'openai' ? 'ChatGPT / Codex' : copy.title }} · {{ copy.group }} #{{ account.group_id }}</p></div>
+          <div><h2 :id="'dedicated-' + account.id">{{ account.label }}</h2><p>{{ account.platform === 'anthropic' ? 'Claude' : account.platform === 'openai' ? 'ChatGPT / Codex' : copy.title }} · {{ copy.group }} {{ dedicatedDisplayName(account.group_name, account.group_id) }}</p></div>
           <span class="mofa-dedicated-status" :data-state="effectiveStatus(account, now)">{{ copy.statuses[effectiveStatus(account, now)] || copy.unknown }}</span>
         </header>
         <dl class="mofa-dedicated-facts">

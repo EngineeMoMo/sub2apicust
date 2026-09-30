@@ -41,6 +41,16 @@ describe('智力效率页面交互', () => {
     expect(page.find('.mofa-intel-sample').text()).toBe('低样本')
     expect(page.text()).toContain('不是统计可信度保证')
   })
+  it('矩阵直接展示费用及聚合口径，缺失费用不当作免费', async () => {
+    const page = await render()
+    expect(page.findAll('.mofa-intel-price').map(cell => cell.text())).toEqual(expect.arrayContaining([expect.stringContaining('$0.1'), expect.stringContaining('$0.2'), expect.stringContaining('$0')]))
+    expect(page.get('.mofa-intel-matrix').text()).toContain('median')
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ...source, points: [{ ...source.points[0], iq: null, average_price_usd: null }] }) })
+    await page.findAll('button').find(button => button.text() === '刷新数据')!.trigger('click')
+    await flushPromises()
+    expect(page.get('.mofa-intel-price').text()).toContain('—')
+    expect(page.get('.mofa-intel-price').text()).not.toContain('$0')
+  })
   it('支持搜索、环境与样本过滤，以及清空筛选', async () => {
     const page = await render()
     await page.get('input[type=search]').setValue('gpt')
@@ -84,12 +94,13 @@ describe('智力效率页面交互', () => {
     await sort.setValue('source')
     expect(page.findAll('.mofa-intel-matrix tbody tr')[1].text()).toContain('claude-test')
   })
-  it('说明区只保留指定两段，保留手动刷新', async () => {
+  it('展示费用口径及原有说明，保留手动刷新', async () => {
     const page = await render()
     expect(page.text()).not.toContain('查看源站')
     expect(page.text()).not.toContain('30 分钟')
     expect(page.find('a[href^="https://codexradar.com"]').exists()).toBe(false)
     expect(page.get('.mofa-intel-notes').findAll('p').map(paragraph => paragraph.text())).toEqual([
+      '费用是评测数据源提供的平均任务费用（USD），不是本站套餐价或每百万Token单价；不同推理档位、环境及聚合口径不能直接混为统一报价。缺失显示 —，不是免费。',
       'IQ 是源站评测指标，不是人类智商；不同环境、样本数和推理档位会影响可比性。',
       '少于 30 个有效样本标记为低样本；30 只是展示筛选阈值，不是统计可信度保证。缺失数据不按 0 分处理。'
     ])
@@ -115,6 +126,7 @@ describe('智力效率页面交互', () => {
     expect(page.text()).toContain('Choose models with evidence.')
     expect(page.text()).toContain('Small sample')
     expect(page.get('.mofa-intel-notes').findAll('p').map(paragraph => paragraph.text())).toEqual([
+      'Costs are the source’s average task costs in USD, not this site’s plan prices or per-million-token rates. Effort, environment and aggregation affect comparability. Missing values are shown as —, not free.',
       'IQ is a source benchmark metric, not human IQ. Harness, sample size and effort affect comparability.',
       'Fewer than 30 valid samples are marked as small samples. The threshold is a display filter, not a statistical confidence guarantee. Missing data is not treated as zero.'
     ])

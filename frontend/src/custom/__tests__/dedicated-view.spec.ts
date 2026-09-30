@@ -10,7 +10,7 @@ import { dedicatedAPI, type DedicatedBinding, type DedicatedView } from '@/custo
 vi.mock('@/components/layout/AppLayout.vue', () => ({ default: defineComponent({ template: '<main><slot name="page-actions" /><slot /></main>' }) }))
 vi.mock('@/custom/dedicated/api', async importOriginal => {
   const original = await importOriginal<typeof import('@/custom/dedicated/api')>()
-  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), choices: vi.fn() } }
+  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), remove: vi.fn(), choices: vi.fn() } }
 })
 const now = Date.parse('2026-09-28T08:00:00Z')
 const view: DedicatedView = { id: 1, label: '我的 Claude', platform: 'anthropic', group_id: 33, expires_at: new Date(now + 3600_000).toISOString(), status: 'available', last_used_at: null, sampled_at: new Date(now - 60_000).toISOString(), checked_at: new Date(now).toISOString(), quota_state: 'available', windows: [{ key: 'five_hour', remaining_percent: 65, resets_at: new Date(now + 60_000).toISOString(), stale: false }] }
@@ -26,6 +26,7 @@ beforeEach(() => {
   vi.mocked(dedicatedAPI.choices).mockReset().mockResolvedValue([])
   vi.mocked(dedicatedAPI.save).mockReset().mockResolvedValue(binding)
   vi.mocked(dedicatedAPI.revoke).mockReset().mockResolvedValue(undefined)
+  vi.mocked(dedicatedAPI.remove).mockReset().mockResolvedValue(undefined)
 })
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; vi.useRealTimers() })
 async function user(locale = 'zh') { wrapper = mount(DedicatedAccountsView, { global: globals(locale) }); await flushPromises(); return wrapper }
@@ -34,6 +35,11 @@ async function admin() { wrapper = mount(AdminDedicatedAccountsView, { global: g
 function button(page: VueWrapper, label: string) { const found = page.findAll('button').find(item => item.text() === label); if (!found) throw new Error('Missing button: ' + label); return found }
 
 describe('用户专属账号页面', () => {
+  it('显示专属分组名并保留编号', async () => {
+    vi.mocked(dedicatedAPI.mine).mockResolvedValue([{ ...view, group_name: 'Claude 专属组' }])
+    const page = await user()
+    expect(page.text()).toContain('Claude 专属组 #33')
+  })
   it('展示状态、剩余比例、重置时间和密钥入口', async () => {
     const page = await user()
     expect(page.text()).toContain('我的 Claude')
@@ -81,6 +87,54 @@ describe('用户专属账号页面', () => {
 })
 
 describe('管理端包号操作', () => {
+  it('列表和编辑选择项显示名称，账号和分组可重新选择', async () => {
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, user_name: '用户甲', account_name: 'Claude 专属账号', group_name: 'Claude 专属组' }])
+    const page = await admin()
+    expect(page.text()).toContain('用户甲 #11')
+    expect(page.text()).toContain('Claude 专属账号 #22 / Claude 专属组 #33')
+    await button(page, '修改 / 续期').trigger('click')
+    await flushPromises()
+    const options = page.findAll('option').map(option => option.text())
+    expect(options).toContain('用户甲 #11')
+    expect(options).toContain('Claude 专属账号 #22')
+    expect(options).toContain('Claude 专属组 #33')
+    expect(page.get('select[aria-label="上游账号"]').element.matches(':disabled')).toBe(false)
+    expect(page.get('select[aria-label="专属分组"]').element.matches(':disabled')).toBe(false)
+  })
+  it('多人显示名称并提交多用户，重复用户不能保存', async () => {
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, platform: 'openai', user_ids: [11, 12], users: [{ id: 11, name: '甲' }, { id: 12, name: '乙' }] }])
+    const page = await admin()
+    expect(page.text()).toContain('乙 #12')
+    await button(page, '修改 / 续期').trigger('click')
+    await flushPromises()
+    expect(dedicatedAPI.choices).toHaveBeenCalledWith('accounts', '', 'openai')
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(dedicatedAPI.save).toHaveBeenCalledWith(1, expect.objectContaining({ user_ids: [11, 12] }))
+    await button(page, '修改 / 续期').trigger('click')
+    await button(page, '添加用户').trigger('click')
+    await flushPromises()
+    page.findAllComponents(DedicatedPicker)[2]!.vm.$emit('update:modelValue', 11)
+    vi.mocked(dedicatedAPI.save).mockClear()
+    await page.get('form').trigger('submit')
+    expect(dedicatedAPI.save).not.toHaveBeenCalled()
+  })
+  it('仅撤销记录提供删除，取消不删除，确认后刷新列表', async () => {
+    const page = await admin()
+    expect(page.findAll('button').some(item => item.text() === '删除记录')).toBe(false)
+    page.unmount()
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, revoked_at: view.checked_at }])
+    const revokedPage = await admin()
+    await button(revokedPage, '删除记录').trigger('click')
+    await button(revokedPage, '取消').trigger('click')
+    expect(dedicatedAPI.remove).not.toHaveBeenCalled()
+    await button(revokedPage, '删除记录').trigger('click')
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([])
+    await button(revokedPage, '确认删除').trigger('click')
+    await flushPromises()
+    expect(dedicatedAPI.remove).toHaveBeenCalledWith(1)
+    expect(revokedPage.text()).toContain('还没有包号记录')
+  })
   it('展示准备说明与原计费规则，不擅自改分组', async () => {
     const page = await admin()
     expect(page.text()).toContain('先准备一个独立分组')

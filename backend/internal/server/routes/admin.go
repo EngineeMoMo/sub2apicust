@@ -36,6 +36,8 @@ func RegisterAdminRoutes(
 		admin.POST("/dedicated-accounts", h.CustomDedicated.Save)
 		admin.PUT("/dedicated-accounts/:id", h.CustomDedicated.Save)
 		admin.POST("/dedicated-accounts/:id/revoke", h.CustomDedicated.Revoke)
+		// [CUSTOM] 仅撤销后的包号可删除，保留旧密钥隔离记录。
+		admin.DELETE("/dedicated-accounts/:id", h.CustomDedicated.Delete)
 
 		// 部署与运营合规确认
 		registerAdminComplianceRoutes(admin, h)

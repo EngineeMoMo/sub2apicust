@@ -1,5 +1,6 @@
 export const intelligenceCopy = {
   zh: {
+    priceNote: '费用是评测数据源提供的平均任务费用（USD），不是本站套餐价或每百万Token单价；不同推理档位、环境及聚合口径不能直接混为统一报价。缺失显示 —，不是免费。',
     title: '智力效率', description: '看能力，也看完成任务的代价。', refresh: '刷新数据', refreshing: '正在同步',
     updated: '评测数据更新', fetched: '本页获取',
     intro: '让模型选择，有据可依。', summary: '同一来源的评测分数、推理档位与任务效率，在这里一起比较。',
@@ -22,6 +23,7 @@ export const intelligenceCopy = {
     ultra: '极致', max: '最高', xhigh: '超高', high: '高', medium: '中', lowEffort: '低'
   },
   en: {
+    priceNote: 'Costs are the source’s average task costs in USD, not this site’s plan prices or per-million-token rates. Effort, environment and aggregation affect comparability. Missing values are shown as —, not free.',
     title: 'Intelligence & efficiency', description: 'Compare capability and the cost of completing a task.', refresh: 'Refresh data', refreshing: 'Syncing',
     updated: 'Source updated', fetched: 'Fetched here',
     intro: 'Choose models with evidence.', summary: 'Compare benchmark scores, reasoning effort and task efficiency from a single source.',

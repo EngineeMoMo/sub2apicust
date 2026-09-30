@@ -6,6 +6,12 @@ import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/help/faq',
+    name: 'ConsoleFaq',
+    component: () => import('@/custom/views/ConsoleFaqView.vue'),
+    meta: { title: '常见问题', requiresAuth: true }
+  },
+  {
     path: '/preview/:section?',
     name: 'GuestPreview',
     component: () => import('@/custom/views/GuestPreviewView.vue'),

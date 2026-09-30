@@ -1,5 +1,16 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-09-30 控制台与多人包号（未发布）
+
+- **收口决定**：用户确认保留账号不可加入其他分组的独占约束，授权提交推送；本轮不继续改业务规则。生产待用户发布，本轮CI／镜像状态按代码提交重新验证，未跟踪product-samples不提交。
+
+- **2026-09-30 已部署本机Docker（优先于本轮未部署记录）**：用户授权本机测试。原三容器处于停止状态，保留原卷启动Postgres／Redis，先完成597905字节数据库备份与pg_restore目录校验、旧镜像标签sub2apicust:before-console-20260930，再代理预检200并构建。前端类型／国际化3测／构建及Go embed成功；仅应用容器重建，运行镜像与标签一致be2f26f98e8c3dee62d765a8b78e6cd33021dc3b6f618c76085e310180b234b8，三服务healthy，health=ok。迁移242两列和三个索引确认存在；数据库／Redis容器ID及app_data卷不变，用户2／密钥0／组3／套餐1／订单0／包号0／设置280计数保持。备份逐项比较只有Claude版本2.1.283→2.1.285与Codex版本0.158.0→0.159.2两键自动同步，09:44启动日志证实，其余278键不变。HTTP入口index-Ckx_MqIV.js及三个新页面chunk验证通过，账户与管理员接口匿名401；浏览器8080官网正常打开并留给用户测试，尚未做带数据管理员交互验收。证据output/console-deploy-20260930，备份SHA256=1D900EC14FB9915B5E912F0A84778271CEB149178B7CC526E3A9F55411EE037E。未提交推送或操作生产；迁移后的回退需兼顾数据库，不能直接跑旧单用户版本。
+
+- 定制前端：PublicLayout／BrandHomeView按登录态隐藏游客入口；新增ConsoleFaqView与 `/help/faq`，PublicFaqView支持隐藏重复标题。DedicatedPicker提供已选名称回退，AdminDedicatedAccountsView显示所有用户／账号／组名称并支持1–100用户、改绑与撤销后删除；DedicatedAccountsView仅公开本人组名。IntelligenceView默认矩阵展示平均任务费用、缺失与聚合口径，中英文copy补充费用定义；新增样式只在theme.css。
+- 定制后端：新增 `custom_dedicated_display.go` 名称白名单、`custom_dedicated_members.go` 成员与删除逻辑；更新已有custom service/handler，迁移242添加JSON成员及逻辑删除，改绑保留旧隔离记录。sqlmock与真实PostgreSQL测试覆盖迁移、多人、非成员拒绝、名称隐私、改绑、删除和重新分配。不改计费、不自动授权、不公开管理员账号信息给用户。
+- 上游接缝：`frontend/src/components/layout/AppSidebar.vue` 的 `[CUSTOM]` FAQ路径改为 `/help/faq`；`backend/internal/server/routes/admin.go` 新增带 `[CUSTOM]` 的管理员DELETE路由，沿用认证、合规、审计中间件。
+- 验证：139前端定向＋3国际化、类型／lint／build通过；Docker Go定向service/handler单测及embed编译通过，18个service测试在临时PostgreSQL容器运行通过（含真实SQL）。证据output/console-fixes-20260930；未全量Go／CI／管理页浏览器视觉验收、未提交推送部署，生产403/503原因尚未确定。维护与回退见deploy/DEDICATED_TROUBLESHOOTING.md。
+
 ### 魔法配方创作扩展（2026-09-28）
 - 新增独立样品07-image-prompt.md、08-video-prompt.md；site目录接入creative分类、媒体字段默认值与对应工具引导，按钮明确仅整理模板。无上游业务文件修改、无新依赖或模型接口。
 - 2026-09-28创作配方更新：新增07-image-prompt.md与08-video-prompt.md，现为工作3份、大学3份、创作2份。主按钮改为“整理并生成提示词”，明确本地模板组装、不调用模型；结果与教程按文字／生图／视频分别引导。构建与语法检查完成，30项core／DOM测试全通过；真实浏览器验证创作筛选2项、两份虚构示例及正确目标工具提示，桌面和390px无外层横向溢出。本机4178服务已重启（session75587），用户旧页未刷新。未调用模型、未验证媒体效果、未提交推送或部署生产；真实系统剪贴板与下载落地仍待验证。
