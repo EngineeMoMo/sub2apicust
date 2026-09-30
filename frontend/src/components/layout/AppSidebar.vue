@@ -204,6 +204,8 @@ import IntelligenceIcon from '@/custom/components/IntelligenceIcon.vue'
 import { intelligenceCopy } from '@/custom/intelligence/copy'
 // [CUSTOM] 包号用户入口与管理入口共用定制文案。
 import { dedicatedCopy } from '@/custom/dedicated/copy'
+// [CUSTOM] 家族首页独立皇冠图标，不复用仪表盘四宫格。
+import FamilyHomeIcon from '@/custom/components/FamilyHomeIcon.vue'
 
 interface NavItem {
   path: string
@@ -725,7 +727,7 @@ const flagBatchImageAccess = () => canUseBatchImage.value
 function buildSelfNavItems(withDashboard: boolean): NavItem[] {
   const items: NavItem[] = []
   // [CUSTOM] 家族首页复用本站登录，不向独立产品转交登录令牌。
-  items.push({ path: '/family', label: '家族首页', icon: DashboardIcon })
+  items.push({ path: '/family', label: '家族首页', icon: FamilyHomeIcon })
   if (withDashboard) {
     items.push({ path: '/dashboard', label: t('nav.dashboard'), icon: DashboardIcon })
   }

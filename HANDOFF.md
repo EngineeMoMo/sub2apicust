@@ -39,6 +39,20 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-09-30 家族视觉更新再次获准提交推送（最新授权）**：用户要求“提交并推送代码，我更新下”。本次仅发布工坊三张等宽图片及置顶交互、最新深发参考人像、家族首页皇冠图标、SynaRoute 官网／下载链接和相关配置说明／回归；工作区包号专项前后端及三条专用主题规则继续隔离，不混入本轮提交。不新增跨站 SSO、统一退出或配方／工坊一体化托管；主站家族首页与 API 控制台共用当前来源登录，8080 与 4184 是不同来源的本地运行／源码预览。发布验证与远端 SHA／CI／镜像以本轮后续记录为准，不沿用 321fe99 的成功结果，不代用户部署生产。
+- **实际暂存快照验证**：本次限定 16 个文件，使用 git checkout-index 导出独立暂存源码，复用现有前端依赖；72 项／8 文件（家族相关 69 项＋国际化 3 项）、vue-tsc、相关 ESLint、Vite 生产构建全部通过。日志 output/family-polish-release-20260930/{tests,types,lint,build}.log；24 个并行文件 SHA256 前后一致，专用包号配置新文件未进入快照，主题仅剩三条包号规则未暂存。未重建本机 8080、部署生产、登录或调用收费模型；原有 Browserslist／chunk 警告不在本轮处理范围，完整后端 CI 仍需核对本轮 SHA。
+
+- **2026-09-30 SynaRoute 免登录官网／下载入口（本地源码，未发布）**：用户要求在家族展台增加下载或官网链接，也可提供未安装引导。本轮选择确定性的公开链接，不新增安装检测或改动原密钥导入：FamilyHomeView的SynaRoute面板在原配置动作下增加“下载客户端”／“访问官网”，匿名与登录用户均可点击，新窗口且noopener noreferrer、不携带Key／JWT、不自动下载或安装。新增family/synarouteLinks.ts集中官方站点https://synaroute.mofamilys.com与/zh/download；来源为真实工程D:/ccfile/SynaRoute的README、site/src/config/site.ts及App.tsx下载路由，不采用搜索结果中的同名第三方。KeysView原导入和100ms焦点提示保持未改，不能把其启发式当真实安装检测；此轮无新上游接缝。样式仅theme.css，原品牌紫色／配置登录／SynaRoute关系图和工坊三图保留。
+- **SynaRoute 入口取证及未知边界**：69项／7文件回归通过（此前57项＋home新增1项＋synaRouteImport11项），相关ESLint、vue-tsc与Vite构建通过，证据output/synaroute-links-20260930/{tests,lint,types,build}.log。4184实际匿名1280桌面／390手机两条链接可见、均44px高、无横向溢出，键盘Tab到官网链接focus-visible及2pxoutline；截图synaroute-links-{desktop,mobile}-20260930.png与browser-evidence.json，临时viewport reset，交付tab9保留。网站在线访问本轮未成功：web工具不可访问／GitHub cache miss、隐藏官网页超时导致工具重置、两条HEAD各12秒超时；来源已确认不等于官网此刻可达，不能说安装包下载或真实客户端导入已验。本轮未登录、调用收费模型、修改SynaRoute工程、提交推送、重建8080或部署生产，保留包号及此前并行修改。
+
+- **2026-09-30 工坊三图与参考人像终态（本地源码，未发布；覆盖下方雨夜两图及金发版本）**：用户要求保留原玻璃瓶和狐狸、新增第三张人物，继而否决金发欧美人物，最新以用户提供的深发色室内写真为视觉参考。内置 image_gen 生成虚构28岁成年女性：深棕长发、安静表情、米白吊带／淡蓝灰细条纹衬衫／牛仔裤、自然坐姿，手放膝上；不使用裙装、摸头、截图黑框或尺寸徽标。新增studio-reference-portrait.png／webp／provenance.json，原PNG保留，网页WebP1122×1402、113416字节，精确prompt与参考边界已登记；不代表真人身份、代言或模板实测。此前被否决资产移入ignored output/studio-floral-20260930/iterations，不混入发布；原瓶／狐副本与magic-studio原thumb的SHA256逐一一致。
+- **最新尺寸纠正与交互**：用户指出另外两张过小、不协调，theme.css中仅工坊列宽改为40%文案／60%图区，三图统一4:5等宽正常流Grid，轻微±2°与±8px错落，默认互不遮挡；手机去除图区多余最小高度。三张button保留悬停轻抬／回正／1.1倍并置顶、点按单选／恢复，键盘焦点层级高于悬停，reduced-motion关闭过渡。FamilyProductVisual仅custom组件、无新上游业务接缝；caption为“AI 视觉示例 · 非模板实测”。原首屏、品牌、登录／入口、模型功能与包号并行修改保留，没有触发网站模型请求。
+- **本轮取证**：57项／6文件通过（home11、products17、switcher8、header3、upgrade8、AppSidebar10），相关ESLint、vue-tsc与最新Vite生产构建通过，日志output/studio-reference-20260930/{tests-final,lint-final,types,build-final}.log。4184实际源码浏览器1280桌面三图约178.46×223.07px、390手机约84.66×105.82px，三对默认相交面积均0、三图均加载、页面无横向溢出；每张实际鼠标悬停z20且pressed=false，玻璃瓶Tab焦点focus-visible/z30，手机尺寸点按true→false。手机尺寸不是实机触摸验证，减少动画仅源码契约测试。证据browser-evidence-final.json及本线程studio-balanced-{desktop,mobile}-20260930.png；临时viewport已reset，交付预览tab7保留。此源码预览设置请求仍回退Sub2API，不当原品牌配置、真实登录或生产验收；未提交推送、重建8080或部署生产。
+
+- **2026-09-30 家族首页侧栏图标（本地源码，未发布）**：用户指出家族首页与仪表盘四宫格重复，已新增custom/components/FamilyHomeIcon.vue的1.5px皇冠轮廓（currentColor、aria-hidden），AppSidebar仅新增带[CUSTOM]的import并将共享buildSelfNavItems内`/family`条目改为该组件，用户端与管理员个人区均复用；两类仪表盘仍DashboardIcon，菜单、路由、登录及主题未改。upgrade-contract新增图标区分回归，55项／6文件通过，相关ESLint与类型通过，证据output/family-icon-20260930/{tests,lint,types}.log；UPGRADE与CUSTOMIZATIONS登记接缝。未提交推送、重建8080或部署生产，没有真实登录侧栏视觉验收；此前工坊人像本地改动与包号并行工作保留。
+
+- **2026-09-30 工坊人像与地址配置说明（本地源码，未发布）**：按用户要求仅替换首页工坊左侧玻璃瓶为既有虚构成年女性雨夜写真，右侧纸艺狐狸及非模板实测说明保留。新增custom/assets/studio-rain-portrait.webp为magic-studio/assets/rain-portrait-thumb.webp原样副本，SHA256均B030EEF9067933F921A8580053620610D7C5C46F31167487544D98DF826D5B40；原生成来源PROVENANCE.json，未新增模型调用、图片编辑或真人代言。FamilyProductVisual仅改import／src／alt，family-home加素材与懒加载断言，SURFACE登记来源，没有改主题或认证业务。FAMILY_PORTAL新增GitHub Settings → Secrets and variables → Actions → Variables的具体操作、三项Repository Variables示例、精确CORS与手动重建／拉取边界；未操作实际变量、DNS或服务器。44项／5文件定向回归、相关ESLint、类型与Vite构建通过，日志output/studio-portrait-20260930。4184为源码预览（自启session42274），1280桌面／390手机浅色无横溢出、人像完整可见、两图加载；截图studio-portrait-{desktop,mobile}-20260930.png与browser-evidence.json留证。该预览公开设置请求失败，首屏回退默认站名，不能当现有品牌配置、真实登录或生产验收；未重建8080或提交推送，保留包号并行工作。此前321fe99镜像不含本轮人像与说明。
+
 - **本轮镜像已发布／集成待完成（覆盖下方构建中状态）**：GHCR36712632118现success，已从成功任务109877820940日志核验真实标签ghcr.io/engineemomo/sub2apicust:sha-321fe99及摘要sha256:c8dd5b34edacf29eec9e30f53f35f5de8c5898706b86715b81d70b8a73db4147，证据output/family-release-20260930/image-publication.json。本轮CI36712632123的Go Unit已success，Integration tests仍in_progress；frontend／Go lint／shell／release-helpers及安全扫描成功，不标全部CI通过。功能提交仍321fe99；随后仅交接文档skip-ci提交，不产生替代镜像。生产仍由用户备份后更新，不建议在集成未完成时直接更新latest。包号专项继续保留未提交，三个MAGIC_*变量未设、独立产品托管／入口仍待。
 
 - **2026-09-30 产品代码已提交推送（发布状态优先）**：功能提交321fe9943b700384b10c2fc1368ed24c6b90eb97已推origin/main，git push与ls-remote核对远端SHA一致。内容为家族展台／控制台切换、配方模型设置／登录配置桥接、工坊独立源码与接入教程，共141文件；未确认合并的包号专项前后端、专用测试／文档及3条主题规则仍保留未提交。实际发布快照285项通过及类型／相关lint／Vite见下一段；本机94dba406镜像包含此前并行工作，不是本次限定范围的GHCR镜像。新提交GHCR36712632118在Build and push，CI36712632123在Go Unit；远端frontend／Go lint／shell／release-helpers及Security Scan36712632091已成功，未标全绿或镜像可用。记录output/family-release-20260930/{runs,jobs-36712632118,jobs-36712632123,jobs-36712632091}.json，不沿用旧43b715a结果。仓库MAGIC_RECIPES_URL／MAGIC_RECIPES_ORIGIN／MAGIC_STUDIO_URL均未设置（只读API核对名称），生产入口将禁用；独立页面仍需单独托管。未操作生产、域名／Variables或用户数据。
@@ -193,6 +207,14 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- **本轮家族视觉发布（优先于下方待授权历史）**：已获提交推送授权，按限定暂存版本验证后推送 origin/main；核对本轮 SHA 的 CI、安全扫描与 GHCR，再提供实际镜像标签供用户备份后更新。包号专项仍另行处理，独立配方／工坊地址和精确来源仍须配置；不把重发主站镜像当全部产品已托管或跨站 SSO 已实现。皇冠真实侧栏、生产登录回跳、官网实际下载及真实模型授权仍待用户验收。
+
+- **SynaRoute 官网／下载入口待发布**：用户在4184/home#synaroute确认新增两个公开入口；链接与布局已在源码和浏览器验证，官网实时可达性／安装包下载／真实协议导入仍待用户网络下验证。本轮未改原导入失败提示或增加可靠安装检测，不能仅凭焦点断言未安装。确认后另行授权提交／发布，与未确认包号专项隔离；网站换域名时更新family/synarouteLinks.ts，不把第三方同名产品地址替入。
+
+- **皇冠图标待发布验收**：本轮家族首页侧栏皇冠仅在源码，尚未进入8080或远端镜像；用户确认后再授权提交／发布。更新时验证用户及管理员个人区、展开／收起和双主题，仪表盘四宫格保持不变，不沿用旧镜像截图当新图标验收。
+
+- **工坊三图待用户视觉确认与发布**：用户查看4184/home#studio或最新studio-balanced桌面／手机截图，确认深发色参考写真与三张等宽放大的布局；不能再沿用被否决的雨夜两图、金发人物或1.3:1:1卡片。默认无遮挡、鼠标悬停／键盘置顶及手机尺寸点按已取证，不等于用户视觉认可或实机触摸验收。本轮仅本地源码，321fe99不含这些改动；提交推送／Docker部署仍须新的用户授权，保留并行包号改动。独立产品实际发布地址仍未知；先托管，再按FAMILY_PORTAL“在哪里配置”创建MAGIC_RECIPES_URL／MAGIC_RECIPES_ORIGIN／MAGIC_STUDIO_URL仓库Variables并重建镜像，不把本机预览或回退默认站名当线上配置。
 
 - **本轮发布检查**：功能321fe99及其镜像已发布，Go Unit通过，CI36712632123集成仍运行；先核验集成终态再由用户备份并执行./update.sh sha-321fe99，不标全绿或直接更新latest。此版仅产品相关，包号专项仍在工作区、须另行确认提交。三个MAGIC_*仓库Variables均未配置；独立配方／工坊静态页面分别托管并设置公开构建变量后需重建镜像，当前生产入口保持禁用，不宣称推原站镜像即可运行全部产品。
 

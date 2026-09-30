@@ -156,13 +156,64 @@ describe('统一产品首页', () => {
     expect(view.get('#studio').text()).toContain('内容首版已完成')
   })
 
-  it('原创图例及非实测说明可读屏，API节点保留原M轮廓', () => {
+  it('AI 图例及非实测说明可读屏，API节点保留原M轮廓', () => {
     const view = page()
     const caption = view.get('#studio figcaption')
-    expect(caption.text()).toBe('原创视觉示例 · 非模板实测')
+    expect(caption.text()).toContain('AI 视觉示例 · 非模板实测')
+    expect(caption.text()).toContain('悬停或点按，置顶欣赏')
     expect(caption.element.closest('[aria-hidden="true"]')).toBeNull()
+    expect(view.findAll('#studio img')).toHaveLength(3)
+    expect(view.get('#studio .mofa-studio-portrait img').attributes()).toMatchObject({
+      alt: '深发色成年女性 AI 人像图例',
+      src: expect.stringContaining('studio-reference-portrait.webp'), width: '320', height: '400', loading: 'lazy'
+    })
+    expect(view.get('#studio img[alt="玻璃瓶原创图例"]').attributes('src')).toContain('studio-jade-bottle.webp')
     expect(view.get('#studio img[alt="纸艺狐狸原创图例"]').exists()).toBe(true)
     expect(view.get('#api .mofa-api-node-mark').attributes('style')).toContain('--mofa-node-mask: url(')
+  })
+
+  it('三图可点按或通过键盘按钮置顶，再次点按恢复，不触发跳转或模型请求', async () => {
+    const fetch = vi.spyOn(window, 'fetch')
+    const open = vi.spyOn(window, 'open')
+    const view = page()
+    await view.get('#family-tab-studio').trigger('click')
+    const cards = view.findAll('#studio .mofa-studio-card')
+    expect(cards).toHaveLength(3)
+    expect(cards.every(card => card.attributes('aria-pressed') === 'false')).toBe(true)
+    for (const card of cards) {
+      expect(card.element.tagName).toBe('BUTTON')
+      expect(card.attributes('type')).toBe('button')
+      expect(card.attributes('aria-label')).toContain('置顶展示')
+      await card.trigger('click')
+      expect(card.attributes('aria-pressed')).toBe('true')
+      expect(cards.filter(item => item.attributes('aria-pressed') === 'true')).toHaveLength(1)
+    }
+    await cards[2].trigger('click')
+    expect(cards.every(card => card.attributes('aria-pressed') === 'false')).toBe(true)
+    expect(fetch).not.toHaveBeenCalled()
+    expect(open).not.toHaveBeenCalled()
+  })
+
+  it('SynaRoute 提供无需登录的官方介绍与下载页，不夹带凭据或自动下载', async () => {
+    const fetch = vi.spyOn(window, 'fetch')
+    const open = vi.spyOn(window, 'open')
+    const view = page()
+    await view.get('#family-tab-synaroute').trigger('click')
+    const download = view.get('[data-testid="synaroute-download"]')
+    const website = view.get('[data-testid="synaroute-website"]')
+    expect(download.attributes()).toMatchObject({ href: 'https://synaroute.mofamilys.com/zh/download', target: '_blank', rel: 'noopener noreferrer', 'aria-label': '下载 SynaRoute 客户端（新窗口）' })
+    expect(website.attributes()).toMatchObject({ href: 'https://synaroute.mofamilys.com', target: '_blank', rel: 'noopener noreferrer', 'aria-label': '访问 SynaRoute 官网（新窗口）' })
+    expect(download.isVisible()).toBe(true)
+    expect(website.isVisible()).toBe(true)
+    expect(download.attributes('download')).toBeUndefined()
+    expect(linkTo(view, '登录后配置 SynaRoute')).toEqual({ path: '/login', query: { redirect: '/dashboard?product=synaroute' } })
+    harness.auth.isAuthenticated = true
+    await view.vm.$nextTick()
+    expect(linkTo(view, '配置 SynaRoute')).toBe('/keys')
+    expect(download.attributes('href')).not.toContain('private-login-token')
+    expect(harness.token).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+    expect(open).not.toHaveBeenCalled()
   })
 
   it('家族首页与原 API 介绍都保留公开路由，配置选择页仍要求登录', () => {

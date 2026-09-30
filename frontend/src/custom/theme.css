@@ -35,6 +35,7 @@
 .mofa-family-launcher button:is(:hover, [aria-selected='true']) .mofa-launch-arrow { opacity: 1; transform: rotate(0); }
 .mofa-family-stage { overflow: hidden; border-radius: 0 0 16px 16px; }
 .mofa-family-product { --product-accent: var(--brand-action); display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: center; position: relative; min-width: 0; min-height: 480px; padding: 48px; gap: 40px; scroll-margin-top: 32px; animation: mofa-family-stage-in .45s cubic-bezier(.16,1,.3,1) both; }
+.mofa-family-studio { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 32px; }
 .mofa-family-synaroute, .mofa-family-launcher .mofa-launch-synaroute, .mofa-product-capsule .mofa-switch-synaroute { --product-accent: 106 73 173; }
 html.dark :is(.mofa-family-synaroute, .mofa-family-launcher .mofa-launch-synaroute, .mofa-product-capsule .mofa-switch-synaroute) { --product-accent: 191 169 243; }
 .mofa-family-product-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -47,6 +48,10 @@ html.dark :is(.mofa-family-synaroute, .mofa-family-launcher .mofa-launch-synarou
 .mofa-family-product-action .btn:hover { gap: 36px; filter: brightness(1.06); }
 .mofa-family-synaroute .mofa-family-product-action .btn { color: white; }
 html.dark .mofa-family-synaroute .mofa-family-product-action .btn { color: rgb(var(--brand-page)); }
+.mofa-synaroute-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
+.mofa-synaroute-links a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; color: rgb(var(--product-accent)); font-size: .8125rem; text-decoration: underline; }
+.mofa-synaroute-links .mofa-synaroute-download { padding: 10px 14px; border: 1px solid rgb(var(--product-accent) / .45); border-radius: 8px; text-decoration: none; }
+.mofa-synaroute-links .mofa-synaroute-download:hover { background: rgb(var(--product-accent) / .08); }
 .mofa-family-product-action > button { min-height: 52px; padding: 12px 18px; border: 1px solid rgb(var(--brand-border)); border-radius: 8px; font-size: .875rem; color: rgb(var(--brand-muted)); cursor: not-allowed; }
 .mofa-family-product-info .mofa-family-account-note { font-size: .75rem; margin-top: 16px; max-width: 44ch; }
 .mofa-family-product:focus-visible { outline: 2px solid rgb(var(--brand-focus)); outline-offset: -6px; }
@@ -77,11 +82,19 @@ html.dark .mofa-family-synaroute .mofa-family-product-action .btn { color: rgb(v
 .mofa-recipe-output > svg:last-child { color: rgb(var(--product-accent)); }
 .mofa-recipe-preview > figcaption { width: 100%; text-align: center; color: rgb(var(--brand-muted)); font-size: .6875rem; }
 .mofa-studio-preview { display: flex; flex-direction: column; gap: 24px; width: 100%; }
-.mofa-studio-images { position: relative; width: 100%; aspect-ratio: 1.05; }
-.mofa-studio-preview img { position: absolute; width: 49%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 12px; box-shadow: 0 18px 32px rgb(8 23 23 / .18); }
-.mofa-studio-preview img:first-child { top: 2%; left: 5%; transform: rotate(-8deg); }
-.mofa-studio-preview img + img { top: 14%; right: 4%; transform: rotate(7deg); }
+.mofa-studio-images { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: clamp(12px, 1.4vw, 18px); width: 100%; padding: 32px 12px 40px; isolation: isolate; }
+.mofa-studio-card { position: relative; min-width: 0; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; user-select: none; transform: translateY(var(--studio-offset)) rotate(var(--studio-angle)); transform-origin: 50% 50%; box-shadow: 0 18px 32px rgb(8 23 23 / .18); transition: transform .32s cubic-bezier(.16,1,.3,1), box-shadow .32s cubic-bezier(.16,1,.3,1); }
+.mofa-studio-card img { display: block; width: 100%; height: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: inherit; }
+.mofa-studio-portrait { --studio-angle: -2deg; --studio-offset: 8px; z-index: 1; }
+.mofa-studio-bottle { --studio-angle: 0deg; --studio-offset: -8px; z-index: 1; }
+.mofa-studio-fox { --studio-angle: 2deg; --studio-offset: 8px; z-index: 1; }
+.mofa-studio-card:is(:focus-visible, [aria-pressed="true"]) { z-index: 10; transform: translateY(calc(var(--studio-offset) - 12px)) rotate(0deg) scale(1.1); box-shadow: 0 28px 44px rgb(8 23 23 / .28); }
+@media (hover: hover) and (pointer: fine) {
+  .mofa-studio-card:hover { z-index: 20; transform: translateY(calc(var(--studio-offset) - 12px)) rotate(0deg) scale(1.1); box-shadow: 0 28px 44px rgb(8 23 23 / .28); }
+}
+.mofa-studio-card:focus-visible { z-index: 30; outline: 2px solid rgb(var(--brand-focus)); outline-offset: 5px; }
 .mofa-studio-preview > figcaption { width: 100%; text-align: center; color: rgb(var(--brand-muted)); font-size: .6875rem; }
+.mofa-studio-hint { display: block; margin-top: 6px; font-size: .75rem; }
 .mofa-route-preview { width: 100%; text-align: center; }
 .mofa-route-map { padding: 16px 8px 36px; }
 .mofa-route-source { display: inline-flex; align-items: center; gap: 10px; color: rgb(var(--product-accent)); font-size: 1.75rem; font-weight: 600; }
@@ -149,20 +162,18 @@ html.dark .mofa-family-synaroute .mofa-family-product-action .btn { color: rgb(v
   .mofa-family-product-action { margin-top: 24px; }
   .mofa-family-product-action .btn { gap: 16px; min-height: 48px; }
   .mofa-product-visual { min-height: 320px; }
+  .mofa-family-studio .mofa-product-visual { min-height: 0; }
   .mofa-recipe-preview { padding: 16px 4px 0; }
   .mofa-recipe-sheet { width: 90%; min-height: 280px; padding: 20px; }
   .mofa-recipe-sheet > strong { font-size: 1.25rem; }
   .mofa-recipe-output { padding: 12px; gap: 8px; font-size: .6875rem; }
-  .mofa-studio-preview img { width: 52%; }
-  .mofa-studio-preview img:first-child { top: 8%; left: 4%; }
-  .mofa-studio-preview img + img { top: 21%; right: 4%; }
   .mofa-family-session { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 36px; }
   .mofa-product-capsule :is(a, button) { padding-inline: 10px; }
   .mofa-api-orbit { width: 230px; }
   .mofa-api-orbit-tag { padding-inline: 8px; font-size: .6875rem; }
 }
 @keyframes mofa-family-stage-in { from { opacity: .8; clip-path: inset(0 0 0 3%); transform: translateX(16px); } to { opacity: 1; clip-path: inset(0); transform: translateX(0); } }
-@media (prefers-reduced-motion: reduce) { .mofa-family-product { animation: none; } .mofa-family-launcher button, .mofa-family-launcher button::after, .mofa-launch-arrow, .mofa-family-product-action .btn, .mofa-product-capsule :is(a, button) { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .mofa-family-product { animation: none; } .mofa-family-launcher button, .mofa-family-launcher button::after, .mofa-launch-arrow, .mofa-family-product-action .btn, .mofa-product-capsule :is(a, button), .mofa-studio-card { transition: none; } }
 .mofa-recipe-connect-shell { min-height: 100svh; background: rgb(var(--brand-page)); color: rgb(var(--brand-text)); }
 .mofa-recipe-connect-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid rgb(var(--brand-border)); }
 .mofa-recipe-connect-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }

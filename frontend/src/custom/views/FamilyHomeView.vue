@@ -27,7 +27,13 @@
               <div class="mofa-family-product-heading"><h3>{{ product.name }}</h3><span>{{ product.state }}</span></div>
               <p class="mofa-family-purpose">{{ product.purpose }}</p>
               <p>{{ product.description }}</p>
-              <div class="mofa-family-product-action"><FamilyProductAction :product="product" /></div>
+              <div class="mofa-family-product-action">
+                <FamilyProductAction :product="product" />
+                <div v-if="product.id === 'synaroute'" class="mofa-synaroute-links">
+                  <a :href="SYNA_ROUTE_DOWNLOAD_URL" class="mofa-synaroute-download" target="_blank" rel="noopener noreferrer" aria-label="下载 SynaRoute 客户端（新窗口）" data-testid="synaroute-download"><Icon name="download" size="sm" aria-hidden="true" />下载客户端</a>
+                  <a :href="SYNA_ROUTE_WEBSITE_URL" target="_blank" rel="noopener noreferrer" aria-label="访问 SynaRoute 官网（新窗口）" data-testid="synaroute-website">访问官网<Icon name="externalLink" size="sm" aria-hidden="true" /></a>
+                </div>
+              </div>
               <p class="mofa-family-account-note">{{ product.account }}</p>
             </div>
             <FamilyProductVisual :product="product.id" />
@@ -52,6 +58,7 @@ import FamilyProductAction from '@/custom/components/FamilyProductAction.vue'
 import FamilyProductMark from '@/custom/components/FamilyProductMark.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { familyProducts, recipeDestination, studioDestination } from '@/custom/family/products'
+import { SYNA_ROUTE_DOWNLOAD_URL, SYNA_ROUTE_WEBSITE_URL } from '@/custom/family/synarouteLinks'
 
 const app = useAppStore()
 const auth = useAuthStore()

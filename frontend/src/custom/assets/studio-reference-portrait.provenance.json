@@ -1,0 +1,26 @@
+{
+  "tool": "内置 image_gen",
+  "createdAt": "2026-09-30",
+  "useCase": "photorealistic-natural",
+  "reference": {
+    "path": "C:/Users/ADMINI~1/AppData/Local/Temp/codex-clipboard-6828f234-1bd0-45ad-860c-482af1e78f1c.png",
+    "role": "用户提供的发型、神态、室内光线与普通穿搭视觉参考；权属未核实，不原样嵌入截图。"
+  },
+  "source": "C:/Users/Administrator/.codex/generated_images/01a0e6e0-d2eb-7e31-8fb6-65043452e0e5/exec-3753f93c-fd73-4b91-b551-6da8a59dab9b.png",
+  "originalAsset": "studio-reference-portrait.png",
+  "webAsset": "studio-reference-portrait.webp",
+  "encoding": {
+    "format": "webp",
+    "quality": 85,
+    "width": 1122,
+    "height": 1402,
+    "bytes": 113416
+  },
+  "prompt": "Use case: photorealistic-natural. Create one clean 4:5 vertical editorial portrait for a website gallery, using the attached image only as a reference for dark hairstyle, facial aesthetic, quiet expression, soft indoor light and muted neutral palette. A fictional adult 28-year-old East Asian woman with long loosely tousled dark brown hair and delicate natural makeup sits comfortably beside a window, looking calmly at the camera with her head slightly tilted. A beautiful natural face with realistic skin texture, restrained expression, not a large smile. Ordinary fully clothed casual styling: ivory camisole, loose very fine gray-blue striped cotton shirt worn normally over it, and blue denim jeans. The outfit consists of separate top and trousers, never a skirt or dress. Her hands rest naturally in her lap; no hand touching head or hair. Relaxed seated upright pose, both legs down. Frame from just above the whole head to mid thighs; face prominent, comfortable headroom. Quiet gray-beige plaster wall, subtle diffused window light, creamy neutral tones and gentle shadows similar to the reference. Natural magazine photography, not an illustration, not glossy airbrushed skin, no green tint, no garden or blonde hair. Remove all screenshot artifacts: no black frame, rounded corners, UI, dimension badge, lettering, logos or watermark. Single clean photograph, no collage.",
+  "boundaries": [
+    "虚构成年人物，不代表真人身份或代言。",
+    "普通分体穿搭：吊带、细条纹衬衫与牛仔裤；非裙装。",
+    "仅首页视觉图例，未使用工坊提示词进行实测。",
+    "原 PNG 保留，仅做 WebP 格式压缩，不裁切或修改像素内容。"
+  ]
+}

@@ -1,5 +1,7 @@
 # 雾钛青：上游同步核对清单
 
+- 家族首页图标：保留AppSidebar.vue的FamilyHomeIcon定制import与`/family`条目的皇冠组件；不要重新复用DashboardIcon。图形留在custom/components/FamilyHomeIcon.vue，20px用户主菜单与16px管理员个人区继承原尺寸／currentColor；仪表盘图标、路由和登录边界不改。回归upgrade-contract.spec.ts及上游AppSidebar.spec.ts。
+
 - 包号保存400诊断与多专属组：保留custom/dedicated/config.ts白名单错误转换及AdminDedicatedAccountsView.showError，handler保留metadata。后端custom_dedicated_groups.go保证同批成员多个专属组的保存／认证／选号／历史隔离查询一致，成员移除事务清原账号关联组，不误删无关组。运行dedicated-config／dedicated-view、原UserAllowedGroupsModal及TestCustomDedicatedConfigPostgres：合法多专属组通过，关联公开池／名单外授权仍拒绝，两位共组须在同一记录选全；此前严格单组规则已被用户新要求替代。
 
 ## 2026-09-30 魔法配方登录选择（源码完成，尚未发布）

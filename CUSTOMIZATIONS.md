@@ -1,5 +1,34 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-09-30 家族视觉与公开链接发布收口（最新授权）
+
+- 用户再次授权提交推送，范围仅为下方登记的工坊三图／最新参考人像、家族皇冠图标、SynaRoute 公开链接及配置说明。AppSidebar 的新增图标 import 与原家族入口标记均保留 [CUSTOM]；视觉仍只在 theme.css。包号运行时及三条专用样式不混入本轮暂存版本，不新增依赖、模型调用、认证共享方案或一体化托管。
+- 本轮验证、远端代码与镜像终态以 HANDOFF 最新记录和 output/family-polish-release-20260930 为准；下方“未发布”文字保留为实施时历史，不沿用旧 SHA 的 CI 结果，不部署生产。
+- 实际限定暂存快照 72 项／8 文件及类型、相关 lint、Vite 构建通过；仅 16 个家族相关文件，24 个并行文件内容未变，三条包号样式未暂存。远端 CI／GHCR 尚须按功能提交核验，不把本地前端构建当后端或真实模型验收。
+
+## 2026-09-30 SynaRoute 公开官网与下载链接（本地未发布）
+
+- 新增custom/family/synarouteLinks.ts，官方地址来源为SynaRoute真实工程的README、site/config及download路由，集中https://synaroute.mofamilys.com与/zh/download；FamilyHomeView仅在SynaRoute面板的原配置动作下加入两个公开a链接，匿名也可点击，新窗口／noopener noreferrer／不带凭据，下载入口仅打开官网下载页，不自动下载或安装。KeysView、导入生成器、认证与其他产品行为保持，无新增上游接缝或依赖；视觉只在theme.css，继承紫色、44px操作高度及原焦点规则。
+- family-home.spec.ts新增匿名／登录态、精确href／新窗口安全属性、无download属性、无凭据访问及无自动fetch／open回归。69项／7文件及相关lint／类型／Vite通过，日志output/synaroute-links-20260930；4184桌面／手机无横向溢出、两链接44px、Tab可见焦点及截图留证。官网在线访问超时，不能宣称实时可达、安装包或真实客户端导入通过；本轮不新增安装检测，既有100ms焦点启发式并非可靠安装判断。未提交推送、重建8080或部署生产，保留此前视觉及包号并行修改。
+
+## 2026-09-30 工坊三图、深发参考人像与等宽放大（本地未发布，覆盖旧两图人像）
+
+- FamilyProductVisual.vue的工坊分支保留原玻璃瓶／狐狸副本并新增左人像，三张均为原生button，单选aria-pressed及再次点按恢复，不跳转／运行模型。新增custom/assets/studio-reference-portrait.png／webp／provenance.json，内置image_gen参考用户最新深发色室内图片生成虚构成年女性，使用分体吊带／细条纹衬衫／牛仔裤，不使用裙装、摸头或截图边框；精确prompt与来源边界保存，参考权属未核实，不代表真人代言或模板实测。WebP113416字节，原PNG保留；被否决候选移入ignored output，原瓶／狐副本SHA256与工坊thumb逐一一致。caption改为“AI 视觉示例 · 非模板实测”，alt不再虚构欧美国籍；SURFACE记录最新要求。
+- 所有视觉只在custom/theme.css：工坊文案／图区40:60，三图等宽4:5正常流Grid、轻微±2°／±8px错落、手机去除额外最小高度；悬停抬升／回正／1.1倍且z20，点按z10、键盘焦点z30，reduced-motion关闭过渡。没有新上游运行时接缝／依赖／业务配置，不触碰原首屏／入口／登录或并行包号样式。同步上游后验证三图默认无遮挡、等宽、键盘与手机交互，不把旧叠图效果当最新状态。
+- family-home新增三图素材及按钮回归，upgrade-contract新增等宽正常流／工坊列比例／焦点层级／减少动画断言；57项／6文件、相关ESLint、类型及最新Vite构建通过。4184实际浏览器1280桌面／390手机三图加载、默认相交面积0、无横向溢出，三张实际悬停z20、键盘z30及手机尺寸点按true→false，非触摸实机。日志与browser-evidence-final.json在output/studio-reference-20260930，页面截图studio-balanced-{desktop,mobile}-20260930.png；源码预览公开设置回退不当品牌或生产验收。未提交推送、重建8080或部署生产。
+
+## 2026-09-30 家族首页侧栏皇冠图标（未发布）
+
+- 新增custom/components/FamilyHomeIcon.vue：简洁皇冠SVG，1.5px描边、currentColor、aria-hidden，继承原菜单20px／16px尺寸；不新增主题规则或依赖。
+- 上游接缝AppSidebar.vue逐处登记：新增带[CUSTOM]的FamilyHomeIcon import；既有[CUSTOM]家族入口仅由DashboardIcon改为FamilyHomeIcon。共享buildSelfNavItems同时作用用户主菜单和管理员个人区，保留两类仪表盘四宫格、导航行为及认证。同步核对见custom/UPGRADE.md。
+- upgrade-contract.spec.ts新增家族／用户仪表盘／管理员仪表盘图标区分及SVG语义断言，55项／6文件、相关lint和类型通过，日志output/family-icon-20260930；未真实账号侧栏视觉验收、提交推送、重建8080或部署生产，保留既有人像及包号并行修改。
+
+## 2026-09-30 工坊女性人像与地址配置说明（未发布）
+
+- FamilyProductVisual.vue仅替换工坊左侧图例，新增custom/assets/studio-rain-portrait.webp为已有rain-portrait-thumb.webp原样副本，虚构成年女性；右侧狐狸、非模板实测caption、所有入口／认证／原首屏保持不变，无主题改动或新上游接缝。来源见magic-studio/assets/PROVENANCE.json、family/SURFACE.md；未新调用模型或修改图片像素。
+- family-home.spec.ts补人像src、alt、尺寸与懒加载断言；44项／5文件回归、相关lint、类型与Vite通过。4184源码预览1280桌面／390手机两图已加载且无横溢出，证据output/studio-portrait-20260930及本轮截图；公开设置请求失败导致首屏回退，不能作为原品牌配置或生产验收。
+- FAMILY_PORTAL.md补充GitHub仓库Settings → Secrets and variables → Actions → Variables具体配置、三项MAGIC_*公开变量示例与重建流程，明确不是后台或旧容器运行时变量；不含密钥、不扩大CORS、不自动托管子产品。未修改实际变量／DNS、提交推送、重建8080或部署生产，保留包号并行改动。
+
 - **本轮镜像发布补充**：GHCR36712632118现success，实际标签sha-321fe99／摘要c8dd5b34edacf29eec9e30f53f35f5de8c5898706b86715b81d70b8a73db4147；Go Unit已成功，CI36712632123集成仍运行，不标全绿。此条覆盖下方“镜像运行中”，准确取证在HANDOFF与output/family-release-20260930；后续skip-ci文档不生成新镜像，生产未操作。
 
 - **2026-09-30 产品已推送321fe99**：用户授权的家族首页、配方／工坊与接入教程已提交origin/main，141文件，独立暂存快照285项与类型／lint／build通过。包号专项前后端及三个专用主题规则仍在工作区，不混入产品发布。GHCR36712632118与CI36712632123仍运行，安全扫描及frontend／Go lint／shell／release-helpers成功，不标镜像可用或全绿；终态以HANDOFF及本轮记录为准。三项MAGIC_*仓库Variables未设置，独立产品另行托管／配置并重建，当前生产入口禁用；不自动部署生产。

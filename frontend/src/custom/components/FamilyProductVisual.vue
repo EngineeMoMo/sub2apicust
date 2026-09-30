@@ -20,10 +20,17 @@
     </figure>
     <figure v-else-if="product === 'studio'" class="mofa-studio-preview">
       <div class="mofa-studio-images">
-        <img :src="studioBottle" alt="玻璃瓶原创图例" width="320" height="400" loading="lazy">
-        <img :src="studioFox" alt="纸艺狐狸原创图例" width="320" height="400" loading="lazy">
+        <button type="button" class="mofa-studio-card mofa-studio-portrait" aria-label="置顶展示女性人像" :aria-pressed="activeStudioImage === 'portrait'" @click="toggleStudioImage('portrait')">
+          <img :src="studioPortrait" alt="深发色成年女性 AI 人像图例" width="320" height="400" loading="lazy" draggable="false">
+        </button>
+        <button type="button" class="mofa-studio-card mofa-studio-bottle" aria-label="置顶展示玻璃瓶" :aria-pressed="activeStudioImage === 'bottle'" @click="toggleStudioImage('bottle')">
+          <img :src="studioBottle" alt="玻璃瓶原创图例" width="320" height="400" loading="lazy" draggable="false">
+        </button>
+        <button type="button" class="mofa-studio-card mofa-studio-fox" aria-label="置顶展示纸艺狐狸" :aria-pressed="activeStudioImage === 'fox'" @click="toggleStudioImage('fox')">
+          <img :src="studioFox" alt="纸艺狐狸原创图例" width="320" height="400" loading="lazy" draggable="false">
+        </button>
       </div>
-      <figcaption>原创视觉示例 · 非模板实测</figcaption>
+      <figcaption><span>AI 视觉示例 · 非模板实测</span><span class="mofa-studio-hint">悬停或点按，置顶欣赏</span></figcaption>
     </figure>
     <figure v-else class="mofa-route-preview">
       <div class="mofa-route-map" aria-hidden="true"><span class="mofa-route-source"><FamilyProductMark product="synaroute" />SynaRoute</span><svg viewBox="0 0 360 110" fill="none"><path d="M180 0v40M45 98V55q0-15 15-15h240q15 0 15 15v43M180 40v58" stroke="currentColor" stroke-width="1.5" /><circle cx="180" cy="40" r="5" fill="currentColor" /></svg><div class="mofa-route-targets"><span><Icon name="terminal" size="md" />本地工具</span><span><Icon name="key" size="md" />API 配置</span><span><Icon name="arrowsUpDown" size="md" />模型路由</span></div></div>
@@ -33,11 +40,18 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import mark from '@/custom/assets/mofa-mark.webp'
+import studioPortrait from '@/custom/assets/studio-reference-portrait.webp'
 import studioBottle from '@/custom/assets/studio-jade-bottle.webp'
 import studioFox from '@/custom/assets/studio-paper-fox.webp'
 import Icon from '@/components/icons/Icon.vue'
 import FamilyProductMark from '@/custom/components/FamilyProductMark.vue'
 
 defineProps<{ product: string }>()
+
+const activeStudioImage = ref('')
+function toggleStudioImage(image: string) {
+  activeStudioImage.value = activeStudioImage.value === image ? '' : image
+}
 </script>

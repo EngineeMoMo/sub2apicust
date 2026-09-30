@@ -3,6 +3,7 @@ import authLayout from '@/components/layout/AuthLayout.vue?raw'
 import appLayout from '@/components/layout/AppLayout.vue?raw'
 import appHeader from '@/components/layout/AppHeader.vue?raw'
 import sidebar from '@/components/layout/AppSidebar.vue?raw'
+import familyHomeIcon from '@/custom/components/FamilyHomeIcon.vue?raw'
 import tableLayout from '@/components/layout/TablePageLayout.vue?raw'
 import main from '@/main.ts?raw'
 import router from '@/router/index.ts?raw'
@@ -17,6 +18,20 @@ import publicLayout from '@/custom/components/PublicLayout.vue?raw'
 import { customRoutes } from '@/custom/routes'
 
 describe('雾钛青与上游布局的升级契约', () => {
+  it('工坊三图在正常流等宽分列而非绝对叠放，保留置顶与减少动画支持', () => {
+    expect(theme).toMatch(/\.mofa-studio-images\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/)
+    expect(theme).toMatch(/\.mofa-family-studio\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.8fr\) minmax\(0, 1\.2fr\);/)
+    expect(theme).toMatch(/\.mofa-studio-card\s*\{[^}]*position:\s*relative;/)
+    expect(theme).toMatch(/\.mofa-studio-card:focus-visible\s*\{[^}]*z-index:\s*30;/)
+    expect(theme).toMatch(/@media \(prefers-reduced-motion: reduce\)[^\n]*\.mofa-studio-card[^\n]*transition: none;/)
+  })
+  it('家族首页使用独立皇冠，用户与管理员仪表盘保留原图标', () => {
+    expect(sidebar).toContain("path: '/family', label: '家族首页', icon: FamilyHomeIcon")
+    expect(sidebar).toContain("path: '/dashboard', label: t('nav.dashboard'), icon: DashboardIcon")
+    expect(sidebar).toContain("path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon")
+    expect(familyHomeIcon).toContain('stroke="currentColor"')
+    expect(familyHomeIcon).toContain('aria-hidden="true"')
+  })
   it('充值页在纵向flex正文中占满可用宽度，同时保留原最大宽度', () => {
     expect(paymentView).toContain('class="mx-auto max-w-4xl space-y-6"')
     expect(theme).toMatch(/\.mofa-workspace-main\s*>\s*\.mx-auto\.max-w-4xl\s*\{\s*width:\s*100%;\s*\}/)
