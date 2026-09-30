@@ -1,5 +1,18 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-09-30 家族视觉与下载入口更新（最新）
+
+功能提交 `25071d4d547c69d6c933bbcb0c276585b23b4b68` 已推送 origin/main：工坊三张等宽图片与鼠标／点按／键盘置顶、最新深发人像、家族首页独立皇冠图标、SynaRoute 官网与下载链接，以及发布地址配置说明。只包含 16 个家族相关文件，不包含工作区包号专项，未新增跨站 SSO 或一体化产品托管。实际暂存快照 72 项／8 文件、类型／相关 lint／Vite 构建通过；真实生产登录与模型授权仍需用户验收。
+
+**记录时发布尚未完成**：[镜像构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764218)、[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764231)和[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36736764322)仍运行，不把旧提交的成功结果沿用到本轮。待三项成功并核对镜像任务日志中实际标签／摘要，再备份数据库和部署配置、记录旧标签后执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-25071d4
+```
+
+上面是本轮功能提交的预期标签，不代表构建中已能拉取；后续交接文档 `[skip ci]` 提交不生成替代镜像。三项 `MAGIC_RECIPES_URL`／`MAGIC_RECIPES_ORIGIN`／`MAGIC_STUDIO_URL` 仓库变量名称只读查询仍为空，配方／工坊入口保持待配置，需按 `frontend/src/custom/FAMILY_PORTAL.md` 设置实际已托管地址并重建。上线后验证 `/health`、三图及交互、皇冠与仪表盘图标区分、SynaRoute 公开链接、真实登录后的家族首页／API 控制台往返；代理不代操作生产。
+
 ## 2026-09-30 家族产品与接入教程版本
 
 功能提交 `321fe9943b700384b10c2fc1368ed24c6b90eb97` 已推送origin/main：保留品牌首屏，新增互动产品展台／控制台产品坞、配方模型设置与显式登录配置、工坊独立源码及接入教程。未混入工作区待确认的包号专项修复；本机8080此前整工作区镜像不等于本次发布范围。
