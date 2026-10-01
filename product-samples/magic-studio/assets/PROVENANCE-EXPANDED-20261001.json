@@ -1,0 +1,289 @@
+{
+  "date": "2026-10-01",
+  "tool": "内置 image_gen",
+  "referenceImages": [],
+  "seed": "未设置",
+  "postprocessing": "原PNG留档；仅等比缩小与WebP编码，无裁切、无像素编辑",
+  "assets": [
+    {
+      "id": "cherry-street",
+      "file": "cherry-street.png",
+      "prompt": "Create an original photorealistic youth fashion editorial, vertical 4:5. A fictional 25-year-old adult East Asian woman with dark brown softly wavy hair, a warm playful smile and natural skin texture. Cherry-red ribbed tank top, open opaque white cotton shirt, loose light-blue jeans; tasteful fully clothed summer styling. She leans casually beside a powder-blue bicycle at a sunlit old-city corner and turns to look at a friend just off camera, one hand loosely holding the bicycle handle, the other resting naturally at her waist. Three-quarter-length framing, relaxed asymmetric pose, believable fingers, breezy hair and candid energy. Warm yellow stucco, a red-orange café awning without lettering and crisp turquoise sky. Sunlit color separation, slight film grain, authentic editorial photography, not glossy plastic skin or a stock pose. One person only, no text, logos, watermark, UI, celebrity likeness or copied reference face.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-44d5baf1-7550-4b28-ad62-530011abedb4.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2620839,
+          "sha256": "1dbf5a10ad4ff8e5f6ce7ba50750e55ba63a30c81df78df81d44e0a7657ddf5c"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 276312,
+          "sha256": "b656ca85a9614e70ef390296207ae47065bf49558728f276bd08c8656ce1a60c"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 76914,
+          "sha256": "5e938f3f8b1412a62c27782baeda5bbb577c0c0b01699dfa1013f0f261f1249e"
+        }
+      }
+    },
+    {
+      "id": "vinyl-afternoon",
+      "file": "vinyl-afternoon.png",
+      "prompt": "Create a completely original photorealistic vertical 4:5 editorial photograph. A fictional attractive 26-year-old adult East Asian man with tousled dark hair, clear kind eyes and a small spontaneous smile, in a teal-green short-sleeved camp-collar shirt over a white tee and dark denim. Inside a small vintage vinyl record shop, half-turned toward a friend outside the frame, holding one orange record sleeve with purely abstract color shapes and absolutely no lettering. Waist-up framing, casually resting his other hand on a wooden record crate, fingers anatomically believable. Late-afternoon honey sunlight through the window, cobalt-blue shelving softly out of focus, rich teal-orange color harmony, candid sweet approachable energy. Real skin pores, subtle film grain, natural proportions, editorial photography rather than an artificial beauty advertisement. One adult person only. No musician or actor likeness, existing album covers, logos, text, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-6fa58723-112b-40b0-9f55-1958104a40d6.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2002155,
+          "sha256": "e0942040f1353067af3908898b0a4b036f77c021e2fea5436dc57f824f883668"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 140486,
+          "sha256": "bcfcdb453c4a0bd6076360b046e5b1a967c27dec22dd2c1c0dff96d7f5948fb5"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 42386,
+          "sha256": "4086ba1d3c7a9eae71a447ba6a898a4b6c50e4a9eb0d509ffc255239e215889f"
+        }
+      }
+    },
+    {
+      "id": "midnight-editorial",
+      "file": "midnight-editorial.png",
+      "prompt": "Create an original premium fashion magazine photograph, vertical 4:5. A fictional 27-year-old adult East Asian woman with long dark hair and a relaxed confident expression, wearing a fully opaque black silk camisole with a modest neckline, an ivory tailored blazer worn casually over the shoulders, and high-waisted indigo jeans. No dress, no skirt, no lingerie, no nudity. Three-quarter portrait on an urban rooftop at blue hour, torso gently angled, forearms resting naturally on a stone railing, both hands low and relaxed, not touching her head. A soft warm scarlet practical light grazes one side of her face against a cool blue city skyline; a hint of wind moves her hair. Sophisticated subtly alluring adult styling, genuine skin texture and believable hands, elegant non-suggestive pose, 85mm editorial photography with shallow depth and fine grain. Keep the whole head and upper hips within frame. No celebrity, copied reference face, lettering, fashion brand, watermark or UI.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-10600d57-a09d-4486-8035-0e8db6dc4671.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2134759,
+          "sha256": "8e0e7e061bd1c2ac4551ce628ce47ccda9ed5dfbfbc50cefee7f1c735f6fb073"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 144238,
+          "sha256": "fa23350a41011eaa831a440e1feeb0c19422c7a745e1f6d3535c688f38f9629c"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 37184,
+          "sha256": "6d969f6a3e8292375adc7cf08e284fa801bd83f695647d0121388c3e41f8b6ba"
+        }
+      }
+    },
+    {
+      "id": "scarlet-rider",
+      "file": "scarlet-rider.png",
+      "prompt": "Create an original cinematic cosplay fashion photograph, portrait 4:5. A fictional 25-year-old adult East Asian female futuristic motorcycle courier, short black bob, alert friendly eyes and a subtle mischievous smile. Original scarlet-red and charcoal technical motorcycle jacket, opaque fitted black high-neck top, matching full-length armored trousers and boots; no existing game or anime costume, no exposed lingerie. She sits sideways on the edge of a stationary unbranded motorcycle in a futuristic service bay, a closed silver helmet held at her hip and a compact metal delivery case secured behind her. Waist-to-head composition with a little motorcycle visible, hands natural, one foot grounded, no hand near her head. Warm red reflected light contrasts with cyan overhead workshop strips, practical worn metal, small scratches and tactile fabric, shallow cinematic depth. Energetic contemporary character storytelling, realistic youthful adult facial features and skin. No weapon, copied character, celebrity, logos, text, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-5956004b-93a9-4805-80e3-5582d1aac20e.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2267843,
+          "sha256": "18f42212c6a01b6ddc66e88f482354f2ce2a121878387f052649f585ba909b7f"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 190922,
+          "sha256": "661cf9250db72b52da3c5179bd9152b8a05588e3ec75c4f7bf8a8b6db4d81d4e"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 54972,
+          "sha256": "2087baf0deae9b5454aff8f4b273956d41d89b44418d03e700cb9f3942c603a2"
+        }
+      }
+    },
+    {
+      "id": "lotus-sword",
+      "file": "lotus-sword.png",
+      "prompt": "Create an original high-quality hand-drawn 2D anime key visual, portrait 4:5. A clearly adult 25-year-old male xianxia swordsman with long dark hair loosely tied, gentle confident eyes, wearing flowing sky-blue and ivory cultivation robes with a vermilion sash and practical dark boots. An original character, not from any existing anime or novel. He stands on old stone steps beside a vivid turquoise lotus lake at golden dusk, turning gracefully to watch a small luminous crane fly past; his sword remains sheathed at his waist and both hands are relaxed and anatomically coherent. Robe hems and hair sweep softly in a warm breeze, pink lotus petals drift in the foreground. Three-quarter full-figure composition with ample environment, orange-gold sun behind distant mountain pagodas, confident fine linework, rich painterly background, nuanced cel shading and clear atmospheric perspective. Beautiful youthful adult hero, no childlike body or face. No generic plastic 3D render, giant energy beams, text, logos, watermark, UI or copied characters.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-4480d954-e082-4105-b3d0-c3ee89feb2c4.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2786799,
+          "sha256": "b59332fd6ebff235530ab351ec1f321ec896c4e144272bdbb623787b9136ef91"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 359382,
+          "sha256": "5f18cd0ae66c2da4ccf565462fed96f71b2f4cffc676e49c6ced0c2a90e34312"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 94980,
+          "sha256": "e70f5f3905ce3ad0a070d628fec934a1a3495d81c87e56bd2d3837195fb5887a"
+        }
+      }
+    },
+    {
+      "id": "tide-mecha",
+      "file": "tide-mecha.png",
+      "prompt": "Create an original cinematic science-fiction concept illustration, landscape 3:2. A unique coastal rescue exosuit mech with ivory ceramic armor, safety-orange panels, chunky articulated industrial legs, a small transparent enclosed cockpit and practical hydraulic joints. Not a Gundam, not any existing robot franchise design. The mech strides through shallow azure coastal water beside a long concrete breakwater, water spraying naturally around its grounded feet. Three-quarter low-angle wide view with the entire machine visible and a tiny rescue boat nearby as scale; faraway container-port silhouettes and a brilliant turquoise horizon. Clear balanced mechanical weight, coherent limbs and functional components, no guns or combat. Warm late-afternoon sunlight makes the orange accents glow against saturated cobalt water and white foam. Highly detailed painted concept art, dynamic diagonal composition, tangible material wear, dramatic but readable rather than visually cluttered. No text, serial numbers, logos, watermark, interface or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-5bcde6ad-530d-4c41-a2b2-72987617219d.png",
+      "files": {
+        ".png": {
+          "width": 1536,
+          "height": 1024,
+          "bytes": 3371571,
+          "sha256": "74f15065bf6fde7e15939379c632181b642378be74b3deb990f3ee2db2f75c05"
+        },
+        ".webp": {
+          "width": 1400,
+          "height": 933,
+          "bytes": 399260,
+          "sha256": "21229e6325eb24d04c13181c9ce9cc1cd3f2ee3e90e631e01887e3a8be61e2f3"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 347,
+          "bytes": 66494,
+          "sha256": "d234084fa1b5928776677c32a0d5008357dceee8c3bc45c762cd2a92ea1bcb90"
+        }
+      }
+    },
+    {
+      "id": "otter-morning",
+      "file": "otter-morning.png",
+      "prompt": "Create an original photorealistic wildlife photograph, square 1:1. One adult sea otter floating belly-up in a clear turquoise tidal pool, looking curiously toward the camera, gently holding a small shell between its anatomically correct front paws. Its entire body and hind feet comfortably fit within the frame, dense wet brown fur with silver water droplets, natural rounded face and lively eyes, real animal proportions rather than a cartoon toy. A few olive kelp ribbons curve through the water and subtle ripples spread around the otter. Overhead three-quarter viewpoint, bright transparent morning sunlight, realistic caustics, sparkling highlights, nuanced blue-green water and warm fur contrast. Charming lively documentary animal photography with crisp subject and softly detailed environment. No clothes, human hands, extra animals, anthropomorphic expression, lettering, logo, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-ff8335d7-ffd9-4dc2-bdc0-8c677a526909.png",
+      "files": {
+        ".png": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 2819844,
+          "sha256": "a8ea3abbb560af3d1ff5a7143a0de5808a9bc2ac06c900e16e13381496b1b999"
+        },
+        ".webp": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 335422,
+          "sha256": "8492a335baffda8c511c33328e5d1be0e4e1de4944890f8cf7f43e1673069418"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 520,
+          "bytes": 77658,
+          "sha256": "1a3a97aec89316305dd4b11678945db6f3214a4f135abe4ee15675317fe7302e"
+        }
+      }
+    },
+    {
+      "id": "coral-sneaker",
+      "file": "coral-sneaker.png",
+      "prompt": "Create an original high-end sports product advertising photograph, square 1:1. One unbranded contemporary running shoe, ivory-white woven mesh upper, lime-green laces, subtle light-gray structural overlays and a realistic layered off-white rubber sole. No brand logo, no letters, no trademark pattern. Place the single shoe naturally on a sculpted coral-red curved step, full shoe visible in a clean side three-quarter view, believable ground contact and matching shadow. A crisp cobalt-blue shadow cuts diagonally across the background, a few tiny water droplets on the coral surface add freshness without a giant splash. Bold sunlit hard lighting, refined texture detail, confident youth sports color palette, clean editorial advertising composition with breathable negative space. Accurate lacing and shoe structure, not a floating or melted object. No person, second shoe, typography, logo, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-a7ae50b8-ccca-4c09-8d93-19eebfaf6e46.png",
+      "files": {
+        ".png": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 2452193,
+          "sha256": "268ebadf63503ce6978338d08a5af5b0b68a2cf87241e91a00bc37656b04233b"
+        },
+        ".webp": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 241898,
+          "sha256": "a4ef600caea5fa0f3cb3ea41d1a0efa6f72d1810e4cd7b5279c53376823ee7df"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 520,
+          "bytes": 46488,
+          "sha256": "2fede563ae20b8520a1aa32e30b4ac67617026c18a5a88a4966604e241397c38"
+        }
+      }
+    },
+    {
+      "id": "aurora-lagoon",
+      "file": "aurora-lagoon.png",
+      "prompt": "Create an original cinematic fine-art landscape photograph, horizontal 3:2. An empty northern glacial lagoon at night, framed by low dark basalt shores and a distant snow-covered mountain ridge. A graceful luminous emerald aurora ribbon flows across the deep indigo sky and reflects naturally in calm icy blue water; subtle violet light touches the snow. Low wide-angle viewpoint with a few dark rounded stones and translucent thin ice in the foreground, strong clear layers of near shore, lake, mountains and expansive sky. Realistically restrained stars, authentic glacial texture and atmospheric depth, rich blue-green-violet color without neon oversaturation. Serene yet visually striking, long-exposure cinematic natural landscape with believable geography, no giant moon, no floating islands, no fantasy buildings or duplicated mountains. No people, text, logos, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-b7f0ed20-59e0-4e29-8eb9-a542e1c3df46.png",
+      "files": {
+        ".png": {
+          "width": 1536,
+          "height": 1024,
+          "bytes": 2242767,
+          "sha256": "881b6c0756faab4b9b8d9bb674662b1a15a9314d07ee3449e846605f52de2d6e"
+        },
+        ".webp": {
+          "width": 1400,
+          "height": 933,
+          "bytes": 122978,
+          "sha256": "81d2e91671c1b9fffab10015e11d56c89625f75169e82b913c5682508616700b"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 347,
+          "bytes": 21158,
+          "sha256": "0abf5eaed961f09bad32580baf16aefa2482a51374f69baa559cd9bad671b880"
+        }
+      }
+    },
+    {
+      "id": "lantern-alley",
+      "file": "lantern-alley.png",
+      "prompt": "Create an original charming miniature stop-motion-inspired 3D illustration, vertical 4:5. A small friendly original tanuki raccoon-dog chef with rounded natural animal features, wearing a plain tiny indigo apron, serving one steaming ramen bowl through the wooden counter of a miniature night-time noodle shop. No existing cartoon character. Full little shop visible in a narrow cozy alley, warm glowing orange paper lanterns without writing, peacock-blue evening shadows, tiny terracotta plant pots and a cream fabric awning, a little drifting noodle steam. Eye-level view with the chef and bowl clearly readable, tactile handmade clay fur and slightly imperfect wood, finely crafted miniature details, warm inviting lively storytelling rather than glossy plastic. Crisp main subject, gentle depth and believable warm light spilling onto blue paving stones. Avoid anthropomorphic human hands, multiple faces, excessive clutter, all lettering, logos, watermark, UI or collage.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑",
+      "generatedFile": "exec-5f737d41-d1d2-4cc3-9cd1-ff51ebdb4534.png",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2441408,
+          "sha256": "fc1dee0e637345695544223760c66e8f3e3661c522b19ddcaadc981320452b9a"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 276524,
+          "sha256": "66c930d0a42a96b540ac6ef2431beab2f58675d745baef8ae667363c42484bbf"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 78182,
+          "sha256": "054b8f1eab09aeaf8017088623ce790e57993b3c165d6cbbbcab756f199cd3b4"
+        }
+      }
+    }
+  ]
+}

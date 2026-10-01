@@ -1580,3 +1580,47 @@ html .mofa-auth .mofa-auth-title {
   .mofa-dedicated-account footer { align-items: flex-start; flex-direction: column; }
   .mofa-dedicated-form-grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* [CUSTOM] 同源子产品工作区；产品内部保留可独立运行的静态模块。 */
+.mofa-product-workspace { position: relative; margin: 0 -1rem -1rem; height: calc(100dvh - 190px); min-height: 520px; }
+.mofa-product-workspace iframe { width: 100%; height: 100%; border: 0; display: block; background: transparent; }
+.mofa-product-workspace-loading { position: absolute; inset: 0; display: grid; place-content: center; background: #f5f8f8; z-index: 1; }
+/* [CUSTOM] 工坊投稿与人工审核工作区，沿用主站主题，不增加独立登录。 */
+.mofa-studio-contribute { max-width: 1400px; margin: 0 auto; color: #25393c; }
+.mofa-studio-contribute-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
+.mofa-studio-contribute h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -.025em; margin-bottom: 10px; }
+.mofa-studio-contribute p { line-height: 1.7; margin: 10px 0 20px; max-width: 72ch; }
+.mofa-studio-contribute-tabs { display: flex; gap: 24px; border-bottom: 1px solid #cedadc; margin-bottom: 28px; overflow-x: auto; }
+.mofa-studio-contribute-tabs > * { padding: 12px 2px; min-height: 44px; white-space: nowrap; }
+.mofa-studio-contribute-tabs [aria-current="page"] { border-bottom: 2px solid #096b68; color: #096b68; font-weight: 600; }
+.mofa-studio-submit-grid, .mofa-studio-review-grid { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 28px; align-items: start; }
+.mofa-studio-panel { padding: clamp(20px, 2.5vw, 32px); border-radius: 14px; background: #fff; min-width: 0; }
+.mofa-studio-panel h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 16px; }
+.mofa-studio-panel h3 { font-size: 1rem; font-weight: 600; margin: 24px 0 12px; }
+.mofa-studio-panel label { display: grid; gap: 8px; font-size: .9rem; margin-bottom: 20px; }
+.mofa-studio-panel :is(input:not([type="checkbox"]), select, textarea) { min-width: 0; width: 100%; border: 1px solid #b9cbce; border-radius: 8px; background: #fafcfc; padding: 12px; color: inherit; }
+.mofa-studio-panel :is(input, select, textarea):focus-visible { outline: 2px solid #096b68; outline-offset: 3px; }
+.mofa-studio-field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 20px; }
+.mofa-studio-panel .mofa-studio-check { display: flex; align-items: flex-start; gap: 12px; line-height: 1.7; }
+.mofa-studio-check input { margin-top: 5px; accent-color: #096b68; flex-shrink: 0; }
+.mofa-studio-media { background: #edf3f3; border-radius: 12px; margin: 20px 0; overflow: hidden; }
+.mofa-studio-media :is(img, video) { width: 100%; max-height: 520px; object-fit: contain; display: block; }
+.mofa-studio-fine { font-size: .85rem; color: #526d72; }
+.mofa-studio-file { padding: 20px; border: 1px dashed #7f999d; border-radius: 10px; }
+.mofa-studio-list-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-bottom: 16px; }
+.mofa-studio-submission-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; text-align: left; width: 100%; padding: 18px 0; border-top: 1px solid #dce5e6; min-height: 44px; }
+.mofa-studio-submission-row strong { grid-column: 1/-1; overflow-wrap: anywhere; }
+.mofa-studio-submission-row[aria-pressed="true"] { color: #096b68; }
+.mofa-studio-prompt { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: .9rem; line-height: 1.8; padding: 20px; background: #f1f6f6; border-radius: 10px; }
+.mofa-studio-review-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.mofa-studio-feedback { padding: 16px 20px; background: #e8f3f2; border-radius: 10px; overflow-wrap: anywhere; }
+.mofa-studio-error { background: #fff0ed; color: #a03726; }
+.dark .mofa-studio-contribute { color: #e0edee; }
+.dark .mofa-studio-panel { background: #15272b; }
+.dark .mofa-studio-panel :is(input:not([type="checkbox"]), select, textarea), .dark .mofa-studio-prompt, .dark .mofa-studio-media { background: #102025; border-color: #466269; }
+.dark .mofa-studio-feedback { background: #173c3d; }
+.dark .mofa-studio-error { background: #472a28; color: #ffc7bd; }
+.dark .mofa-studio-fine { color: #b1cace; }
+.dark .mofa-studio-contribute-tabs [aria-current="page"], .dark .mofa-studio-submission-row[aria-pressed="true"] { color: #8bddcf; }
+.dark .mofa-studio-contribute-tabs, .dark .mofa-studio-submission-row { border-color: #466269; }
+@media (max-width: 800px) { .mofa-studio-submit-grid, .mofa-studio-review-grid, .mofa-studio-field-grid { grid-template-columns: minmax(0,1fr); } .mofa-studio-contribute-heading { flex-direction: column; } }
+@media (max-width: 767px) { .mofa-product-workspace { height: calc(100dvh - 180px); min-height: 500px; } }

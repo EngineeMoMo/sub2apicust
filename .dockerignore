@@ -16,6 +16,14 @@ docs/
 # Docker build context even though docs/ is otherwise excluded.
 !docs/legal/
 !docs/legal/*.md
+# [CUSTOM] 配方构建读取 Markdown 权威模板，产品只发布白名单静态产物。
+!product-samples/magic-recipes/*.md
+product-samples/magic-recipes/site/index.html
+product-samples/magic-studio/.impeccable/
+product-samples/magic-studio/assets/*.png
+!product-samples/magic-studio/assets/mofa-mark-flat.png
+frontend/public/recipes/
+frontend/public/studio/
 
 # IDE
 .idea/
@@ -33,6 +41,10 @@ build/
 
 # Node modules (will be installed in container)
 frontend/node_modules/
+# [CUSTOM] 本机构建缓存与配置编译产物不覆盖容器内重新编译的结果。
+frontend/vite.config.js
+frontend/vite.config.d.ts
+**/*.tsbuildinfo
 node_modules/
 
 # Go build cache (will be built in container)
@@ -40,6 +52,8 @@ backend/vendor/
 
 # Test files
 *_test.go
+# [CUSTOM] 仅产品静态路由的 embed 回归随镜像构建执行。
+!backend/internal/web/custom_family_products_test.go
 **/*.test.js
 coverage/
 .nyc_output/
@@ -51,6 +65,8 @@ coverage/
 
 # 本地闭源插件目录可能包含发布签名私钥，绝不能进入 Docker 构建上下文。
 /plugins/
+# [CUSTOM] 本地验收证据、数据库备份和暂存快照绝不进入构建上下文。
+/output/
 
 # Local config
 config.yaml

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { catalog } from './catalog.mjs';
@@ -29,12 +29,30 @@ const model = await readFile(path.join(directory, 'model.cjs'), 'utf8');
 const connector = await readFile(path.join(directory, 'magic-connect.cjs'), 'utf8');
 const modelUi = await readFile(path.join(directory, 'model-ui.js'), 'utf8');
 const app = await readFile(path.join(directory, 'app.js'), 'utf8');
+const host = await readFile(path.join(directory, '../../family-runtime/host-client.js'), 'utf8');
 const template = await readFile(path.join(directory, 'template.html'), 'utf8');
 const safeData = JSON.stringify(recipes).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
-const html = template.replace('%%LOGO%%', 'data:image/png;base64,' + logo.toString('base64'))
+let html = template.replace('%%LOGO%%', 'data:image/png;base64,' + logo.toString('base64'))
   .replace('%%STYLE%%', () => style).replace('%%DATA%%', () => safeData)
   .replace('%%CORE%%', () => core).replace('%%MODEL%%', () => model)
   .replace('%%CONNECTOR%%', () => connector)
-  .replace('%%MODEL_UI%%', () => modelUi).replace('%%APP%%', () => app);
-await writeFile(path.join(directory, 'index.html'), html, 'utf8');
+  .replace('%%MODEL_UI%%', () => host + '\n;' + modelUi).replace('%%APP%%', () => app);
+const outputIndex = process.argv.indexOf('--output');
+if (outputIndex >= 0 && !process.argv[outputIndex + 1]) throw new Error('缺少输出目录');
+const output = outputIndex >= 0 ? path.resolve(process.argv[outputIndex + 1]) : directory;
+await mkdir(output, { recursive: true });
+if (process.argv.includes('--embedded')) {
+  const scripts = [];
+  html = html.replace('<head>', '<head>\n<meta name="mofa-api-site" content="same-origin">')
+    .replace("script-src 'unsafe-inline'", "script-src 'self'")
+    .replace("style-src 'unsafe-inline'", "style-src 'self'")
+    .replace('img-src data:', "img-src 'self' data:")
+    .replace('connect-src https:', "connect-src 'self' https:")
+    .replace(/<style>[\s\S]*?<\/style>/, '<link rel="stylesheet" href="./theme.css">')
+    .replace(/<script>([\s\S]*?)<\/script>/g, (_tag, script) => { scripts.push(script); return ''; })
+    .replace('</body>', '<script src="./bundle.js"></script>\n</body>');
+  await writeFile(path.join(output, 'theme.css'), style, 'utf8');
+  await writeFile(path.join(output, 'bundle.js'), scripts.join('\n;\n'), 'utf8');
+}
+await writeFile(path.join(output, 'index.html'), html, 'utf8');
 console.log('已生成独立页面：' + recipes.length + '份配方，' + Buffer.byteLength(html) + '字节');

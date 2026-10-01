@@ -132,4 +132,6 @@ func registerRoutes(
 	routes.RegisterPaymentRoutes(v1, h.Payment, h.PaymentWebhook, h.Admin.Payment, jwtAuth, adminAuth, auditLog, settingService, panelRateLimiter)
 
 	handler.RegisterPageRoutes(v1, cfg.Pricing.DataDir, gin.HandlerFunc(jwtAuth), gin.HandlerFunc(adminAuth), settingService)
+	// [CUSTOM] 工坊投稿私有存储，原用户认证／管理员审核与审计保护，发布后才公开。
+	handler.RegisterStudioRoutes(v1, cfg.Pricing.DataDir, gin.HandlerFunc(jwtAuth), gin.HandlerFunc(adminAuth), gin.HandlerFunc(auditLog), settingService, panelRateLimiter)
 }

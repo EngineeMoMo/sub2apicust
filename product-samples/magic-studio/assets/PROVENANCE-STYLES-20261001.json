@@ -1,0 +1,242 @@
+{
+  "tool": "image_gen.imagegen",
+  "date": "2026-10-01",
+  "referenceImages": [],
+  "notes": "原创风格差异：像素、水墨、美漫、水彩、剪纸、复古未来。只等比编码，没有裁切。",
+  "assets": [
+    {
+      "id": "pixel-night",
+      "title": "像素港口 · 夜航开始",
+      "category": "场景插画",
+      "ratio": "wide",
+      "style": "像素",
+      "subject": "原创像素港口与小型青绿渡船，少量成年旅人",
+      "scene": "横向游戏场景，深蓝夜空、亮紫码头、橘黄窗灯和水面倒影，清晰8位像素块",
+      "light": "严格低分辨率像素美术，用有限色板与抖动层次，不用写实渲染",
+      "prompt": "Create an original landscape 3:2 pixel-art game environment, not a photograph or 3D render. A lively small midnight harbor with a mint-green ferry at the dock, a compact violet ticket hut, warm amber window lights and two tiny clearly adult travelers with luggage. Strict deliberate square pixel clusters, a limited 24-color palette, crisp stair-stepped edges, hand-placed dithering, no smooth gradients, no anti-aliased painting. Deep indigo sky, plum dock structures, cyan water reflections and orange lights with strong readable silhouettes. Side-on scene like a lovingly crafted 1990s adventure-game background, rich atmosphere and readable space without excessive clutter. Original environment, no existing game sprites, no text, UI, logos or watermark.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-fdec46bd-6be4-4ce8-a9c3-41ea5964e301.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-fdec46bd-6be4-4ce8-a9c3-41ea5964e301.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1748041,
+      "sha256": "b3c34ad25a3d74fc3e97086a070cfaa565d28ce312ff5ab6e33dcda2053a4040",
+      "files": {
+        ".png": {
+          "width": 1536,
+          "height": 1024,
+          "bytes": 1748041,
+          "sha256": "b3c34ad25a3d74fc3e97086a070cfaa565d28ce312ff5ab6e33dcda2053a4040"
+        },
+        ".webp": {
+          "width": 1400,
+          "height": 933,
+          "bytes": 164600,
+          "sha256": "ed097768c352cf82eb98399bc7fa99020e21580aa7cc80bf5df7bae626e0e50f"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 347,
+          "bytes": 35962,
+          "sha256": "3f295f4e5e0a3df7d58f50a1d817d8b41120a70d0d0dc1c25010501ca4a2df2d"
+        }
+      }
+    },
+    {
+      "id": "ink-koi",
+      "title": "墨色山河 · 一尾朱砂",
+      "category": "奇幻风景",
+      "ratio": "portrait",
+      "style": "水墨",
+      "subject": "原创水墨巨鲤与烟云山河，朱砂色鱼尾作为唯一鲜艳重点",
+      "scene": "竖向宣纸留白，山水横断面里一尾鲤鱼盘旋，墨色从浓到淡渐隐",
+      "light": "真实毛笔飞白、墨晕与宣纸纤维，传统水墨与现代超现实构图",
+      "prompt": "Create a completely original vertical 4:5 contemporary Chinese ink-wash artwork on tactile off-white xuan paper. An enormous graceful koi swims through layered misty ink mountains as if the river and sky were one. Charcoal-black and dilute gray brushwork, confident dry-brush streaks, feathered ink bleeding and large intentional negative spaces. A single restrained vermilion-red koi tail is the only saturated color accent. The composition is asymmetrical and poetic, with crisp near rocks dissolving into pale distant peaks. The fish anatomy and flowing movement remain elegant and readable. Authentic hand-painted ink aesthetics, paper fibers, no photorealism, no glossy 3D, no computer neon or generic fantasy effects. No calligraphy, seals, signatures, text, watermark, UI or copied historic painting.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-13358092-a3fe-4405-9886-a9229a6fbf76.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-13358092-a3fe-4405-9886-a9229a6fbf76.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 2821736,
+      "sha256": "257c68ffee5fb806582086bddd2218f0fbc0ef85f98667789a0d6cce207e8346",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2821736,
+          "sha256": "257c68ffee5fb806582086bddd2218f0fbc0ef85f98667789a0d6cce207e8346"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 308182,
+          "sha256": "f67bb847c785e7353f12be8108f256e8fcf4ef437e6b6033b44bdea083aba0ab"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 65612,
+          "sha256": "5906295497201d46fb02bf5a5012e137fc102104c351fec2e9619fe31ba9887b"
+        }
+      }
+    },
+    {
+      "id": "comic-hero",
+      "title": "美漫封面 · 橙色闪电",
+      "category": "Cosplay",
+      "ratio": "portrait",
+      "style": "美漫",
+      "subject": "25岁的原创成年女性城市英雄，青绿短发、橙黑骑行夹克与工装长裤",
+      "scene": "都市天台跃步瞬间，半身到膝盖的动态透视，斜向高楼剪影与留白",
+      "light": "粗细分明墨线、网点印刷与大胆橙蓝撞色，经典美漫插画非写实人像",
+      "prompt": "Create an original vertical 4:5 American-comic cover illustration with no lettering. A clearly adult 25-year-old fictional female urban messenger hero with short teal hair, an orange-and-black fitted motorcycle jacket, opaque black top and full-length graphite cargo trousers. She lands lightly from a short rooftop step, one boot forward, confident delighted expression and natural readable hands, a small delivery satchel swinging at her side. Powerful diagonal city silhouettes behind her, cobalt sky and tangerine highlights, bold varied black ink outlines, graphic spot-black shadows, visible offset-print halftone dots and hand-painted color separations. Energetic foreshortening, a coherent adult body and distinctive original costume; do not imitate any existing superhero or artist. Not a photograph, anime, 3D render or glossy beauty image. No guns, logos, text, speech bubbles, watermark or UI.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-fd37fd13-ee36-4427-90de-51ed33fb818d.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-fd37fd13-ee36-4427-90de-51ed33fb818d.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 3214570,
+      "sha256": "0df35124fe446f77ef5e90f404f2651e6be4dc6bfb7258922dd04829350a2a94",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 3214570,
+          "sha256": "0df35124fe446f77ef5e90f404f2651e6be4dc6bfb7258922dd04829350a2a94"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 535952,
+          "sha256": "06f2be0966f213ebcbd5eed3ca58b833a2eb939a863f25e36a73aba56b834c1c"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 112972,
+          "sha256": "710c1ace84824270ba387206e048039a2a5d49b802bb5d4c18a27884bf789fd0"
+        }
+      }
+    },
+    {
+      "id": "watercolor-island",
+      "title": "水彩旅行 · 海湾慢一天",
+      "category": "奇幻风景",
+      "ratio": "wide",
+      "style": "水彩",
+      "subject": "原创蓝白海湾小镇、彩色帆船与岸边花园",
+      "scene": "横向旅行画册构图，俯看弯曲海湾，宽阔浅蓝水面、散落房屋与橙色船帆",
+      "light": "透明水彩层染、冷压纸纹理和轻巧铅笔细节，清新不写实",
+      "prompt": "Create an original horizontal 3:2 watercolor travel-journal illustration, not a photograph. An elevated view over a bright Mediterranean-inspired bay with small white-and-cobalt houses, a curving stone waterfront, bougainvillea gardens and three tiny sailboats with orange and yellow sails. Broad translucent turquoise watercolor washes, pale blue sea, fresh lemon sunlight, soft pigment blooms, visible cold-pressed paper grain and a few delicate graphite architectural lines. Buildings and boats are selectively detailed while large sea areas breathe; charming gentle irregular hand-painted edges rather than precise 3D geometry. Lively summer atmosphere with confident colorful accents and rich but airy composition. No readable signs, text, logos, watermark, UI, collage or imitation of a specific painter.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-b8dc6068-b235-4f93-a9b0-64a14d3a8b60.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-b8dc6068-b235-4f93-a9b0-64a14d3a8b60.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3527340,
+      "sha256": "ba23ecb59395d52ad08c41d0d51bf416d47e8bf1b91a2f81447372fe4c05c4f3",
+      "files": {
+        ".png": {
+          "width": 1536,
+          "height": 1024,
+          "bytes": 3527340,
+          "sha256": "ba23ecb59395d52ad08c41d0d51bf416d47e8bf1b91a2f81447372fe4c05c4f3"
+        },
+        ".webp": {
+          "width": 1400,
+          "height": 933,
+          "bytes": 432662,
+          "sha256": "2600954dd4c7f1b1c27faac58412eb097f698fdf2c113c2647dce0667c7503ad"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 347,
+          "bytes": 66784,
+          "sha256": "109abb93e2213f1afd4bec892dbf9c8b6f8115778670f36121c8447e0550a58d"
+        }
+      }
+    },
+    {
+      "id": "papercut-tiger",
+      "title": "剪纸小虎 · 春山漫游",
+      "category": "动物自然",
+      "ratio": "square",
+      "style": "剪纸",
+      "subject": "原创橙红小虎穿过青绿色叶片，纯手工剪纸造型",
+      "scene": "方形层叠纸艺，老虎完整侧身可见，几层蓝绿山形与花叶形成空间",
+      "light": "厚纸边缘、剪刀切口和层间真实阴影，现代民艺色彩，不用毛绒写实",
+      "prompt": "Create an original square 1:1 handcrafted layered paper-cut artwork. A charming orange-red tiger with cream paper cheeks and bold charcoal paper stripes walks through teal and jade foliage, its full body, four paws and curved tail clearly readable. The tiger is a stylized animal, not a human or existing mascot. All forms are physically cut from thick matte colored paper, with slightly irregular scissor edges, shallow stacked layers and real directional shadows between layers. A few cobalt mountain shapes and small apricot blossoms form a balanced lively spring composition. Crisp graphic silhouettes, tactile paper fibers, contemporary folk-art color design. No furry photorealism, plastic 3D, gradients, lettering, logo, watermark, UI or frame.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-c84e8a45-acf7-4acd-ba90-21ca654d5455.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-c84e8a45-acf7-4acd-ba90-21ca654d5455.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3059181,
+      "sha256": "7c9b1f4f7e5c7b1d33af306f2b929f2b6dabfd9caae592387faf68ccc264cef6",
+      "files": {
+        ".png": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 3059181,
+          "sha256": "7c9b1f4f7e5c7b1d33af306f2b929f2b6dabfd9caae592387faf68ccc264cef6"
+        },
+        ".webp": {
+          "width": 1254,
+          "height": 1254,
+          "bytes": 408666,
+          "sha256": "b36f899602d7c79abb3f31e1779231c97ab651401310ae0ca5ad919697042ab7"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 520,
+          "bytes": 68906,
+          "sha256": "530657e4e73439419e02dd7611e00bb6bb2dcfcc05b8e062cd3c7e1fa889809d"
+        }
+      }
+    },
+    {
+      "id": "retro-observatory",
+      "title": "复古未来 · 火星日落站",
+      "category": "海报社媒",
+      "ratio": "portrait",
+      "style": "复古未来",
+      "subject": "原创火星观测站、圆形天线与远处橙色星球，纯图形复古科幻海报",
+      "scene": "竖向几何平面构成，深蓝剪影、杏黄沙丘、红橙星空与留白",
+      "light": "丝网印刷色块、有限套色与细微纸纹，70年代科幻视觉而非电影剧照",
+      "prompt": "Create an original vertical 4:5 retro-futurist science-fiction travel poster artwork with absolutely no text. A solitary elegant Mars observatory with a curved antenna and a small dome stands on layered apricot dunes. A giant burnt-orange planet rises beyond the indigo horizon while one tiny ivory rover follows a clean curved track. Flat confident geometric silhouettes, dramatic diagonal framing, a limited screen-print palette of midnight blue, vermilion, mustard and cream, subtle authentic printed-paper texture and slight color registration imperfections. Inspired by the general visual language of 1970s space-age graphic design, without copying any existing poster or artist. Sophisticated editorial composition, not a photorealistic film still, not glossy 3D or a generic futuristic interface. No typography, logos, watermark, UI or collage.",
+      "path": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-8b3951fa-ce9a-421f-8691-c87e2310729b.png",
+      "source": "C:\\Users\\Administrator\\.codex\\generated_images\\01a0e6e0-d2eb-7e31-8fb6-65043452e0e5\\exec-8b3951fa-ce9a-421f-8691-c87e2310729b.png",
+      "tool": "image_gen.imagegen",
+      "date": "2026-10-01",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 2729039,
+      "sha256": "90d696f9f67b87c8a346fcaf044b723a6c07552d086a5c1c5dc765801e4a002a",
+      "files": {
+        ".png": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 2729039,
+          "sha256": "90d696f9f67b87c8a346fcaf044b723a6c07552d086a5c1c5dc765801e4a002a"
+        },
+        ".webp": {
+          "width": 1122,
+          "height": 1402,
+          "bytes": 320748,
+          "sha256": "4ac6c2b330b83dc6d3e4de0fca3e7827be50659ca2005ba9d51711f3f743cfad"
+        },
+        "-thumb.webp": {
+          "width": 520,
+          "height": 650,
+          "bytes": 56744,
+          "sha256": "05cf9c8a07cbd8433dc85c4ef818cdbc264e5fc35fe1f9c1eea35cadf91c2090"
+        }
+      }
+    }
+  ]
+}

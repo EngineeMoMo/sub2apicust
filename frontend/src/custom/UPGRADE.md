@@ -1,5 +1,11 @@
 # 雾钛青：上游同步核对清单
 
+- 2026-10-01 最新要求：默认浅色且保留用户已保存偏好。同步 `main.ts`、`AppSidebar.vue`、`HomeView.vue`、`KeyUsageView.vue` 的 `[CUSTOM]` 初始化，不恢复无偏好时跟随系统深色。内置产品走认证路由 `/tools/recipes`、`/tools/studio`，正文中的同源 iframe 跟随宿主主题；显式独立外部地址仍兼容新窗口。不要把 `.mofa-product-workspace` 改成与 AppLayout 根节点重复的 `.mofa-workspace`。
+- 保留 `FamilyWorkspaceView`、`workspace.ts`、共享 `family-runtime/host-client.js` 的来源／窗口／nonce、目录时效、权限复查、退出取消；配方同页选择仅在该宿主下启用，独立模式仍用原选择页。共享运行时须由 Docker COPY、两产品 builder 接入。对子页的同源访问是信任关系，不是安全沙箱；后期跨站拆分须重新明确 CORS、SSO与退出方案，不能传 JWT 到产品 URL。
+- 保留 Vite `dev-products.mjs` 的精确开发目录映射与测试；旧 gitignored `vite.config.js` 可抢先加载，预览使用 `vite --config vite.config.ts`。Go 的产品 CSP／SAMEORIGIN 只允许同源嵌入，mp4 文件仍严格白名单并验证 Range206；不开放 PNG原图／来源文档或通配资源。工坊片段署名与许可证不要删，不能称为模型实测作品。回归新增 `family-workspace*`、`family-dev-products`、host-client、配方UI、工坊UI及 TestFamily。
+
+- 一体化产品：保留 vite.config.ts 的 [CUSTOM] 打包器 import／config 钩子、Docker 两项源码 COPY／web embed 测试、Dockerignore 模板与测试例外／本机产物排除，以及 embed_on.go 两条 [CUSTOM] 静态分流。默认 /recipes/／/studio/ 先由白名单静态处理，不能回落为主站 SPA 或误改成必须配置外部地址；配方脚本／样式外置，当前来源选择仍须 nonce／窗口／用途授权。回归 build-products.test.mjs、family-products／home／switcher、配方 connector 与 go test -tags embed -run '^TestFamily' -v ./internal/web；仅镜像构建限定本轮测试，完整web旧logo.png夹具失败仍需另行维护，不冒充全量通过。详见 deploy/FAMILY_INTEGRATED.md。
+
 - 家族首页图标：保留AppSidebar.vue的FamilyHomeIcon定制import与`/family`条目的皇冠组件；不要重新复用DashboardIcon。图形留在custom/components/FamilyHomeIcon.vue，20px用户主菜单与16px管理员个人区继承原尺寸／currentColor；仪表盘图标、路由和登录边界不改。回归upgrade-contract.spec.ts及上游AppSidebar.spec.ts。
 
 - 包号保存400诊断与多专属组：保留custom/dedicated/config.ts白名单错误转换及AdminDedicatedAccountsView.showError，handler保留metadata。后端custom_dedicated_groups.go保证同批成员多个专属组的保存／认证／选号／历史隔离查询一致，成员移除事务清原账号关联组，不误删无关组。运行dedicated-config／dedicated-view、原UserAllowedGroupsModal及TestCustomDedicatedConfigPostgres：合法多专属组通过，关联公开池／名单外授权仍拒绝，两位共组须在同一记录选全；此前严格单组规则已被用户新要求替代。

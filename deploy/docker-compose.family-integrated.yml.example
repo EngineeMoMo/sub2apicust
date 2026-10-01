@@ -1,0 +1,8 @@
+# [CUSTOM] 与原本机配置叠加；只覆盖构建地址，不修改数据库、卷或来源许可。
+services:
+  sub2api:
+    build:
+      args:
+        VITE_MAGIC_RECIPES_URL: ""
+        VITE_MAGIC_RECIPES_ORIGIN: ""
+        VITE_MAGIC_STUDIO_URL: ""

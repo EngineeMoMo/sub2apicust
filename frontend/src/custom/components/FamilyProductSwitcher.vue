@@ -8,7 +8,7 @@
       </template>
     </nav>
     <aside v-if="intent" class="mofa-product-intent" aria-label="继续打开产品">
-      <div><strong>继续使用{{ intent.name }}</strong><p>已进入 API 控制台。{{ intent.external ? '点击打开新窗口，本站登录会保留。' : '从这里进入密钥页，主动配置桌面工具。' }}</p></div>
+      <div><strong>继续使用{{ intent.name }}</strong><p>已进入 API 控制台。{{ intent.external ? '独立部署的产品将在新窗口打开。' : intent.id === 'synaroute' ? '进入密钥页，主动配置桌面工具。' : '点击即可在当前控制台工作区打开，登录会保留。' }}</p></div>
       <FamilyProductAction :product="intent" />
       <button type="button" class="mofa-product-dismiss" aria-label="留在 API 控制台" @click="dismissIntent"><Icon name="x" size="sm" aria-hidden="true" /></button>
     </aside>
@@ -31,7 +31,7 @@ const origin = window.location.origin
 const recipe = recipeDestination(String(import.meta.env.VITE_MAGIC_RECIPES_URL || ''), origin, import.meta.env.DEV)
 const studio = studioDestination(String(import.meta.env.VITE_MAGIC_STUDIO_URL || ''), origin, import.meta.env.DEV)
 const products = computed(() => familyProducts(recipe, auth.isAdmin, studio))
-const activeProduct = 'api'
+const activeProduct = computed(() => route.path === '/tools/recipes' ? 'recipes' : route.path === '/tools/studio' ? 'studio' : 'api')
 const intent = computed(() => auth.isAuthenticated && ['/dashboard', '/admin/dashboard'].includes(route.path) && typeof route.query.product === 'string'
   ? products.value.find(product => product.id !== 'api' && product.id === route.query.product && product.destination)
   : undefined)

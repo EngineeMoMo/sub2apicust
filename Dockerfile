@@ -45,6 +45,11 @@ RUN --mount=type=cache,id=sub2api-pnpm-store,target=/root/.local/share/pnpm/stor
 # Copy only that subtree to keep the build dependency minimal.
 COPY frontend/ ./
 COPY docs/legal/ /app/docs/legal/
+# [CUSTOM] 配方与工坊作为同站点静态产品，由 Vite 定制插件打包到嵌入资源。
+COPY product-samples/magic-recipes/ /app/product-samples/magic-recipes/
+COPY product-samples/magic-studio/ /app/product-samples/magic-studio/
+# [CUSTOM] 可独立运行的子产品宿主适配器。
+COPY product-samples/family-runtime/ /app/product-samples/family-runtime/
 # [CUSTOM] 公开产品地址及授权来源写入前端构建，不作为运行容器环境配置。
 RUN VITE_MAGIC_RECIPES_URL="${VITE_MAGIC_RECIPES_URL}" \
     VITE_MAGIC_RECIPES_ORIGIN="${VITE_MAGIC_RECIPES_ORIGIN}" \
@@ -89,6 +94,11 @@ COPY backend/ ./
 
 # Copy frontend dist from previous stage (must be after backend copy to avoid being overwritten)
 COPY --from=frontend-builder /app/backend/internal/web/dist ./internal/web/dist
+
+# [CUSTOM] 同站点产品的路径隔离、方法与 CSP 契约随镜像构建验证。
+RUN --mount=type=cache,id=sub2api-gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=sub2api-gobuild,target=/root/.cache/go-build \
+    go test -tags embed -run '^TestFamily' -v ./internal/web
 
 # Build the binary (BuildType=release for CI builds, embed frontend)
 # Version precedence: build arg VERSION > exact git tag > cmd/server/VERSION

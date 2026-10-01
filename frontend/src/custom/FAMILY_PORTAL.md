@@ -1,5 +1,15 @@
 # 魔法家族统一首页
 
+## 2026-10-01 最新交互
+
+用户要求默认浅色，已保存深色仍保留；内置配方／工坊跟随主站当前主题。首页与控制台的本站产品默认进入 `/tools/recipes`、`/tools/studio`，登录后在控制台右侧正文展示，不打开新窗口。该入口复用原主站账号和认证守卫；直接访问公开 `/recipes/`、`/studio/` 仍可单独浏览，显式外部产品地址保留独立模式。
+
+配方“模型设置”在宿主中直接下拉本人已有可用 Key、读取模型目录并选择接口格式，也能手填；点击应用只存所选连接，不运行模型。没有 Key 时引导原密钥管理，离开前提示当前材料可能丢失。用户主动运行才发送材料并可能计费，视频仍复制使用。独立静态页面没有宿主，保留原配置选择窗口，不宣称任意独立网站自动共享登录。
+
+模块源码仍分别保留，`FamilyWorkspaceView` 和 `family-runtime/host-client.js` 是可替换的宿主接缝。当前 iframe 是可信同源内容，不能当成隔离第三方脚本的安全边界；未来独立域名需重新处理认证、精确来源、CORS与退出。
+
+本轮预览4185显式使用 `vite --config vite.config.ts`；8080是否更新、测试与实际发布状态见 HANDOFF，不把新源码预览等同旧8080或生产已更新。下方旧默认深色／新窗口描述由本节覆盖。
+
 ## 产品范围与设计
 
 本页是现有魔法 API 站点内的品牌官网，不是新账号系统。2026-09-30 用户否决账户摘要＋目录首页，要求恢复原品牌首屏，在下面介绍附属产品，并将登录后的产品切换放在 API 控制台顶部。保留既有狮冠 M、雾钛青、默认深色与原 BrandPanel 三条 CTA；首页 Persuade，控制台 Operate。样式只在 `custom/theme.css` 的专属作用域。
@@ -26,9 +36,11 @@ SynaRoute 当前仅密钥导入，不等于桌面账号单点登录。尚未实�
 
 ## 发布配置
 
-实际域名与服务器配置尚未确定。生产未配置配方 URL 时入口禁用，显示“待配置发布地址”；本机开发站未配置时使用明确标记的 4178 预览，不用于生产默认值。
+2026-10-01 用户确认一体化部署：默认一个主站镜像提供 `/recipes/` 和 `/studio/`，未配置外部地址时标为“本站产品”，不再禁用或自动跳到独立开发端口。Vite 定制插件从权威源码打包，Go embed 以独立静态白名单和 CSP 提供；部署／安全／本机迁移见 `deploy/FAMILY_INTEGRATED.md`。
 
-本机 Docker 构建可显式配置本机 HTTP 配方地址，只有当前主站与目标都是回环 HTTP 时接受、追加公开来源提示并标为“本机预览”；非DEV空配置不会自动添加入口，远程 HTTP 仍拒绝。具体本机容器叠加、精确CORS与数据保护见 `deploy/FAMILY_LOCAL_DOCKER.md`，生产域名仍需另行确认。
+配方内置版本自动使用当前站点登录配置选择与家族首页，不受 `api_site` 查询参数影响。主站登录有效即可复用会话，但选择密钥及模型仍需主动授权，工坊无需第二套登录。以下变量只在选择外部独立托管时需要，空值使用实际内置产品，不要求创建变量。
+
+本机 Docker 仍可显式配置独立 HTTP 配方地址，只有两端均为回环 HTTP 时接受并标为“本机预览”；该兼容选项不是默认部署方案，远程 HTTP 仍拒绝。旧独立端口说明见 `deploy/FAMILY_LOCAL_DOCKER.md`，当前默认使用一体化文档。
 
 | 构建变量 | 用途 | 值的形式 |
 | --- | --- | --- |
@@ -36,13 +48,13 @@ SynaRoute 当前仅密钥导入，不等于桌面账号单点登录。尚未实�
 | `VITE_MAGIC_RECIPES_ORIGIN` | 配置回传接收来源许可 | 独立配方的精确 origin（协议＋域名＋端口），不得含路径或通配；同源可留空 |
 | `VITE_MAGIC_STUDIO_URL` | 工坊打开地址 | 与配方一样的安全地址校验，不携带 api_site 或任何账号数据 |
 
-Dockerfile 的前端构建 stage 已新增三个对应 ARG，`custom-image.yml` 从仓库 Actions Variables 的 `MAGIC_RECIPES_URL`／`MAGIC_RECIPES_ORIGIN`／`MAGIC_STUDIO_URL` 传入。源码接线不等于已设置仓库变量、运行 CI 或上线；这些是公开前端配置，绝不能填密钥。变量在构建时写入前端，不能给已构建容器加运行时环境变量冒充生效。本机 Docker 显式使用配方4178／工坊4179，工坊仍由其独立 Node 预览服务提供，不在本轮四容器中。
+Dockerfile 的前端构建 stage 已新增三个对应 ARG，`custom-image.yml` 从仓库 Actions Variables 的 `MAGIC_RECIPES_URL`／`MAGIC_RECIPES_ORIGIN`／`MAGIC_STUDIO_URL` 传入。源码接线不等于已设置仓库变量、运行 CI 或上线；这些是公开前端配置，绝不能填密钥。变量在构建时写入前端，不能给已构建容器加运行时环境变量冒充生效。2026-10-01本机8080已改为镜像内置两个产品，不依赖4178／4179；旧独立服务仅为兼容预览或回退，不作为当前默认方案。
 
 ### 在哪里配置（GitHub 镜像构建）
 
-不是魔法 API 管理后台的设置项，也不是运行容器的 `.env`。当前 GitHub 构建按以下步骤读取公开地址：
+默认一体化部署无需配置这些地址。只有选择独立托管时才按以下步骤操作；不是魔法 API 管理后台的设置项，也不是运行容器的 `.env`：
 
-1. 先独立发布配方静态页和工坊静态资源，并确认实际 HTTPS 地址能正常打开；原站镜像不会替你托管它们。配方构建与发布说明见 `product-samples/magic-recipes/site/README.md`，工坊说明见 `product-samples/magic-studio/README.md`。
+1. 确认确实要覆盖内置产品，再独立发布静态页并核对实际 HTTPS 地址。配方独立发布说明见 `product-samples/magic-recipes/site/README.md`，工坊说明见 `product-samples/magic-studio/README.md`。
 2. 打开 `EngineeMoMo/sub2apicust` 仓库 → **Settings → Secrets and variables → Actions → Variables → New repository variable**。创建下面三个 **Repository Variables**，不是 Secrets，也不需要在变量名前加 `VITE_`。[GitHub 官方操作说明](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables#creating-configuration-variables-for-a-repository)。
 
    | 仓库变量名 | 示例值（仅示意，须换成实际已部署地址） |
@@ -55,12 +67,12 @@ Dockerfile 的前端构建 stage 已新增三个对应 ARG，`custom-image.yml` 
 4. 打开仓库 **Actions → Build custom image (GHCR) → Run workflow**，选择需要发布的分支并重新构建。只保存变量或重启旧容器不会生效；手动重建同一提交可能沿用同一 SHA 标签，应确认新的构建成功并拉取新镜像。
 5. 用户备份后更新 API 镜像，再检查首页与登录后控制台中的配方／工坊入口。未提交的本地配图修改不会被远端构建包含；真实登录与配方模型授权仍需单独验收。
 
-原站镜像不自动发布 `product-samples/magic-recipes/site/index.html`。配方静态文件与原站新页面分别发布，独立来源还须保留既有来源并配置 API CORS；构建来源许可与 API CORS 是两层不同检查。同源路径需反向代理单独提供静态文件，不交给原站 SPA 兜底。不要放松认证、窗口安全头或生产来源限制。
+默认镜像在构建时直接生成配方与工坊，不使用本机已生成的 `site/index.html`。仅选择独立来源覆盖时还须保留既有来源并配置 API CORS，构建来源许可与 API CORS 是两层检查。内置路径由 Go 静态处理，不交给主站 SPA 兜底。不要放松认证、窗口安全头或生产来源限制。
 
 ## 验收与维护
 
 - 单元／组件：`family-products.spec.ts`、`family-home.spec.ts`、`family-switcher.spec.ts`、`family-header.spec.ts`、`guest-session.spec.ts`、`upgrade-contract.spec.ts`；路由守卫 `feature-access.spec.ts`，配方 `ui.test.cjs`。
-- 检查匿名、用户、管理员与退出状态，生产未配置／错误地址的禁用状态，原 API 介绍及后台模式限制，桌面／手机与双主题。
+- 检查匿名、用户、管理员与退出状态，空配置使用内置路径、错误显式地址禁用，原 API 介绍及后台模式限制，桌面／手机与双主题。
 - 用户自行真实登录后核验产品切换、配方已有 Key／模型选择与显式授权；不替用户生成收费请求或开启桌面导入。
 - 上游接缝为 `router/index.ts` 的公开模式等待、`AppSidebar.vue` 的个人区菜单、`AppHeader.vue` 的组件及 import、Dockerfile 的三个构建 ARG／RUN 与 workflow 的三个 Variables 接线，均有 `[CUSTOM]` 标记。同步时保留原守卫、原菜单、账户操作和构建逻辑，不能覆盖其他定制。
 - 准确测试结果、当前8080镜像、备份和未验项见根 `HANDOFF.md` 最新状态；本机更新不等于生产发布，没有提交推送。

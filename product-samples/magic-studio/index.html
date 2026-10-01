@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="description" content="魔法工坊：探索图片与视频创作方法，改成自己的提示词，发现Skills与工作流。">
+ <meta name="description" content="魔法工坊：探索图片创作方法，改成自己的提示词，发现Skills与工作流。视频与分镜待开放。">
  <meta name="color-scheme" content="dark light">
  <title>魔法工坊 · 魔法家族</title>
  <link rel="icon" href="assets/mofa-mark-flat.png">
  <link rel="stylesheet" href="theme.css">
+ <script src="host-client.js"></script>
  <script type="module" src="app.mjs"></script>
 </head>
 <body>
@@ -25,25 +26,29 @@
  <main class="workspace">
   <section class="library" id="collection" aria-labelledby="page-title">
    <div class="page-heading"><div><h1 id="page-title">灵感，从这里开始。</h1><p id="page-description">找一个喜欢的效果，做成自己的作品。</p></div><button class="text-button" id="history-button"></button></div>
+   <div class="community-bar"><a id="submit-work" class="text-button" href="https://ai.mofamilys.com/tools/studio/submit">分享作品与提示词</a><span id="community-status" role="status">投稿需登录，审核通过后才公开。</span><button id="refresh-community" class="text-button" hidden>刷新投稿</button></div>
    <div id="catalog-controls">
     <div class="search-row"><label class="search-box"><span id="search-icon"></span><input id="search" type="search" placeholder="搜效果、提示词、风格或工具…" aria-label="搜索灵感" maxlength="160" autocomplete="off"><kbd>/</kbd></label><label class="sort-control"><span class="sr-only">排序</span><select id="sort"><option value="featured">精选顺序</option><option value="title">按标题</option><option value="reverse">倒序浏览</option></select></label></div>
     <div class="filter-line"><div id="media-filters" class="segments" role="group" aria-label="按媒介筛选"></div><button id="more-filters" class="text-button" aria-expanded="false" aria-controls="advanced-filters"></button></div>
-    <div id="advanced-filters" class="advanced-filters" hidden><label>资源类型<select id="resource-type"><option value="all">全部类型</option><option value="prompt">提示词</option><option value="skill">Agent Skill</option><option value="workflow">工作流</option></select></label><p>图片／视频表示创作媒介，Skill／工作流表示使用方式。选择Skill或工作流会进入对应资源区。</p></div>
+    <div id="advanced-filters" class="advanced-filters" hidden><label>资源类型<select id="resource-type"><option value="all">全部类型</option><option value="prompt">提示词</option><option value="skill">Agent Skill</option><option value="workflow">工作流</option></select></label><p>图片、Skills与工作流可浏览；视频与分镜待开放。选择Skill或工作流会进入对应资源区。</p></div>
     <div id="category-filters" class="category-filters" role="group" aria-label="按用途筛选"></div>
+    <div class="style-filter-line"><span>视觉风格</span><div id="style-filters" class="category-filters" role="group" aria-label="按视觉风格筛选"></div></div>
    </div>
+   <p id="video-availability" class="video-availability fine-print">视频与分镜待开放。你可以先探索图片，或使用 Skills 和工作流。</p>
    <div class="collection-caption"><span id="result-count" role="status" aria-live="polite"></span><span id="collection-note">原创示例 · 提示词待实测</span></div>
    <div id="gallery" class="gallery"></div>
    <div id="empty-state" class="empty-state" hidden><div id="empty-icon"></div><h2 id="empty-title">暂时没有找到</h2><p id="empty-description"></p><button id="empty-action" class="primary-button">清除筛选</button></div>
    <div id="plays-list" class="plays-list" hidden></div>
-   <footer class="library-footer"><span>魔法家族 · 给灵感一个开始</span><button id="about-button" class="text-button">使用说明</button></footer>
+   <footer class="library-footer"><a class="text-button" href="https://ai.mofamilys.com/family" target="_blank" rel="noopener noreferrer" aria-label="返回家族首页（新窗口）">家族首页</a><button id="about-button" class="text-button">使用说明</button></footer>
   </section>
   <aside id="workbench" class="workbench" aria-labelledby="workbench-heading" tabindex="-1">
    <div class="bench-heading"><button id="return-to-library" class="icon-button return-to-library" aria-label="返回灵感与筛选" title="返回灵感与筛选"></button><h2 id="workbench-heading">做成我的作品</h2><button id="bench-save" class="icon-button" aria-label="收藏当前条目"></button></div>
    <div id="bench-content" class="bench-content">
    <div id="bench-preview" class="bench-preview"></div>
    <div class="bench-title"><div id="bench-badges" class="badges"></div><h3 id="selected-title"></h3><p id="selected-description"></p></div>
+   <div id="bench-origin"></div>
    <form id="material-form" class="material-form"><div class="section-label"><h4>换成你的内容</h4><button id="reset-materials" class="text-button" type="button">恢复示例</button></div><div id="material-fields"></div></form>
-   <div class="prompt-section"><div class="section-label"><label for="prompt-output">完整提示词</label><div class="language-switch" role="group" aria-label="提示词语言"><button id="language-zh" aria-pressed="true">中文</button><button id="language-en" aria-pressed="false">English</button></div></div><textarea id="prompt-output" rows="6" readonly aria-describedby="prompt-note"></textarea><p id="prompt-note" class="fine-print">空白材料使用示例值。你的替换内容只留在当前页面。</p></div>
+   <div class="prompt-section"><div class="section-label"><label for="prompt-output">复用模板 · 完整提示词</label><div class="language-switch" role="group" aria-label="提示词语言"><button id="language-zh" aria-pressed="true">中文</button><button id="language-en" aria-pressed="false">English</button></div></div><textarea id="prompt-output" rows="6" readonly aria-describedby="prompt-note"></textarea><p id="prompt-note" class="fine-print">复用模板不等于原始生成记录。空白使用示例值；你的替换内容只留在当前页面。</p></div>
    <details class="instructions"><summary>使用步骤与注意事项</summary><ol id="usage-steps"></ol><p id="usage-requirements"></p><p id="usage-tip"></p><div id="skill-command"></div></details>
    <a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer"></a>
    <p class="fine-print source-note">方法参考官方指南；原创模板尚未逐条实测。</p>
@@ -53,8 +58,8 @@
   </aside>
  </main>
  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
- <dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-caption"><div class="dialog-bar"><span id="preview-caption"></span><button id="close-preview" class="icon-button" aria-label="关闭大图预览"></button></div><img id="preview-image" alt=""></dialog>
- <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title"><div class="dialog-bar"><h2 id="about-title">从灵感到自己的作品</h2><button id="close-about" class="icon-button" aria-label="关闭使用说明"></button></div><ol><li>选择图片、视频或Skills·工作流，打开想尝试的条目。</li><li>替换主体、场景等材料，检查中文或英文提示词。</li><li>复制到对应工具；Skills和工作流先按官方说明准备环境。</li></ol><p>图片是原创AI视觉示例；视频播放是二维运镜示意，实际生成效果需要在目标模型验证。</p><p>收藏、主题和最近浏览保存在当前浏览器。替换材料仅当前页有效；下载TXT会保存你的材料，请先脱敏。</p><p id="storage-status"></p><button id="clear-history" class="secondary-button">清除最近浏览</button></dialog>
+ <dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-caption"><div class="dialog-bar"><span id="preview-caption"></span><button id="close-preview" class="icon-button" aria-label="关闭作品预览"></button></div><div class="preview-layout"><div id="preview-media"></div><div id="preview-details"></div></div></dialog>
+<dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title"><div class="dialog-bar"><h2 id="about-title">从灵感到自己的作品</h2><button id="close-about" class="icon-button" aria-label="关闭使用说明"></button></div><ol><li>点开图像，查看完整作品和对应提示词。</li><li>原始提示词保留实际发送的文字；复用模板可以替换主体和场景，两者分开。</li><li>复制到对应工具；Skills和工作流先按官方说明准备环境。</li></ol><p>目前可浏览38张原创图像。视频与分镜暂未开放，相关入口和作品不会展示；后续准备好成片、对应提示词与使用条件后再开放。</p><p>题材与视觉风格分别筛选，覆盖像素、水墨、美漫、水彩、剪纸、复古未来等。图片投稿需登录并提供模型与完整提示词，审核通过才展示；反推模板与原始记录明确区分。人工审核不等于模型效果验证。</p><p>收藏、主题和最近浏览保存在当前浏览器。替换材料仅当前页有效；下载TXT会保存你的材料，请先脱敏。</p><p id="storage-status"></p><button id="clear-history" class="secondary-button">清除最近浏览</button></dialog>
  <noscript><p class="noscript">请启用JavaScript使用搜索、收藏和提示词编辑。</p></noscript>
 </body>
 </html>

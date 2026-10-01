@@ -94,6 +94,11 @@ func (s *FrontendServer) Middleware() gin.HandlerFunc {
 			return
 		}
 
+		// [CUSTOM] 内置配方／工坊使用独立静态白名单与 CSP，不进入主站 SPA 兜底。
+		if serveFamilyProduct(c, s.distFS) {
+			return
+		}
+
 		cleanPath := strings.TrimPrefix(path, "/")
 		if cleanPath == "" {
 			cleanPath = "index.html"
@@ -313,6 +318,11 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 
 		if shouldBypassEmbeddedFrontend(path) {
 			c.Next()
+			return
+		}
+
+		// [CUSTOM] 无设置注入的旧入口也保持同站点产品路径与安全边界。
+		if serveFamilyProduct(c, distFS) {
 			return
 		}
 

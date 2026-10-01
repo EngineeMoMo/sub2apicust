@@ -6,6 +6,30 @@ import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/tools/studio/submit',
+    name: 'StudioSubmissions',
+    component: () => import('@/custom/views/StudioSubmissionsView.vue'),
+    meta: { title: '分享作品', requiresAuth: true }
+  },
+  {
+    path: '/admin/studio/submissions',
+    name: 'StudioReview',
+    component: () => import('@/custom/views/StudioSubmissionsView.vue'),
+    meta: { title: '作品审核', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/tools/recipes',
+    name: 'RecipeWorkspace',
+    component: () => import('@/custom/views/FamilyWorkspaceView.vue'),
+    meta: { title: '魔法配方', requiresAuth: true }
+  },
+  {
+    path: '/tools/studio',
+    name: 'StudioWorkspace',
+    component: () => import('@/custom/views/FamilyWorkspaceView.vue'),
+    meta: { title: '魔法工坊', requiresAuth: true }
+  },
+  {
     path: '/family',
     name: 'FamilyHome',
     component: () => import('@/custom/views/FamilyHomeView.vue'),

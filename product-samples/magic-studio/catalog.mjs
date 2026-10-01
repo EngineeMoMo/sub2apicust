@@ -1,6 +1,5 @@
-// 原创模板是待目标模型验证的内容；视觉示例与模板验证分别登记。
+import { newImages, diverseImages, expansionImages, freshImages, videoPlans, originalImagePrompts } from './new-gallery.mjs';
 const google = { label: 'Google 图片提示指南', url: 'https://ai.google.dev/gemini-api/docs/image-generation' };
-const runway = { label: 'Runway 视频提示指南', url: 'https://academy.runwayml.com/guides/prompting-guide' };
 const comfy = { label: 'ComfyUI 官方工作流', url: 'https://github.com/Comfy-Org/workflow_templates' };
 const remotion = { label: 'Remotion 官方 Skills', url: 'https://www.remotion.dev/docs/ai/skills' };
 const field = (key, label, value, hint = '') => ({ key, label, value, hint });
@@ -10,13 +9,7 @@ const image = (id, title, category, art, ratio, tags, summary, fields, zh, en, t
  steps: ['选择支持对应能力的生图工具；整理好参考素材。', '替换下方主体、场景等材料，检查完整提示词。', '先出一张小样，检查构图、文字和主体细节，再调整。'],
  requirements: '示例图为原创 AI 视觉素材；下方可替换模板尚未在目标模型逐条验证。比例请在目标工具中设置。'
 });
-const motion = (id, title, category, art, movement, summary, fields, zh, en, tip) => ({
- id, title, category, art, movement, summary, fields, zh, en, tip,
- media: 'video', type: 'prompt', ratio: 'wide', tags: ['图生视频', '运镜'], tool: '视频生成工具', source: runway, status: '未实测', previewLabel: '二维运镜示意',
- steps: ['先准备主体清晰、细节稳定的起始图片。', '在支持图生视频的工具里上传起始图，设置其实际支持的时长及比例。', '粘贴提示词，先检查动作连贯和主体是否变形，再继续生成下一镜。'],
- requirements: '本页播放的是静态图的二维运镜演示，不是模型生成视频。模型的时长、比例和参考图支持以实际工具为准。'
-});
-export const items = [
+const originalItems = [
  image('jade-product', '一瓶清透的夏天', '电商产品', 'jade-bottle', 'portrait', ['产品摄影', '玻璃质感'], '把普通产品图整理成干净、有材质感的广告画面。',
  [field('subject', '产品主体', '无品牌玉绿色磨砂护肤瓶'), field('scene', '背景与道具', '浅色石灰石台座、一片细叶和柔和水面反光'), field('light', '光线', '大型柔光从侧面照射')],
  '为{{subject}}创作一张克制的产品广告摄影。场景是{{scene}}。{{light}}，保留自然阴影，真实呈现玻璃、金属与少量凝露的材质。产品完整可见，主体突出，背景简洁。画面不添加未经提供的标志、文案或额外产品。建议竖幅4:5。',
@@ -57,26 +50,6 @@ export const items = [
  '拍摄{{subject}}的建筑杂志风格室内照片。使用{{materials}}，大窗外是{{view}}。自然晨光，细腻材料纹理，真实空间比例，克制装饰。家具之间有合理通道，透视连贯，画面不出现人物和文字。建议横幅3:2。',
  'Create an architectural editorial photograph of {{subject}} featuring {{materials}}, with {{view}} outside a large window. Use natural morning light, tactile materials, realistic proportions, and restrained decoration. Preserve usable circulation and coherent perspective. No people or lettering. Suggested framing: landscape 3:2.',
  '概念图不能代替施工设计；核对真实尺寸、通道和家具摆放。'),
- motion('product-push', '产品广告 · 缓慢推进', '产品展示', 'jade-bottle', 'push', '用一个简单镜头突出产品材质，先保持主体稳定。',
- [field('subject', '主体', '护肤瓶'), field('action', '环境变化', '水面反光轻微移动'), field('camera', '镜头', '缓慢、平稳地向前推进')],
- '以提供的图片为起始帧。{{subject}}保持原有位置、形状、标签与材质。{{action}}。镜头{{camera}}，连续单镜头，动作克制，景深自然变化，产品始终清晰。先只完成这一段动作，不增加转场。时长和画幅在目标工具中按实际支持设置。',
- 'Use the supplied image as the first frame. Preserve the position, shape, label, and materials of {{subject}}. {{action}}. The camera performs {{camera}} in one continuous restrained shot, with natural depth of field and a sharp hero product. Focus on this one action without adding cuts. Set duration and aspect ratio in the target tool.',
- '图生视频重点写动作与镜头；主体外观已在起始图里，不必重复大量静态细节。'),
- motion('city-pan', '微缩城市 · 横向巡游', '运镜练习', 'mini-city', 'pan', '让镜头缓慢经过建筑，适合空间与城市主题。',
- [field('subject', '场景', '微缩海滨城市'), field('action', '主体动作', '电车沿轨道缓慢行驶'), field('camera', '镜头', '从左向右平稳平移')],
- '从提供的{{subject}}起始图开始。{{action}}，其余建筑结构与尺度保持一致。镜头{{camera}}，连续单镜头，速度均匀，环境运动细微，保留微缩材质与柔和光线。时长和画幅在目标工具里设置。',
- 'Begin with the supplied image of {{subject}}. {{action}} while architecture and scale remain consistent. The camera performs {{camera}} in one continuous shot at a steady speed. Use subtle environmental motion and preserve the miniature materials and soft light. Set duration and aspect ratio in the target tool.',
- '先分开测试镜头移动与主体移动；同时要求多个对象运动，会提高检查难度。'),
- motion('rain-breathe', '雨夜角色 · 安静一瞬', '角色动作', 'rain-portrait', 'breathe', '一个呼吸、一点雨光，用细微动作建立真实感。',
- [field('subject', '人物', '画面中的成年探险者'), field('action', '动作', '自然呼吸，视线缓慢转向镜头'), field('camera', '镜头', '近景镜头保持稳定')],
- '以提供的人物图片为起始帧。{{subject}}{{action}}。{{camera}}。雨滴与远处灯光产生轻微环境变化，保持人物身份、脸部结构、衣物与光线方向一致。连续单镜头，动作幅度小而自然，不新增人物或对白。',
- 'Use the supplied portrait as the first frame. {{subject}} performs {{action}}. {{camera}}. Raindrops and distant lights create subtle environmental movement. Preserve identity, facial structure, clothing, and lighting direction. Use one continuous shot with small natural motions, without adding people or dialogue.',
- '检查眼睛、嘴角、衣物与背景是否漂移；示意播放只展示二维画面变化。'),
- motion('cloud-flight', '浮岛世界 · 轻缓航行', '动画短片', 'floating-island', 'drift', '用前后景的层次为一个幻想场景写镜头。',
- [field('subject', '场景', '云海上的浮岛与天文台'), field('action', '环境动作', '云雾缓慢流动，瀑布连续落下'), field('camera', '镜头', '轻缓向右前方航行')],
- '从提供的{{subject}}画面开始。{{action}}。镜头{{camera}}，保持前景与远景的空间关系、建筑轮廓及黎明色彩。连续航拍感单镜头，运动平稳，不突然跳转或大幅改变场景。',
- 'Start from the supplied image of {{subject}}. {{action}}. The camera performs {{camera}}, maintaining spatial relationships, architectural silhouettes, and dawn colors. Use a smooth continuous aerial-style shot without sudden cuts or large scene changes.',
- '想做长片时，先验收每个短镜头，再用剪辑工具连接；不把单段时长当成无限。'),
  {
  id: 'remotion-caption', title: '给短片加上清晰字幕', media: 'video', type: 'skill', category: '字幕剪辑', tags: ['Remotion', '字幕', 'Agent Skill'], tool: 'Remotion', source: remotion,
  status: '未运行', summary: '使用官方字幕技能，让助手在项目里处理字幕节奏与排版。', fields: [field('subject', '视频内容', '30秒产品介绍短片'), field('style', '字幕风格', '两行以内、重点词突出、适合手机观看')],
@@ -106,10 +79,31 @@ export const items = [
  steps: ['从官方模板中选实际支持图生视频的条目。', '核对环境及输入图尺寸，设置短段参数。', '检查连续性和变形，再增加时长或后期剪辑。'], requirements: '视频模板各自有不同模型、节点及硬件要求。本站没有运行或提供预装环境。', tip: '工作流与提示词分开保存版本，便于排查是素材、参数还是依赖变化。'
  }
 ];
+export const items = [
+ ...diverseImages,
+ ...expansionImages,
+ ...freshImages,
+ ...newImages,
+ ...originalItems.filter(item => item.media === 'image' && item.type === 'prompt').map(item => ({ ...item, rawPrompt: originalImagePrompts[item.art], rawPromptLabel: '这张图实际使用的原始提示词' })),
+ ...videoPlans,
+ ...originalItems.filter(item => item.type !== 'prompt')
+].map(item => ({ ...item, styles: item.styles || (item.type !== 'prompt' ? [] :
+ item.category === '动漫二次元' || item.category === '修仙动漫' ? ['二次元'] :
+ item.category === '科技机甲' || ['cloud-world','dragon-cloud'].includes(item.id) ? ['概念设计'] :
+ ['paper-mascot', 'mini-city', 'lantern-alley', 'candy-orbit'].includes(item.id) ? ['3D手作'] :
+ item.media === 'video' ? ['电影感'] :
+ item.category === '海报社媒' ? ['平面海报', '写实摄影'] : ['写实摄影']) }));
+for(const item of items){if(['rain-character','sweet-woman','sweet-man','cyber-cosplay','midnight-editorial','fashion-editorial'].includes(item.id))item.styles=['写实摄影','电影感'];}
 export const plays = [
- { id: 'product-story', title: '从一张产品图，到一段广告', summary: '先做主视觉，再设计一个镜头，最后补字幕。', art: 'jade-bottle', steps: [{ id: 'jade-product', label: '准备产品画面' }, { id: 'product-push', label: '写缓慢推进镜头' }, { id: 'remotion-caption', label: '加真实字幕' }] },
- { id: 'character-story', title: '让角色，进入自己的故事', summary: '先固定形象，再用一个小动作建立情绪。', art: 'rain-portrait', steps: [{ id: 'rain-character', label: '建立角色肖像' }, { id: 'rain-breathe', label: '写一个自然动作' }, { id: 'comfy-video', label: '核对视频工作流' }] },
- { id: 'little-city', title: '把一座城市，装进口袋', summary: '从微缩插画到横向巡游，再组织短片。', art: 'mini-city', steps: [{ id: 'mini-city', label: '设计微缩城市' }, { id: 'city-pan', label: '安排巡游镜头' }, { id: 'remotion-render', label: '整理成可编辑视频' }] },
- { id: 'quiet-world', title: '做一个会呼吸的幻想世界', summary: '确定远近层次，再安排云雾与镜头运动。', art: 'floating-island', steps: [{ id: 'cloud-world', label: '绘制世界主视觉' }, { id: 'cloud-flight', label: '写平稳航行镜头' }, { id: 'comfy-video', label: '检查生成环境' }] }
+ { id: 'product-story', title: '从一张产品图，到一段广告', summary: '先准备产品画面，研究都市分镜的光线和景别，再为自己的素材补字幕。视频条目目前仅分镜，尚无样片。', art: 'jade-bottle', steps: [{ id: 'jade-product', label: '准备产品画面' }, { id: 'elevator-secret', label: '研究都市镜头与光线' }, { id: 'remotion-caption', label: '为自己的短片加字幕' }] },
+ { id: 'character-story', title: '让角色，进入自己的故事', summary: '先固定原创形象，再写出自然动作与情绪，不复刻现有剧集角色。', art: 'sweet-woman', steps: [{ id: 'sweet-woman', label: '建立原创人物肖像' }, { id: 'coast-reunion', label: '写出重逢与情绪特写' }, { id: 'comfy-video', label: '核对自己的视频工作流' }] },
+ { id: 'little-city', title: '给小世界，一个大景别', summary: '从微缩城市画面出发，研究公路分镜的空间层次，整理成自己的短片。', art: 'mini-city', steps: [{ id: 'mini-city', label: '设计微缩城市' }, { id: 'coastal-choice', label: '研究公路大景别' }, { id: 'remotion-render', label: '组织可编辑视频' }] },
+ { id: 'quiet-world', title: '做一个有生命的幻想世界', summary: '先设计世界，再写出两人冒险的动作节奏；两个条目仅作方法参考，不是同一生成过程。', art: 'floating-island', steps: [{ id: 'cloud-world', label: '绘制世界主视觉' }, { id: 'celestial-gate', label: '设计人物与环境互动' }, { id: 'comfy-video', label: '检查生成环境' }] }
 ];
 export const typeLabels = { prompt: '提示词', skill: 'Skill', workflow: '工作流' };
+export const artSizes = Object.fromEntries([
+ [1122, 1402, ['anime-pilot','anime-summer','cherry-street','citrus-poster','city-skater','comic-hero','cyber-cosplay','fashion-editorial','festival-friends','ink-koi','jade-bottle','lantern-alley','lilac-cosplay','lotus-sword','midnight-editorial','rain-portrait','retro-observatory','scarlet-rider','sweet-man','sweet-woman','vinyl-afternoon']],
+ [1536, 1024, ['aurora-lagoon','calm-room','dragon-cloud','floating-island','pixel-night','snow-leopard','tide-mecha','watercolor-island']],
+ [1254, 1254, ['candy-orbit','coffee-still','coral-sneaker','headphone-ad','mini-city','otter-morning','paper-fox','papercut-tiger']],
+ [1672, 941, ['orbital-mecha']]
+].flatMap(([width, height, names]) => names.map(name => [name, { width, height }])));

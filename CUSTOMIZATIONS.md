@@ -1,5 +1,77 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-01 家族产品限定发布验证
+
+- 用户授权提交并推送本线程产品代码。按已有各节登记包含一体化静态白名单／Docker打包、正文工作区／默认浅色与宿主主题、配方同页配置、工坊38图／对应prompt／瀑布流、人工投稿审核及视频／分镜待开放；包号专项和更新脚本／CI接线保持未暂存，共享theme与UPDATE_GUIDE只提交产品段落。
+- 实际暂存快照通过Node104＋原站前端229项、类型／定向lint／Vite构建；证据output/family-release-20261001。不沿用混合工作树编译或旧SHA的远端结果冒充本次发布验证；新SHA的CI／GHCR需推送后核对，生产由用户更新。
+
+## 2026-10-01 工坊视频与分镜待开放（未部署）
+
+- 自有product-samples/magic-studio/core.mjs新增VIDEO_CONTENT_ENABLED=false与isItemAvailable，统一隐藏视频作品／分镜，原目录不删；app.mjs关闭筛选、搜索／收藏／历史、玩法分镜步骤、旧hash及公开投稿选择，保留图片和4份官方工具指引。收藏ID仍存储，仅可见数量排除暂关闭项。
+- index.html增加常驻“视频与分镜待开放”及使用说明，theme.css使用真实disabled、muted与不允许光标；局部opacity=1避免叠加全局忙碌样式导致提示过淡。保持瀑布流、完整画幅、对应prompt及宿主主题，不新增依赖或上游接缝。
+- 自有StudioSubmissionsView.vue禁用视频新投稿选项，提交／旧视频重投前端阻断并提示；保留图片投稿和旧记录私有查看／撤回／管理员管理，api.ts及服务端MP4协议不变。不能将UI关闭描述为后端访问控制或已上线。
+- 新增core／UI与Vue边界回归；Node104＋Vue11、类型／限定lint／Vite构建通过。4185真实验证待开放、搜索、旧链接、玩法、图片详情与深浅手机；24个并行包号文件SHA256保持。证据output/studio-video-paused-20261001；恢复成片／提示词／授权／播放条件已记HANDOFF五，未更新8080、提交推送或部署生产。
+
+## 2026-10-01 更新脚本旧镜像保留（未发布）
+
+- 自有 `deploy/update.sh` 新增仅本仓 `sha-*`／`latest` 与来源标签悬空镜像的定向清理；当前镜像与实际更新前镜像按完整ID保护，同版重复运行保留回退版，无历史记录时取创建时间较早的最近sha版本作候选。增加本地update-before／rollback-previous标签以保护latest旧版，所有运行／停止容器引用镜像均跳过，不强制删除、不做全局prune、卷或备份清理。
+- 健康检查超时改为失败退出且不清理；检查错误保留镜像并显示原因，增加同部署目录并发锁。宿主机脚本需单独替换，应用镜像pull不更新该文件；本地保护标签不属于GHCR发布标签。
+- 新增 `deploy/tests/update-test.sh`、`deploy/tests/fixtures/update-docker.sh` 的22场景假Docker回归；上游接缝 `.github/workflows/backend-ci.yml` 的shell job新增带[CUSTOM]的语法和假Docker测试步骤。UPDATE_GUIDE同步保留／失败／锁／服务器替换规则。
+- Git Bash语法检查与22场景回归通过，不操作真实Docker／生产、不编译后端、不混入并行未提交工作；本轮未提交推送。
+
+## 2026-10-01 工坊瀑布流消除齐行空白（未部署）
+
+- 仅工坊自有app/core/catalog/theme与定向测试：新增纯masonryPositions最短列算法及1px Grid位置；保留DOM与顶部阅读顺序、完整contain原画幅、已有雾青主题、提示词／收藏／复用行为。38张源PNG尺寸写入artSizes预留，逐一测试核对；不改图片像素或素材内容。
+- CSS变量负责2／3／4／5列，降列先归位再测高，避免旧位置产生隐式空列。ResizeObserver合并重排、过滤容器仅高度变化；媒体加载／错误／元数据与resize回退，筛选断开旧观察、玩法隐藏／pagehide清理、pageshow恢复。无观察器或测高不可用仍保留可读Grid，不加依赖、不改宿主／后端白名单或认证。
+- Node101（工坊41＋配方56＋宿主1＋打包3）、语法／限定diff检查、Vite构建通过；真实320／390／768／1280／2200、详情焦点／分镜／空态检查，桌面同列间距18–19px、手机12–13px、横溢出0、warn/error空。初轮缩窄产生隐式列问题已修，并增加回归。技能扫描器exit127，不宣称扫描通过。证据output/studio-masonry-20261001；24个包号并行文件SHA256保持。仅4185预览，未更新8080、提交推送、Docker／Go或生产部署。
+- README／PRODUCT同步OpenAI只读官方查证：Videos API及Sora 2于2026-09-24关闭，没有一对一替代API；历史文档不代表可调用。本轮没有接视频服务或收费调用，本站第三方视频能力未知，10套分镜仍0段对应成片。
+
+## 2026-10-01 工坊风格多样化与真实投稿审核（未部署）
+
+- 工坊new-gallery新增六种明显不同媒材的真图（像素／水墨／美漫／水彩／剪纸／复古未来）与实际prompt；catalog题材／风格独立，core保持原始记录与反推区别、严格同源公开媒体适配和规范ID收藏，app/index/theme加入风格筛选、投稿入口、匿名公开目录、成片播放器与prompt详情。38图／10套无成片分镜／4工具，准确原始记录30图；PROVENANCE-STYLES记录资产与工具，未输入参考图，完整图无裁切。打包脚本仍只发白名单运行资源，不发PNG／来源JSON，无新依赖。
+- 新增后端handler/custom_studio_handler.go与测试、middleware/custom_studio_audit_test.go，单实例私有JSON／media存储：原API用户上传、作者／管理员读取、管理员确认发布、拒绝／下架／撤回、期望状态409、Range、文件签名／尺寸／体积／额度。公开目录只返回published的作品／署名／prompt等公开字段。没有新数据库迁移、自动审核、收费模型、采集或定时任务。
+- **上游接缝** backend/internal/server/router.go：RegisterPageRoutes之后新增[CUSTOM] RegisterStudioRoutes，复用原JWT／管理员认证、面板限流、合规与审计，dataDir仍来自Pricing配置。同步上游时保留单次注册，不能把私有素材映射成匿名静态目录。
+- **上游接缝** backend/internal/server/middleware/audit_log.go：auditBodyOmittedRoutes精确加入投稿及admin审核两条路由[CUSTOM]，不记录私有文件／提示词正文，仍记录操作者、路径和结果。同步后运行TestStudioAuditOmitsPrivateBody，勿为省略正文关闭整个审计。
+- 定制web/custom_family_products.go只把工坊connect-src从none改为self（[CUSTOM]），用于匿名审核后公开目录；继续禁止外部连接、脚本／图片／媒体限定同源、静态白名单不扩为私有目录。static回归保留CSP和范围读取；不是跨域SSO或模型API放行。
+- 新增custom/studio/api.ts、StudioSubmissionsView.vue及两份定向测试，customRoutes增加用户／管理员两路由；FamilyWorkspaceView宿主只新增origin/source/nonce保护的studio-submit当前路由动作，不传JWT。theme.css新增mofa-studio-contribute命名空间，默认浅色／跟随主站深浅、完整媒体contain、手机单列；普通预览仍可后期拆分模块。
+- 投稿需要授权、完整prompt及模型说明，original／reference明确区分；初始pending不会公开。管理员看片确认及原因、作者撤回、修改重新审核；文件选择只本地预览，点击提交才上传，账号切换清理私人输入／blob／迟到响应。无永久清理UI，撤回仍占额度；只支持单实例，备份含pricing.data_dir/studio-submissions，见工坊COMMUNITY及FAMILY_INTEGRATED。
+- 证据：Node96／Vue64定向、类型／lint／Vite构建，隔离Docker投稿／审计5顶层与静态回归／Go embed成功；web全量两favicon旧用例失败未修，不标全量通过。4185六图／风格／桌面浅色／手机深色／完整prompt／匿名登录回跳实测，私有投稿／审核真实账号仍待。24并行包号文件保持；未更新8080或生产、提交推送、调用视频或付费模型，准确未验和部署门槛见HANDOFF。
+
+## 2026-10-01 工坊再增十张原创图（最新目录）
+
+- 内容增量，不重设计界面：new-gallery.mjs新增10份独立完整实际prompt与变量、共用recordedImage映射；catalog.mjs优先展示最新十图，32张图＋10套视频分镜＋4份Skills，共46条。index.html使用说明数量、README／PRODUCT／DESIGN同步，旧22图不撤换。视频仍0段新成片，明确分镜与影片的区别。
+- 内置image_gen实际生成，未传用户参考截图；成年人物25岁以上、不复刻现有角色。PNG原图留档、无裁切WebP和缩略图进入运行包；assets/PROVENANCE-EXPANDED-20261001.json记录逐字实际prompt、工具、生成文件名、尺寸／字节数／SHA256。共24张准确原始记录，8张旧摘要图仍明确缺失，不以另写模板伪造原始prompt。
+- core／ui新增十图资源摘要、尺寸比例、对应prompt、替换和两种复制回归；custom/family/build-products.test.mjs逐字节核对十对网页资源、不发布原PNG或JSON。工坊30＋配方56＋宿主1＋打包3共90项与Vite生产构建通过，4185十图／原始prompt、1280浅色／390深色contain及无横溢出通过、warn/error为空，详见HANDOFF与output/studio-images-more-20261001。
+- 不新增运行时module或依赖，不改后端白名单／CSP、主站主题、宿主认证、配方或SynaRoute；24个包号并行文件SHA256保持。未收费视频调用、Go编译、Docker重建、更新8080、提交推送或生产发布，准确边界和视频待办在HANDOFF。
+
+## 2026-10-01 工坊鲜活图像、作品与提示词详情（视频成片待补）
+
+- 仅工坊源码／素材与家族打包回归：撤下四段Blender视频及其封面；new-gallery.mjs新增六张原创图的实际完整prompt和十套原创分镜，catalog.mjs同步目录／玩法。22张图、10套分镜、4份Skills；十套分镜没有可播放成片，不冒充完成视频需求。
+- index.html／app.mjs／theme.css加入作品与提示词并排详情、卡片复制／复用、原始提示词记录与可替换模板区分。14张原始记录与两个PROVENANCE JSON逐字对应，8张旧图缺失原始记录明确标注；右侧材料只留内存，图片索引原画幅及完整contain，44px操作、手机堆叠、关闭焦点、重开归零与弹窗内手动复制。
+- core.mjs导出保留当前材料模板与可用原始记录、条件和状态；core／ui回归更新，build-products.test.mjs确认0个mp4和无film-*、新图打包。不改上游运行时文件、安全白名单／CSP、宿主认证／主题、配方或母品牌首屏，不新增依赖或付费生成接口。
+- 六张PNG留档、无裁切网页WebP及缩略图，精确prompt／工具／无参考图记录在assets/PROVENANCE-VIBRANT-20261001.json；旧影片来源文档只保留撤下历史。没有视频生成工具，第三方目标题材媒体授权未核实，待用户自己的接口／预算或授权素材，不下载抖音或复刻剧集人物。
+- 本轮88项Node／jsdom／宿主／打包及Vite生产构建通过，实际4185桌面／手机、原始与复用复制提示／材料隔离／完整图像／分镜／Esc焦点通过。准确证据与未验见HANDOFF最新条目；未Go编译、Docker重建、提交推送或更新8080／生产，包号并行工作保留。
+
+## 2026-10-01 控制台内子产品工作区、主题与作品扩充（最新源码）
+
+- 用户新要求覆盖历史默认深色：未保存主题时默认浅色，已保存深色仍保留；内置子产品跟随宿主根节点主题。新增 `FamilyWorkspaceView.vue`，受原认证守卫保护的 `/tools/recipes`、`/tools/studio` 在 `AppLayout` 右侧正文加载同源静态产品。`familyProducts` 内置入口使用 RouterLink，显式独立外部地址仍有安全新窗口兼容；SynaRoute 不改。
+- 新增 `family/workspace.ts` 与 `product-samples/family-runtime/host-client.js`，以来源、确切 iframe 窗口与每次加载的随机 nonce 配对。宿主读取本人既有密钥，只回传目录元数据，用户选择模型并点击应用后仅回传所选 Key；复查权限、轮换、模型目录时效及用途。退出、切换与卸载取消未完成读取并清空连接；不自动创建密钥、调用生成模型或把 JWT 放进 URL／消息。它是受信同源模块，不是隔离不可信脚本的安全沙箱。
+- 上游接缝逐处登记并有 `[CUSTOM]`：`main.ts`、`AppSidebar.vue`、`HomeView.vue`、`KeyUsageView.vue` 的无偏好主题初始化统一浅色；`vite.config.ts` 新增开发入口适配器 import／插件；`Dockerfile` 新增共享 family-runtime COPY。`custom/theme.css` 仅新增 `.mofa-product-workspace` 专属布局；原主题颜色与并行包号样式不回滚。
+- 新增 `dev-products.mjs`／`d.mts` 与6项回归：开发服务器仅将 GET／HEAD 的两产品根目录映射到其静态首页，补齐尾斜杠并保留宿主参数；不改 API、文件路径或其他路由。解决目录入口误落主站登录页；本机预览显式 `--config vite.config.ts`，避免旧的 gitignored 编译配置优先加载。
+- 配方新增同页 Key／模型／协议选择与手填兼容，只有内嵌宿主模式启用直接目录选择；独立静态模式保留原登录选择窗口。材料／已选连接只留页面内存，应用配置本身不运行模型。子产品主题开关内嵌时隐藏，由主站统一控制。
+- 工坊扩为16张原创图片＋4段真实授权原片＋4份 Skills／工作流，新增8张原创图包含年轻成年男女、穿搭、Cosplay、动漫、原创机甲、动物、电商。所有新人物明确成年人，未把用户截图作为生成输入。左侧点击直接大图／原生影片播放，右侧 `contain` 完整预览，统一网格与横向用途筛选；视频不再使用图片二维运镜，不将影片冒充本站生成或模板实测。影片出处／署名／CC BY 授权及处理记录在 `assets/PROVENANCE-20261001.md` 和每个视频条目。
+- Go静态处理仅两产品安全头从 DENY 改 SAMEORIGIN、`frame-ancestors 'self'`，允许同源工作区，未放宽主站全局策略。工坊增加两个运行模块和严格 mp4 白名单／MIME，支持原生 Range 请求；原始 PNG、来源文档、测试和服务脚本仍不公开。打包器只复制运行时资源，不新增服务、SDK或调度。
+- 169项自动测试（Node／打包83、前端及国际化86）、类型／相关 lint／生产 Vite 构建通过；Docker内 TestFamily 两函数回归与 Go embed 编译通过。本轮未提交推送／生产发布；本机8080仍旧版，真实登录选择、用户模型／计费及三条抖音完整观看未验。源码／镜像与截图准确状态见 HANDOFF 最新条目，不用历史浏览器或 CI 结果代替。
+
+## 2026-10-01 配方与工坊同站点一体化（本机8080已部署，未发布生产）
+
+- 新增 frontend/src/custom/family/build-products.mjs／d.mts／test，将权威配方生成外置脚本／样式版本、工坊仅复制运行模块／WebP／品牌PNG到两个带标记的 public 目录。清理前检查绝对目录为指定根的直接子目录且带本产品标记，拒绝覆盖用户文件；生成目录 gitignore，原独立应用仍可使用。
+- 上游接缝逐处登记，均有 [CUSTOM]：frontend/vite.config.ts 的打包器 import 和插件 config 钩子；Dockerfile 的两项 product-samples COPY 和嵌入路由测试 RUN；.dockerignore 的配方 Markdown／web embed 测试例外与生成目录、原始工坊PNG、本机 output／配置编译产物排除；.gitignore 的两个生成目录；backend/internal/web/embed_on.go 的有设置／旧版两条 serveFamilyProduct 分流，不经过 SPA 兜底或本机 data/public 覆盖。
+- 新增 Go custom_family_products.go／test：两个专属命名空间，GET／HEAD、无斜杠308、明确JS MIME，未知／穿越／源文件404、其他方法405、无目录列表、no-store／nosniff／DENY／no-referrer及不允许内联执行的产品 CSP；不改 API 路由、认证／计费或全站 CSP，不新增依赖。Docker 构建执行 go test -tags embed -run '^TestFamily' -v ./internal/web 限定本轮回归后才生成镜像，测试源码不复制到最终运行镜像；首次完整 web 测试因旧用例引用已不存在的 logo.png 失败，不修改其用例或宣称全量通过，原失败日志保留。
+- 定制 products.ts 默认同源 /recipes/、/studio/ 并显示本站产品，显式独立覆盖与错误地址禁用保留；配方 builder 内置模式外置JS／CSS和构建标记，model-ui固定当前站点选择窗口／家族首页、不信 api_site；connector 只在受信内置模式允许精确当前来源，其余白名单／窗口／nonce／期限／用途配对不变。工坊只增加安全新窗口家族链接，维持原设计与模型边界。
+- 同步 README／产品部署说明、FAMILY_PORTAL 与 FAMILY_LOCAL_DOCKER，新增 FAMILY_INTEGRATED 和不含凭据的 Compose 构建覆盖样例。177项自动测试及类型／lint／Vite通过，Docker内TestFamily两函数／14路径子用例及两种embed入口通过、Go embed编译通过；原完整web测试的旧logo.png夹具失败另存，不标全量通过。
+- 用户选择更新8080后仅应用替换，镜像c599729e28df与容器一致，三服务healthy、25项HTTP检查通过、原DB／Redis ID／数据卷／业务计数及280项设置摘要保持。浏览器实际配方整理／同源配置字段、工坊内容／图片／复制提示、1280桌面及390手机无横溢出、双主题通过；原站登录回跳参数可见，IAB配置弹窗及真实账号授权／付费模型仍未验。准确证据与备份见HANDOFF及output/family-integrated-20261001，不提交推送或部署生产，24个包号并行文件SHA256保留。
+
 ## 2026-09-30 家族视觉与公开链接发布收口（最新授权）
 
 - **最新发布状态**：本节功能已推送 origin/main，提交 25071d4d547c69d6c933bbcb0c276585b23b4b68，push 与远端 SHA 一致。GHCR 36736764218 和 CI 36736764231 收工时仍运行；安全扫描 36736764322、CI 前端／Go lint／shell／release-helpers 已成功，Go Unit 与镜像 Build and push 仍进行，不标全部通过或镜像已发布。准确终态见 HANDOFF 和本轮取证目录，生产未操作；下方“未提交／未发布”均为实施时历史。

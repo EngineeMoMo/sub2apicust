@@ -3,6 +3,16 @@ const assert = require('node:assert/strict');
 const connector = require('./magic-connect.cjs');
 const { webcrypto } = require('node:crypto');
 
+test('一体化部署仅信任当前完整来源，不借此允许第三方登录站点', () => {
+  const own = 'https://family.example.test';
+  assert.equal(connector.portalURL(own, own).origin, own);
+  const connection = connector.begin(own, own, webcrypto, true);
+  assert.equal(new URL(connector.loginURL(connection, 'text')).origin, own);
+  assert.throws(() => connector.portalURL('https://evil.test', own));
+  assert.throws(() => connector.portalURL(own, own + '/recipes/'));
+  assert.throws(() => connector.begin(own, own, webcrypto));
+});
+
 test('登录仅接受官方域名和明确本机 HTTP，不接受仿冒、凭据或路径', () => {
   assert.equal(connector.portalURL('https://ai.mofamilys.com/').origin, 'https://ai.mofamilys.com');
   assert.equal(connector.portalURL('http://127.0.0.1:4175').origin, 'http://127.0.0.1:4175');

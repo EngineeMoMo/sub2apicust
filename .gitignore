@@ -152,6 +152,9 @@ docs/screenshots/*
 .serena/
 .codex/
 frontend/coverage/
+# [CUSTOM] 家族产品在 Vite 构建前生成，不提交构建产物。
+frontend/public/recipes/
+frontend/public/studio/
 aicodex
 output/
 .codegraph/

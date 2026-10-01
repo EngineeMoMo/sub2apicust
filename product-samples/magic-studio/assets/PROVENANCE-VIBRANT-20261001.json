@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-01",
+  "tool": "内置 image_gen",
+  "referenceImages": [],
+  "assets": [
+    {
+      "id": "festival-friends",
+      "file": "festival-friends.png",
+      "prompt": "Create an original photorealistic fashion editorial photograph, vertical 4:5. Two fictional East Asian adult women aged 25 and 27 laughing mid-conversation at an outdoor summer music festival. One wears a cobalt-blue cropped ribbed T-shirt and loose white jeans, the other a coral-red sporty tank top and denim shorts. No nudity. Hair caught naturally in a breeze, one holding a translucent lime-green soda cup. Shot from waist up, candid slightly off-center framing, real pores and tiny flyaway hairs, believable hands, unforced joy rather than a posed AI smile. Out-of-focus cherry-red stage canopy, bright blue sky, subtle sun flare and energetic afternoon daylight. Rich restrained color, independent youth magazine photography, medium-format film texture. Entire subject comfortably in frame. No lettering, no watermark, no famous person, no copied reference face.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    },
+    {
+      "id": "city-skater",
+      "file": "city-skater.png",
+      "prompt": "Create a completely original photorealistic vertical 4:5 street-fashion photograph. A fictional handsome 26-year-old East Asian adult man, short textured dark hair, relaxed genuine smile, carrying an orange skateboard under one arm while turning towards a friend outside the frame. Oversized cream tee with a small abstract blue wave graphic but no text, faded cobalt utility pants, silver necklace. Waist-up candid composition, sunset on a seaside skatepark, saturated terracotta ramp in the foreground and turquoise sea behind, a little motion in the hair but crisp eyes. Youthful effortless energy, attractive natural features, no plastic skin, believable fingers and anatomy. Editorial film photography with confident sunlight, rich color separation, realistic grain. No celebrities, no brands, no watermark, no lettering.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    },
+    {
+      "id": "lilac-cosplay",
+      "file": "lilac-cosplay.png",
+      "prompt": "Create an original vertical 4:5 premium cosplay fashion editorial photograph of a fictional 25-year-old adult East Asian woman. A playful, confident adult character with a short lilac bob and two small curved pearlescent horn accessories, not an existing anime character. She wears a sophisticated opaque lavender and deep-plum cropped utility jacket, a high-neck fitted white top and high-waisted graphite cargo trousers, fingerless gloves; tasteful fashionable styling, no nudity or lingerie. She reaches one gloved hand towards a small floating translucent pink message orb near her face, with a warm teasing smile. Three-quarter waist-up framing showing her entire hand. Futuristic violet transit lounge, pale mint signage shapes without letters, glowing pink reflections, real photographic fabric texture and convincing soft light on skin. Distinct energetic color, editorial composition, not a generic game render. No watermark, no text, no celebrity likeness.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    },
+    {
+      "id": "dragon-cloud",
+      "file": "dragon-cloud.png",
+      "prompt": "Create an original breathtaking wide 3:2 fantasy illustration, one complete artwork, no panels. A monumental red-and-gold Chinese celestial dragon swimming in the sky through luminous indigo storm clouds above an emerald floating island city. A tiny traveler in an orange cloak stands on a stone observation bridge at lower right for scale. Sweeping diagonal composition, dragon body anatomically coherent, airy negative space, beautiful warm sunrise splitting the cloud bank, luminous sapphire rivers winding through architecture, controlled intricate detail, painterly cinematic key art with vibrant pigments and elegant organic shapes. Original fantasy world, no existing game or animation characters. No text, no lettering, no logos, no watermark.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    },
+    {
+      "id": "anime-summer",
+      "file": "anime-summer.png",
+      "prompt": "Create an original hand-painted 2D anime illustration, vertical 4:5. A clearly adult 25-year-old female travel illustrator with mint-green hair in a loose ponytail, cheerful bright eyes, wearing an opaque cobalt windbreaker over a coral shirt, sitting beside a seaside fruit-ice stall holding a transparent cup of vivid blue shaved ice. A small curious orange cat perched on the bench beside her, warm summer sunlight, turquoise sea, red parasol, scattered wind-blown postcards with abstract marks not readable letters. Dynamic candid composition, expressive but elegant face, natural hands, brilliant fresh color, visible painterly brush texture and crisp selective linework, premium contemporary illustration. Fully original character, no resemblance to existing anime characters, no school uniform, no sexualization, no nudity. No caption, no watermark, no logo.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    },
+    {
+      "id": "candy-orbit",
+      "file": "candy-orbit.png",
+      "prompt": "Create an original square 1:1 premium playful product advertising still. A clear unbranded resealable pouch filled with glossy jewel-colored fruit gummies floats above a cobalt-blue curved platform. Orange slices, strawberries, violet gummy rings and lime-green translucent candy pieces arc around the pouch in an organized dynamic spiral, not chaotic clutter. Hot coral seamless background with a soft directional shadow, crisp studio hard light, convincing transparent material and appetizing subtle sugar texture, vivid young consumer-brand art direction, bold minimal composition with generous breathing room. Packaging intentionally has no lettering or logo. High-end commercial photography mixed with believable tabletop styling. No text, no watermark, no existing brand.",
+      "kind": "原创AI图像",
+      "templateVerification": "原始提示词实际生成本图；可替换模板未重跑"
+    }
+  ],
+  "videos": {
+    "status": "10套原创分镜，0段新成片",
+    "withdrawn": [
+      "film-elephants",
+      "film-sintel-landscape",
+      "film-sintel-character",
+      "film-bunny"
+    ],
+    "reason": "用户否决旧片，授权目标题材样片及视频生成接口待确认"
+  }
+}

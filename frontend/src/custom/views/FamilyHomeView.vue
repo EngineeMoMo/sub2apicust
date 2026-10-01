@@ -43,7 +43,7 @@
     </section>
     <section class="mofa-family-session" aria-labelledby="family-session-title">
       <div><h2 id="family-session-title">一个控制台，随时出发。</h2><p>登录后进入魔法 API 控制台，从顶部打开家族工具。</p></div>
-      <details><summary>登录与模型授权，如何协作？<Icon name="chevronDown" size="sm" aria-hidden="true" /></summary><p>本站控制台与配方配置选择共用当前会话。配方连接模型时，仍由你选择已有密钥并明确授权；不会自动创建密钥或产生模型费用。</p><p>SynaRoute 使用密钥导入，不是桌面账号单点登录。工坊首版是公开创作资源，不需要再注册账号；独立产品尚未实现统一退出。</p><RouterLink to="/guide">查看模型接入教程 <Icon name="arrowRight" size="sm" aria-hidden="true" /></RouterLink></details>
+      <details><summary>登录与模型授权，如何协作？<Icon name="chevronDown" size="sm" aria-hidden="true" /></summary><p>配方和工坊已随本站镜像提供，无需另外托管。本站控制台与配方配置选择共用当前会话，连接模型时仍由你选择已有密钥并明确授权，不会自动创建密钥或产生模型费用。</p><p>工坊是公开创作资源，无需另注册账号。SynaRoute 使用密钥导入，不是桌面账号单点登录；退出本站后，配方内已授权连接需手动清除或刷新页面。</p><RouterLink to="/guide">查看模型接入教程 <Icon name="arrowRight" size="sm" aria-hidden="true" /></RouterLink></details>
     </section>
   </PublicLayout>
 </template>

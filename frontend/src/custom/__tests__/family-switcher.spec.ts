@@ -54,9 +54,19 @@ describe('控制台顶部产品切换', () => {
     expect(page().find('aside').exists()).toBe(false)
   })
 
-  it('未配置独立地址则禁用并隐藏继续打开提示', () => {
+  it('未配置独立地址时使用内置产品，继续打开仍由用户主动点击', () => {
     vi.stubEnv('VITE_MAGIC_RECIPES_URL', '')
     vi.stubEnv('VITE_MAGIC_STUDIO_URL', '')
+    harness.route.query = { product: 'recipes' }
+    const view = page()
+    expect(view.findAll('button:disabled')).toHaveLength(0)
+    expect(view.findAllComponents(RouterLinkStub).find(link => link.text().includes('打开魔法配方'))?.props('to')).toBe('/tools/recipes')
+    expect(view.findAllComponents(RouterLinkStub).find(link => link.text().includes('魔法工坊'))?.props('to')).toBe('/tools/studio')
+  })
+
+  it('显式错误的外部地址仍禁用，不悄悄回退或展示打开提示', () => {
+    vi.stubEnv('VITE_MAGIC_RECIPES_URL', 'http://unsafe.example.test/')
+    vi.stubEnv('VITE_MAGIC_STUDIO_URL', 'https://studio.test/?key=secret')
     harness.route.query = { product: 'recipes' }
     const view = page()
     expect(view.findAll('button:disabled')).toHaveLength(2)

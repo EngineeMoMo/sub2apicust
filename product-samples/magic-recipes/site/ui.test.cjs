@@ -13,6 +13,7 @@ function setup(options = {}) {
   console.on('jsdomError', error => errors.push(error.message));
   const dom = new JSDOM(html, { url: options.url || 'http://127.0.0.1:4178/' + (options.hash || ''), runScripts: 'dangerously', virtualConsole: console,
     beforeParse(window) {
+      if (options.parent) Object.defineProperty(window, 'parent', { value: options.parent });
       window.matchMedia = () => ({ matches: false });
       window.open = options.open || (() => null);
       window.fetch = async (...args) => {
@@ -35,6 +36,36 @@ function setup(options = {}) {
   return { dom, window: dom.window, document: dom.window.document, errors, requests };
 }
 function submit(document) { document.getElementById('recipe-form').dispatchEvent(new document.defaultView.Event('submit', { cancelable: true })); }
+
+test('控制台内直接下拉选择配置，不打开新窗口或自动调用模型；退出清除密钥', async () => {
+  const messages = [], parent = { postMessage: message => messages.push(message) };
+  const page = setup({ url: 'http://127.0.0.1:8080/recipes/?embedded=1', parent, open: () => assert.fail('不得开新窗口') });
+  const { window, document } = page, nonce = 'a'.repeat(64);
+  const send = data => window.dispatchEvent(new window.MessageEvent('message', { source: parent, origin: 'http://127.0.0.1:8080', data: { nonce, ...data } }));
+  const answer = async result => {
+    const message = messages.at(-1); send({ type: 'mofa-host-response', id: message.id, result });
+    await new Promise(resolve => setImmediate(resolve));
+  };
+  try {
+    send({ type: 'mofa-host-init', theme: 'dark' });
+    assert.equal(document.documentElement.dataset.theme, 'dark');
+    document.getElementById('open-model-settings').click();
+    assert.equal(messages.at(-1).action, 'keys');
+    await answer([{ id: 1, name: '模拟密钥', group: '模拟分组' }]);
+    const key = document.getElementById('magic-key-select'); key.value = '1'; key.dispatchEvent(new window.Event('change'));
+    assert.equal(messages.at(-1).action, 'models');
+    await answer({ models: ['fake-model'], protocol: 'responses' });
+    const model = document.getElementById('magic-model-select'); model.value = 'fake-model'; model.dispatchEvent(new window.Event('change'));
+    document.getElementById('apply-magic-config').click(); assert.equal(messages.at(-1).action, 'apply');
+    await answer({ kind: 'text', protocol: 'responses', base: 'https://api.test/v1', key: 'fake-key', model: 'fake-model', size: '' });
+    assert.equal(document.getElementById('model-key').value, 'fake-key');
+    assert.equal(page.requests.length, 0);
+    send({ type: 'mofa-host-theme', theme: 'light' }); assert.equal(document.documentElement.dataset.theme, 'light');
+    send({ type: 'mofa-host-session-ended' }); assert.equal(document.getElementById('model-key').value, '');
+    assert.equal(window.localStorage.getItem('fake-key'), null);
+    assert.deepEqual(page.errors, []);
+  } finally { window.close(); }
+});
 test('家族本机入口仅预填允许的网站来源，无隐式登录、存储或模型请求', () => {
   const page = setup({ hash: '?api_site=' + encodeURIComponent('http://127.0.0.1:4175') });
   try {
@@ -528,7 +559,7 @@ test('深浅色、方法视图和配方直达可用', () => {
   try {
     assert.equal(page.document.getElementById('recipe-title').textContent, '大学编程实验复盘');
     page.document.getElementById('theme').click();
-    assert.equal(page.document.documentElement.dataset.theme, 'light');
+    assert.equal(page.document.documentElement.dataset.theme, 'dark');
     page.document.getElementById('guide-view').click();
     assert.equal(page.document.getElementById('editor').hidden, true);
     page.document.getElementById('back-to-edit').click();

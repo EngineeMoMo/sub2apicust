@@ -12,8 +12,87 @@
   let latest = '';
   let login;
   const connector = globalThis.MofaRecipeConnect;
+  const host = globalThis.MofaFamilyHost;
+  let inlineVersion = 0, inlineBusy = false;
+  function inlineSelection() {
+    return { kind: editing, keyID: Number(byId('magic-key-select').value), model: byId('magic-model-select').value, protocol: byId('magic-protocol').value };
+  }
+  function inlineControls() {
+    byId('connect-magic-api').disabled = inlineBusy;
+    byId('magic-key-select').disabled = inlineBusy;
+    byId('magic-model-select').disabled = inlineBusy || byId('magic-model-select').options.length < 2;
+    byId('apply-magic-config').disabled = inlineBusy || !byId('magic-model-select').value;
+  }
+  function options(id, list, placeholder) {
+    const select = byId(id);
+    select.replaceChildren(new Option(placeholder, ''));
+    list.forEach(entry => select.append(new Option(entry.label, entry.value)));
+  }
+  async function inlineRequest(action) {
+    const version = ++inlineVersion;
+    inlineBusy = true; inlineControls();
+    byId('magic-connect-status').textContent = action === 'apply' ? '正在应用所选连接…' : '正在读取配置…';
+    try {
+      const result = await host.request(action, inlineSelection());
+      if (version !== inlineVersion) return;
+      if (action === 'keys') {
+        options('magic-key-select', result.map(entry => ({ value: String(entry.id), label: entry.name + ' · ' + (entry.group || '未命名分组') })), '请选择可用密钥');
+        options('magic-model-select', [], '先选择密钥');
+        byId('magic-connect-status').textContent = result.length ? '选择密钥后读取其模型目录。' : '当前没有可用密钥，请到密钥管理创建并绑定分组，或手动填写接口。';
+      } else if (action === 'models') {
+        options('magic-model-select', result.models.map(model => ({ value: model, label: model })), '请选择模型');
+        byId('magic-protocol').value = result.protocol;
+        byId('magic-connect-status').textContent = result.models.length ? '目录来自所选密钥；请确认模型能力与接口格式后应用。' : '此密钥没有返回模型，请检查分组或更换密钥。';
+      } else {
+        const config = client.configure(result);
+        connections.set(config.kind, config); drafts.set(config.kind, config);
+        loadDraft(editing); if (kind() === editing) resetRun(); refreshConnection();
+        byId('magic-connect-status').textContent = '已应用 ' + config.model + '，密钥只留本页内存，尚未调用生成模型。';
+        byId('settings-status').textContent = '魔法 API 连接已应用。检查提示词后再手动运行。';
+      }
+    } catch (error) {
+      if (version === inlineVersion) {
+        if (action === 'models') options('magic-model-select', [], '目录读取失败，请重选密钥');
+        byId('magic-connect-status').textContent = error.message;
+      }
+    } finally { if (version === inlineVersion) { inlineBusy = false; inlineControls(); } }
+  }
+  if (host?.embedded) {
+    byId('inline-magic-config').hidden = false;
+    byId('magic-connect-hint').textContent = '已在魔法 API 控制台中打开。直接读取当前账户的可用密钥与模型，也可在下方手动填写接口。';
+    byId('magic-site').closest('.field').hidden = true;
+    byId('connect-magic-api').textContent = '读取／刷新可用密钥';
+    byId('magic-family-home').removeAttribute('target');
+    byId('magic-family-home').textContent = '家族首页';
+    byId('magic-family-home').addEventListener('click', event => { event.preventDefault(); host.request('family').catch(() => {}); });
+    byId('magic-key-select').addEventListener('change', () => {
+      options('magic-model-select', [], '先选择密钥');
+      if (byId('magic-key-select').value) inlineRequest('models'); else inlineControls();
+    });
+    byId('magic-model-select').addEventListener('change', inlineControls);
+    byId('apply-magic-config').addEventListener('click', () => inlineRequest('apply'));
+    byId('manage-magic-keys').addEventListener('click', () => {
+      byId('magic-connect-status').textContent = '前往密钥管理会清除当前页材料与模型连接。';
+      const button = byId('manage-magic-keys');
+      if (button.dataset.confirmed) host.request('manage-keys').catch(() => {});
+      else { button.dataset.confirmed = 'true'; button.textContent = '确认离开，管理密钥'; }
+    });
+    document.addEventListener('mofa-host-ready', () => { if (!byId('model-settings').hidden) inlineRequest('keys'); });
+    document.addEventListener('mofa-session-ended', () => {
+      inlineVersion++; inlineBusy = false; connections.clear(); drafts.clear(); resetRun(); loadDraft(editing); refreshConnection();
+      options('magic-key-select', [], '登录已失效'); options('magic-model-select', [], '请重新登录'); inlineControls();
+      byId('magic-connect-status').textContent = '登录已失效，本页连接与密钥已清除。';
+    });
+  }
+  const sameSite = document.querySelector('meta[name="mofa-api-site"]')?.content === 'same-origin';
   const portalHint = new URLSearchParams(location.search).get('api_site');
-  if (portalHint) {
+  if (sameSite && !host?.embedded) {
+    byId('magic-site').value = location.origin;
+    byId('magic-site').readOnly = true;
+    byId('magic-site-hint').textContent = '已使用当前站点。已有登录有效时可直接选择配置，仍需你明确授权密钥。';
+    byId('magic-family-home').href = new URL('/family', location.origin).href;
+    byId('connect-magic-api').textContent = '选择魔法 API 配置';
+  } else if (portalHint) {
     try {
       const portal = connector.portalURL(portalHint).origin;
       const localPreview = location.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
@@ -31,10 +110,11 @@
     if (message) byId('magic-connect-status').textContent = message;
   }
   function startLogin() {
+    if (host?.embedded) { inlineRequest('keys'); return; }
     endLogin();
     byId('magic-site').removeAttribute('aria-invalid');
     try {
-      const connection = connector.begin(byId('magic-site').value.trim(), location.origin, crypto);
+      const connection = connector.begin(byId('magic-site').value.trim(), location.origin, crypto, sameSite);
       connection.kind = editing;
       connection.expires = Date.now() + 300000;
       connection.popup = window.open(connector.loginURL(connection, editing), '_blank', 'popup,width=640,height=800');
@@ -105,6 +185,7 @@
     byId('open-model-settings').setAttribute('aria-expanded', 'true');
     byId('model-settings').scrollIntoView({ block: 'start' });
     byId('model-kind').focus({ preventScroll: true });
+    if (host?.embedded) { byId('magic-protocol-field').hidden = editing === 'image'; inlineRequest('keys'); }
   }
   function closeSettings() {
     drafts.set(editing, collect());
@@ -228,7 +309,10 @@
   byId('open-model-settings').addEventListener('click', () => byId('model-settings').hidden ? openSettings() : closeSettings());
   byId('close-model-settings').addEventListener('click', closeSettings);
   byId('configure-model').addEventListener('click', () => openSettings());
-  byId('model-kind').addEventListener('change', () => { drafts.set(editing, collect()); loadDraft(byId('model-kind').value); });
+  byId('model-kind').addEventListener('change', () => {
+    drafts.set(editing, collect()); loadDraft(byId('model-kind').value);
+    if (host?.embedded) { byId('magic-protocol-field').hidden = editing === 'image'; inlineRequest('keys'); }
+  });
   byId('show-model-key').addEventListener('click', () => {
     const showing = byId('model-key').type === 'password';
     byId('model-key').type = showing ? 'text' : 'password';
@@ -237,6 +321,7 @@
   });
   byId('model-settings-form').addEventListener('submit', event => {
     event.preventDefault();
+    inlineVersion++; inlineBusy = false; inlineControls();
     try {
       const config = client.configure(collect());
       endLogin('已应用手动连接，先前的登录接入已取消。');
@@ -249,6 +334,7 @@
     } catch (error) { settingsError(error); }
   });
   byId('clear-model-settings').addEventListener('click', () => {
+    inlineVersion++; inlineBusy = false; inlineControls();
     endLogin('接入已取消；仅清除配方连接，不退出原站账号。');
     connections.delete(editing);
     drafts.delete(editing);

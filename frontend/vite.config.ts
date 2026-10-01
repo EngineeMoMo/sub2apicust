@@ -2,6 +2,10 @@ import { defineConfig, loadEnv, Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import checker from 'vite-plugin-checker'
 import { resolve } from 'path'
+// [CUSTOM] 开发与生产构建均生成同站点配方／工坊，不依赖额外静态容器。
+import { buildFamilyProducts } from './src/custom/family/build-products.mjs'
+// [CUSTOM] Vite 的目录入口显式映射到静态首页，避免落入主站登录路由。
+import { familyProductDevEntries } from './src/custom/family/dev-products.mjs'
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -85,6 +89,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      // [CUSTOM] 原产品源码保留独立模式，生成文件仅写入 public 的专用目录。
+      { name: 'mofa-family-products', async config() { await buildFamilyProducts() } },
+      familyProductDevEntries(),
       vue(),
       checker({
         vueTsc: true

@@ -5,17 +5,17 @@ import { familyLoginTarget, familyProducts, recipeDestination, studioDestination
 import { safeGuestRedirect } from '@/custom/guest/navigation'
 
 describe('家族产品地址与会话边界', () => {
-  it('生产未配置地址时禁用配方，不把本机地址当上线地址', () => {
+  it('生产未配置地址时使用镜像内置配方，不把开发端口当上线地址', () => {
     const recipe = recipeDestination('', 'https://ai.mofamilys.com', false)
-    expect(recipe).toEqual({ preview: false, invalid: false })
-    expect(familyProducts(recipe, false)[1]).toMatchObject({ state: '待配置发布地址', destination: undefined })
+    expect(recipe).toEqual({ href: 'https://ai.mofamilys.com/recipes/', preview: false, invalid: false, integrated: true })
+    expect(familyProducts(recipe, false)[1]).toMatchObject({ state: '本站产品', destination: '/tools/recipes', external: false })
   })
 
   it.each(['https://recipes.example.test/', '/recipes/'])('支持已配置的 HTTPS 或同源地址 %s', value => {
     const recipe = recipeDestination(value, 'https://ai.mofamilys.com', false)
     expect(recipe.href).toBe(new URL(value, 'https://ai.mofamilys.com').href)
     expect(recipe).toMatchObject({ preview: false, invalid: false })
-    expect(familyProducts(recipe, false)[1].state).toBe('独立产品')
+    expect(familyProducts(recipe, false)[1].state).toBe(value === '/recipes/' ? '本站产品' : '独立产品')
   })
 
   it.each([
@@ -29,12 +29,12 @@ describe('家族产品地址与会话边界', () => {
   })
 
   it('仅本机开发预览添加公开 api_site 提示，不传凭据', () => {
-    const recipe = recipeDestination('', 'http://127.0.0.1:4175', true)
+    const recipe = recipeDestination('http://127.0.0.1:4178', 'http://127.0.0.1:4175', true)
     const destination = new URL(recipe.href!)
     expect(recipe.preview).toBe(true)
     expect(destination.origin).toBe('http://127.0.0.1:4178')
     expect([...destination.searchParams]).toEqual([['api_site', 'http://127.0.0.1:4175']])
-    expect(recipeDestination('', 'https://ai.mofamilys.com', true).href).toBeUndefined()
+    expect(recipeDestination('', 'https://ai.mofamilys.com', true).href).toBe('https://ai.mofamilys.com/recipes/')
     expect(recipeDestination('http://127.0.0.1:4178', 'https://ai.mofamilys.com', true).invalid).toBe(true)
   })
 
@@ -49,11 +49,11 @@ describe('家族产品地址与会话边界', () => {
     expect(familyProducts({ preview: false, invalid: false }, true)[0].destination).toBe('/admin/dashboard')
   })
 
-  it('本机 Docker 构建可显式连接本机配方，空配置和远程来源仍不开放 HTTP', () => {
+  it('本机默认同源路径，可显式选择独立预览，远程 HTTP 仍不开放', () => {
     const recipe = recipeDestination('http://127.0.0.1:4178', 'http://127.0.0.1:8080', false)
     expect(recipe.preview).toBe(true)
     expect(recipe.href).toBe('http://127.0.0.1:4178/?api_site=http%3A%2F%2F127.0.0.1%3A8080')
-    expect(recipeDestination('', 'http://127.0.0.1:8080', false).href).toBeUndefined()
+    expect(recipeDestination('', 'http://127.0.0.1:8080', false)).toEqual({ href: 'http://127.0.0.1:8080/recipes/', integrated: true, preview: false, invalid: false })
     expect(recipeDestination('http://recipes.test', 'http://127.0.0.1:8080', false).invalid).toBe(true)
     expect(recipeDestination('http://127.0.0.1:4178', 'http://api.test', false).invalid).toBe(true)
   })
@@ -68,8 +68,8 @@ describe('家族产品地址与会话边界', () => {
   })
 
   it('工坊使用同样严格的地址校验，不传来源或凭据', () => {
-    expect(studioDestination('', 'https://ai.mofamilys.com', false).href).toBeUndefined()
-    expect(studioDestination('', 'http://127.0.0.1:4175', true).href).toBe('http://127.0.0.1:4179/')
+    expect(studioDestination('', 'https://ai.mofamilys.com', false).href).toBe('https://ai.mofamilys.com/studio/')
+    expect(studioDestination('', 'http://127.0.0.1:4175', true)).toEqual({ href: 'http://127.0.0.1:4175/studio/', integrated: true, preview: false, invalid: false })
     expect(studioDestination('http://127.0.0.1:4179', 'http://127.0.0.1:8080', false).preview).toBe(true)
     expect(studioDestination('https://studio.example.test/?key=secret', 'https://ai.mofamilys.com', false).invalid).toBe(true)
     expect(studioDestination('http://127.0.0.1:4179', 'https://ai.mofamilys.com', false).invalid).toBe(true)

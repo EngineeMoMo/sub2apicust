@@ -292,9 +292,11 @@
   byId('back-to-edit').addEventListener('click', () => { showView('edit'); byId('input-' + active.fields[0].id).focus(); });
   byId('theme').addEventListener('click', () => {
     const light = document.documentElement.dataset.theme !== 'light';
-    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    globalThis.MofaFamilyHost.setTheme(light ? 'light' : 'dark');
     byId('theme').textContent = light ? '切换深色' : '切换浅色';
   });
+  document.addEventListener('mofa-theme', () => { byId('theme').textContent = document.documentElement.dataset.theme === 'light' ? '切换深色' : '切换浅色'; });
+  byId('theme').textContent = document.documentElement.dataset.theme === 'light' ? '切换深色' : '切换浅色';
   window.addEventListener('hashchange', () => {
     const recipe = recipes.find(item => item.id === location.hash.slice(1));
     if (recipe && recipe.id !== active.id) activate(recipe);

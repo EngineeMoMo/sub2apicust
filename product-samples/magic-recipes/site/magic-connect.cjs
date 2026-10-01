@@ -4,16 +4,23 @@
   else root.MofaRecipeConnect = api;
 })(globalThis, () => {
   'use strict';
-  function portalURL(value) {
+  function portalURL(value, ownOrigin = '') {
     let url;
     try { url = new URL(value); } catch { throw new Error('请填写完整的魔法 API 网站地址。'); }
     const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-    if (!(url.origin === 'https://ai.mofamilys.com' || (local && url.protocol === 'http:'))) throw new Error('请使用 https://ai.mofamilys.com，或本机魔法 API 测试站。其他网站请使用手动配置。');
+    let sameSite = false;
+    if (ownOrigin) {
+      const own = new URL(ownOrigin);
+      const ownLocal = ['localhost', '127.0.0.1', '[::1]'].includes(own.hostname);
+      if (own.origin !== ownOrigin || !(own.protocol === 'https:' || (ownLocal && own.protocol === 'http:'))) throw new Error('当前站点来源无效。');
+      sameSite = url.origin === ownOrigin;
+    }
+    if (!(sameSite || url.origin === 'https://ai.mofamilys.com' || (local && url.protocol === 'http:'))) throw new Error('请使用本站魔法 API、https://ai.mofamilys.com，或本机测试站。其他网站请使用手动配置。');
     if (url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('网站地址仅填写域名与端口，不包含路径、密码或参数。');
     return url;
   }
-  function begin(portal, origin, crypto) {
-    const url = portalURL(portal);
+  function begin(portal, origin, crypto, sameSite = false) {
+    const url = portalURL(portal, sameSite ? origin : '');
     const page = new URL(origin);
     const local = ['localhost', '127.0.0.1', '[::1]'].includes(page.hostname);
     if (page.origin !== origin || !(page.protocol === 'https:' || (page.protocol === 'http:' && local))) throw new Error('请通过 HTTPS 网站或本机 HTTP 预览打开配方页，不支持 file 地址登录接入。');

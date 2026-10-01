@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,7 +21,16 @@
     <div class="field connection-kind"><label for="model-kind">连接用途</label><select id="model-kind"><option value="text">文字模型</option><option value="image">生图模型</option></select></div>
     <section class="magic-connect" aria-labelledby="magic-connect-title">
       <h3 id="magic-connect-title">从魔法 API 选择配置</h3>
-      <p class="hint">在新窗口登录原站，选择已有密钥、分组和模型，再授权带回本页。不需要在这里输入账号密码。</p>
+      <p class="hint" id="magic-connect-hint">独立打开时通过原站授权；控制台内可以直接选择已有密钥和模型，不需要在这里输入账号密码。</p>
+      <div id="inline-magic-config" hidden>
+        <div class="settings-grid">
+          <div class="field"><label for="magic-key-select">密钥与分组</label><select id="magic-key-select"><option value="">先读取可用密钥</option></select></div>
+          <div class="field"><label for="magic-model-select">模型目录</label><select id="magic-model-select" disabled><option value="">先选择密钥</option></select></div>
+          <div class="field" id="magic-protocol-field"><label for="magic-protocol">文字接口格式</label><select id="magic-protocol"><option value="chat">Chat Completions</option><option value="responses">Responses</option></select></div>
+        </div>
+        <div class="form-actions"><button id="apply-magic-config" class="primary" type="button" disabled>使用所选配置</button><button id="manage-magic-keys" class="quiet" type="button">管理密钥</button></div>
+        <p class="hint">读取目录不生成内容。只有点击“使用所选配置”才将这一个密钥带入配方内存，不会自动运行模型。</p>
+      </div>
       <div class="field"><label for="magic-site">魔法 API 网站</label><input id="magic-site" type="url" value="https://ai.mofamilys.com" autocomplete="off" spellcheck="false" maxlength="2000" aria-describedby="magic-site-hint magic-connect-status"><p id="magic-site-hint" class="hint">线上使用魔法 API 官方域名；本机测试可填 http://127.0.0.1:4175。不接受其他登录网站。</p></div>
       <div class="form-actions"><button id="connect-magic-api" type="button" class="primary">登录魔法 API 并选择配置</button><button id="cancel-magic-connect" type="button" class="quiet" hidden>取消接入</button></div>
       <p id="magic-connect-status" class="fine-print" role="status" aria-live="polite">仅导入你确认的连接，账号密码与登录令牌留在魔法 API。不会自动运行模型。</p>
@@ -98,7 +107,7 @@
       <section id="guide" hidden aria-label="使用方法与示例"><h3>先看边界，再开始</h3><p id="scope" class="prose"></p><details open><summary>参考示例（不是模型实测）</summary><pre id="example" class="prose"></pre></details><details><summary>怎样检查 AI 的输出</summary><pre id="checks" class="prose"></pre></details><details><summary>结果不理想时，如何追问</summary><pre id="repair" class="prose"></pre></details><button id="back-to-edit" type="button" class="primary">用这份配方</button></section>
     </article>
   </div>
-  <footer><span>魔法家族 · 可复用的 AI 工作方法</span><a id="magic-family-home" href="https://ai.mofamilys.com/family" target="_blank" rel="noopener noreferrer">家族首页（新窗口）</a><span>本地体验版 · 支持自己的兼容模型接口</span></footer>
+  <footer><span>魔法家族 · 可复用的 AI 工作方法</span><a id="magic-family-home" href="https://ai.mofamilys.com/family" target="_blank" rel="noopener noreferrer">家族首页（新窗口）</a><span>支持自己的兼容模型接口</span></footer>
 </main>
 <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
   <div class="confirm-heading"><span class="confirm-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg></span><button id="confirm-close" class="confirm-close" type="button" aria-label="关闭提示框"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>

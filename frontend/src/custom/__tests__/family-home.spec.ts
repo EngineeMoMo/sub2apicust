@@ -144,15 +144,19 @@ describe('统一产品首页', () => {
     expect(linkTo(view, '游客预览控制台')).toBe('/preview')
   })
 
-  it('生产地址未配置时独立产品不可点击，不虚构已上线', () => {
+  it('未配置外部地址时内置产品可进入，已登录按钮不再要求登录', async () => {
     vi.stubEnv('VITE_MAGIC_RECIPES_URL', '')
     vi.stubEnv('VITE_MAGIC_STUDIO_URL', '')
     const view = page()
-    expect(view.get('#recipes button').attributes('disabled')).toBeDefined()
-    expect(view.get('#recipes').text()).toContain('待配置发布地址')
-    expect(view.get('#recipes').text()).toContain('发布后开放')
-    expect(view.get('#studio button').attributes('disabled')).toBeDefined()
-    expect(view.get('#studio').text()).toContain('待配置发布地址')
+    expect(view.get('#recipes').text()).toContain('本站产品')
+    expect(view.get('#studio').text()).toContain('本站产品')
+    expect(linkTo(view, '登录后打开魔法配方')).toBeDefined()
+    harness.auth.isAuthenticated = true
+    await view.vm.$nextTick()
+    expect(linkTo(view, '打开魔法配方')).toBe('/tools/recipes')
+    expect(linkTo(view, '打开魔法工坊')).toBe('/tools/studio')
+    expect(view.get('#recipes').text()).not.toContain('登录后')
+    expect(view.get('#studio').text()).not.toContain('登录后')
     expect(view.get('#studio').text()).toContain('内容首版已完成')
   })
 

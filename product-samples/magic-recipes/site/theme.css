@@ -45,3 +45,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--acce
 @keyframes confirm-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.confirm-dialog{padding:24px}.confirm-dialog h2{font-size:21px}.confirm-actions{gap:10px}.confirm-actions button{flex:1;padding:10px 8px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.confirm-dialog[open]{animation:none}}
+.mofa-embedded .header .brand, .mofa-embedded .prototype, .mofa-embedded .intro { display: none; }
+.mofa-embedded #theme { display: none; }
+.mofa-embedded .header { position: sticky; top: 0; z-index: 4; min-height: 64px; justify-content: flex-end; }
+.mofa-embedded .shell { padding-top: 20px; max-width: none; }
+.mofa-embedded footer { margin-top: 24px; }
