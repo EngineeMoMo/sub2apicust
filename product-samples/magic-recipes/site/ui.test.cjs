@@ -359,6 +359,103 @@ test('文字与生图连接分开，生图返回图片，视频不发送文字�
     assert.equal(page.requests.length, 1);
   } finally { page.dom.window.close(); }
 });
+test('Base64图片在页内打开原图并提供下载入口，关闭和Esc恢复按钮焦点，不创建新窗口', async () => {
+  const opened = [];
+  const page = setup({ hash: '#image', open: (...args) => opened.push(args), fetch: async () => jsonReply({ data: [{ b64_json: 'aGVsbG8=' }] }) });
+  try {
+    configure(page, { kind: 'image', name: 'test-image-model' });
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click(); await settled();
+    const button = page.document.querySelector('#generated-images button');
+    assert.ok(button, '打开图片必须是页内预览按钮，不能把data地址交给新窗口');
+    assert.equal(page.document.querySelectorAll('#generated-images a[target="_blank"]').length, 0);
+    button.click();
+    const viewer = page.document.getElementById('generated-image-viewer');
+    const image = page.document.getElementById('generated-image-full');
+    const close = page.document.getElementById('generated-image-close');
+    const download = page.document.getElementById('generated-image-download');
+    assert.equal(viewer.open, true);
+    assert.equal(image.src, page.document.querySelector('#generated-images img').src);
+    assert.equal(download.href, image.src);
+    assert.equal(download.download, 'mofa-recipes-image-1.png');
+    assert.equal(download.target, '');
+    assert.equal(page.document.activeElement, close);
+    close.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+    assert.equal(page.document.activeElement, download);
+    download.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+    assert.equal(page.document.activeElement, close);
+    close.click();
+    assert.equal(viewer.open, false);
+    assert.equal(image.getAttribute('src'), null);
+    assert.equal(download.getAttribute('href'), null);
+    assert.equal(page.document.activeElement, button);
+    button.click(); viewer.dispatchEvent(new page.window.Event('cancel', { cancelable: true }));
+    assert.equal(viewer.open, false);
+    assert.equal(page.document.activeElement, button);
+    assert.deepEqual(opened, []);
+    assert.equal(page.requests.length, 1);
+    assert.deepEqual(page.errors, []);
+  } finally { page.dom.window.close(); }
+});
+
+test('多图序号和JPEG下载类型正确，修改材料或离开页面关闭并清除原图预览', async () => {
+  const page = setup({ hash: '#image', fetch: async () => jsonReply({ output_format: 'jpeg', data: [{ b64_json: 'aGVsbG8=' }, { b64_json: 'd29ybGQ=' }] }) });
+  try {
+    configure(page, { kind: 'image', name: 'test-image-model' });
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click(); await settled();
+    page.document.querySelectorAll('#generated-images button')[1].click();
+    assert.equal(page.document.getElementById('generated-image-title').textContent, '图片 2 · 原图预览');
+    assert.equal(page.document.getElementById('generated-image-full').src, 'data:image/jpeg;base64,d29ybGQ=');
+    assert.equal(page.document.getElementById('generated-image-download').download, 'mofa-recipes-image-2.jpeg');
+    page.window.dispatchEvent(new page.window.Event('pagehide'));
+    assert.equal(page.document.getElementById('generated-image-viewer').open, false);
+    assert.equal(page.document.getElementById('generated-image-full').getAttribute('src'), null);
+    page.document.querySelectorAll('#generated-images button')[0].click();
+    input(page.document, 'input-scene', '已更改的场景');
+    assert.equal(page.document.getElementById('generated-image-viewer').open, false);
+    assert.equal(page.document.getElementById('generated-image-full').getAttribute('src'), null);
+    assert.equal(page.document.getElementById('generated-image-download').getAttribute('href'), null);
+    assert.equal(page.document.querySelectorAll('#generated-images button').length, 0);
+    assert.equal(page.requests.length, 1);
+  } finally { page.dom.window.close(); }
+});
+
+test('远程图片保持原地址在页内预览，过期错误可见，不伪造跨域下载', async () => {
+  const source = 'https://images.example.test/result.webp';
+  const page = setup({ hash: '#image', fetch: async () => jsonReply({ data: [{ url: source }] }) });
+  try {
+    configure(page, { kind: 'image', name: 'test-image-model' });
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click(); await settled();
+    const button = page.document.querySelector('#generated-images button'); button.click();
+    assert.equal(page.document.getElementById('generated-image-full').src, source);
+    assert.equal(page.document.getElementById('generated-image-download').hidden, true);
+    assert.equal(page.document.getElementById('generated-image-download').getAttribute('href'), null);
+    assert.equal(page.document.getElementById('generated-image-save-note').hidden, false);
+    page.document.getElementById('generated-image-full').dispatchEvent(new page.window.Event('error'));
+    assert.equal(page.document.getElementById('generated-image-error').hidden, false);
+    page.document.getElementById('generated-image-close').click(); button.click();
+    assert.equal(page.document.getElementById('generated-image-error').hidden, true);
+    assert.equal(page.requests.length, 1);
+  } finally { page.dom.window.close(); }
+});
+
+test('不支持dialog的浏览器保留图片并给出保存方法，不打开空白页', async () => {
+  const page = setup({ hash: '#image', open: () => { throw new Error('不允许图片新窗口导航'); }, fetch: async () => jsonReply({ data: [{ b64_json: 'aGVsbG8=' }] }) });
+  try {
+    configure(page, { kind: 'image', name: 'test-image-model' });
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click(); await settled();
+    page.document.getElementById('generated-image-viewer').showModal = undefined;
+    page.document.querySelector('#generated-images button').click();
+    assert.match(page.document.getElementById('model-run-status').textContent, /长按或右键保存/);
+    assert.equal(page.document.querySelectorAll('#generated-images img').length, 1);
+    assert.equal(page.document.getElementById('generated-image-viewer').open, false);
+    assert.deepEqual(page.errors, []);
+  } finally { page.dom.window.close(); }
+});
+
 test('停止等待可取消，切换配方后迟到结果不污染新配方', async () => {
   const cancelled = setup({ fetch: (_url, options) => new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })) });
   try {
@@ -457,11 +554,13 @@ test('切换配方保留本页草稿，重新打开不持久化', () => {
 test('用户材料不作为HTML执行，保留原始文本', () => {
   const page = setup();
   try {
+    const originalImages = page.document.querySelectorAll('img').length;
     const payload = '</textarea><img src=x onerror="alert(1)">{{field:date}}';
     input(page.document, 'input-material', payload);
     submit(page.document);
     assert.ok(page.document.getElementById('output').value.includes(payload));
-    assert.equal(page.document.querySelectorAll('img').length, 1);
+    assert.equal(page.document.querySelectorAll('img').length, originalImages);
+    assert.equal(page.document.querySelector('img[onerror]'), null);
     assert.deepEqual(page.errors, []);
   } finally { page.dom.window.close(); }
 });
@@ -640,7 +739,8 @@ test('初始页面和提示词整理不发送网络请求，也不保存密钥�
   const page = setup();
   try {
     assert.equal(page.document.querySelectorAll('script[src], link[href], iframe').length, 0);
-    for (const image of page.document.querySelectorAll('img')) assert.ok(image.src.startsWith('data:'));
+    for (const image of page.document.querySelectorAll('img[src]')) assert.ok(image.src.startsWith('data:'));
+    assert.equal(page.document.getElementById('generated-image-full').getAttribute('src'), null);
     page.document.getElementById('load-example').click(); submit(page.document);
     assert.equal(page.requests.length, 0);
     assert.equal(page.window.localStorage.length, 0);

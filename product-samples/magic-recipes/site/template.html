@@ -109,6 +109,12 @@
   </div>
   <footer><span>魔法家族 · 可复用的 AI 工作方法</span><a id="magic-family-home" href="https://ai.mofamilys.com/family" target="_blank" rel="noopener noreferrer">家族首页（新窗口）</a><span>支持自己的兼容模型接口</span></footer>
 </main>
+<dialog id="generated-image-viewer" class="confirm-dialog image-dialog" aria-labelledby="generated-image-title">
+  <div class="image-dialog-heading"><h2 id="generated-image-title">原图预览</h2><button id="generated-image-close" class="quiet" type="button" aria-label="关闭图片预览" autofocus>关闭</button></div>
+  <div class="image-dialog-body"><img id="generated-image-full" alt="" referrerpolicy="no-referrer"></div>
+  <p id="generated-image-error" class="error" role="alert" hidden>图片暂时无法显示，远程地址可能已过期。请关闭预览后重试。</p>
+  <div class="image-dialog-actions"><a id="generated-image-download" class="quiet" hidden>下载原图</a><p id="generated-image-save-note" class="fine-print" hidden>可长按或右键保存图片。</p></div>
+</dialog>
 <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
   <div class="confirm-heading"><span class="confirm-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg></span><button id="confirm-close" class="confirm-close" type="button" aria-label="关闭提示框"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
   <h2 id="confirm-title"></h2>

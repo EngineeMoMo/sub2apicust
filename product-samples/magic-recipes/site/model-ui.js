@@ -13,6 +13,61 @@
   let login;
   const connector = globalThis.MofaRecipeConnect;
   const host = globalThis.MofaFamilyHost;
+  const imageViewer = byId('generated-image-viewer');
+  let imageTrigger;
+  function clearImagePreview(restoreFocus = true) {
+    const trigger = imageTrigger;
+    imageTrigger = undefined;
+    byId('generated-image-full').removeAttribute('src');
+    byId('generated-image-full').alt = '';
+    byId('generated-image-download').removeAttribute('href');
+    byId('generated-image-download').removeAttribute('download');
+    byId('generated-image-download').hidden = true;
+    byId('generated-image-error').hidden = true;
+    if (restoreFocus && trigger?.isConnected) trigger.focus({ preventScroll: true });
+  }
+  function closeImagePreview(restoreFocus = true) {
+    if (imageViewer.open) imageViewer.close();
+    clearImagePreview(restoreFocus);
+  }
+  function openImagePreview(source, index, trigger) {
+    if (typeof imageViewer.showModal !== 'function') {
+      byId('model-run-status').textContent = '此浏览器不支持图片预览，请在当前图片上长按或右键保存。';
+      return;
+    }
+    imageTrigger = trigger;
+    byId('generated-image-title').textContent = '图片 ' + (index + 1) + ' · 原图预览';
+    byId('generated-image-full').alt = '模型生成的图片 ' + (index + 1);
+    byId('generated-image-full').src = source;
+    byId('generated-image-error').hidden = true;
+    const format = /^data:image\/(png|jpeg|webp);base64,/.exec(source)?.[1];
+    const download = byId('generated-image-download');
+    download.hidden = !format;
+    if (format) {
+      download.href = source;
+      download.download = 'mofa-recipes-image-' + (index + 1) + '.' + format;
+    } else {
+      download.removeAttribute('href');
+      download.removeAttribute('download');
+    }
+    byId('generated-image-save-note').hidden = Boolean(format);
+    imageViewer.showModal();
+    byId('generated-image-close').focus({ preventScroll: true });
+  }
+  byId('generated-image-close').addEventListener('click', () => closeImagePreview());
+  imageViewer.addEventListener('cancel', event => { event.preventDefault(); closeImagePreview(); });
+  imageViewer.addEventListener('close', () => { if (!imageViewer.open) clearImagePreview(); });
+  imageViewer.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const first = byId('generated-image-close');
+    const download = byId('generated-image-download');
+    const last = download.hidden ? first : download;
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+  byId('generated-image-full').addEventListener('error', () => {
+    if (imageViewer.open) byId('generated-image-error').hidden = false;
+  });
   let inlineVersion = 0, inlineBusy = false;
   function inlineSelection() {
     return { kind: editing, keyID: Number(byId('magic-key-select').value), model: byId('magic-model-select').value, protocol: byId('magic-protocol').value };
@@ -222,6 +277,7 @@
     byId('send-followup').disabled = Boolean(pending);
   }
   function clearAnswer() {
+    closeImagePreview(false);
     history = [];
     latest = '';
     byId('conversation').replaceChildren();
@@ -273,12 +329,14 @@
         image.referrerPolicy = 'no-referrer';
         image.src = source;
         image.addEventListener('error', () => { if (image.isConnected) byId('model-run-status').textContent = '接口已返回图片，但浏览器无法显示；远程图片可能已过期。'; });
-        const link = document.createElement('a');
-        link.href = source;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = '打开图片 ' + (index + 1);
-        byId('generated-images').append(image, link);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quiet generated-image-open';
+        button.setAttribute('aria-haspopup', 'dialog');
+        button.setAttribute('aria-controls', 'generated-image-viewer');
+        button.textContent = '打开图片 ' + (index + 1);
+        button.addEventListener('click', () => openImagePreview(source, index, button));
+        byId('generated-images').append(image, button);
       }
       byId('model-run-status').textContent = '图片已返回。画幅与风格请对照提示词检查。';
     }
@@ -368,5 +426,5 @@
   byId('connect-magic-api').addEventListener('click', startLogin);
   byId('cancel-magic-connect').addEventListener('click', () => endLogin('已取消接入，不会接收先前窗口的配置。魔法 API 登录状态不受影响。'));
   window.addEventListener('message', receiveLogin);
-  window.addEventListener('pagehide', () => endLogin());
+  window.addEventListener('pagehide', () => { endLogin(); closeImagePreview(false); });
 })();

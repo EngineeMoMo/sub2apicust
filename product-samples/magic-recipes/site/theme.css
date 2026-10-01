@@ -30,6 +30,15 @@ select{font:inherit;display:block;width:100%;min-width:0;min-height:46px;padding
 @media(max-width:680px){.tutorial>summary{padding:16px 18px}.tutorial>summary span{display:block;margin-top:5px}.tutorial-content{padding:4px 20px 22px}.tutorial-content h2{font-size:21px}.tutorial-steps{grid-template-columns:1fr;row-gap:20px;padding-left:22px}.tutorial-footer{align-items:stretch;flex-direction:column;gap:14px}.header-actions{gap:6px}.header{gap:10px}.header .brand{gap:8px}.header .brand strong{font-size:17px}.header .quiet{padding:8px}}
 .confirm-dialog{width:min(460px,calc(100% - 32px));max-height:calc(100dvh - 48px);margin:auto;padding:28px;border:0;border-radius:16px;background:var(--surface);color:var(--text);box-shadow:0 24px 72px #0005;overflow:auto}
 .confirm-dialog::backdrop{background:rgb(7 20 22 / .72)}
+.generated-image-open{justify-self:start;color:var(--accent)}
+.image-dialog{width:min(1120px,calc(100% - 32px));padding:20px}
+.image-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.image-dialog-heading h2{margin:0;font-size:20px}
+.image-dialog-body{display:grid;place-items:center;min-height:80px}
+#generated-image-full{display:block;max-width:100%;max-height:calc(100dvh - 230px);width:auto;height:auto;object-fit:contain}
+.image-dialog-actions{display:flex;align-items:center;gap:12px;margin-top:16px}
+.image-dialog-actions a{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;border-radius:8px;text-decoration:none}
+.image-dialog p.error{color:var(--error)}
 .confirm-dialog[open]{animation:confirm-enter 180ms ease-out}
 .confirm-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .confirm-symbol{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--selected);color:var(--accent)}

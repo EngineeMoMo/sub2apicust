@@ -1,5 +1,7 @@
 # 雾钛青：上游同步核对清单
 
+- 配方生成图片的“打开图片”保留页内原生dialog，避免Base64 data新窗口空跳转；原图下载仅PNG／JPEG／WebP Base64，远程图提示长按／右键保存。保留Esc／关闭回焦点、Tab循环、换材料／配方／连接／退出清理及图片加载错误，独立与主站外置CSP共用。不改母站theme.css或放宽CSP；回归配方ui.test.cjs、model.test.cjs和build-products.test.mjs。
+
 - 2026-10-01 最新要求：默认浅色且保留用户已保存偏好。同步 `main.ts`、`AppSidebar.vue`、`HomeView.vue`、`KeyUsageView.vue` 的 `[CUSTOM]` 初始化，不恢复无偏好时跟随系统深色。内置产品走认证路由 `/tools/recipes`、`/tools/studio`，正文中的同源 iframe 跟随宿主主题；显式独立外部地址仍兼容新窗口。不要把 `.mofa-product-workspace` 改成与 AppLayout 根节点重复的 `.mofa-workspace`。
 - 保留 `FamilyWorkspaceView`、`workspace.ts`、共享 `family-runtime/host-client.js` 的来源／窗口／nonce、目录时效、权限复查、退出取消；配方同页选择仅在该宿主下启用，独立模式仍用原选择页。共享运行时须由 Docker COPY、两产品 builder 接入。对子页的同源访问是信任关系，不是安全沙箱；后期跨站拆分须重新明确 CORS、SSO与退出方案，不能传 JWT 到产品 URL。
 - 保留 Vite `dev-products.mjs` 的精确开发目录映射与测试；旧 gitignored `vite.config.js` 可抢先加载，预览使用 `vite --config vite.config.ts`。Go 的产品 CSP／SAMEORIGIN 只允许同源嵌入，mp4 文件仍严格白名单并验证 Range206；不开放 PNG原图／来源文档或通配资源。工坊片段署名与许可证不要删，不能称为模型实测作品。回归新增 `family-workspace*`、`family-dev-products`、host-client、配方UI、工坊UI及 TestFamily。

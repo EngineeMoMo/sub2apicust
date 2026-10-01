@@ -1,5 +1,11 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-01 配方打开原图修复（发布准备）
+
+生成后的“打开图片”改为页内原图弹窗，避免把Base64 data地址交给新窗口；带关闭／Esc和手机完整预览，Base64提供下载原图入口，远程图可长按或右键保存。仅自有配方静态资源与交接，不改计费或新增迁移；含上一版包号免扣和迁移243。61项配方＋3项打包、类型／生产构建与独立／同源iframe夹具通过，下载文件落地和真实线上结果仍待用户验收。新SHA CI／安全／镜像发布后以HANDOFF终态的固定标签更新，不能使用下方旧标签认为包含本修复；更新脚本专项未纳入。
+
+用户先备份Postgres、部署配置和app_data（含studio-submissions），记录旧镜像，再按本轮已确认成功的固定标签更新。更新后刷新配方并用真实已生成图片检查打开图片1、多图序号、手机关闭与原图保存；无需为了测试重新请求模型。代理未操作8080或生产。
+
 ## 2026-10-01 包号免扣与共享限制（最新可更新版本）
 
 功能acd73d716daa6a8e728a36fca5dce5fd523ae3f6已推origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854705)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854536)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854627)全部成功。Go unit／integration、PG、lint0 issues及前端类型／372项回归通过，镜像embed编译成功；govulncheck未发现漏洞，前端审计按既有例外通过。本次包括有效包号实扣0／余额0可用、独立参考计量、后台使用限制，以及此前同批成员多专属组、移除成员、Key恢复与旧表单保护；公共组按原规则计费，前后端与迁移243同版。293c091不包含此次包号改动。
