@@ -1,12 +1,19 @@
 # 日常更新操作手册（定制版 sub2api）
 
-## 2026-10-01 包号免扣与共享限制（发布准备）
+## 2026-10-01 包号免扣与共享限制（最新可更新版本）
 
-用户已授权提交推送，由用户更新生产。本次新版本包括有效包号实扣0／余额0可用、独立参考计量、后台使用限制，以及此前同批成员多专属组、移除成员、Key恢复与旧表单保护；公共组按原规则计费。前后端与迁移243同版。功能提交、CI／安全扫描和GHCR固定镜像须以HANDOFF本轮最终证据为准，准备阶段不提供未确认标签，293c091不包含此次包号改动。
+功能acd73d716daa6a8e728a36fca5dce5fd523ae3f6已推origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854705)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854536)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854627)全部成功。Go unit／integration、PG、lint0 issues及前端类型／372项回归通过，镜像embed编译成功；govulncheck未发现漏洞，前端审计按既有例外通过。本次包括有效包号实扣0／余额0可用、独立参考计量、后台使用限制，以及此前同批成员多专属组、移除成员、Key恢复与旧表单保护；公共组按原规则计费，前后端与迁移243同版。293c091不包含此次包号改动。
+
+实际固定镜像ghcr.io/engineemomo/sub2apicust:sha-acd73d7，linux/amd64，摘要sha256:b41acdce7446e1b7bca618e16e6f6dbdab5b13fd30732760247063deb576bfa7，经成功任务manifest推送及containerimage.digest核实。先完成下面的备份并记录旧镜像，再由用户执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-acd73d7
+```
 
 更新前备份Postgres、部署配置与app_data（含studio-submissions），记录当前镜像。确认新SHA门禁全部成功后在服务器用固定sha标签更新。迁移启动时执行；更新后在包号管理配置使用限制，默认2并发／30次每UTC固定分钟／日上限0不限／2MiB／生图关闭，不是Token或美元预算。验证0余额专属组实扣0、普通组原计费、到期撤销拒新请求、共享限额和实际客户端。需要WS会话更新或实时音频的客户端须先验证兼容性；本版包号WS仅支持生成与取消。回退旧计费版本前暂停相关包号Key／账号。
 
-宿主更新脚本专项仍未提交，本次应用镜像不会替换服务器上的update.sh。新版本门禁结果与具体更新命令将在本轮核验后补记。
+宿主更新脚本专项仍未提交，本次应用镜像不会替换服务器上的update.sh。本轮未代部署生产或调用收费模型，线上历史扣款仍需流水核实；后续纯文档skip-ci提交不产生替代镜像。下方293c091及更旧版本记录为历史。
 
 ## 2026-10-01 截图与发布门禁修复（最新可更新版本）
 

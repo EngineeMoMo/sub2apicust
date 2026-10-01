@@ -39,6 +39,12 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-01 包号正式发布门禁全绿（本轮终态）**：功能acd73d716daa6a8e728a36fca5dce5fd523ae3f6已推origin/main，65个包号及依赖文件；直接读取同SHA的[CI36873854705](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854705)、[Security36873854536](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854536)、[GHCR36873854627](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854627)，均completed/success。Go unit／integration全量、独立PG准入／计量／认证、Go lint0 issues、前端类型与372项关键回归均成功；镜像日志确认embed构建成功，govulncheck No vulnerabilities found，前端Audit exceptions validated，既有两项SheetJS high例外未扩。
+- **本次实际固定镜像**：ghcr.io/engineemomo/sub2apicust:sha-acd73d7，linux/amd64，摘要sha256:b41acdce7446e1b7bca618e16e6f6dbdab5b13fd30732760247063deb576bfa7；成功任务的manifest推送、containerimage.digest和revision=acd73d716逐项核实，版本0.2.8-custom.acd73d716。用户备份Postgres、部署配置、app_data（含studio-submissions）后，在/sub2api-deploy执行./update.sh sha-acd73d7，迁移243随启动执行；更新后验0余额专属组实扣0、公共组原计费、共享策略、到期撤销及真实客户端。默认日上限0不限、生图关闭、WS仅生成与取消；严格Token／美元预算、IP异常和归档仍未实现。
+- **发布范围与留存**：既有包号多人多组、移除成员、Key恢复、旧表单与400诊断及三条关联主题样式随免扣同版；更新脚本／假Docker测试、其shell CI三行及UPDATE_GUIDE旧镜像清理段继续留工作区未提交，三个脚本字节SHA256仍等于开工基准。证据output/dedicated-billing-20261001/{release-initial,ci-final,ghcr-image-proof}.json及完整job日志。只补交接的后续文档提交用skip-ci，不生成替代镜像；未操作8080或生产、未改业务DB、未发收费请求，不宣称现场验收或历史扣款原因已确认。以下“未发布／门禁运行中”为此前进度。
+
+- **2026-10-01 包号功能已推送（门禁运行中）**：功能提交acd73d716daa6a8e728a36fca5dce5fd523ae3f6已推origin/main，git push与ls-remote输出核实；65个包号及依赖文件，发布树6fc7cad1adec562ab069b04e5c06e653835badb9。该SHA的[CI36873854705](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854705)、[Security36873854536](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854536)、[GHCR36873854627](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854627)已启动，当前未完成，不能标全绿或提供镜像成功结论。更新脚本专项及其shell接线仍未提交，服务器未操作；结果以本轮后续终态为准，证据output/dedicated-billing-20261001/release-initial.json。
+
 - **2026-10-01 包号发布授权已收到（提交准备）**：用户明确“提交并推送代码，我发布更新”。本次发布包含免扣／共享限制以及其依赖的既有同批成员多组、移除成员、Key恢复复查、旧表单409／具体400诊断和相关三条主题样式，形成同版包号功能；更新脚本、假Docker回归及其shell CI接线继续留在工作区，本次不混入。远端main经git ls-remote核实仍f846b970c4，无远端新提交；新SHA的CI／安全／镜像结果推送后逐项取证，不能拿293c091结果替代。生产由用户备份后更新，代理不操作服务器。
 
 - **2026-10-01 包号免扣余额与防滥用开发完成（未发布）**：用户已明确“开始处理开发”，源码在原未提交包号专项基础上实现独立BillingType=2：服务端正向资格与请求私有准入凭证，余额0可用、客户实扣0、公共组原计费；两平台／WS保留Token和参考价，Key额度／窗口按参考量累加，余额DB／缓存／通知不扣不误报。迁移243新增策略、共享计数、可恢复租约和独立账本，参考账本与原去重／Key增量共事务；每次服务端执行独立计量，同次回调幂等，已准入请求跨期撤销不追扣，不把失败转成余额收费。后台“使用限制”默认共享并发2、RPM30、日0、2MiB、生图关，所有成员／关联专属组／Key共用；日0不设限，不是Token／美元预算，不自动IP封禁或退款。WS每轮重查权益／策略，控制帧仅生成与取消，session.update／重复type键不能旁路工具或实时音频；未适配异步／批量媒体付费入口拒绝。用户／管理员表格及导出区分包号实扣0和参考金额，详细边界见[计费实现](deploy/DEDICATED_BILLING_PLAN.md)第六节、接缝见CUSTOMIZATIONS最新节。
@@ -291,7 +297,8 @@
 ## 五、待办 / 下一步
 
 - [x] **包号免扣余额源码与隔离验证**：按用户开发授权完成迁移243、正向准入、DB／缓存实扣0、独立参考计量、共享并发／RPM／日请求上限、WS控制帧防旁路、策略后台和用量报表。Linux全量unit、真实PG专项、Go lint／embed、372前端关键项／类型／lint／构建成功。默认2并发／30rpm／日0／2MiB／生图关，规则与实际局限见DEDICATED_BILLING_PLAN第六节。
-- [ ] **包号新版本发布与业务验收**：用户已授权提交推送，正在形成免扣与原同批成员多组／专项保护的完整提交，前后端＋243同版；取得新SHA的integration／CI／安全／GHCR，不沿用293c091。真实浏览器编辑策略、合法Claude／Codex／HTTP流式／WS客户端、0余额专属组及同用户公共组、同步生图启用与未适配入口拒绝待验收；没有合法账号不发收费请求。上线由用户备份后部署，日限额按实际档位调整；回滚旧计费版先暂停相关Key／账号。
+- [x] **包号新版本提交与发布门禁**：acd73d716已推origin/main，65文件；同SHA的CI（含unit／integration）、安全与GHCR全部success，固定镜像sha-acd73d7及摘要从成功job日志核实，详见第四节本轮终态。前后端＋243同版，旧293c091不含免扣。
+- [ ] **包号真实业务验收**：用户备份后用sha-acd73d7部署；真实浏览器编辑策略、合法Claude／Codex／HTTP流式／WS客户端、0余额专属组及同用户公共组、同步生图启用与未适配入口拒绝仍待。没有合法账号不发收费请求，日限额按实际档位调整；回滚旧计费版先暂停相关Key／账号。未知生产现场和历史扣款不自动补偿。
 - [ ] **包号进一步运营约束与对账**：本版日上限是硬请求数，尚无输出Token硬限／美元预留／自动IP异常处置；按实际档位与兼容性决定是否增强。租约／账本保留供异步结算，观察增长后制定归档策略。历史已扣款只据请求与余额流水逐笔形成补偿清单，不自动全额退款、不把参考量当真实上游成本。
 
 - [x] **本轮安全修复授权已收到**：用户明确“修复好再发布”，前轮自动审批的授权阻塞已解除；Axios1.20.0安装执行完成、官方sumdb核对x/image0.45.0，投稿清理检查和解码回归已写。先前“等待授权”均属历史。
@@ -433,7 +440,7 @@
 - [x] **升级方式保持Docker + update.sh**：不采用App内在线更新，上游预编译二进制会覆盖定制；普通重启不会还原可写层，镜像重建才会，历史澄清保持有效。
 
 ## 六、文档地图
-- [deploy/DEDICATED_BILLING_PLAN.md](deploy/DEDICATED_BILLING_PLAN.md) — 包号免扣源码证据、已实施共享限制／计量、验证与局限（源码完成，未发布）。
+- [deploy/DEDICATED_BILLING_PLAN.md](deploy/DEDICATED_BILLING_PLAN.md) — 包号免扣源码证据、共享限制／计量、验证与局限（镜像sha-acd73d7已发布，真实业务待用户更新验收）。
 - [BRAND_IMPLEMENTATION.md](BRAND_IMPLEMENTATION.md) — **最新已批准设计的执行计划**：素材路径、色表、阶段顺序、代码接线、防坑、验收与新对话提示。
 - [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md) — **定制唯一权威清单**（新增文件 / 接线改动 / 行为修改 / 自检清单）。
 - [SYNC.md](SYNC.md) — 同步上游 + 构建镜像 + 部署 runbook + 4 条红线。

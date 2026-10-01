@@ -1,8 +1,8 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-01 包号独立免扣与共享限制（源码完成，未发布）
+## 2026-10-01 包号独立免扣与共享限制（已推送，门禁全绿）
 
-用户已授权“开始处理开发”及“提交并推送代码，我发布更新”。本节覆盖首版包号仍扣余额的历史边界，发布同时包含既有同批成员多专属组、移除成员、历史隔离、Key恢复、旧表单保护及所需三条主题样式；运行细则见deploy/DEDICATED_BILLING_PLAN.md第六节。记录时处于提交准备，新SHA门禁须推送后核验，前后端和迁移243需同版，生产由用户更新。更新脚本专项继续保留未提交。
+用户已授权“开始处理开发”及“提交并推送代码，我发布更新”。功能acd73d716已推origin/main，65文件；其CI（unit／integration、lint、前端类型与372项）、安全和GHCR均成功，实际镜像sha-acd73d7及摘要见HANDOFF最新终态／ci-final.json。本节覆盖首版包号仍扣余额的历史边界，发布同时包含既有同批成员多专属组、移除成员、历史隔离、Key恢复、旧表单保护及所需三条主题样式；运行细则见deploy/DEDICATED_BILLING_PLAN.md第六节。前后端和迁移243同版，生产由用户备份更新，真实业务仍待验收。更新脚本专项继续保留未提交。
 
 新增文件集中在custom：service/custom_dedicated_billing.go与custom_dedicated_admission.go、repository/custom_dedicated_billing.go、middleware/custom_dedicated_billing.go、迁移243；测试包含私有凭证、独立计量、缓存不扣、两平台／WS记录、真实PG准入／结算／认证以及fixture。前端新增custom/components/DedicatedBillingPolicy.vue及其回归，原自有管理页／API／文案接独立策略表单，无新依赖，本轮未改theme.css。策略GET／PUT沿用管理员认证／审计，updated_at防冲突；并发2、RPM30、日上限0、2MiB、生图关闭是首版默认，并非按Token或美元的硬预算。
 
@@ -31,7 +31,7 @@
 | .github/workflows/backend-ci.yml | Unit job增加独立Postgres服务与DEDICATED_TEST_POSTGRES_DSN，使真实包号测试在CI实际执行 | PG专项不能只skip，服务为空库；shell更新脚本接线仅留工作区，本次不提交 |
 | Makefile | 前端关键Vitest列表加入包号策略／管理／配置及UsageTable | 本轮25文件372项通过，新CI包含这些回归 |
 
-验证：便携官方Go1.27.0与现有Linux Go测试镜像；真实空白PG随机schema，包号／WS定向81顶层测试＋82子场景成功；Linux全量unit通过，最终控制帧补丁后重跑定向、Go lint0 issues及embed构建；前端372关键回归、类型／相关lint／Vite构建通过。Windows全量第一次遇到路径／sh和Ollama时间精度失败，Linux初试只读ent与SDK代理问题已修正测试环境后重跑成功，未改这些无关业务源码。证据在output/dedicated-billing-20261001；新SHA的integration／CI／安全／GHCR、真实浏览器及收费账号仍待。22个原并行文件SHA256与开工快照一致，其余8个仅在原改动上新增本轮功能。
+验证：便携官方Go1.27.0与现有Linux Go测试镜像；真实空白PG随机schema，包号／WS定向81顶层测试＋82子场景成功；Linux全量unit通过，最终控制帧补丁后重跑定向、Go lint0 issues及embed构建；前端372关键回归、类型／相关lint／Vite构建通过。Windows全量第一次遇到路径／sh和Ollama时间精度失败，Linux初试只读ent与SDK代理问题已修正测试环境后重跑成功，未改这些无关业务源码。随后实际acd73d716的CI全量unit／integration、PG及372项回归、安全与镜像全部成功，证据output/dedicated-billing-20261001。真实浏览器及收费账号仍待；开发前后22个原并行文件SHA256一致，发布时仅将必要包号依赖纳入，更新脚本保持。
 
 ## 2026-10-01 用户授权发布门禁修复（已发布）
 
