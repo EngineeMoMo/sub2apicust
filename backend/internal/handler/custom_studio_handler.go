@@ -6,15 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
-	"github.com/Wei-Shaw/sub2api/internal/service"
-	"github.com/gin-gonic/gin"
-	_ "golang.org/x/image/webp"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,6 +20,12 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
+	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
+	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/gin-gonic/gin"
+	_ "golang.org/x/image/webp"
 )
 
 const studioFileLimit = 30 << 20
@@ -31,6 +33,13 @@ const studioFileLimit = 30 << 20
 var studioIDPattern = regexp.MustCompile("^[a-f0-9]{32}$")
 var studioCategories = strings.Fields("年轻人像 时尚肖像 Cosplay 动漫二次元 科技机甲 动物自然 奇幻风景 电商产品 场景插画 海报社媒 空间设计")
 var studioStyles = strings.Fields("写实摄影 电影感 二次元 3D手作 概念设计 平面海报 水彩 水墨 像素 美漫 剪纸 复古未来")
+
+// 清理失败保留原业务错误或已发送的响应；记录服务端错误，不记录投稿正文。
+func studioCleanup(operation string, cleanup func() error) {
+	if err := cleanup(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Printf("studio %s cleanup failed: %v", operation, err)
+	}
+}
 
 type StudioPublicEntry struct {
 	ID         string    `json:"id"`
@@ -145,13 +154,13 @@ func (handler *StudioHandler) save(entry StudioEntry) error {
 		return err
 	}
 	name := file.Name()
-	defer os.Remove(name)
+	defer studioCleanup("temporary record", func() error { return os.Remove(name) })
 	if _, err = file.Write(content); err != nil {
-		file.Close()
+		studioCleanup("record file", file.Close)
 		return err
 	}
 	if err = file.Sync(); err != nil {
-		file.Close()
+		studioCleanup("record file", file.Close)
 		return err
 	}
 	if err = file.Close(); err != nil {
@@ -168,12 +177,12 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, studioFileLimit+(64<<10))
 	if err := ctx.Request.ParseMultipartForm(1 << 20); err != nil {
 		if ctx.Request.MultipartForm != nil {
-			defer ctx.Request.MultipartForm.RemoveAll()
+			defer studioCleanup("multipart files", ctx.Request.MultipartForm.RemoveAll)
 		}
 		response.Error(ctx, http.StatusRequestEntityTooLarge, "文件或表单过大，视频最多30MB、图片最多12MB")
 		return
 	}
-	defer ctx.Request.MultipartForm.RemoveAll()
+	defer studioCleanup("multipart files", ctx.Request.MultipartForm.RemoveAll)
 	entry := StudioEntry{StudioPublicEntry: StudioPublicEntry{Title: strings.TrimSpace(ctx.PostForm("title")), Author: strings.TrimSpace(ctx.PostForm("author")),
 		Category: ctx.PostForm("category"), Style: ctx.PostForm("style"), Media: ctx.PostForm("media"),
 		Prompt: strings.TrimSpace(ctx.PostForm("prompt")), PromptKind: ctx.PostForm("prompt_kind"),
@@ -192,7 +201,7 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 		response.BadRequest(ctx, "请选择图片或视频文件")
 		return
 	}
-	defer file.Close()
+	defer studioCleanup("upload file", file.Close)
 	content, err := io.ReadAll(io.LimitReader(file, studioFileLimit+1))
 	if err != nil || len(content) > studioFileLimit {
 		response.Error(ctx, http.StatusRequestEntityTooLarge, "视频文件不能超过30MB")
@@ -253,7 +262,7 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 		return
 	}
 	if err := handler.save(entry); err != nil {
-		os.Remove(mediaPath)
+		studioCleanup("orphan media", func() error { return os.Remove(mediaPath) })
 		response.InternalError(ctx, "保存投稿记录失败")
 		return
 	}
@@ -335,7 +344,7 @@ func (handler *StudioHandler) media(ctx *gin.Context, public bool) {
 		response.NotFound(ctx, "素材不存在")
 		return
 	}
-	defer file.Close()
+	defer studioCleanup("media file", file.Close)
 	ctx.Header("Content-Type", entry.MIME)
 	ctx.Header("Cache-Control", "no-store")
 	ctx.Header("X-Content-Type-Options", "nosniff")
