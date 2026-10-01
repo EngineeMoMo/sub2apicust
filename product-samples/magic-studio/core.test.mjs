@@ -7,6 +7,30 @@ import { createAppServer } from './serve.mjs';
 const ids = items.map(x => x.id);
 const state = { section:'discover', media:'all', type:'all', category:'all', query:'', sort:'featured' };
 const saved = { favorites:[], history:[] };
+test('五类各补两图与首页人像具有准确提示词和完整资产，移除项不能再直达', async () => {
+ const { curatedImages, homepageImage } = await import('./new-gallery.mjs');
+ const { createHash } = await import('node:crypto');
+ const provenance = JSON.parse(await readFile(new URL('assets/PROVENANCE-CURATED-20261001.json',import.meta.url),'utf8'));
+ assert.equal(curatedImages.length,10);
+ for(const category of ['Cosplay','动物自然','海报社媒','动漫二次元','空间设计']) assert.equal(curatedImages.filter(item=>item.category===category).length,2);
+ for(const item of [...curatedImages,homepageImage]) {
+  const record = provenance.assets.find(asset=>asset.id===item.id);
+  assert.equal(item.rawPrompt,record.prompt);
+  assert.ok(findItems(items,{...state,category:item.category},saved).some(found=>found.id===item.id));
+  for(const suffix of ['.png','.webp','-thumb.webp']) {
+   const bytes = await readFile(new URL('assets/'+item.art+suffix,import.meta.url));
+   assert.equal(createHash('sha256').update(bytes).digest('hex'),record.files[suffix].sha256);
+   assert.ok(Math.abs(record.files[suffix].width/record.files[suffix].height-record.files['.png'].width/record.files['.png'].height)<0.002);
+  }
+ }
+ assert.deepEqual(await readFile(new URL('assets/window-portrait.webp',import.meta.url)),await readFile(new URL('../../frontend/src/custom/assets/studio-reference-portrait.webp',import.meta.url)));
+ for(const id of ['midnight-editorial','coral-sneaker']) {
+  assert.ok(!ids.includes(id));
+  assert.equal(itemFromHash('#item='+id,items),null);
+ }
+ assert.equal(findItems(items,{...state,category:'时尚肖像'},saved).length,1);
+ assert.equal(findItems(items,{...state,category:'时尚肖像'},saved)[0].id,'fashion-editorial');
+});
 test('公开投稿收藏保存的只是规范ID，加载目录前可恢复，不接受外链和私人材料',()=>{
  const id='community-'+'d'.repeat(32);
  const restored=cleanSaved({favorites:[id,'https://evil.test','community-../private'],history:[id],prompt:'不保存'},ids);
@@ -42,9 +66,9 @@ test('公开投稿适配拒绝外链、无效编号、待审核与虚假来源�
  for(const mutation of [{media_url:'https://other.test/media'},{id:'../private'},{status:'pending'},{prompt_kind:'made-up'},{prompt:''},{notes:null},{media:'html'}])assert.equal(communityItem({...record,...mutation}),null);
 });
 
-test('目录完整：52条唯一资源，所有玩法指向已有条目', () => {
- assert.equal(new Set(ids).size, 52);
- assert.equal(items.filter(x => x.media === 'image' && x.type === 'prompt').length, 38);
+test('目录完整：61条唯一资源，所有玩法指向已有条目', () => {
+ assert.equal(new Set(ids).size, 61);
+ assert.equal(items.filter(x => x.media === 'image' && x.type === 'prompt').length, 47);
  assert.equal(items.filter(x => x.media === 'video' && x.type === 'prompt').length, 10);
  assert.equal(items.filter(x => x.type !== 'prompt').length, 4);
  assert.equal(plays.length, 4);
@@ -54,14 +78,14 @@ test('目录完整：52条唯一资源，所有玩法指向已有条目', () => 
   for (const language of ['zh','en']) assert.doesNotMatch(compile(item, {}, language), /\{\{\w+\}\}/);
  }
 });
-test('新增十张图有逐字原始记录、三种资产与无裁切尺寸证据', async () => {
+test('保留扩展图有逐字原始记录、三种资产与无裁切尺寸证据', async () => {
  const { readFile } = await import('node:fs/promises');
  const { createHash } = await import('node:crypto');
  const { expansionImages } = await import('./new-gallery.mjs');
  const provenance = JSON.parse(await readFile(new URL('assets/PROVENANCE-EXPANDED-20261001.json', import.meta.url), 'utf8'));
- assert.equal(expansionImages.length, 10);
+ assert.equal(expansionImages.length, 8);
  assert.equal(provenance.assets.length, 10);
- assert.equal(new Set(expansionImages.map(item => item.category)).size, 9);
+ assert.equal(new Set(expansionImages.map(item => item.category)).size, 7);
  assert.deepEqual(provenance.referenceImages, []);
  for (const item of expansionImages) {
   const asset = provenance.assets.find(asset => asset.id === item.art);
@@ -89,7 +113,7 @@ test('媒介、资源类型与用途可以同时筛选', () => {
  const result = findItems(items, {...state,section:'skills',media:'video',type:'skill'}, saved);
  assert.equal(result.length, 2);
  assert.ok(result.every(x => x.media === 'video' && x.type === 'skill'));
- assert.equal(findItems(items, {...state,media:'image',category:'电商产品'}, saved).length, 5);
+ assert.equal(findItems(items, {...state,media:'image',category:'电商产品'}, saved).length, 4);
 });
 test('多关键词搜索同时匹配中文、英文、工具与标签', () => {
  assert.equal(findItems(items, {...state,query:'产品 玻璃'}, saved)[0].id, 'jade-product');
@@ -104,7 +128,7 @@ test('收藏包含跨媒介资源，浏览记录按最新顺序显示', () => {
 });
 test('视频与分镜暂不开放，检索收藏历史均不展示但保留原始记录', () => {
  assert.equal(VIDEO_CONTENT_ENABLED, false);
- assert.equal(findItems(items, state, saved).length,38);
+ assert.equal(findItems(items, state, saved).length,47);
  assert.equal(findItems(items, {...state,media:'video'}, saved).length,0);
  for (const section of ['discover','saved','history']) {
   const result=findItems(items,{...state,section},{favorites:ids,history:ids});
@@ -173,9 +197,9 @@ test('瀑布流支持单列、分数高度、空结果与列数变化', () => {
  assert.deepEqual(masonryPositions([200, 100, 200], 2, 12).map(position => position.column), [1,2,2]);
  assert.deepEqual(masonryPositions([200, 100, 200], 3, 18).map(position => position.row), [1,1,1]);
 });
-test('内置画幅预留值与38份原始PNG尺寸一致', async () => {
+test('内置画幅预留值与47份原始PNG尺寸一致', async () => {
  const images = items.filter(item => item.media === 'image' && item.art);
- assert.equal(Object.keys(artSizes).length, 38);
+ assert.equal(Object.keys(artSizes).length, 47);
  for (const item of images) {
   const image = await readFile(new URL(`./assets/${item.art}.png`, import.meta.url));
   assert.deepEqual(artSizes[item.art], {width:image.readUInt32BE(16),height:image.readUInt32BE(20)});

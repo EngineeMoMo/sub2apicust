@@ -94,7 +94,6 @@ html.dark .mofa-family-synaroute .mofa-family-product-action .btn { color: rgb(v
 }
 .mofa-studio-card:focus-visible { z-index: 30; outline: 2px solid rgb(var(--brand-focus)); outline-offset: 5px; }
 .mofa-studio-preview > figcaption { width: 100%; text-align: center; color: rgb(var(--brand-muted)); font-size: .6875rem; }
-.mofa-studio-hint { display: block; margin-top: 6px; font-size: .75rem; }
 .mofa-route-preview { width: 100%; text-align: center; }
 .mofa-route-map { padding: 16px 8px 36px; }
 .mofa-route-source { display: inline-flex; align-items: center; gap: 10px; color: rgb(var(--product-accent)); font-size: 1.75rem; font-weight: 600; }
@@ -121,6 +120,9 @@ html.dark .mofa-family-synaroute .mofa-family-product-action .btn { color: rgb(v
 .mofa-product-capsule .mofa-product-current { color: rgb(var(--brand-on-action)); background: rgb(var(--brand-action)); }
 .mofa-product-capsule .mofa-product-current .mofa-product-mark { color: inherit; }
 .mofa-product-capsule .mofa-product-current:hover { color: rgb(var(--brand-on-action)); background: rgb(var(--brand-action-hover)); }
+.mofa-product-capsule .mofa-switch-synaroute.mofa-product-current { background: rgb(var(--product-accent)); }
+.mofa-product-capsule .mofa-switch-synaroute.mofa-product-current:hover { background: rgb(var(--product-accent) / .9); }
+html.dark .mofa-product-capsule .mofa-switch-synaroute.mofa-product-current { color: rgb(var(--brand-page)); }
 .mofa-product-capsule button:disabled { opacity: .65; cursor: not-allowed; }
 .mofa-product-switcher :is(a, button):focus-visible { outline: 2px solid rgb(var(--brand-focus)); outline-offset: -2px; }
 .mofa-product-intent { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px; margin-top: 12px; padding: 16px; border-top: 1px solid rgb(var(--brand-border)); font-size: .875rem; }

@@ -16,14 +16,14 @@ test('视觉风格与题材分开筛选，未开放视频不可切换',async()=>
  click('[data-media="video"]');assert.equal(w.document.querySelectorAll('.art-card').length,1);
  assert.equal(w.document.querySelector('[data-media="video"]').disabled,true);
  assert.equal(w.document.querySelector('[data-style="水墨"]').getAttribute('aria-pressed'),'true');
- click('[data-media="image"]');input('search','剪纸');assert.equal(w.document.querySelectorAll('.art-card').length,1);
+ click('[data-media="image"]');input('search','剪纸');assert.equal(w.document.querySelectorAll('.art-card').length,2);
  assert.equal($('submit-work').textContent,'分享作品与提示词');assert.equal(requests.length,0);
 }));
 test('同源只展示公开图片，视频投稿暂不展示，原始提示词仍可查看',async()=>{
  const id='b'.repeat(32),record={id,title:'投稿图片',author:'原创作者',category:'年轻人像',style:'电影感',media:'image',prompt_kind:'actual',prompt:'真实使用的人物场景与光线提示词',model:'作者模型',notes:'',media_url:`/api/v1/studio/gallery/${id}/media`};
  await app(async({w,$,click,requests,flush})=>{
   await flush();assert.equal(requests.length,1);assert.equal(requests[0].options.credentials,'omit');
-  assert.equal(w.document.querySelectorAll('.art-card').length,39);
+  assert.equal(w.document.querySelectorAll('.art-card').length,48);
   click('[data-item-id="community-'+id+'"] .card-open');await flush();
   assert.equal($('preview-dialog').open,true);assert.ok(w.document.querySelector('#preview-media img'));
   assert.equal(w.document.querySelector('#preview-media video'),null);
@@ -33,7 +33,7 @@ test('同源只展示公开图片，视频投稿暂不展示，原始提示词�
 });
 test('公开投稿接口失败不清空图库或草稿，也不显示假成功',async()=>app(async({w,$,input,flush})=>{
  input('material-subject','本页保留的材料');await flush();
- assert.equal(w.document.querySelectorAll('.art-card').length,38);
+ assert.equal(w.document.querySelectorAll('.art-card').length,47);
  assert.equal($('material-subject').value,'本页保留的材料');assert.match($('community-status').textContent,/暂不可用/);
  assert.equal($('refresh-community').disabled,false);
 },{integrated:true,communityFailure:true}));
@@ -79,7 +79,7 @@ test('瀑布流重算、媒体加载、筛选与观察器生命周期不打乱DO
   const ids = [...gallery.children].map(card => card.dataset.itemId);
   assert.equal(gallery.classList.contains('masonry'), true);
   assert.equal(gallery.children[3].style.gridRow, '199 / span 300');
-  assert.equal(observer.targets.size, 39);
+  assert.equal(observer.targets.size, 48);
   observer.callback([{target:gallery,contentRect:{width:900}}]);
   observer.callback([{target:gallery,contentRect:{width:900}}]);
   assert.equal(frames.size, 1);runFrames();
@@ -100,12 +100,12 @@ test('瀑布流重算、媒体加载、筛选与观察器生命周期不打乱DO
   input('search','不存在');assert.equal(gallery.classList.contains('masonry'), false);
   assert.equal(observer.targets.size, 1);
   click('[data-section="plays"]');assert.equal(observer.targets.size, 0);
-  click('[data-section="discover"]');assert.equal(observer.targets.size, 39);
-  click('[data-media="video"]');assert.equal(observer.targets.size, 39);
+  click('[data-section="discover"]');assert.equal(observer.targets.size, 48);
+  click('[data-media="video"]');assert.equal(observer.targets.size, 48);
   assert.equal(gallery.querySelectorAll('.script-teaser').length,0);
   w.dispatchEvent(new w.Event('resize'));assert.equal(frames.size, 1);
   w.dispatchEvent(new w.Event('pagehide'));assert.equal(frames.size, 0);assert.equal(observer.targets.size, 0);
-  w.dispatchEvent(new w.Event('pageshow'));assert.equal(observer.targets.size, 39);
+  w.dispatchEvent(new w.Event('pageshow'));assert.equal(observer.targets.size, 48);
  }, {setup:w => {
   w.ResizeObserver = class {
    constructor(callback) { this.callback=callback;this.targets=new Set();observers.push(this); }
@@ -122,15 +122,15 @@ test('瀑布流重算、媒体加载、筛选与观察器生命周期不打乱DO
 test('没有ResizeObserver时仍可筛选并用窗口resize回退，不遮住内容', async () => app(({w,$,click}) => {
  assert.equal($('gallery').classList.contains('masonry'), false);
  click('[data-media="video"]');w.dispatchEvent(new w.Event('resize'));
- assert.equal($('gallery').children.length,38);
+ assert.equal($('gallery').children.length,47);
 }));
 test('发现、Skills与玩法保留，视频显示待开放且不可进入', async()=>app(({w,$,click,input})=>{
- assert.equal(w.document.querySelectorAll('.art-card').length,38);
+ assert.equal(w.document.querySelectorAll('.art-card').length,47);
  const video=w.document.querySelector('[data-media="video"]');assert.equal(video.disabled,true);assert.match(video.textContent,/待开放/);
  assert.equal(video.getAttribute('aria-describedby'),'video-availability');assert.equal($('video-availability').hidden,false);
- click('[data-media="video"]');assert.equal(w.document.querySelectorAll('.art-card').length,38);
+ click('[data-media="video"]');assert.equal(w.document.querySelectorAll('.art-card').length,47);
  input('search','不存在');assert.equal($('empty-state').hidden,false);
- click('#empty-action');assert.equal(w.document.querySelectorAll('.art-card').length,38);
+ click('#empty-action');assert.equal(w.document.querySelectorAll('.art-card').length,47);
  click('[data-section="skills"]');assert.equal(w.document.querySelectorAll('.art-card').length,4);
  click('[data-item-id="remotion-caption"] .card-open');assert.ok($('skill-command').textContent.includes('npx skills add'));
  click('[data-section="plays"]');assert.equal(w.document.querySelectorAll('.play-story').length,4);
@@ -200,7 +200,7 @@ test('后退到未开放分镜不替换当前图片材料，暂存的收藏记�
 test('已审核视频投稿深链接也不能绕过前台暂停，图片入口正常', async()=>{
  const id='e'.repeat(32),record={id,title:'已审核视频',author:'作者',category:'年轻人像',style:'电影感',media:'video',prompt_kind:'actual',prompt:'真实使用的视频分镜与镜头提示词',model:'作者模型',notes:'12秒',media_url:`/api/v1/studio/gallery/${id}/media`};
  await app(async({w,$,flush})=>{
-  await flush();assert.equal($('gallery').children.length,38);assert.equal($('selected-title').textContent,'像素港口 · 夜航开始');
+  await flush();assert.equal($('gallery').children.length,47);assert.equal($('selected-title').textContent,'像素港口 · 夜航开始');
   assert.equal(w.document.querySelector('video'),null);
   assert.equal(w.document.querySelector('[data-item-id="community-'+id+'"]'),null);
   assert.match($('community-status').textContent,/尚无可展示的图片/);
@@ -210,12 +210,12 @@ test('发现与Skills的资源类型选择进入可命中区域，导航同步',
  const choose=value=>{$('resource-type').value=value;$('resource-type').dispatchEvent(new w.Event('change',{bubbles:true}));};
  choose('skill');assert.equal(w.document.querySelectorAll('.art-card').length,2);assert.equal(w.document.querySelector('[data-section="skills"]').getAttribute('aria-current'),'page');
  choose('workflow');assert.equal(w.document.querySelectorAll('.art-card').length,2);
- choose('prompt');assert.equal(w.document.querySelectorAll('.art-card').length,38);assert.equal(w.document.querySelector('[data-section="discover"]').getAttribute('aria-current'),'page');
+ choose('prompt');assert.equal(w.document.querySelectorAll('.art-card').length,47);assert.equal(w.document.querySelector('[data-section="discover"]').getAttribute('aria-current'),'page');
 }));
 test('返回灵感恢复列表焦点，筛选与当前材料保留', async()=>app(({w,$,click,input,scrollTargets})=>{
  click('[data-media="image"]');input('material-subject','我的瓶子');
  click('#return-to-library');assert.equal(scrollTargets.at(-1),'collection');assert.equal(w.document.activeElement.id,'search');
- assert.equal(w.document.querySelectorAll('.art-card').length,38);assert.equal($('material-subject').value,'我的瓶子');
+ assert.equal(w.document.querySelectorAll('.art-card').length,47);assert.equal($('material-subject').value,'我的瓶子');
  click('[data-section="plays"]');click('#return-to-library');assert.equal(w.document.activeElement.id,'history-button');
 }));
 test('两个模态框均有有效且非空的可访问名称引用', async()=>app(({w,$,click})=>{
@@ -251,12 +251,13 @@ test('图片原始提示词与保存的实际生成记录逐字一致', async()=
  const fresh=JSON.parse(await readFile(new URL('assets/PROVENANCE-VIBRANT-20261001.json',import.meta.url),'utf8'));
  const expanded=JSON.parse(await readFile(new URL('assets/PROVENANCE-EXPANDED-20261001.json',import.meta.url),'utf8'));
  const older=JSON.parse(await readFile(new URL('assets/PROVENANCE.json',import.meta.url),'utf8'));
- for(const asset of [...expanded.assets,...fresh.assets,...older.assets]){
+ const curated=JSON.parse(await readFile(new URL('assets/PROVENANCE-CURATED-20261001.json',import.meta.url),'utf8'));
+ for(const asset of [...curated.assets,...expanded.assets,...fresh.assets,...older.assets].filter(asset=>!['midnight-editorial','coral-sneaker'].includes(asset.id))){
   const item=items.find(item=>item.art===asset.id);
   assert.ok(item,asset.id);assert.equal(item.rawPrompt,asset.prompt);
   assert.ok((await readFile(new URL('assets/'+asset.id+'.webp',import.meta.url))).length>1000);
  }
- assert.equal(items.filter(item=>item.rawPrompt).length,30);
+ assert.equal(items.filter(item=>item.rawPrompt).length,39);
 });
 test('弹窗分别复制原始提示词与我的模板，替换材料不改原始记录', async()=>app(async({w,$,click,input,clipboard,flush})=>{
  click('[data-item-id="festival-friends"] .card-use');
@@ -271,10 +272,10 @@ test('弹窗分别复制原始提示词与我的模板，替换材料不改原�
  assert.equal($('preview-dialog').open,false);assert.equal(w.document.activeElement.id,'workbench');
  assert.equal($('material-subject').value,'原创测试主体');
 }));
-test('十张新增作品均可打开对应原始提示词、替换和分别复制', async()=>app(async({w,$,click,input,clipboard,flush})=>{
+test('保留扩展作品均可打开对应原始提示词、替换和分别复制', async()=>app(async({w,$,click,input,clipboard,flush})=>{
  const { expansionImages } = await import('./new-gallery.mjs');
  click('[data-media="image"]');
- assert.equal(w.document.querySelectorAll('.art-card').length,38);
+ assert.equal(w.document.querySelectorAll('.art-card').length,47);
  for(const item of expansionImages){
   click('[data-item-id="'+item.id+'"] .card-use');
   const replacement='自己的主体-'+item.id;

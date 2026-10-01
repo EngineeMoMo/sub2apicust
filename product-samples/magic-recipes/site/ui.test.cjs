@@ -37,6 +37,31 @@ function setup(options = {}) {
 }
 function submit(document) { document.getElementById('recipe-form').dispatchEvent(new document.defaultView.Event('submit', { cancelable: true })); }
 
+test('切换生图用途先清除文字旧目录，权限失败显示具体原因，不保留可应用的旧模型', async () => {
+  const messages=[], parent={postMessage:message=>messages.push(message)};
+  const page=setup({url:'http://127.0.0.1:8080/recipes/?embedded=1',parent});
+  const {window,document}=page,nonce='a'.repeat(64);
+  const send=data=>window.dispatchEvent(new window.MessageEvent('message',{source:parent,origin:'http://127.0.0.1:8080',data:{nonce,...data}}));
+  const reply=async data=>{send({type:'mofa-host-response',id:messages.at(-1).id,...data});await new Promise(resolve=>setImmediate(resolve));};
+  try {
+    send({type:'mofa-host-init',theme:'light'});document.getElementById('open-model-settings').click();
+    await reply({result:[{id:1,name:'模拟文字密钥',group:'文字组'}]});
+    const key=document.getElementById('magic-key-select');key.value='1';key.dispatchEvent(new window.Event('change'));
+    await reply({result:{models:['fake-text-model'],protocol:'chat'}});
+    const model=document.getElementById('magic-model-select');model.value='fake-text-model';model.dispatchEvent(new window.Event('change'));
+    assert.equal(document.getElementById('apply-magic-config').disabled,false);
+    const kind=document.getElementById('model-kind');kind.value='image';kind.dispatchEvent(new window.Event('change'));
+    assert.equal(messages.at(-1).payload.kind,'image');assert.equal(model.value,'');assert.equal(key.options.length,1);
+    await reply({error:'已有有效密钥，但所属分组均未开启生图权限。'});
+    assert.match(document.getElementById('magic-connect-status').textContent,/分组均未开启生图权限/);
+    assert.equal(key.disabled,true);assert.equal(model.disabled,true);assert.equal(document.getElementById('apply-magic-config').disabled,true);
+    document.getElementById('connect-magic-api').click();await reply({result:[{id:2,name:'模拟生图密钥',group:'生图组'}]});
+    key.value='2';key.dispatchEvent(new window.Event('change'));await reply({result:{models:['fake-image-model'],protocol:'chat'}});
+    assert.equal(model.options[1].value,'fake-image-model');assert.equal(model.disabled,false);
+    assert.equal(page.requests.length,0);assert.deepEqual(page.errors,[]);
+  } finally {window.close();}
+});
+
 test('控制台内直接下拉选择配置，不打开新窗口或自动调用模型；退出清除密钥', async () => {
   const messages = [], parent = { postMessage: message => messages.push(message) };
   const page = setup({ url: 'http://127.0.0.1:8080/recipes/?embedded=1', parent, open: () => assert.fail('不得开新窗口') });

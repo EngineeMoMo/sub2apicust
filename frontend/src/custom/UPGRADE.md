@@ -10,6 +10,13 @@
 
 - 包号保存400诊断与多专属组：保留custom/dedicated/config.ts白名单错误转换及AdminDedicatedAccountsView.showError，handler保留metadata。后端custom_dedicated_groups.go保证同批成员多个专属组的保存／认证／选号／历史隔离查询一致，成员移除事务清原账号关联组，不误删无关组。运行dedicated-config／dedicated-view、原UserAllowedGroupsModal及TestCustomDedicatedConfigPostgres：合法多专属组通过，关联公开池／名单外授权仍拒绝，两位共组须在同一记录选全；此前严格单组规则已被用户新要求替代。
 
+## 2026-10-01 家族截图修正接缝
+
+- SynaRoute入口与当前态共同保留：family/products.ts为`/keys?product=synaroute`，FamilyProductSwitcher.vue仅在该上下文选中SynaRoute，普通密钥页仍选API；样式位于theme.css并使用紫色product-accent。工坊子路由也保持工坊当前态。
+- 自有magic-recipes／magic-studio的embedded吸顶栏必须有不透明主题背景与层级；配方设置scroll-margin-top:88px及目录top:88px配套，避免正文叠字与设置标题遮挡。独立页面行为保留。
+- 配方workspace选择不自动开分组权限；有效Key均被生图权限筛掉时显示具体原因，刷新／用途变化清旧模型目录，无选项下拉禁用。相关用例在family-workspace.spec.ts与magic-recipes/site/ui.test.cjs；真实账号响应仍待取证。
+- 工坊最新47图及来源见PROVENANCE-CURATED-20261001，公开白名单打包只保留运行WebP，撤下midnight-editorial／coral-sneaker WebP，保留历史PNG与记录。升级后运行build-products.test.mjs与工坊core／ui测试核对完整图／prompt／旧链接；视频仍待开放。
+
 ## 2026-09-30 魔法配方登录选择（源码完成，尚未发布）
 
 - 保留custom/routes.ts的受保护 /connect/recipes 与RecipeConnectView.vue、recipes/connect.ts；复用既有router登录守卫及LoginView的safeGuestRedirect，不另写密码收集或登录令牌转交。

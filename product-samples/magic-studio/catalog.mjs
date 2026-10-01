@@ -1,4 +1,4 @@
-import { newImages, diverseImages, expansionImages, freshImages, videoPlans, originalImagePrompts } from './new-gallery.mjs';
+import { newImages, curatedImages, homepageImage, diverseImages, expansionImages, freshImages, videoPlans, originalImagePrompts } from './new-gallery.mjs';
 const google = { label: 'Google 图片提示指南', url: 'https://ai.google.dev/gemini-api/docs/image-generation' };
 const comfy = { label: 'ComfyUI 官方工作流', url: 'https://github.com/Comfy-Org/workflow_templates' };
 const remotion = { label: 'Remotion 官方 Skills', url: 'https://www.remotion.dev/docs/ai/skills' };
@@ -81,6 +81,8 @@ const originalItems = [
 ];
 export const items = [
  ...diverseImages,
+ ...curatedImages,
+ homepageImage,
  ...expansionImages,
  ...freshImages,
  ...newImages,
@@ -102,8 +104,8 @@ export const plays = [
 ];
 export const typeLabels = { prompt: '提示词', skill: 'Skill', workflow: '工作流' };
 export const artSizes = Object.fromEntries([
- [1122, 1402, ['anime-pilot','anime-summer','cherry-street','citrus-poster','city-skater','comic-hero','cyber-cosplay','fashion-editorial','festival-friends','ink-koi','jade-bottle','lantern-alley','lilac-cosplay','lotus-sword','midnight-editorial','rain-portrait','retro-observatory','scarlet-rider','sweet-man','sweet-woman','vinyl-afternoon']],
- [1536, 1024, ['aurora-lagoon','calm-room','dragon-cloud','floating-island','pixel-night','snow-leopard','tide-mecha','watercolor-island']],
- [1254, 1254, ['candy-orbit','coffee-still','coral-sneaker','headphone-ad','mini-city','otter-morning','paper-fox','papercut-tiger']],
+ [1122, 1402, ['brass-cartographer','frost-musician','jazz-cutout','blue-botanical','anime-sky-mechanic','window-portrait','anime-pilot','anime-summer','cherry-street','citrus-poster','city-skater','comic-hero','cyber-cosplay','fashion-editorial','festival-friends','ink-koi','jade-bottle','lantern-alley','lilac-cosplay','lotus-sword','rain-portrait','retro-observatory','scarlet-rider','sweet-man','sweet-woman','vinyl-afternoon']],
+ [1536, 1024, ['red-panda-moss','turtle-blue','anime-rain-tram','sunken-lounge','lilac-bookshop','aurora-lagoon','calm-room','dragon-cloud','floating-island','pixel-night','snow-leopard','tide-mecha','watercolor-island']],
+ [1254, 1254, ['candy-orbit','coffee-still','headphone-ad','mini-city','otter-morning','paper-fox','papercut-tiger']],
  [1672, 941, ['orbital-mecha']]
 ].flatMap(([width, height, names]) => names.map(name => [name, { width, height }])));

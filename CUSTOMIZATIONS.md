@@ -1,5 +1,18 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-01 截图修正版提交授权与范围
+
+- 用户要求提交并推送以便手动更新，限定65个本轮产品／素材文件；共享theme只包含产品两处hunk，包号专项、更新脚本／测试和CI接线仍留工作区。实际暂存导出源码验证Node106＋Vue538、类型及Vite构建，lint生成副本与源码的边界见HANDOFF最新记录。证据output/studio-refinement-release-20261001。
+- 安全依赖升级安装被自动审批拒绝，依赖／锁文件仍未改；已向用户请求Axios1.20.0、x/image0.45.0及投稿清理检查修复的明确授权。未扩大安全例外、关闭扫描或处理未授权依赖，未部署生产。旧765e5a9的单测／集成已成功，Go lint与安全仍失败，不能据旧镜像给通过结论。
+
+## 2026-10-01 用户截图修正与素材收口（最新源码，未发布）
+
+- 所有本轮代码位于自有`frontend/src/custom/`及`product-samples/`，没有新增上游接缝。`family/products.ts`为SynaRoute配置入口加入`product=synaroute`上下文；`components/FamilyProductSwitcher.vue`按该上下文显示SynaRoute当前态，普通密钥页仍选API，工坊子路由保持工坊当前态。紫色选中态只改`custom/theme.css`，保留并行包号规则；未改SynaRoute客户端／导入。
+- `FamilyProductVisual.vue`移除用户指定提示文案与无用hint规则，三图预览和点按交互保留。`magic-recipes/site/theme.css`修复内嵌吸顶栏全宽、不透明背景、目录顶部间距和设置锚点；`magic-studio/theme.css`为内嵌栏补不透明背景与层级。沿用现有主题变量，没有另做品牌换肤。
+- `family/workspace.ts`在有效密钥全部因生图权限被筛除时返回明确原因；`magic-recipes/site/model-ui.js`刷新／用途变化清空旧目录，空列表和请求失败禁用无选项下拉并显示诊断。不绕过服务端权限、自动开生图权限或创建密钥；生产账号响应尚未取得，不能据此确定用户现场根因。
+- `magic-studio/new-gallery.mjs`与`catalog.mjs`接入五类各两张独立生成图及首页同一窗边人像；删除用户指定两项公开条目与四个WebP，旧PNG／provenance留作历史。当前47图、39份准确原prompt、8份旧缺失记录；10分镜继续封存，4工具保留。新增`assets/PROVENANCE-CURATED-20261001.json`记录实际工具输入、三种资产尺寸／SHA256，十张新图无参考输入，首页人像沿用既有参考来源与未核实权属边界。打包测试确认新WebP字节相同、被删WebP与来源JSON／PNG均不公开。
+- 定向测试覆盖SynaRoute上下文与普通密钥页、权限／空目录与用途切换、47图尺寸／来源／提示词／被删旧链接、真实公开打包；Node106＋Vue80、类型／限定lint／构建通过。浏览器滚动／窄屏／主题／详情／选择流程见`output/studio-refinement-20261001`；密钥与模型仅夹具模拟，未调用生成模型。交接与自有产品说明同步，未提交推送、重建8080或部署生产；前节765e5a9旧发布门禁仍有效。
+
 ## 2026-10-01 家族产品限定发布验证
 
 - 功能765e5a9516eaecf23d94202b4afc48f9bf723339已推送，GHCR sha-765e5a9成功、摘要341886529ae61b817a24da3a2a40dbb7062aabbc2148ecc9b7956153cb422e9d；安全门禁失败与Go errcheck八项失败已取证，不表示可安全部署。x/image的WebP／VP8L可达漏洞含本轮投稿路径，Axios七个high尚未处理；没有关闭扫描或增加安全例外。后续修复待办／授权与完整链接见HANDOFF。

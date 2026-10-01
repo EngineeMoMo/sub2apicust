@@ -36,6 +36,9 @@ export class WorkspaceConnections {
       const allowed = this.keys.filter(key => !(kind === 'image' && key.group?.allow_image_generation === false))
       if (action === 'keys') {
         this.catalogs.clear()
+        if (kind === 'image' && this.keys.length && !allowed.length) {
+          throw new Error('已有有效密钥，但所属分组均未开启生图权限。请在分组管理开启生图权限，或选择已获生图权限的分组密钥。')
+        }
         return allowed.map(key => ({ id: key.id, name: key.name, group: key.group?.name, protocol: key.group?.platform === 'openai' ? 'responses' : 'chat' }))
       }
       const key = allowed.find(entry => entry.id === payload.keyID)

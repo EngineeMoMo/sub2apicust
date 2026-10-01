@@ -83,6 +83,21 @@ describe('控制台顶部产品切换', () => {
     expect(view.findAllComponents(RouterLinkStub)[0].props('to')).toBe('/admin/dashboard')
   })
 
+  it('SynaRoute 入口携带明确上下文，密钥配置页选中 SynaRoute，普通密钥页仍选 API', async () => {
+    const view = page()
+    const synaroute = view.findAllComponents(RouterLinkStub).find(link => link.text() === 'SynaRoute')!
+    expect(synaroute.props('to')).toBe('/keys?product=synaroute')
+    harness.route.path = '/keys'
+    harness.route.query = { product: 'synaroute' }
+    await view.vm.$nextTick()
+    expect(view.get('.mofa-product-current').text()).toBe('SynaRoute')
+    expect(view.get('.mofa-switch-synaroute').attributes('aria-current')).toBe('page')
+    expect(view.get('.mofa-switch-api').attributes('aria-current')).toBeUndefined()
+    harness.route.query = {}
+    await view.vm.$nextTick()
+    expect(view.get('.mofa-product-current').text()).toBe('API 控制台')
+  })
+
   it('退出后没有继续打开提示，其他页面不消费控制台意图', async () => {
     harness.route.query = { product: 'studio' }
     const view = page()

@@ -31,7 +31,12 @@ const origin = window.location.origin
 const recipe = recipeDestination(String(import.meta.env.VITE_MAGIC_RECIPES_URL || ''), origin, import.meta.env.DEV)
 const studio = studioDestination(String(import.meta.env.VITE_MAGIC_STUDIO_URL || ''), origin, import.meta.env.DEV)
 const products = computed(() => familyProducts(recipe, auth.isAdmin, studio))
-const activeProduct = computed(() => route.path === '/tools/recipes' ? 'recipes' : route.path === '/tools/studio' ? 'studio' : 'api')
+const activeProduct = computed(() => {
+  if (route.path === '/tools/recipes') return 'recipes'
+  if (route.path === '/tools/studio' || route.path.startsWith('/tools/studio/')) return 'studio'
+  if (route.path === '/keys' && route.query.product === 'synaroute') return 'synaroute'
+  return 'api'
+})
 const intent = computed(() => auth.isAuthenticated && ['/dashboard', '/admin/dashboard'].includes(route.path) && typeof route.query.product === 'string'
   ? products.value.find(product => product.id !== 'api' && product.id === route.query.product && product.destination)
   : undefined)

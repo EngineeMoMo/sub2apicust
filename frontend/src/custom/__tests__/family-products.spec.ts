@@ -42,7 +42,7 @@ describe('家族产品地址与会话边界', () => {
     const products = familyProducts({ href: 'https://recipes.test/', preview: false, invalid: false }, false)
     expect(products.map(product => product.id)).toEqual(['api', 'recipes', 'studio', 'synaroute'])
     expect(products[0].destination).toBe('/dashboard')
-    expect(products[3].destination).toBe('/keys')
+    expect(products[3].destination).toBe('/keys?product=synaroute')
     expect(products[3].account).toContain('不等于已接通账号单点登录')
     expect(products[2].destination).toBeUndefined()
     expect(products[2].state).toBe('待配置发布地址')

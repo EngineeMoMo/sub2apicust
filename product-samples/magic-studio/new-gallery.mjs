@@ -206,7 +206,149 @@ const recordedImage = spec => ({
   generation: { tool: '内置 image_gen', date: '2026-10-01', framing: spec.ratio === 'wide' ? '横幅 3:2' : spec.ratio === 'square' ? '正方 1:1' : '竖幅 4:5', notes: '未提供参考图；未设置 seed；复用模板另写，未逐条重跑。' }
 });
 export const freshImages = freshSpecs.map(recordedImage);
-export const expansionImages = expansionSpecs.map(recordedImage);
+// 用户移除的两张保留历史生成记录，但不再进入目录／旧链接。
+export const expansionImages = expansionSpecs.filter(spec => !['midnight-editorial', 'coral-sneaker'].includes(spec.id)).map(recordedImage);
+const curatedSpecs = [
+  {
+    "id": "brass-cartographer",
+    "title": "黄铜地图师 · 沙海来信",
+    "category": "Cosplay",
+    "ratio": "portrait",
+    "styles": [
+      "写实摄影"
+    ],
+    "subject": "28岁的原创成年女性地图师，深棕短卷发、护目镜与黄铜罗盘",
+    "scene": "沙漠驿站工坊，墨绿不透明工装与米色围巾，手握展开的无字星图，三分之二身像",
+    "light": "沙金窗光、真实皮革与金属磨损，叙事型Cosplay摄影",
+    "prompt": "Use case: photorealistic-natural. Create one original vertical 4:5 premium cosplay editorial photograph. A fictional 28-year-old adult woman cartographer with short dark curls, brass goggles pushed above her forehead, an opaque deep forest-green tailored utility jacket and a pale linen scarf. She holds an unfolded cream star map showing purely abstract constellation dots and a brass compass, natural anatomically believable hands. Three-quarter-length composition inside a desert waystation workshop: warm sand outside the arched window, wooden drawers and a single globe softly blurred behind. Curious focused expression, distinctive layered travel costume, tactile worn leather and brushed brass, golden late-afternoon window light, photographic skin texture. Original character, no existing franchise costume or celebrity likeness. No lettering, logos, watermark, interface, collage, nudity or lingerie."
+  },
+  {
+    "id": "frost-musician",
+    "title": "霜蓝奏者 · 冬夜序曲",
+    "category": "Cosplay",
+    "ratio": "portrait",
+    "styles": [
+      "写实摄影",
+      "电影感"
+    ],
+    "subject": "29岁的原创成年男性魔法音乐家，深色发、霜蓝长外套与银色肩饰",
+    "scene": "雪夜石造音乐厅台阶，完整提琴和琴弓自然握持，半身至膝的站姿",
+    "light": "冰蓝雪光与室内琥珀窗光、真实绣线和羊毛，克制电影摄影",
+    "prompt": "Use case: photorealistic-natural. Create an original vertical 4:5 cinematic cosplay photograph of a fictional 29-year-old adult male fantasy musician. Dark wavy hair, calm confident face, an opaque frost-blue long wool coat with restrained silver embroidered shoulder details and dark trousers. He stands naturally on the stone steps of a snowy concert hall holding one complete wooden violin by its neck and a bow lowered in the other hand; all fingers believable, no playing pose. Frame head to knees with comfortable headroom. Light snowfall, antique carved stone, amber windows against blue winter dusk, precise woven wool and wood grain, realistic skin and elegant theatrical costume photography. A wholly original character, no existing game or anime identity. No lettering, watermark, logos, UI, collage, nudity or weapons."
+  },
+  {
+    "id": "red-panda-moss",
+    "title": "苔藓树梢，一位小访客",
+    "category": "动物自然",
+    "ratio": "wide",
+    "styles": [
+      "写实摄影"
+    ],
+    "subject": "自然体型与毛发的成年小熊猫",
+    "scene": "湿润山地森林，完整小熊猫沿覆苔树枝侧向行走，尾巴清楚可见",
+    "light": "雨后漫射晨光、细密红棕毛发与蕨叶，纪实野生动物摄影",
+    "prompt": "Use case: photorealistic-natural. Create one original landscape 3:2 wildlife photograph of an adult red panda walking along a moss-covered branch in a humid mountain forest. Full animal clearly visible including all four paws and its long ringed tail, natural anatomy, alert gentle expression, wet fern leaves and layered dark-green forest softly out of focus. Off-center horizontal composition with breathing space in the walking direction. Soft diffuse morning light after rain, extremely tactile reddish fur, fine whiskers, tiny dew beads, authentic long-lens natural-history photography. No human objects, anthropomorphic clothes, extra limbs, text, logo, watermark, interface or collage."
+  },
+  {
+    "id": "turtle-blue",
+    "title": "蓝海航行 · 珊瑚之上",
+    "category": "动物自然",
+    "ratio": "wide",
+    "styles": [
+      "写实摄影"
+    ],
+    "subject": "完整成年海龟，清楚的龟甲和自然鳍肢",
+    "scene": "海龟在多彩珊瑚礁上方游过，斜向构图，远方鱼群作为尺度",
+    "light": "清澈蓝海与真实日光束，水下摄影，不夸张荧光",
+    "prompt": "Use case: photorealistic-natural. Create an original landscape 3:2 underwater wildlife photograph. A complete adult sea turtle glides above a colorful living coral reef, its shell and naturally posed flippers clearly visible, anatomically coherent, small distant reef fish for scale. Diagonal composition, clear deep turquoise water fading to cobalt blue, real sunlight beams and caustic light on the turtle's shell, soft suspended particles, rich but believable orange and violet corals. Premium natural-history underwater photography with precise textures and an unhurried mood. No diver, plastic, text, logo, watermark, UI, collage, exaggerated neon or additional limbs."
+  },
+  {
+    "id": "jazz-cutout",
+    "title": "午夜爵士 · 蓝黄节拍",
+    "category": "海报社媒",
+    "ratio": "portrait",
+    "styles": [
+      "平面海报"
+    ],
+    "subject": "抽象黄铜小号剪影与太阳黄色圆盘",
+    "scene": "钴蓝竖版海报，奶油白剪纸曲线形成节奏，主体落在下半部，上方留排版空位",
+    "light": "粗纹纸与丝网油墨、平面拼贴构图、清楚的有限色板",
+    "prompt": "Use case: ads-marketing. Create a single original vertical 4:5 art-poster background for a jazz social campaign, WITHOUT any typography. A large elegant abstract brass trumpet silhouette curves through the lower half, a bold warm-yellow circular disk behind it, two cream-white paper-cut rhythm shapes on an intense cobalt-blue field. Asymmetric flat graphic composition, restrained three-color palette, real fibrous cut-paper edges and subtle screen-print ink texture. Strong negative space across the upper third reserved for a future headline, editorial art direction, simple confident shapes rather than 3D objects. No words, letters, numbers, brand, watermark, border, interface or collage of multiple posters."
+  },
+  {
+    "id": "blue-botanical",
+    "title": "蓝花实验 · 一页春意",
+    "category": "海报社媒",
+    "ratio": "portrait",
+    "styles": [
+      "平面海报",
+      "写实摄影"
+    ],
+    "subject": "一朵蓝紫色鸢尾花，完整茎叶与清晰花瓣",
+    "scene": "浅青柠绿平面背景，低位斜向构图，花瓣投出清楚阴影，顶部留白",
+    "light": "明亮侧光、细腻花瓣纹理与鲜明蓝绿色分离，实验植物海报摄影",
+    "prompt": "Use case: ads-marketing. Create one original vertical 4:5 contemporary botanical campaign image with no text. One sculptural blue-violet iris flower and two clean green leaves, complete natural stem, arranged diagonally across the lower two thirds of a pale lime-green seamless paper background. Strong side sunlight produces a crisp intentional botanical shadow, exquisite real petal folds and translucent edges, vivid controlled color separation, premium experimental editorial still-life photography. Generous untouched negative space at the top for future typography. Minimal prop-free composition. No vase, lettering, logo, watermark, UI, frame, multiple panels or artificial plastic texture."
+  },
+  {
+    "id": "anime-rain-tram",
+    "title": "雨停以后，电车还在",
+    "category": "动漫二次元",
+    "ratio": "wide",
+    "styles": [
+      "二次元"
+    ],
+    "subject": "27岁的原创成年女性摄影师，黑色短发与芥末黄雨衣",
+    "scene": "雨后的旧街电车站，背影微侧，手拿小相机，绿色电车和湿街暖灯",
+    "light": "二维手绘线条、细腻水粉背景、雨夜青绿与琥珀色对比",
+    "prompt": "Use case: illustration-story. Create one original landscape 3:2 hand-painted 2D anime artwork. A clearly adult 27-year-old female street photographer with a short black bob, an opaque mustard-yellow raincoat and dark trousers waits beside a small green vintage tram after rain. She stands in three-quarter back view holding a compact camera naturally at chest level. Atmospheric old-city lane, warm amber shop windows with no readable signage, wet blue-green pavement reflecting light, quiet overhead wires and a tiny puddle in the foreground. Carefully drawn perspective, selective crisp linework, textured gouache-painted background and a thoughtful cinematic composition. Wholly original adult character and city, no school uniform, copied anime character, sexualization, lettering, watermark, UI or collage."
+  },
+  {
+    "id": "anime-sky-mechanic",
+    "title": "风艇修理铺 · 云上的午后",
+    "category": "动漫二次元",
+    "ratio": "portrait",
+    "styles": [
+      "二次元"
+    ],
+    "subject": "28岁的原创成年男性空艇维修师，栗色卷发、米色工作服与蓝绿背带裤",
+    "scene": "悬空木平台上的修理铺，手持扳手，橙色小空艇在背景，云海与风中旗帜",
+    "light": "明快二维动画、可见手绘笔触、柔和下午阳光与细致机械结构",
+    "prompt": "Use case: illustration-story. Create an original vertical 4:5 hand-painted 2D anime illustration. A clearly adult 28-year-old male airship mechanic with chestnut curls and a warm relaxed grin wears an opaque cream work shirt and teal overalls. He stands on a weathered wooden platform above a sea of clouds, holding a single wrench at his side with believable fingers. Behind him a small original orange sail-powered flying boat rests beside an open repair shed, coherent rigging and simple brass engine details, fabric pennants flutter gently. Bright afternoon sun, painterly cloud atmosphere, selective expressive linework, visible hand-painted texture, lively but uncluttered composition. Entire head and hands comfortably in frame. No existing anime character, child, text, logo, watermark, interface or collage."
+  },
+  {
+    "id": "sunken-lounge",
+    "title": "落一阶，坐进暖光里",
+    "category": "空间设计",
+    "ratio": "wide",
+    "styles": [
+      "写实摄影"
+    ],
+    "subject": "下沉式客厅，陶土布艺弧形沙发、浅石灰岩与胡桃木",
+    "scene": "沙漠现代住宅，宽横幅室内视角，两级台阶进入会客区，大窗外淡色庭院",
+    "light": "斜向午后日光、真实织物与木材、连贯空间透视，建筑杂志摄影",
+    "prompt": "Use case: photorealistic-natural. Create one original landscape 3:2 architectural interior editorial photograph of a sophisticated sunken conversation lounge in a contemporary desert house. A low curved terracotta fabric sofa arranged around a small warm limestone table, two clearly usable wide steps down into the seating area, walnut built-in shelving, cream lime-plaster walls, a tall window overlooking a pale gravel courtyard with one olive tree. Coherent perspective and realistic room proportions, comfortable circulation, sunlight slicing diagonally across the floor, believable fabric weave, warm stone and wood grain. Refined lived-in minimalism, no generic clutter or extravagant luxury props. No people, text, logos, watermark, UI, frame or collage."
+  },
+  {
+    "id": "lilac-bookshop",
+    "title": "转角书屋 · 浅紫的安静",
+    "category": "空间设计",
+    "ratio": "wide",
+    "styles": [
+      "写实摄影"
+    ],
+    "subject": "独立书店，浅紫拱形阅览区、橡木书架与软木地面",
+    "scene": "小型街角书屋，书架转角与圆桌阅读位，完整通道，书脊无可读文字",
+    "light": "柔和天窗自然光、可信建筑尺度与材质，空间编辑摄影",
+    "prompt": "Use case: photorealistic-natural. Create an original landscape 3:2 architectural editorial photograph of a small distinctive independent bookshop. Pale lilac plaster arches frame a cozy reading alcove, honey-oak floor-to-ceiling bookshelves filled with books whose spines have only abstract color blocks and no readable text, cork flooring, one simple round oak reading table with two cream upholstered chairs. A clear generous walking path from the foreground to a street-corner window, coherent architectural perspective, human-scale dimensions, soft daylight from a narrow skylight and window, tactile plaster, cork and wood. Quiet inviting design, thoughtful color rather than clutter. No people, signage, lettering, logos, watermark, UI, collage or multiple rooms."
+  }
+];
+export const curatedImages = curatedSpecs.map(spec => ({ ...recordedImage(spec), styles: spec.styles }));
+export const homepageImage = {
+  ...recordedImage({"id":"window-portrait","title":"窗边片刻 · 灰蓝条纹","category":"年轻人像","ratio":"portrait","styles":["写实摄影"],"subject":"28岁的虚构成年女性，深棕长发，白色吊带、灰蓝细条纹衬衫与牛仔裤","scene":"灰米色窗边，端正坐姿，双手自然放在腿上，头顶至大腿中部","light":"柔和窗光与真实肤质、自然灰米色室内摄影","prompt":"Use case: photorealistic-natural. Create one clean 4:5 vertical editorial portrait for a website gallery, using the attached image only as a reference for dark hairstyle, facial aesthetic, quiet expression, soft indoor light and muted neutral palette. A fictional adult 28-year-old East Asian woman with long loosely tousled dark brown hair and delicate natural makeup sits comfortably beside a window, looking calmly at the camera with her head slightly tilted. A beautiful natural face with realistic skin texture, restrained expression, not a large smile. Ordinary fully clothed casual styling: ivory camisole, loose very fine gray-blue striped cotton shirt worn normally over it, and blue denim jeans. The outfit consists of separate top and trousers, never a skirt or dress. Her hands rest naturally in her lap; no hand touching head or hair. Relaxed seated upright pose, both legs down. Frame from just above the whole head to mid thighs; face prominent, comfortable headroom. Quiet gray-beige plaster wall, subtle diffused window light, creamy neutral tones and gentle shadows similar to the reference. Natural magazine photography, not an illustration, not glossy airbrushed skin, no green tint, no garden or blonde hair. Remove all screenshot artifacts: no black frame, rounded corners, UI, dimension badge, lettering, logos or watermark. Single clean photograph, no collage."}),
+  styles: ['写实摄影'],
+  generation: { tool: '内置 image_gen', date: '2026-09-30', framing: '竖幅 4:5', notes: '复用首页既有图例；原生成使用用户提供的发型、神态与室内光线参考，参考权属未核实。人物为虚构成年人；复用模板未重跑。' },
+  requirements: '复用已有首页 AI 图例与真实生成记录。原生成使用用户视觉参考，参考权属未核实；不代表真人身份或代言。可替换模板未实测。'
+};
 export const diverseImages = [
   {
     "id": "pixel-night",

@@ -30,7 +30,7 @@
           <img :src="studioFox" alt="纸艺狐狸原创图例" width="320" height="400" loading="lazy" draggable="false">
         </button>
       </div>
-      <figcaption><span>AI 视觉示例 · 非模板实测</span><span class="mofa-studio-hint">悬停或点按，置顶欣赏</span></figcaption>
+      <figcaption>AI 视觉示例 · 非模板实测</figcaption>
     </figure>
     <figure v-else class="mofa-route-preview">
       <div class="mofa-route-map" aria-hidden="true"><span class="mofa-route-source"><FamilyProductMark product="synaroute" />SynaRoute</span><svg viewBox="0 0 360 110" fill="none"><path d="M180 0v40M45 98V55q0-15 15-15h240q15 0 15 15v43M180 40v58" stroke="currentColor" stroke-width="1.5" /><circle cx="180" cy="40" r="5" fill="currentColor" /></svg><div class="mofa-route-targets"><span><Icon name="terminal" size="md" />本地工具</span><span><Icon name="key" size="md" />API 配置</span><span><Icon name="arrowsUpDown" size="md" />模型路由</span></div></div>

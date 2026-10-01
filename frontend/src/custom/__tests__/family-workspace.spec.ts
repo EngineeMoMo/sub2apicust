@@ -55,7 +55,14 @@ describe('控制台子产品与配置授权', () => {
     await connection.execute('keys', { kind: 'text' }); await connection.execute('models', { kind: 'text', keyID: 1 })
     await expect(connection.execute('apply', { kind: 'image', keyID: 1, model: 'example-model', protocol: 'chat' })).rejects.toThrow('目录已过期')
     if (entries[0].group) entries[0].group.allow_image_generation = false
-    expect(await connection.execute('keys', { kind: 'image' })).toEqual([])
+    await expect(connection.execute('keys', { kind: 'image' })).rejects.toThrow('所属分组均未开启生图权限')
+  })
+
+  it('生图目录不掩盖分组权限原因，也不误报空账号或混合权限', async () => {
+    const entries = [key(), key({ id: 2, group: { ...key().group!, allow_image_generation: false } })]
+    const { connection } = broker(entries)
+    expect(await connection.execute('keys', { kind: 'image' })).toEqual([{ id: 1, name: '模拟密钥', group: '模拟分组', protocol: 'responses' }])
+    expect(await broker([]).connection.execute('keys', { kind: 'image' })).toEqual([])
   })
   it('通道必须同时匹配来源、iframe、nonce及请求格式', () => {
     const frame = {} as Window, origin = location.origin, nonce = 'a'.repeat(64)

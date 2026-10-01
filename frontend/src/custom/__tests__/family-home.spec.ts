@@ -114,7 +114,7 @@ describe('统一产品首页', () => {
     await view.vm.$nextTick()
     expect(harness.user).not.toHaveBeenCalled()
     expect(linkTo(view, '进入控制台')).toBe('/dashboard')
-    expect(linkTo(view, '配置 SynaRoute')).toBe('/keys')
+    expect(linkTo(view, '配置 SynaRoute')).toBe('/keys?product=synaroute')
     expect(view.get('#recipes a').attributes()).toMatchObject({
       href: 'https://recipes.example.test/', target: '_blank', rel: 'noopener noreferrer'
     })
@@ -164,7 +164,7 @@ describe('统一产品首页', () => {
     const view = page()
     const caption = view.get('#studio figcaption')
     expect(caption.text()).toContain('AI 视觉示例 · 非模板实测')
-    expect(caption.text()).toContain('悬停或点按，置顶欣赏')
+    expect(caption.text()).not.toContain('悬停或点按，置顶欣赏')
     expect(caption.element.closest('[aria-hidden="true"]')).toBeNull()
     expect(view.findAll('#studio img')).toHaveLength(3)
     expect(view.get('#studio .mofa-studio-portrait img').attributes()).toMatchObject({
@@ -213,7 +213,7 @@ describe('统一产品首页', () => {
     expect(linkTo(view, '登录后配置 SynaRoute')).toEqual({ path: '/login', query: { redirect: '/dashboard?product=synaroute' } })
     harness.auth.isAuthenticated = true
     await view.vm.$nextTick()
-    expect(linkTo(view, '配置 SynaRoute')).toBe('/keys')
+    expect(linkTo(view, '配置 SynaRoute')).toBe('/keys?product=synaroute')
     expect(download.attributes('href')).not.toContain('private-login-token')
     expect(harness.token).not.toHaveBeenCalled()
     expect(fetch).not.toHaveBeenCalled()

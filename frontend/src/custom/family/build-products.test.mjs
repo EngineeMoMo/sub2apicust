@@ -26,12 +26,15 @@ test('打包仅发布运行资源，配方脚本和样式外置，工坊原图 W
   assert.equal(assets.filter(file => file.endsWith('.mp4')).length, 0);
   assert.ok(!assets.some(file => file.startsWith('film-')));
   assert.ok(assets.includes('festival-friends.webp') && assets.includes('lilac-cosplay-thumb.webp'));
-  for (const id of ["cherry-street","vinyl-afternoon","midnight-editorial","scarlet-rider","lotus-sword","tide-mecha","otter-morning","coral-sneaker","aurora-lagoon","lantern-alley"]) {
+  for (const id of ["cherry-street","vinyl-afternoon","scarlet-rider","lotus-sword","tide-mecha","otter-morning","aurora-lagoon","lantern-alley"]) {
     for (const suffix of ['.webp', '-thumb.webp']) {
       assert.deepEqual(await readFile(path.join(products.studio, 'assets', id + suffix)), await readFile(path.join(workspace, 'product-samples/magic-studio/assets', id + suffix)));
     }
   }
   assert.ok(!assets.includes('PROVENANCE-EXPANDED-20261001.json'));
+  for (const id of ['midnight-editorial','coral-sneaker']) for (const suffix of ['.webp','-thumb.webp']) assert.ok(!assets.includes(id+suffix));
+  for (const id of ['brass-cartographer','frost-musician','red-panda-moss','turtle-blue','jazz-cutout','blue-botanical','anime-rain-tram','anime-sky-mechanic','sunken-lounge','lilac-bookshop','window-portrait']) for (const suffix of ['.webp','-thumb.webp']) assert.deepEqual(await readFile(path.join(products.studio,'assets',id+suffix)),await readFile(path.join(workspace,'product-samples/magic-studio/assets',id+suffix)));
+  assert.ok(!assets.includes('PROVENANCE-CURATED-20261001.json'));
   assert.ok((await readdir(products.studio)).includes('host-client.js'));
   assert.ok(!assets.includes('PROVENANCE.json'));
   const studio = await readFile(path.join(products.studio, 'index.html'), 'utf8');

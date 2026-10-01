@@ -47,6 +47,9 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--acce
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.confirm-dialog[open]{animation:none}}
 .mofa-embedded .header .brand, .mofa-embedded .prototype, .mofa-embedded .intro { display: none; }
 .mofa-embedded #theme { display: none; }
-.mofa-embedded .header { position: sticky; top: 0; z-index: 4; min-height: 64px; justify-content: flex-end; }
+.mofa-embedded .header { position: sticky; top: 0; z-index: 4; width: 100%; max-width: none; min-height: 64px; padding: 12px 32px; background: var(--bg); justify-content: flex-end; }
 .mofa-embedded .shell { padding-top: 20px; max-width: none; }
+.mofa-embedded .model-settings { scroll-margin-top: 88px; }
 .mofa-embedded footer { margin-top: 24px; }
+@media(min-width:901px){.mofa-embedded .library{top:88px;max-height:calc(100dvh - 112px);overflow-y:auto;}}
+@media(max-width:600px){.mofa-embedded .header{padding-inline:20px;}}

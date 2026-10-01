@@ -19,7 +19,7 @@
   }
   function inlineControls() {
     byId('connect-magic-api').disabled = inlineBusy;
-    byId('magic-key-select').disabled = inlineBusy;
+    byId('magic-key-select').disabled = inlineBusy || byId('magic-key-select').options.length < 2;
     byId('magic-model-select').disabled = inlineBusy || byId('magic-model-select').options.length < 2;
     byId('apply-magic-config').disabled = inlineBusy || !byId('magic-model-select').value;
   }
@@ -30,15 +30,21 @@
   }
   async function inlineRequest(action) {
     const version = ++inlineVersion;
+    if (action === 'keys') {
+      options('magic-key-select', [], '正在读取可用密钥');
+      options('magic-model-select', [], '先选择密钥');
+    }
     inlineBusy = true; inlineControls();
     byId('magic-connect-status').textContent = action === 'apply' ? '正在应用所选连接…' : '正在读取配置…';
     try {
       const result = await host.request(action, inlineSelection());
       if (version !== inlineVersion) return;
       if (action === 'keys') {
-        options('magic-key-select', result.map(entry => ({ value: String(entry.id), label: entry.name + ' · ' + (entry.group || '未命名分组') })), '请选择可用密钥');
+        options('magic-key-select', result.map(entry => ({ value: String(entry.id), label: entry.name + ' · ' + (entry.group || '未命名分组') })), result.length ? '请选择可用密钥' : '没有可用密钥');
         options('magic-model-select', [], '先选择密钥');
-        byId('magic-connect-status').textContent = result.length ? '选择密钥后读取其模型目录。' : '当前没有可用密钥，请到密钥管理创建并绑定分组，或手动填写接口。';
+        byId('magic-connect-status').textContent = result.length ? '选择密钥后读取其模型目录。' : editing === 'image'
+          ? '没有可用于生图的有效密钥。请在 API 密钥管理确认密钥启用、未过期、额度可用且绑定已开启生图权限的分组。'
+          : '没有有效密钥。请在 API 密钥管理确认密钥启用、未过期、额度可用且已绑定启用的分组。';
       } else if (action === 'models') {
         options('magic-model-select', result.models.map(model => ({ value: model, label: model })), '请选择模型');
         byId('magic-protocol').value = result.protocol;
@@ -52,6 +58,10 @@
       }
     } catch (error) {
       if (version === inlineVersion) {
+        if (action === 'keys') {
+          options('magic-key-select', [], '暂无可选密钥，请查看下方原因');
+          options('magic-model-select', [], '先选择可用密钥');
+        }
         if (action === 'models') options('magic-model-select', [], '目录读取失败，请重选密钥');
         byId('magic-connect-status').textContent = error.message;
       }
