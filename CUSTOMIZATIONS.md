@@ -1,10 +1,11 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-01 用户授权发布门禁修复（验证中）
+## 2026-10-01 用户授权发布门禁修复（已发布）
 
+- 功能293c091b3ab0c8f187c031bed1955bb843939d40已推origin/main，限定10文件；同一SHA的CI36842744777（Go lint、unit／integration、前端／shell／release）、Security36842744680、GHCR36842744656均success。镜像实际embed编译／推送成功，固定sha-293c091、摘要c517187b769f8b49f1fb29b1667277b745bb42deb5be05eabbf3f39e54274a06；完整链接、证据与手动更新说明见HANDOFF及deploy/UPDATE_GUIDE。源码包含上一轮47图／滚动／导航与目录诊断，真实账号的线上模型列表仍待验收，生产未操作。
 - 用户已明确“修复好再发布”，解除前轮依赖安装授权阻塞。上游依赖文件`backend/go.mod`仅x/image0.41.0→0.45.0并加[CUSTOM]注释，`backend/go.sum`两条校验来自官方sumdb；其x/sys／x/text要求与现有锁定一致。`frontend/package.json`与`pnpm-lock.yaml`仅Axios1.18.1→1.20.0，JSON／锁文件不支持注释，接缝在此登记；七项Axios high已从生产审计消失，原例外清单与扫描规则未改。
 - 自有`custom_studio_handler.go`八处资源清理错误使用studioCleanup检查；正常重命名后的临时路径不存在不记失败，其他失败写服务端日志，保留原业务错误／响应，不记录投稿材料。新增`custom_studio_cleanup_test.go`及来源明确的WebP测试副本覆盖正常解码、截断格式、最小尺寸、2400万像素限制、拒绝无落盘和重命名失败清理。没有修改上传权限／发布确认、额度／大小／媒体白名单或视频暂停状态。
-- 本机Go编译器仍缺、Docker未启动，未把本机格式化当编译通过；只使用官方Go1.27.0归档核验SHA256后提取的便携gofmt处理本轮两文件。限定暂存树c3423c3导出源码，Node106＋Vue538共644项、类型／源码lint／Vite构建及原审计例外检查通过，Go CI／安全与新GHCR终态待后续，证据output/family-security-fix-20261001。29个并行文件SHA256未变，共享theme未改；包号及更新脚本工作继续保留，不代部署生产。
+- 本机Go编译器仍缺、Docker未启动，未把本机格式化当编译通过；只使用官方Go1.27.0归档核验SHA256后提取的便携gofmt处理本轮两文件。限定暂存树c3423c3导出源码，Node106＋Vue538共644项、类型／源码lint／Vite构建及原审计例外检查通过；新SHA Go CI／安全与GHCR终态均成功，证据output/family-security-fix-20261001。29个并行文件SHA256未变，共享theme未改；UPDATE_GUIDE只补本发布说明，原并行章节部分暂存保留。包号及更新脚本工作继续保留，不代部署生产。
 
 - **截图修正版安全扫描最新终态**：d84d60e的Security36836909442已failure；新任务两个job日志确认Axios七项high与x/image三个WebP／VP8L漏洞仍在，CI／GHCR仍运行时取证，不把已推送或镜像存在当安全通过。安全依赖安装被自动审批拒绝，未执行，等待用户明确授权；本轮代码推送完成，生产未改，见HANDOFF与output/studio-refinement-release-20261001。
 

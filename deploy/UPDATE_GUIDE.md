@@ -1,5 +1,20 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-01 截图与发布门禁修复（最新可更新版本）
+
+功能提交`293c091b3ab0c8f187c031bed1955bb843939d40`已推origin/main：[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744777)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744680)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744656)全部成功。Go lint 0 issues、unit／integration与镜像embed编译成功；govulncheck无漏洞，前端审计按既有例外通过（两项SheetJS high例外仍存在，未扩例外）。本地实际提交快照644项、类型／源码lint／Vite构建通过。
+
+固定镜像`ghcr.io/engineemomo/sub2apicust:sha-293c091`，linux/amd64，摘要`sha256:c517187b769f8b49f1fb29b1667277b745bb42deb5be05eabbf3f39e54274a06`，由该SHA成功任务的manifest推送及containerimage.digest核实。包含滚动吸顶栏、SynaRoute选中态、首页文案、47图目录及空模型列表诊断，还有Axios1.20.0、x/image0.45.0与投稿资源清理检查；视频／分镜仍待开放。下方765e5a9和d84d60e的暂缓状态是历史，更新应使用本固定标签；收尾文档skip-ci不生成替代应用镜像。
+
+先备份Postgres、部署配置与app_data（含studio-submissions），记录当前镜像作为回退版本，再在服务器执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-293c091
+```
+
+更新后确认健康检查，登录验收滚动栏、SynaRoute、五类新图与保留的单张时尚肖像、配方密钥／生图模型选择、投稿待审和管理员审核。线上空模型框没有取得真实账号的Key／分组／models响应，不能据模拟选择测试宣称现场根因或生图效果已确认；若仍无选项，按新版具体提示检查配置并提供脱敏状态码。包号与新版更新脚本及CI接线不包含在本次应用提交；宿主update.sh不会随应用镜像自动替换。本轮未代部署生产或调用收费模型。
+
 ## 2026-10-01 配方与工坊一体化（已推送，暂缓部署）
 
 功能提交765e5a9516eaecf23d94202b4afc48f9bf723339已推送，[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037358)成功，固定标签sha-765e5a9、摘要sha256:341886529ae61b817a24da3a2a40dbb7062aabbc2148ecc9b7956153cb422e9d。但是[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037421)发现x/image的WebP／VP8L可达漏洞与Axios七个high，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037384)的Go lint也有八处资源清理错误返回未检查。**镜像存在不等于发布门禁通过：暂不建议运行update.sh或拉latest更新公开服务器。** 修复后需新SHA、新安全／CI及镜像成功，再由用户备份更新；本轮未操作生产。
