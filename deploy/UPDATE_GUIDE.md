@@ -1,6 +1,8 @@
 # 日常更新操作手册（定制版 sub2api）
 
-## 2026-10-01 配方与工坊一体化（本轮授权发布，镜像待确认）
+## 2026-10-01 配方与工坊一体化（已推送，暂缓部署）
+
+功能提交765e5a9516eaecf23d94202b4afc48f9bf723339已推送，[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037358)成功，固定标签sha-765e5a9、摘要sha256:341886529ae61b817a24da3a2a40dbb7062aabbc2148ecc9b7956153cb422e9d。但是[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037421)发现x/image的WebP／VP8L可达漏洞与Axios七个high，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36825037384)的Go lint也有八处资源清理错误返回未检查。**镜像存在不等于发布门禁通过：暂不建议运行update.sh或拉latest更新公开服务器。** 修复后需新SHA、新安全／CI及镜像成功，再由用户备份更新；本轮未操作生产。
 
 本机8080已使用同一应用镜像提供`/recipes/`与`/studio/`，无需两个额外服务或产品地址变量。原数据库／Redis／数据卷／业务计数及全部设置摘要保持，镜像／HTTP／实际页面证据见HANDOFF最新终态；迁移和可选独立托管详见[FAMILY_INTEGRATED.md](FAMILY_INTEGRATED.md)。
 
