@@ -513,6 +513,12 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 				nil,
 			)
 		}
+		// [CUSTOM] 原生Ingress同样拒绝包号未适配的会话控制帧。
+		if hooks != nil && hooks.CustomDedicatedBeforeFrame != nil {
+			if err := hooks.CustomDedicatedBeforeFrame(payload); err != nil {
+				return nil, err
+			}
+		}
 		return payload, nil
 	}
 

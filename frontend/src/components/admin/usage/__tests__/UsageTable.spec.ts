@@ -19,6 +19,7 @@ import { nextTick } from 'vue'
 import UsageTable from '../UsageTable.vue'
 
 const messages: Record<string, string> = {
+  'admin.usage.billingTypeDedicated': 'Dedicated · billed zero',
   'admin.usage.userDeletedBadge': 'Deleted',
   'usage.costDetails': 'Cost Breakdown',
   'admin.usage.inputCost': 'Input Cost',
@@ -303,6 +304,20 @@ describe('admin UsageTable tooltip', () => {
       '$0.00000005', '$0.00000006', '$0.00000022', '$0.00000042', '$0.00000018',
     ]))
     if (billingMode === 'image') expect(amounts).toContain('$0.00000011')
+    wrapper.unmount()
+  })
+
+  it('shows dedicated billed zero while preserving reference costs and tokens', async () => {
+    const wrapper = mount(UsageTable, {
+      props: { data: [{ ...baseImageRow, billing_type: 2, actual_cost: 0, total_cost: 2, rate_multiplier: 0, input_tokens: 100 }], loading: false, columns: [] },
+      global: { stubs: { DataTable: DataTableStub, EmptyState: true, Icon: true, Teleport: true } },
+    })
+    expect(wrapper.text()).toContain('Dedicated · billed zero')
+    expect(wrapper.text()).toContain('$0.000000')
+    const triggers = wrapper.findAll('.group.relative')
+    await triggers[triggers.length - 1].trigger('mouseenter')
+    const amounts = wrapper.get('.fixed').findAll('span').map(span => span.text())
+    expect(amounts).toEqual(expect.arrayContaining(['$2.00000000', '$0.00000000']))
     wrapper.unmount()
   })
 

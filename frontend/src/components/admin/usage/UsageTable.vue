@@ -207,6 +207,8 @@
 
         <template #cell-cost="{ row }">
           <div class="text-sm">
+            <!-- [CUSTOM] 独立计费类型明确显示包号免扣，原Token与参考费用保留。 -->
+            <small v-if="row.billing_type === 2">{{ t('admin.usage.billingTypeDedicated') }}</small>
             <div class="flex items-center gap-1.5">
               <span class="font-medium text-green-600 dark:text-green-400">${{ row.actual_cost?.toFixed(6) || '0.000000' }}</span>
               <span

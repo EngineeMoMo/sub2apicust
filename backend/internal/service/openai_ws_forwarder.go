@@ -259,10 +259,11 @@ type OpenAIWSIngressHooks struct {
 	// exceeds the ceiling: downgrade (default) or deny.
 	MaxReasoningEffortOverLimit string
 	// ReasoningEffortMappings rewrites explicit effort values for this WS session.
-	ReasoningEffortMappings []ReasoningEffortMapping
-	TurnStarted             func(turn int, startedAt time.Time)
-	BeforeTurn              func(turn int) error
-	BeforeRequest           func(turn int, payload []byte, originalModel string) error
+	ReasoningEffortMappings    []ReasoningEffortMapping
+	TurnStarted                func(turn int, startedAt time.Time)
+	BeforeTurn                 func(turn int) error
+	BeforeRequest              func(turn int, payload []byte, originalModel string) error
+	CustomDedicatedBeforeFrame func(payload []byte) error // [CUSTOM] 包号控制帧不能旁路轮次／生图限制。
 	// MapRequestModel resolves the current turn's client model to the model
 	// that must be written into the upstream response.create frame.
 	MapRequestModel func(turn int, originalModel string) (string, error)

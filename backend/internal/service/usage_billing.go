@@ -42,6 +42,11 @@ type UsageBillingCommand struct {
 	APIKeyQuotaCost     float64
 	APIKeyRateLimitCost float64
 	AccountQuotaCost    float64
+	// [CUSTOM] 包号准入身份与参考金额，不属于客户余额扣款。
+	DedicatedBindingID     int64
+	DedicatedGroupID       int64
+	DedicatedLeaseID       string
+	DedicatedReferenceCost float64
 }
 
 func (c *UsageBillingCommand) Normalize() {
@@ -86,6 +91,7 @@ func (c *UsageBillingCommand) quantizeMonetaryFields() {
 	c.APIKeyQuotaCost = QuantizeUsageBillingAmount(c.APIKeyQuotaCost)
 	c.APIKeyRateLimitCost = QuantizeUsageBillingAmount(c.APIKeyRateLimitCost)
 	c.AccountQuotaCost = QuantizeUsageBillingAmount(c.AccountQuotaCost)
+	c.DedicatedReferenceCost = QuantizeUsageBillingAmount(c.DedicatedReferenceCost) // [CUSTOM] 独立参考账本沿用规范精度。
 }
 
 // QuantizeUsageBillingAmount 把金额舍入到 UsageBillingMonetaryScale 位小数，
@@ -131,6 +137,10 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 	)
 	if payloadHash := strings.TrimSpace(c.RequestPayloadHash); payloadHash != "" {
 		raw += "|" + payloadHash
+	}
+	// [CUSTOM] 普通请求指纹保持不变；包号指纹包含稳定的权益归属（重试租约不改变幂等身份）。
+	if c.DedicatedBindingID > 0 {
+		raw += fmt.Sprintf("|dedicated:%d:%d:%0.10f", c.DedicatedBindingID, c.DedicatedGroupID, c.DedicatedReferenceCost)
 	}
 	sum := sha256.Sum256([]byte(raw))
 	return hex.EncodeToString(sum[:])

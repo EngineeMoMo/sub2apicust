@@ -1,5 +1,13 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-01 包号免扣与共享限制（发布准备）
+
+用户已授权提交推送，由用户更新生产。本次新版本包括有效包号实扣0／余额0可用、独立参考计量、后台使用限制，以及此前同批成员多专属组、移除成员、Key恢复与旧表单保护；公共组按原规则计费。前后端与迁移243同版。功能提交、CI／安全扫描和GHCR固定镜像须以HANDOFF本轮最终证据为准，准备阶段不提供未确认标签，293c091不包含此次包号改动。
+
+更新前备份Postgres、部署配置与app_data（含studio-submissions），记录当前镜像。确认新SHA门禁全部成功后在服务器用固定sha标签更新。迁移启动时执行；更新后在包号管理配置使用限制，默认2并发／30次每UTC固定分钟／日上限0不限／2MiB／生图关闭，不是Token或美元预算。验证0余额专属组实扣0、普通组原计费、到期撤销拒新请求、共享限额和实际客户端。需要WS会话更新或实时音频的客户端须先验证兼容性；本版包号WS仅支持生成与取消。回退旧计费版本前暂停相关包号Key／账号。
+
+宿主更新脚本专项仍未提交，本次应用镜像不会替换服务器上的update.sh。新版本门禁结果与具体更新命令将在本轮核验后补记。
+
 ## 2026-10-01 截图与发布门禁修复（最新可更新版本）
 
 功能提交`293c091b3ab0c8f187c031bed1955bb843939d40`已推origin/main：[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744777)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744680)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744656)全部成功。Go lint 0 issues、unit／integration与镜像embed编译成功；govulncheck无漏洞，前端审计按既有例外通过（两项SheetJS high例外仍存在，未扩例外）。本地实际提交快照644项、类型／源码lint／Vite构建通过。

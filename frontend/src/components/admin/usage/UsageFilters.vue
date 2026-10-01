@@ -288,7 +288,8 @@ const compactionOptions = ref<SelectOption[]>([
 const billingTypeOptions = ref<SelectOption[]>([
   { value: null, label: t('admin.usage.allBillingTypes') },
   { value: 0, label: t('admin.usage.billingTypeBalance') },
-  { value: 1, label: t('admin.usage.billingTypeSubscription') }
+  { value: 1, label: t('admin.usage.billingTypeSubscription') },
+  { value: 2, label: t('admin.usage.billingTypeDedicated') } // [CUSTOM] 包号用量可独立筛选。
 ])
 
 // 错误类型对应后端 phase 参数(与错误表"类型"徽章同语义)

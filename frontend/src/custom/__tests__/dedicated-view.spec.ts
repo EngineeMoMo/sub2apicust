@@ -10,7 +10,7 @@ import { dedicatedAPI, type DedicatedBinding, type DedicatedView } from '@/custo
 vi.mock('@/components/layout/AppLayout.vue', () => ({ default: defineComponent({ template: '<main><slot name="page-actions" /><slot /></main>' }) }))
 vi.mock('@/custom/dedicated/api', async importOriginal => {
   const original = await importOriginal<typeof import('@/custom/dedicated/api')>()
-  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), remove: vi.fn(), choices: vi.fn() } }
+  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), remove: vi.fn(), choices: vi.fn(), billingPolicy: vi.fn(), saveBillingPolicy: vi.fn() } }
 })
 const now = Date.parse('2026-09-28T08:00:00Z')
 const view: DedicatedView = { id: 1, label: '我的 Claude', platform: 'anthropic', group_id: 33, expires_at: new Date(now + 3600_000).toISOString(), status: 'available', last_used_at: null, sampled_at: new Date(now - 60_000).toISOString(), checked_at: new Date(now).toISOString(), quota_state: 'available', windows: [{ key: 'five_hour', remaining_percent: 65, resets_at: new Date(now + 60_000).toISOString(), stale: false }] }
@@ -27,6 +27,8 @@ beforeEach(() => {
   vi.mocked(dedicatedAPI.save).mockReset().mockResolvedValue(binding)
   vi.mocked(dedicatedAPI.revoke).mockReset().mockResolvedValue(undefined)
   vi.mocked(dedicatedAPI.remove).mockReset().mockResolvedValue(undefined)
+  vi.mocked(dedicatedAPI.billingPolicy).mockReset().mockResolvedValue({ concurrency_limit: 2, rpm_limit: 30, daily_request_limit: 0, max_body_bytes: 2097152, allow_images: false, updated_at: null })
+  vi.mocked(dedicatedAPI.saveBillingPolicy).mockReset()
 })
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; vi.useRealTimers() })
 async function user(locale = 'zh') { wrapper = mount(DedicatedAccountsView, { global: globals(locale) }); await flushPromises(); return wrapper }
@@ -87,6 +89,61 @@ describe('用户专属账号页面', () => {
 })
 
 describe('管理端包号操作', () => {
+  it('使用限制单独编辑，不触发改绑或续期', async () => {
+    const page = await admin()
+    await button(page, '使用限制').trigger('click')
+    await flushPromises()
+    expect(dedicatedAPI.billingPolicy).toHaveBeenCalledWith(1)
+    expect(page.get('form').text()).toContain('所有成员、专属组和密钥共用')
+    expect(dedicatedAPI.save).not.toHaveBeenCalled()
+    expect(dedicatedAPI.saveBillingPolicy).not.toHaveBeenCalled()
+  })
+  it('保存失败展示具体不满足项和编号，而不是统称配置异常', async () => {
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    vi.mocked(dedicatedAPI.save).mockRejectedValue({ reason: 'DEDICATED_ACCOUNT_CONFIG', metadata: { config_issue: 'other_authorized_users', resource_ids: '13' } })
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(page.get('[role="alert"]').text()).toContain('同批共用者请全部加入同一条包号，用户编号: 13')
+    expect(page.find('form').exists()).toBe(true)
+  })
+  it('独立显示配置异常与成员警告，不将绑定有效期当可用证明', async () => {
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, config_status: 'invalid_structure' }, { ...binding, id: 2, config_status: 'member_warning' }])
+    const page = await admin()
+    expect(page.text()).toContain('配置异常：检查账号独占')
+    expect(page.text()).toContain('正常成员不受其他成员停用影响')
+  })
+  it('提交编辑快照版本，冲突不自动覆盖，并可刷新重新编辑', async () => {
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    vi.mocked(dedicatedAPI.save).mockRejectedValue({ reason: 'DEDICATED_ACCOUNT_STALE' })
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(dedicatedAPI.save).toHaveBeenCalledTimes(1)
+    expect(dedicatedAPI.save).toHaveBeenCalledWith(1, expect.objectContaining({ expected_updated_at: binding.updated_at, reactivate: false }))
+    expect(page.text()).toContain('不要直接重试旧表单')
+    const nextVersion = new Date(now + 1).toISOString()
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, updated_at: nextVersion }])
+    await button(page, '刷新状态').trigger('click')
+    await flushPromises()
+    expect(page.find('form').exists()).toBe(false)
+    await button(page, '修改 / 续期').trigger('click')
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(dedicatedAPI.save).toHaveBeenLastCalledWith(1, expect.objectContaining({ expected_updated_at: nextVersion }))
+  })
+  it('恢复撤销包号必须显式勾选确认', async () => {
+    vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, revoked_at: binding.updated_at }])
+    const page = await admin()
+    await button(page, '修改 / 续期').trigger('click')
+    await page.get('form').trigger('submit')
+    expect(dedicatedAPI.save).not.toHaveBeenCalled()
+    expect(page.text()).toContain('请勾选确认恢复')
+    await page.get('input[type="checkbox"]').setValue(true)
+    await page.get('form').trigger('submit')
+    await flushPromises()
+    expect(dedicatedAPI.save).toHaveBeenCalledWith(1, expect.objectContaining({ expected_updated_at: binding.updated_at, reactivate: true }))
+  })
   it('列表和编辑选择项显示名称，账号和分组可重新选择', async () => {
     vi.mocked(dedicatedAPI.list).mockResolvedValue([{ ...binding, user_name: '用户甲', account_name: 'Claude 专属账号', group_name: 'Claude 专属组' }])
     const page = await admin()
@@ -135,10 +192,12 @@ describe('管理端包号操作', () => {
     expect(dedicatedAPI.remove).toHaveBeenCalledWith(1)
     expect(revokedPage.text()).toContain('还没有包号记录')
   })
-  it('展示准备说明与原计费规则，不擅自改分组', async () => {
+  it('展示准备说明与包号免扣规则，不擅自改分组', async () => {
     const page = await admin()
-    expect(page.text()).toContain('先准备一个独立分组')
-    expect(page.text()).toContain('仅控制账号使用权')
+    expect(page.text()).toContain('先准备专属分组')
+    expect(page.text()).toContain('多个同平台标准专属分组')
+    expect(page.text()).toContain('有效包号在获准的专属组内使用实扣0')
+    expect(page.text()).toContain('普通组仍正常计费')
     expect(page.text()).toContain('#22 / #33')
     expect(dedicatedAPI.save).not.toHaveBeenCalled()
   })

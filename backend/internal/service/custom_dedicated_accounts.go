@@ -18,10 +18,12 @@ import (
 var (
 	ErrDedicatedMode     = infraerrors.Forbidden("DEDICATED_ACCOUNT_MODE", "包号功能仅支持标准运行模式")
 	ErrDedicatedAccess   = infraerrors.Forbidden("DEDICATED_ACCOUNT_UNAVAILABLE", "专属账号不可用或不属于当前用户，请联系管理员")
-	ErrDedicatedConfig   = infraerrors.BadRequest("DEDICATED_ACCOUNT_CONFIG", "请使用仅包含该账号、仅授权所选用户、无备用路由的同平台标准专属分组；账号不能属于其他分组或拥有影子账号")
+	ErrDedicatedConfig   = infraerrors.BadRequest("DEDICATED_ACCOUNT_CONFIG", "账号可关联同一批包号成员的多个标准专属分组；各分组仅包含该账号、无备用路由及名单外授权，账号不能拥有影子账号")
 	ErrDedicatedInput    = infraerrors.BadRequest("DEDICATED_ACCOUNT_INPUT", "请选择用户、账号和分组，填写80字以内别名及未来的到期时间")
 	ErrDedicatedConflict = infraerrors.Conflict("DEDICATED_ACCOUNT_CONFLICT", "该账号或分组已有包号记录，请修改原记录")
 	ErrDedicatedNotFound = infraerrors.NotFound("DEDICATED_ACCOUNT_NOT_FOUND", "包号记录不存在")
+	ErrDedicatedStale    = infraerrors.Conflict("DEDICATED_ACCOUNT_STALE", "包号已被修改，请刷新列表后重新编辑")
+	ErrDedicatedRestore  = infraerrors.BadRequest("DEDICATED_ACCOUNT_RESTORE", "请明确确认恢复已撤销的包号")
 )
 
 type CustomDedicatedBinding struct {
@@ -37,12 +39,14 @@ type CustomDedicatedBinding struct {
 }
 
 type CustomDedicatedInput struct {
-	UserIDs   []int64   `json:"user_ids"`
-	UserID    int64     `json:"user_id"`
-	AccountID int64     `json:"account_id"`
-	GroupID   int64     `json:"group_id"`
-	Label     string    `json:"label"`
-	ExpiresAt time.Time `json:"expires_at"`
+	ExpectedUpdatedAt *time.Time `json:"expected_updated_at"`
+	Reactivate        bool       `json:"reactivate"`
+	UserIDs           []int64    `json:"user_ids"`
+	UserID            int64      `json:"user_id"`
+	AccountID         int64      `json:"account_id"`
+	GroupID           int64      `json:"group_id"`
+	Label             string     `json:"label"`
+	ExpiresAt         time.Time  `json:"expires_at"`
 }
 
 type CustomDedicatedWindow struct {
@@ -122,7 +126,7 @@ func (s *CustomDedicatedService) List(ctx context.Context, userID int64, page in
 	return bindings, rows.Err()
 }
 
-const customDedicatedIntegritySQL = `SELECT EXISTS (
+const customDedicatedStructureSQL = `SELECT EXISTS (
  SELECT 1 FROM accounts a JOIN groups g ON g.id = $2
  WHERE a.id = $1 AND a.deleted_at IS NULL AND g.deleted_at IS NULL
  AND g.status = 'active' AND g.is_exclusive = TRUE
@@ -133,15 +137,46 @@ const customDedicatedIntegritySQL = `SELECT EXISTS (
  AND a.parent_account_id IS NULL
  AND NOT EXISTS (SELECT 1 FROM accounts child WHERE child.parent_account_id = a.id AND child.deleted_at IS NULL)
  AND EXISTS (SELECT 1 FROM account_groups ag WHERE ag.account_id = a.id AND ag.group_id = g.id)
- AND NOT EXISTS (SELECT 1 FROM account_groups ag WHERE (ag.account_id = a.id AND ag.group_id <> g.id) OR (ag.group_id = g.id AND ag.account_id <> a.id))
+ AND NOT EXISTS (SELECT 1 FROM account_groups ag WHERE ag.group_id = g.id AND ag.account_id <> a.id)
+ AND NOT EXISTS (SELECT 1 FROM account_groups ag JOIN groups related ON related.id=ag.group_id
+ WHERE ag.account_id=a.id AND related.deleted_at IS NULL AND (
+ related.status IS DISTINCT FROM 'active' OR related.is_exclusive IS DISTINCT FROM TRUE
+ OR related.platform IS DISTINCT FROM a.platform OR related.subscription_type IS DISTINCT FROM 'standard'
+ OR related.fallback_group_id IS NOT NULL OR related.fallback_group_id_on_invalid_request IS NOT NULL
+ OR EXISTS (SELECT 1 FROM account_groups extra WHERE extra.group_id=related.id AND extra.account_id<>a.id)))
  AND jsonb_array_length($3::jsonb) > 0
- AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements_text($3::jsonb) member(id)
-   WHERE NOT EXISTS (SELECT 1 FROM users u JOIN user_allowed_groups ug ON ug.user_id=u.id AND ug.group_id=g.id
-     WHERE u.id=member.id::bigint AND u.deleted_at IS NULL AND u.status='active'))
- AND NOT EXISTS (SELECT 1 FROM user_allowed_groups ug JOIN users other ON other.id=ug.user_id WHERE ug.group_id=g.id AND other.deleted_at IS NULL AND NOT $3::jsonb @> jsonb_build_array(ug.user_id))
- AND NOT EXISTS (SELECT 1 FROM api_keys k WHERE k.group_id=g.id AND k.deleted_at IS NULL AND NOT $3::jsonb @> jsonb_build_array(k.user_id))
- AND NOT EXISTS (SELECT 1 FROM user_subscriptions sub WHERE sub.group_id = g.id AND sub.deleted_at IS NULL)
+ AND NOT EXISTS (SELECT 1 FROM user_allowed_groups ug JOIN users other ON other.id=ug.user_id
+ WHERE ug.group_id IN (` + customDedicatedRelatedGroupsSQL + `) AND other.deleted_at IS NULL AND NOT $3::jsonb @> jsonb_build_array(ug.user_id))
+ AND NOT EXISTS (SELECT 1 FROM user_subscriptions sub WHERE sub.group_id IN (` + customDedicatedRelatedGroupsSQL + `) AND sub.deleted_at IS NULL)
 )`
+
+const customDedicatedIntegritySQL = `SELECT (` + customDedicatedStructureSQL + `)
+ AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements_text($3::jsonb) member(id)
+   WHERE NOT EXISTS (SELECT 1 FROM users u JOIN user_allowed_groups ug ON ug.user_id=u.id AND ug.group_id=$2
+     WHERE u.id=member.id::bigint AND u.deleted_at IS NULL AND u.status='active'))
+ AND NOT EXISTS (SELECT 1 FROM api_keys k WHERE k.group_id IN (` + customDedicatedRelatedGroupsSQL + `) AND k.deleted_at IS NULL AND k.status NOT IN ('disabled','inactive') AND NOT $3::jsonb @> jsonb_build_array(k.user_id))`
+
+const customDedicatedAccessSQL = `SELECT (` + customDedicatedStructureSQL + `)
+ AND $3::jsonb @> jsonb_build_array($4::bigint)
+ AND EXISTS (SELECT 1 FROM users u JOIN user_allowed_groups ug ON ug.user_id=u.id
+ WHERE u.id=$4 AND ug.group_id=$2 AND u.deleted_at IS NULL AND u.status='active')`
+
+func customDedicatedAccess(ctx context.Context, query customDedicatedQuery, binding CustomDedicatedBinding, userID int64) (bool, error) {
+	var valid bool
+	members, _ := json.Marshal(customDedicatedMembers(binding))
+	err := query.QueryRowContext(ctx, customDedicatedAccessSQL, binding.AccountID, binding.GroupID, string(members), userID).Scan(&valid)
+	return valid, err
+}
+
+func customDedicatedRequestAccess(ctx context.Context, query customDedicatedQuery, binding CustomDedicatedBinding, subject customDedicatedSubject) (bool, error) {
+	if subject.GroupID == binding.GroupID {
+		return customDedicatedAccess(ctx, query, binding, subject.UserID)
+	}
+	var valid bool
+	members, _ := json.Marshal(customDedicatedMembers(binding))
+	err := query.QueryRowContext(ctx, customDedicatedAliasAccessSQL, binding.AccountID, binding.GroupID, string(members), subject.UserID, subject.GroupID).Scan(&valid)
+	return valid, err
+}
 
 type customDedicatedQuery interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
@@ -176,11 +211,22 @@ func (s *CustomDedicatedService) Save(ctx context.Context, id int64, input Custo
 	defer func() { _ = tx.Rollback() }()
 	binding := CustomDedicatedBinding{ID: id, UserID: input.UserID, UserIDs: input.UserIDs, AccountID: input.AccountID, GroupID: input.GroupID, Label: input.Label, ExpiresAt: input.ExpiresAt}
 	var previous CustomDedicatedBinding
+	var removedUsers []int64
 	if id != 0 {
 		previous, err = scanCustomDedicated(tx.QueryRowContext(ctx, "SELECT "+customDedicatedColumns+" FROM custom_dedicated_accounts WHERE id = $1 AND deleted_at IS NULL FOR UPDATE", id))
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrDedicatedNotFound
 		}
+		if err != nil {
+			return nil, err
+		}
+		if input.ExpectedUpdatedAt == nil || !input.ExpectedUpdatedAt.Equal(previous.UpdatedAt) {
+			return nil, ErrDedicatedStale
+		}
+		if previous.RevokedAt != nil && !input.Reactivate {
+			return nil, ErrDedicatedRestore
+		}
+		removedUsers, err = customDedicatedRemoveMembers(ctx, tx, previous, binding)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +236,7 @@ func (s *CustomDedicatedService) Save(ctx context.Context, id int64, input Custo
 		return nil, err
 	}
 	if !valid {
-		return nil, ErrDedicatedConfig
+		return nil, customDedicatedConfigError(ctx, tx, binding)
 	}
 	var exists bool
 	err = tx.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM custom_dedicated_accounts WHERE (account_id = $1 OR group_id = $2) AND id <> $3 AND deleted_at IS NULL)", input.AccountID, input.GroupID, id).Scan(&exists)
@@ -222,6 +268,9 @@ func (s *CustomDedicatedService) Save(ctx context.Context, id int64, input Custo
 		return nil, err
 	}
 	s.apiKeys.InvalidateAuthCacheByGroupID(ctx, input.GroupID)
+	for _, userID := range removedUsers {
+		s.apiKeys.InvalidateAuthCacheByUserID(ctx, userID)
+	}
 	if previous.GroupID != 0 && previous.GroupID != input.GroupID {
 		s.apiKeys.InvalidateAuthCacheByGroupID(ctx, previous.GroupID)
 	}
@@ -281,7 +330,7 @@ func (s *CustomDedicatedService) Check(ctx context.Context, account *Account, gr
 			parentID = *account.ParentAccountID
 		}
 	}
-	rows, err := s.db.QueryContext(ctx, "SELECT "+customDedicatedColumns+" FROM custom_dedicated_accounts WHERE (group_id=$1 OR account_id=$2 OR account_id=$3 OR account_id=(SELECT parent_account_id FROM accounts WHERE id=$2)) AND (deleted_at IS NULL OR NOT EXISTS (SELECT 1 FROM custom_dedicated_accounts live WHERE live.deleted_at IS NULL AND live.group_id=$1 AND ($2::bigint=0 OR live.account_id=$2)))", subject.GroupID, accountID, parentID)
+	rows, err := s.db.QueryContext(ctx, customDedicatedCheckSQL, subject.GroupID, accountID, parentID)
 	if err != nil {
 		return ErrDedicatedAccess
 	}
@@ -303,10 +352,12 @@ func (s *CustomDedicatedService) Check(ctx context.Context, account *Account, gr
 		if s.simpleMode {
 			return ErrDedicatedAccess
 		}
-		if !authenticated || !customDedicatedAllowed(binding, subject, account, time.Now()) {
+		requestBinding := binding
+		requestBinding.GroupID = subject.GroupID
+		if !authenticated || !customDedicatedAllowed(requestBinding, subject, account, time.Now()) {
 			return ErrDedicatedAccess
 		}
-		valid, err := customDedicatedIntegrity(ctx, s.db, binding)
+		valid, err := customDedicatedRequestAccess(ctx, s.db, binding, subject)
 		if err != nil || !valid {
 			return ErrDedicatedAccess
 		}
@@ -370,7 +421,7 @@ func (s *CustomDedicatedService) View(ctx context.Context, userID, id int64, quo
 		view.Status = "expired"
 		return view, nil
 	}
-	valid, err := customDedicatedIntegrity(ctx, s.db, binding)
+	valid, err := customDedicatedAccess(ctx, s.db, binding, userID)
 	if err != nil {
 		return nil, err
 	}

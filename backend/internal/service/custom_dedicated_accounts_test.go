@@ -61,7 +61,10 @@ func TestCustomDedicatedCheck(t *testing.T) {
 			binding := customDedicatedTestBinding(now)
 			mock.ExpectQuery(`SELECT .* FROM custom_dedicated_accounts WHERE \(group_id`).WillReturnRows(customDedicatedTestRows(binding))
 			if test.authenticated && test.subject.UserID == 11 && test.subject.GroupID == 33 && test.accountID == 22 {
-				mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WithArgs(int64(22), int64(33), "[11]").WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(test.valid))
+				mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAccessSQL)).WithArgs(int64(22), int64(33), "[11]", int64(11)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(test.valid))
+			}
+			if test.name == "shared pool" {
+				mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAliasAccessSQL)).WithArgs(int64(22), int64(33), "[11]", int64(11), int64(44)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 			}
 			ctx := context.Background()
 			if test.authenticated {
@@ -116,10 +119,12 @@ func TestCustomDedicatedViewOwnerFilter(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-type customDedicatedInvalidator struct{ groups []int64 }
+type customDedicatedInvalidator struct{ groups, users []int64 }
 
-func (cache *customDedicatedInvalidator) InvalidateAuthCacheByKey(context.Context, string)   {}
-func (cache *customDedicatedInvalidator) InvalidateAuthCacheByUserID(context.Context, int64) {}
+func (cache *customDedicatedInvalidator) InvalidateAuthCacheByKey(context.Context, string) {}
+func (cache *customDedicatedInvalidator) InvalidateAuthCacheByUserID(_ context.Context, id int64) {
+	cache.users = append(cache.users, id)
+}
 func (cache *customDedicatedInvalidator) InvalidateAuthCacheByGroupID(_ context.Context, id int64) {
 	cache.groups = append(cache.groups, id)
 }
@@ -156,6 +161,8 @@ func TestCustomDedicatedSaveRejectsUnsafeConfigAndDuplicates(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(valid))
 		if valid {
 			mock.ExpectQuery("SELECT EXISTS.*custom_dedicated_accounts").WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+		} else {
+			mock.ExpectQuery(regexp.QuoteMeta(customDedicatedConfigSQL)).WithArgs(int64(22), int64(33), "[11]").WillReturnRows(sqlmock.NewRows([]string{"issue", "resource_ids"}).AddRow("account_unsafe_groups", "55"))
 		}
 		mock.ExpectRollback()
 		_, err = service.Save(context.Background(), 0, CustomDedicatedInput{UserID: 11, AccountID: 22, GroupID: 33, Label: "账号", ExpiresAt: time.Now().Add(time.Hour)})
@@ -229,7 +236,7 @@ func TestCustomDedicatedViewOnlyReturnsWhitelist(t *testing.T) {
 	reader := &customDedicatedAccountReader{account: &Account{ID: 22, Platform: PlatformOpenAI, Type: AccountTypeOAuth, Status: StatusActive, Schedulable: true, Name: "internal-account@example.com", Credentials: map[string]any{"access_token": "private-token"}, ErrorMessage: "secret upstream failure", Extra: map[string]any{"codex_5h_used_percent": 25.0, "codex_usage_updated_at": now.Format(time.RFC3339)}}}
 	service := &CustomDedicatedService{db: db, accounts: reader}
 	mock.ExpectQuery("SELECT .* WHERE id=").WithArgs(int64(1), int64(11)).WillReturnRows(customDedicatedTestRows(binding))
-	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAccessSQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery("SELECT .* WHERE id=").WithArgs(int64(1), int64(11)).WillReturnRows(customDedicatedTestRows(binding))
 	view, err := service.View(context.Background(), 11, 1, true)
 	require.NoError(t, err)
@@ -249,7 +256,7 @@ func TestCustomDedicatedViewReassignmentDuringRead(t *testing.T) {
 	binding := customDedicatedTestBinding(time.Now())
 	service := &CustomDedicatedService{db: db, accounts: &customDedicatedAccountReader{account: &Account{ID: 22, Platform: PlatformAnthropic}}}
 	mock.ExpectQuery("SELECT .* WHERE id=").WillReturnRows(customDedicatedTestRows(binding))
-	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedIntegritySQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAccessSQL)).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 	mock.ExpectQuery("SELECT .* WHERE id=").WillReturnError(sql.ErrNoRows)
 	view, err := service.View(context.Background(), 11, 1, true)
 	require.ErrorIs(t, err, ErrDedicatedNotFound)

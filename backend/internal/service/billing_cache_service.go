@@ -753,14 +753,14 @@ func (s *BillingCacheService) CheckBillingEligibility(ctx context.Context, user 
 		if err := s.checkSubscriptionEligibility(ctx, user.ID, group, subscription); err != nil {
 			return err
 		}
-	} else {
+	} else if !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 有效包号只豁免余额预检，其余Key与RPM检查保留。
 		if err := s.checkBalanceEligibility(ctx, user.ID); err != nil {
 			return err
 		}
 	}
 
 	// user × platform quota 仅在 standard（余额）模式生效；订阅模式豁免
-	if !isSubscriptionMode {
+	if !isSubscriptionMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号使用独立共享限额，普通平台消费限额仍按余额请求执行。
 		if err := s.checkUserPlatformQuotaEligibility(ctx, user.ID, platform); err != nil {
 			return err
 		}

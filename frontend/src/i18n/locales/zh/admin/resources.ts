@@ -540,6 +540,8 @@ export default {
       allBillingTypes: '全部计费类型',
       billingTypeBalance: '钱包余额',
       billingTypeSubscription: '订阅套餐',
+      // [CUSTOM] 包号实扣与参考用量分开。
+      billingTypeDedicated: '包号内使用 · 实扣0',
       billingMode: '计费模式',
       billingModeToken: '按量',
       billingModePerRequest: '按次',

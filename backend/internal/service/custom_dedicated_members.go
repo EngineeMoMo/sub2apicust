@@ -42,6 +42,23 @@ func customDedicatedHasMember(binding CustomDedicatedBinding, userID int64) bool
 	return false
 }
 
+func customDedicatedRemoveMembers(ctx context.Context, tx *sql.Tx, previous, next CustomDedicatedBinding) ([]int64, error) {
+	removed := make([]int64, 0)
+	for _, userID := range customDedicatedMembers(previous) {
+		if customDedicatedHasMember(next, userID) {
+			continue
+		}
+		if _, err := tx.ExecContext(ctx, "DELETE FROM user_allowed_groups WHERE (group_id=$1 OR group_id IN (SELECT ag.group_id FROM account_groups ag JOIN groups g ON g.id=ag.group_id WHERE ag.account_id=$3 AND g.deleted_at IS NULL AND g.is_exclusive=TRUE)) AND user_id=$2", previous.GroupID, userID, previous.AccountID); err != nil {
+			return nil, err
+		}
+		if _, err := tx.ExecContext(ctx, "UPDATE api_keys SET status='inactive', updated_at=NOW() WHERE (group_id=$1 OR group_id IN (SELECT ag.group_id FROM account_groups ag JOIN groups g ON g.id=ag.group_id WHERE ag.account_id=$3 AND g.deleted_at IS NULL AND g.is_exclusive=TRUE)) AND user_id=$2 AND deleted_at IS NULL AND status <> 'inactive'", previous.GroupID, userID, previous.AccountID); err != nil {
+			return nil, err
+		}
+		removed = append(removed, userID)
+	}
+	return removed, nil
+}
+
 func (s *CustomDedicatedService) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {

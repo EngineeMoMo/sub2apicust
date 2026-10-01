@@ -35,6 +35,9 @@ func RegisterAdminRoutes(
 		admin.GET("/dedicated-accounts", h.CustomDedicated.AdminList)
 		admin.POST("/dedicated-accounts", h.CustomDedicated.Save)
 		admin.PUT("/dedicated-accounts/:id", h.CustomDedicated.Save)
+		// [CUSTOM] 包号共享限额沿用管理员认证与审计；不修改余额或重置请求计数。
+		admin.GET("/dedicated-accounts/:id/billing-policy", h.CustomDedicated.BillingPolicy)
+		admin.PUT("/dedicated-accounts/:id/billing-policy", h.CustomDedicated.BillingPolicy)
 		admin.POST("/dedicated-accounts/:id/revoke", h.CustomDedicated.Revoke)
 		// [CUSTOM] 仅撤销后的包号可删除，保留旧密钥隔离记录。
 		admin.DELETE("/dedicated-accounts/:id", h.CustomDedicated.Delete)

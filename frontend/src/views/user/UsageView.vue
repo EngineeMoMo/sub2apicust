@@ -398,6 +398,7 @@ const billingTypeOptions = computed<SelectOption[]>(() => [
   { value: null, label: t('admin.usage.allBillingTypes') },
   { value: 0, label: t('admin.usage.billingTypeBalance') },
   { value: 1, label: t('admin.usage.billingTypeSubscription') },
+  { value: 2, label: t('admin.usage.billingTypeDedicated') }, // [CUSTOM] 包号用量独立筛选。
 ])
 const billingModeOptions = computed<SelectOption[]>(() => [
   { value: null, label: t('admin.usage.allBillingModes') },
@@ -661,6 +662,7 @@ const exportToCSV = async () => {
       'IP Address',
       'Type',
       'Billing Mode',
+      'Billing Type', // [CUSTOM] 区分包号免扣和普通计费，原始参考金额仍独立导出。
       'Input Tokens',
       'Output Tokens',
       'Cache Read Tokens',
@@ -680,6 +682,7 @@ const exportToCSV = async () => {
       log.ip_address || '',
       getRequestTypeExportText(log),
       getBillingModeLabel(getDisplayBillingMode(log), t),
+      log.billing_type === 2 ? 'dedicated_prepaid' : log.billing_type === 1 ? 'subscription' : 'balance',
       log.input_tokens,
       log.output_tokens,
       log.cache_read_tokens,

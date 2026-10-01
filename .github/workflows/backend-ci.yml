@@ -23,6 +23,21 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # [CUSTOM] 包号真实事务／并发回归使用独立空库，缺少DSN不能只靠skip冒充通过。
+    services:
+      dedicated-postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: dedicated_test
+          POSTGRES_PASSWORD: dedicated_ci_only
+          POSTGRES_DB: dedicated_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dedicated_test -d dedicated_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v6
       - name: Check Docker Compose simple mode environment
@@ -38,6 +53,8 @@ jobs:
           go version | grep -q 'go1.27.0'
       - name: Unit tests
         working-directory: backend
+        env:
+          DEDICATED_TEST_POSTGRES_DSN: postgres://dedicated_test:dedicated_ci_only@127.0.0.1:5432/dedicated_test?sslmode=disable
         run: make test-unit
       - name: Integration tests
         working-directory: backend

@@ -543,6 +543,8 @@ export default {
       allBillingTypes: 'All Billing Types',
       billingTypeBalance: 'Balance',
       billingTypeSubscription: 'Subscription',
+      // [CUSTOM] 包号实扣与参考用量分开。
+      billingTypeDedicated: 'Dedicated · billed zero',
       billingMode: 'Billing Mode',
       billingModeToken: 'Token',
       billingModePerRequest: 'Per Request',

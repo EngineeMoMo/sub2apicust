@@ -9,11 +9,12 @@ import (
 
 type CustomDedicatedAdminView struct {
 	CustomDedicatedBinding
-	Users       []CustomDedicatedMember `json:"users"`
-	Platform    string                  `json:"platform"`
-	UserName    string                  `json:"user_name"`
-	AccountName string                  `json:"account_name"`
-	GroupName   string                  `json:"group_name"`
+	ConfigStatus string                  `json:"config_status"`
+	Users        []CustomDedicatedMember `json:"users"`
+	Platform     string                  `json:"platform"`
+	UserName     string                  `json:"user_name"`
+	AccountName  string                  `json:"account_name"`
+	GroupName    string                  `json:"group_name"`
 }
 
 type CustomDedicatedMember struct {
@@ -57,8 +58,31 @@ func (s *CustomDedicatedService) AdminList(ctx context.Context, page int) ([]Cus
 		}
 		result = append(result, item)
 	}
-	return result, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	for index := range result {
+		item := &result[index]
+		members, _ := json.Marshal(customDedicatedMembers(item.CustomDedicatedBinding))
+		var structure, membership bool
+		err := s.db.QueryRowContext(ctx, customDedicatedHealthSQL, item.AccountID, item.GroupID, string(members)).Scan(&structure, &membership)
+		if err != nil {
+			return nil, err
+		}
+		item.ConfigStatus = "valid"
+		if !structure || s.simpleMode {
+			item.ConfigStatus = "invalid_structure"
+		} else if !membership {
+			item.ConfigStatus = "member_warning"
+		}
+	}
+	return result, nil
 }
+
+const customDedicatedHealthSQL = `SELECT (` + customDedicatedStructureSQL + `), (` + customDedicatedIntegritySQL + `)`
 
 func (s *CustomDedicatedService) FillGroupNames(ctx context.Context, userID int64, views []CustomDedicatedView) error {
 	if userID <= 0 {

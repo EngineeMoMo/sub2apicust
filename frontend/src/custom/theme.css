@@ -1557,6 +1557,9 @@ html .mofa-auth .mofa-auth-title {
 .mofa-dedicated-field > span, .mofa-dedicated-picker legend { font-size: .875rem; font-weight: 600; margin-bottom: .35rem; }
 .mofa-dedicated input, .mofa-dedicated select { min-height: 42px; width: 100%; min-width: 0; padding: .55rem .75rem; border-radius: 8px; border: 1px solid rgb(var(--brand-border)); background: rgb(var(--brand-page)); color: rgb(var(--brand-text)); font-size: .875rem; }
 .mofa-dedicated input::placeholder { color: rgb(var(--brand-muted)); }
+.mofa-dedicated-restore { display: flex; align-items: center; gap: .75rem; min-height: 44px; margin-bottom: 1rem; cursor: pointer; }
+.mofa-dedicated-restore input[type="checkbox"] { width: 1.125rem; min-height: 1.125rem; height: 1.125rem; padding: 0; flex-shrink: 0; accent-color: var(--color-primary-500, #096b68); }
+.mofa-dedicated-health { max-width: 26rem; overflow-wrap: anywhere; }
 .mofa-dedicated-picker p, .mofa-dedicated-field small { color: rgb(var(--brand-muted)); font-size: .75rem; line-height: 1.6; }
 .mofa-dedicated-search { display: flex; gap: .5rem; }
 .mofa-dedicated-search button { flex-shrink: 0; }

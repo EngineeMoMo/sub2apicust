@@ -172,6 +172,12 @@ func (r *usageBillingRepository) applyBatchImageBalanceHold(
 }
 
 func (r *usageBillingRepository) applyUsageBillingEffects(ctx context.Context, tx *sql.Tx, cmd *service.UsageBillingCommand, result *service.UsageBillingApplyResult) error {
+	// [CUSTOM] 与原有去重、Key计量共用事务，包号结算不能变成余额扣款。
+	if cmd.BillingType == service.BillingTypeDedicated || cmd.DedicatedBindingID > 0 {
+		if err := applyCustomDedicatedBilling(ctx, tx, cmd); err != nil {
+			return err
+		}
+	}
 	if cmd.SubscriptionCost > 0 && cmd.SubscriptionID != nil {
 		if err := incrementUsageBillingSubscription(ctx, tx, *cmd.SubscriptionID, cmd.SubscriptionCost); err != nil {
 			return err

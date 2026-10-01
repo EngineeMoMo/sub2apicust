@@ -26,6 +26,7 @@ type keyBillingInfoResponse struct {
 	PeakRateMultiplier      *float64  `json:"peak_rate_multiplier,omitempty"`
 	AppliedPeakMultiplier   *float64  `json:"applied_peak_multiplier,omitempty"`
 	EffectiveRateMultiplier float64   `json:"effective_rate_multiplier"`
+	BillingType             string    `json:"billing_type,omitempty"` // [CUSTOM] 包号免扣身份；原字段保持兼容。
 	Timezone                *string   `json:"timezone,omitempty"`
 	ObservedAt              time.Time `json:"observed_at"`
 }
@@ -95,6 +96,11 @@ func buildKeyBillingInfo(apiKey *service.APIKey, resolvedRate float64, now time.
 		PeakRateEnabled:         apiKey.Group.PeakRateEnabled,
 		EffectiveRateMultiplier: resolvedRate * appliedPeak,
 		ObservedAt:              now.UTC(),
+	}
+	// [CUSTOM] 倍率自省按客户实扣返回0，不写回用户／分组的参考计量倍率。
+	if apiKey.IsCustomDedicatedPrepaid() {
+		response.BillingType = "dedicated_prepaid"
+		response.EffectiveRateMultiplier = 0
 	}
 	if apiKey.Group.PeakRateEnabled {
 		response.PeakStart = &apiKey.Group.PeakStart

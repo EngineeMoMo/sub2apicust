@@ -171,6 +171,12 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			return
 		}
 		c.Request = c.Request.WithContext(ctx)
+		// [CUSTOM] 正向解析免扣权益并复制Key，防止把请求状态写入认证缓存。
+		apiKey, dedicatedErr = apiKeyService.PrepareCustomDedicatedBilling(ctx, apiKey)
+		if dedicatedErr != nil {
+			AbortWithError(c, 403, "DEDICATED_ACCOUNT_UNAVAILABLE", "专属账号不可用，请联系管理员")
+			return
+		}
 		billingInfoRequest := c.Request.URL.Path == "/v1/sub2api/billing"
 		// Async image task polling only reads data that already belongs to the
 		// authenticated key and must remain available after the completed
@@ -266,7 +272,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 				}
 			} else {
 				// 非订阅模式 或 订阅模式但 subscriptionService 未注入：回退到余额检查
-				if apiKeyBalanceBelowAuthThreshold(apiKey.User.Balance, cfg) {
+				if !apiKey.IsCustomDedicatedPrepaid() && apiKeyBalanceBelowAuthThreshold(apiKey.User.Balance, cfg) { // [CUSTOM] 包号免余额条件，Key状态／到期／额度仍检查。
 					AbortWithError(c, 403, "INSUFFICIENT_BALANCE", "Insufficient account balance")
 					return
 				}
@@ -289,7 +295,8 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			_ = apiKeyService.TouchLastUsed(c.Request.Context(), apiKey.ID)
 		}
 
-		c.Next()
+		// [CUSTOM] 所有认证网关别名统一共享准入与并发租约。
+		customDedicatedBillingAdmission(c, apiKeyService, apiKey)
 	}
 }
 

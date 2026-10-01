@@ -900,6 +900,12 @@ func (s *APIKeyService) Update(ctx context.Context, id int64, userID int64, req 
 		fields.Status = true
 	}
 
+	// [CUSTOM] 包号Key显式或隐式恢复有效状态时，重新验证当前成员资格。
+	if apiKey.Status == StatusActive && s.customDedicated != nil {
+		if _, err := s.CustomDedicatedContext(ctx, apiKey); err != nil {
+			return nil, err
+		}
+	}
 	if err := s.apiKeyRepo.Update(ctx, apiKey, fields); err != nil {
 		return nil, fmt.Errorf("update api key: %w", err)
 	}

@@ -333,7 +333,11 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	durationMs := int(result.Duration.Milliseconds())
 	accountRateMultiplier := account.BillingRateMultiplier()
 	requestID := resolveUsageBillingRequestID(ctx, result.RequestID)
-	if result.OpenAIWSMode {
+	// [CUSTOM] 包号按服务端执行身份去重，客户端请求编号不能逃掉真实用量。
+	if apiKey.IsCustomDedicatedPrepaid() {
+		requestID = apiKey.CustomDedicatedUsageRequestID(result.RequestID)
+	}
+	if result.OpenAIWSMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号WS保留服务端租约＋轮次身份。
 		if upstreamRequestID := strings.TrimSpace(result.RequestID); upstreamRequestID != "" {
 			requestID = upstreamRequestID
 		}

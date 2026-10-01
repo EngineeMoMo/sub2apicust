@@ -39,6 +39,12 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-01 包号发布授权已收到（提交准备）**：用户明确“提交并推送代码，我发布更新”。本次发布包含免扣／共享限制以及其依赖的既有同批成员多组、移除成员、Key恢复复查、旧表单409／具体400诊断和相关三条主题样式，形成同版包号功能；更新脚本、假Docker回归及其shell CI接线继续留在工作区，本次不混入。远端main经git ls-remote核实仍f846b970c4，无远端新提交；新SHA的CI／安全／镜像结果推送后逐项取证，不能拿293c091结果替代。生产由用户备份后更新，代理不操作服务器。
+
+- **2026-10-01 包号免扣余额与防滥用开发完成（未发布）**：用户已明确“开始处理开发”，源码在原未提交包号专项基础上实现独立BillingType=2：服务端正向资格与请求私有准入凭证，余额0可用、客户实扣0、公共组原计费；两平台／WS保留Token和参考价，Key额度／窗口按参考量累加，余额DB／缓存／通知不扣不误报。迁移243新增策略、共享计数、可恢复租约和独立账本，参考账本与原去重／Key增量共事务；每次服务端执行独立计量，同次回调幂等，已准入请求跨期撤销不追扣，不把失败转成余额收费。后台“使用限制”默认共享并发2、RPM30、日0、2MiB、生图关，所有成员／关联专属组／Key共用；日0不设限，不是Token／美元预算，不自动IP封禁或退款。WS每轮重查权益／策略，控制帧仅生成与取消，session.update／重复type键不能旁路工具或实时音频；未适配异步／批量媒体付费入口拒绝。用户／管理员表格及导出区分包号实扣0和参考金额，详细边界见[计费实现](deploy/DEDICATED_BILLING_PLAN.md)第六节、接缝见CUSTOMIZATIONS最新节。
+- **本轮验证证据**：output/dedicated-billing-20261001。完整便携官方Go1.27.0归档SHA256与前轮官方元数据相同，宿主未安装Go；模块／编译／lint缓存均在output。真实独立Postgres随机schema测试、包号／WS定向81顶层＋82子场景成功；Linux全量go test -tags=unit ./...通过，最后原生控制帧／handler校验补丁再跑定向、golangci-lint v2.13 0 issues和embed成功；前端65定向及Makefile25文件372关键项、类型／相关lint／Vite构建通过。Windows全量首次路径／缺sh及Ollama时间精度失败，Linux初试只读ent和SDK代理环境错误修正后全量成功，没有修改无关业务。临时PG及Linux测试容器已清理，未替换8080或生产服务、未写业务DB、未调用收费模型。
+- **保留与未知**：开工30个并行文件中22个SHA256完全不变（含theme.css、包号service专项和更新脚本），另外8个仅增本轮接线／测试／说明，原功能保留。当前HEAD仍f846b970c4，本轮未提交／推送／部署；integration／新SHA CI／安全／GHCR、真实浏览器和业务客户端待验收，不能沿用293c091。没有生产请求／余额流水，不知道某笔线上扣款原因或是否已有滥用；历史补偿需另行逐笔核对。
+
 - **2026-10-01 修复版正式发布门禁全部成功（最新终态）**：功能提交`293c091b3ab0c8f187c031bed1955bb843939d40`已推origin/main，10个限定文件。对该SHA直接读取GitHub任务及job日志：[CI36842744777](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744777)、[Security36842744680](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744680)、[GHCR36842744656](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36842744656)均completed/success。CI Go lint为0 issues；Go unit／integration全部成功（含投稿handler解码与清理回归），前端类型／lint及310项核心测试成功；镜像日志确认`go build -tags embed`成功。govulncheck报告No vulnerabilities found，pnpm审计既有例外检查成功，仍有两项既有SheetJS high例外，未新增例外或关闭扫描。
 - **固定镜像已发布**：`ghcr.io/engineemomo/sub2apicust:sha-293c091`（linux/amd64），摘要`sha256:c517187b769f8b49f1fb29b1667277b745bb42deb5be05eabbf3f39e54274a06`；Build and push日志中manifest推送完成及containerimage.digest逐项确认。包含d84d60e截图修正／47图库及本轮Axios1.20.0、x/image0.45.0和清理检查，不用旧765e5a9／d84d60e失败门禁或更旧成功记录替代。备份Postgres、部署配置和app_data（含studio-submissions）后，用户在`/sub2api-deploy`执行`./update.sh sha-293c091`。本轮未代操作生产、8080、收费模型或真实账号配置；线上生图空框根因仍未取得真实Key／分组／models响应，源码诊断与模拟选择通过不等于现场恢复。
 - **发布证据与隔离**：`output/family-security-fix-20261001/ci-final.json`、各job完整日志、ghcr-image-proof.json及本地实际提交快照记录；本地Node106＋Vue538共644项、类型／源码lint／Vite构建通过。本机仅经官方归档SHA256核验的便携gofmt，Go编译与测试由上述新SHA CI验证。29个并行文件字节SHA256与开工快照相同、共享theme本轮未改；UPDATE_GUIDE只补本发布说明，原更新脚本章节保留并单独部分暂存。包号／更新脚本及CI接线未混入应用提交；收尾文档用skip-ci，不产生替代应用镜像。
@@ -284,6 +290,10 @@
 
 ## 五、待办 / 下一步
 
+- [x] **包号免扣余额源码与隔离验证**：按用户开发授权完成迁移243、正向准入、DB／缓存实扣0、独立参考计量、共享并发／RPM／日请求上限、WS控制帧防旁路、策略后台和用量报表。Linux全量unit、真实PG专项、Go lint／embed、372前端关键项／类型／lint／构建成功。默认2并发／30rpm／日0／2MiB／生图关，规则与实际局限见DEDICATED_BILLING_PLAN第六节。
+- [ ] **包号新版本发布与业务验收**：用户已授权提交推送，正在形成免扣与原同批成员多组／专项保护的完整提交，前后端＋243同版；取得新SHA的integration／CI／安全／GHCR，不沿用293c091。真实浏览器编辑策略、合法Claude／Codex／HTTP流式／WS客户端、0余额专属组及同用户公共组、同步生图启用与未适配入口拒绝待验收；没有合法账号不发收费请求。上线由用户备份后部署，日限额按实际档位调整；回滚旧计费版先暂停相关Key／账号。
+- [ ] **包号进一步运营约束与对账**：本版日上限是硬请求数，尚无输出Token硬限／美元预留／自动IP异常处置；按实际档位与兼容性决定是否增强。租约／账本保留供异步结算，观察增长后制定归档策略。历史已扣款只据请求与余额流水逐笔形成补偿清单，不自动全额退款、不把参考量当真实上游成本。
+
 - [x] **本轮安全修复授权已收到**：用户明确“修复好再发布”，前轮自动审批的授权阻塞已解除；Axios1.20.0安装执行完成、官方sumdb核对x/image0.45.0，投稿清理检查和解码回归已写。先前“等待授权”均属历史。
 - [x] **修复版新SHA发布门禁**：293c091b3已推，实际提交快照644项与类型／源码lint／构建通过；同一SHA的Go lint、embed编译、单测／集成、安全审计与GHCR均成功，固定标签sha-293c091及摘要已核实。详见第四节最新终态与ci-final.json，生产由用户备份后手动更新。
 
@@ -423,6 +433,7 @@
 - [x] **升级方式保持Docker + update.sh**：不采用App内在线更新，上游预编译二进制会覆盖定制；普通重启不会还原可写层，镜像重建才会，历史澄清保持有效。
 
 ## 六、文档地图
+- [deploy/DEDICATED_BILLING_PLAN.md](deploy/DEDICATED_BILLING_PLAN.md) — 包号免扣源码证据、已实施共享限制／计量、验证与局限（源码完成，未发布）。
 - [BRAND_IMPLEMENTATION.md](BRAND_IMPLEMENTATION.md) — **最新已批准设计的执行计划**：素材路径、色表、阶段顺序、代码接线、防坑、验收与新对话提示。
 - [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md) — **定制唯一权威清单**（新增文件 / 接线改动 / 行为修改 / 自检清单）。
 - [SYNC.md](SYNC.md) — 同步上游 + 构建镜像 + 部署 runbook + 4 条红线。

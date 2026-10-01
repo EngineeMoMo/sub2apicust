@@ -129,11 +129,12 @@ func QuotaPlatform(ctx context.Context, apiKey *APIKey) string {
 }
 
 func (p *postUsageBillingParams) shouldDeductAPIKeyQuota() bool {
-	return p.Cost.ActualCost > 0 && p.APIKey.Quota > 0 && p.APIKeyService != nil
+	// [CUSTOM] 包号实扣0仍按原始参考用量累计Key额度。
+	return p.customDedicatedMeterCost() > 0 && p.APIKey.Quota > 0 && p.APIKeyService != nil
 }
 
 func (p *postUsageBillingParams) shouldUpdateRateLimits() bool {
-	return p.Cost.ActualCost > 0 && p.APIKey.HasRateLimits() && p.APIKeyService != nil
+	return p.customDedicatedMeterCost() > 0 && p.APIKey.HasRateLimits() && p.APIKeyService != nil // [CUSTOM] 包号独立计量。
 }
 
 func (p *postUsageBillingParams) shouldUpdateAccountQuota() bool {
@@ -144,6 +145,10 @@ func (p *postUsageBillingParams) shouldUpdateAccountQuota() bool {
 // billing repo is unavailable (nil). Production uses applyUsageBilling → repo.Apply
 // for atomic billing. This path only runs in tests or degraded mode.
 func postUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *billingDeps) {
+	// [CUSTOM] 包号禁止进入无幂等账本的降级扣费路径。
+	if p.APIKey.IsCustomDedicatedPrepaid() {
+		return
+	}
 	billingCtx, cancel := detachedBillingContext(ctx)
 	defer cancel()
 
@@ -329,7 +334,15 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 	// user-specific) rate multiplier consumes subscription quota at the expected
 	// speed. TotalCost remains the raw (pre-multiplier) value; downstream guards
 	// on "> 0" still correctly skip free subscriptions (RateMultiplier == 0).
-	if p.IsSubscriptionBill && p.Subscription != nil && p.Cost.TotalCost > 0 {
+	// [CUSTOM] 包号只记录参考用量，数据库客户余额／订阅消费均为0。
+	if p.APIKey.IsCustomDedicatedPrepaid() {
+		grant := p.APIKey.customDedicatedBilling
+		cmd.BillingType = BillingTypeDedicated
+		cmd.DedicatedBindingID = grant.BindingID
+		cmd.DedicatedGroupID = grant.GroupID
+		cmd.DedicatedLeaseID = grant.LeaseID
+		cmd.DedicatedReferenceCost = p.Cost.TotalCost
+	} else if p.IsSubscriptionBill && p.Subscription != nil && p.Cost.TotalCost > 0 {
 		cmd.SubscriptionID = &p.Subscription.ID
 		cmd.SubscriptionCost = p.Cost.ActualCost
 	} else if p.Cost.ActualCost > 0 {
@@ -337,10 +350,10 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 	}
 
 	if p.shouldDeductAPIKeyQuota() {
-		cmd.APIKeyQuotaCost = p.Cost.ActualCost
+		cmd.APIKeyQuotaCost = p.customDedicatedMeterCost() // [CUSTOM] 包号免扣与Key限额分离。
 	}
 	if p.shouldUpdateRateLimits() {
-		cmd.APIKeyRateLimitCost = p.Cost.ActualCost
+		cmd.APIKeyRateLimitCost = p.customDedicatedMeterCost() // [CUSTOM] 包号计量不受免扣倍率影响。
 	}
 	if p.shouldUpdateAccountQuota() {
 		cmd.AccountQuotaCost = p.Cost.TotalCost * p.AccountRateMultiplier
@@ -354,9 +367,16 @@ func applyUsageBilling(ctx context.Context, requestID string, usageLog *UsageLog
 	if p == nil || deps == nil {
 		return false, nil
 	}
+	// [CUSTOM] 显式Key快照跨越worker上下文，核验实际账号后再生成免扣结算。
+	if err := prepareCustomDedicatedSettlement(p, usageLog); err != nil {
+		return false, err
+	}
 
 	cmd := buildUsageBillingCommand(requestID, usageLog, p)
 	if cmd == nil || cmd.RequestID == "" || repo == nil {
+		if p.APIKey.IsCustomDedicatedPrepaid() {
+			return false, ErrDedicatedAccess
+		} // [CUSTOM] 不把包号失败改扣余额。
 		if p.SimpleModeKeyRateLimitOnly {
 			return false, ErrSimpleModeKeyRateLimitBillingUnavailable
 		}
@@ -412,12 +432,12 @@ func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, de
 		if p.Cost.ActualCost > 0 && p.User != nil && p.APIKey != nil && p.APIKey.GroupID != nil {
 			deps.billingCacheService.QueueUpdateSubscriptionUsage(p.User.ID, *p.APIKey.GroupID, p.Cost.ActualCost)
 		}
-	} else if p.Cost.ActualCost > 0 && p.User != nil {
+	} else if !p.APIKey.IsCustomDedicatedPrepaid() && p.Cost.ActualCost > 0 && p.User != nil { // [CUSTOM] 包号不扣余额缓存。
 		syncBalanceCacheAfterDeduction(ctx, p, deps, result)
 	}
 
-	if p.Cost.ActualCost > 0 && p.APIKey != nil && p.APIKey.HasRateLimits() && deps.billingCacheService != nil {
-		deps.billingCacheService.QueueUpdateAPIKeyRateLimitUsage(p.APIKey.ID, p.Cost.ActualCost)
+	if p.customDedicatedMeterCost() > 0 && p.APIKey != nil && p.APIKey.HasRateLimits() && deps.billingCacheService != nil {
+		deps.billingCacheService.QueueUpdateAPIKeyRateLimitUsage(p.APIKey.ID, p.customDedicatedMeterCost()) // [CUSTOM] 实扣0仍更新限额缓存。
 	}
 
 	deps.deferredService.ScheduleLastUsedUpdate(p.Account.ID)
@@ -429,7 +449,7 @@ func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, de
 	//     限制在并发 in-flight 请求数量内（旧实现的异步入队会让超支无限累积直到 worker 处理）
 	//   - DB 异步(flusher_enabled=false):在独立 goroutine 中走 detached context,失败用 ALERT log 触发 oncall 对账
 	//   - flusher_enabled=true:不直写 DB,由 flusher 异步批量刷（markDirty 已在 IncrementUserPlatformQuotaUsage 内部完成）
-	if !p.IsSubscriptionBill && p.Platform != "" && p.Cost.ActualCost > 0 && p.User != nil && deps.userPlatformQuotaRepo != nil && deps.billingCacheService != nil {
+	if !p.IsSubscriptionBill && !p.APIKey.IsCustomDedicatedPrepaid() && p.Platform != "" && p.Cost.ActualCost > 0 && p.User != nil && deps.userPlatformQuotaRepo != nil && deps.billingCacheService != nil { // [CUSTOM] 包号计入独立账本。
 		if deps.billingCacheService.HasUserPlatformQuotaLimit(ctx, p.User.ID, p.Platform) {
 			deps.billingCacheService.IncrementUserPlatformQuotaUsage(p.User.ID, p.Platform, p.Cost.ActualCost)
 			if deps.cfg == nil || !deps.cfg.Database.UserPlatformQuotaFlusherEnabled {
@@ -489,7 +509,7 @@ func notifyBalanceLow(p *postUsageBillingParams, deps *billingDeps, result *Usag
 			slog.Error("panic in notifyBalanceLow", "recover", r)
 		}
 	}()
-	if p.IsSubscriptionBill || p.Cost.ActualCost <= 0 || p.User == nil || deps.balanceNotifyService == nil {
+	if p.IsSubscriptionBill || p.APIKey.IsCustomDedicatedPrepaid() || p.Cost.ActualCost <= 0 || p.User == nil || deps.balanceNotifyService == nil { // [CUSTOM] 包号不触发余额通知。
 		slog.Debug("notifyBalanceLow: skipped",
 			"is_subscription", p.IsSubscriptionBill,
 			"actual_cost", p.Cost.ActualCost,
@@ -1172,6 +1192,10 @@ func (s *GatewayService) buildRecordUsageLog(
 ) *UsageLog {
 	durationMs := int(result.Duration.Milliseconds())
 	requestID := resolveUsageBillingRequestID(ctx, result.RequestID)
+	// [CUSTOM] 仅包号使用服务端准入身份，保持普通请求既有幂等规则。
+	if apiKey.IsCustomDedicatedPrepaid() {
+		requestID = apiKey.CustomDedicatedUsageRequestID(result.RequestID)
+	}
 	sentModel := upstreamSentModel(result.Model, result.UpstreamModel)
 	if result.UpstreamResponseModelConflict {
 		slog.Warn("upstream_response_model_conflict",

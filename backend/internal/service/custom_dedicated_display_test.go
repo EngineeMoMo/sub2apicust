@@ -24,9 +24,13 @@ func TestCustomDedicatedAdminNames(t *testing.T) {
 		AddRow(1, 11, 22, 33, "包号", now, nil, now, "用户甲", "Claude 账号", "专属组", "anthropic", `[{"id":11,"name":"用户甲"},{"id":12,"name":"用户乙"}]`).
 		AddRow(2, 12, 23, 34, "已删除关联", now, nil, now, "", "", "", "", `[{"id":12,"name":""}]`)
 	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAdminListSQL)).WithArgs(50).WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedHealthSQL)).WillReturnRows(sqlmock.NewRows([]string{"structure", "membership"}).AddRow(true, true))
+	mock.ExpectQuery(regexp.QuoteMeta(customDedicatedHealthSQL)).WillReturnRows(sqlmock.NewRows([]string{"structure", "membership"}).AddRow(false, false))
 	views, err := service.AdminList(context.Background(), 2)
 	require.NoError(t, err)
 	require.Len(t, views, 2)
+	require.Equal(t, "valid", views[0].ConfigStatus)
+	require.Equal(t, "invalid_structure", views[1].ConfigStatus)
 	require.Equal(t, "用户甲", views[0].UserName)
 	require.Equal(t, []int64{11, 12}, views[0].UserIDs)
 	require.Equal(t, "用户乙", views[0].Users[1].Name)

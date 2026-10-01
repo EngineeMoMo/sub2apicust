@@ -1,5 +1,38 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-01 包号独立免扣与共享限制（源码完成，未发布）
+
+用户已授权“开始处理开发”及“提交并推送代码，我发布更新”。本节覆盖首版包号仍扣余额的历史边界，发布同时包含既有同批成员多专属组、移除成员、历史隔离、Key恢复、旧表单保护及所需三条主题样式；运行细则见deploy/DEDICATED_BILLING_PLAN.md第六节。记录时处于提交准备，新SHA门禁须推送后核验，前后端和迁移243需同版，生产由用户更新。更新脚本专项继续保留未提交。
+
+新增文件集中在custom：service/custom_dedicated_billing.go与custom_dedicated_admission.go、repository/custom_dedicated_billing.go、middleware/custom_dedicated_billing.go、迁移243；测试包含私有凭证、独立计量、缓存不扣、两平台／WS记录、真实PG准入／结算／认证以及fixture。前端新增custom/components/DedicatedBillingPolicy.vue及其回归，原自有管理页／API／文案接独立策略表单，无新依赖，本轮未改theme.css。策略GET／PUT沿用管理员认证／审计，updated_at防冲突；并发2、RPM30、日上限0、2MiB、生图关闭是首版默认，并非按Token或美元的硬预算。
+
+所有新增上游接缝均标[CUSTOM]，逐处如下；同步后必须保留相应行为并运行包号／WS和普通计费回归：
+
+| 上游文件 | 原行为与本轮改动 | 同步后的验证 |
+| --- | --- | --- |
+| backend/internal/service/api_key.go | 增加不序列化的请求私有准入凭证，只有服务端认证副本带权益，不能写共享缓存 | 无绑定／伪造身份不免费；原缓存Key字节身份不变 |
+| backend/internal/server/middleware/api_key_auth.go | 正向解析权益、复制Key，只对有效包号跳余额条件；认证完进入共享准入 | 零余额包号进入handler；公共组仍需余额，Key状态／到期／配额仍拦截 |
+| backend/internal/service/billing_cache_service.go | 包号跳余额及普通user×platform消费预检，保留Key窗口／RPM等 | 有效包号零余额通过；普通请求余额／平台额度仍原行为 |
+| backend/internal/service/gateway_usage_billing.go | 两平台共用免扣结算与原事务；Key增量改用独立参考量；包号拒旧兜底、不减余额缓存／不发低余额通知，Claude执行ID来自准入 | DB与缓存实扣0，Key窗口增量非0；错误不转余额；实际账号与准入一致；跨期不追扣 |
+| backend/internal/service/openai_gateway_usage.go | OpenAI执行ID由服务端准入生成，WS轮次哈希不再被原上游ID逻辑覆盖 | 同次回调幂等；不同HTTP执行／WS轮次分别计量，客户重复编号不吞真实用量 |
+| backend/internal/service/usage_billing.go | 命令增加权益归属／租约／参考量，包号独立指纹与金额量化，普通指纹保持原算法 | 普通历史请求去重不变，包号不同归属冲突，参考金额规范8位 |
+| backend/internal/repository/usage_billing_repo.go | 原去重事务内验证准入租约，写独立包号账本，再执行Key增量；包号BalanceCost／SubscriptionCost必须0 | 伪造／错误账号拒绝；账本失败全部回滚；12并发同回调只写一次 |
+| backend/internal/handler/openai_gateway_handler.go | 包号WS每个response.create含首轮共享准入；控制帧钩子只允许已适配生成／取消 | 到期撤销／限额阻止新轮；session.update与重复type键不能藏生图或实时音频 |
+| backend/internal/service/openai_ws_forwarder.go | Hooks新增包号专用控制帧校验 | 普通连接钩子为空／校验nil不改变原行为 |
+| backend/internal/service/openai_ws_v2_passthrough_adapter.go | 后续透传帧在发送前调用包号控制帧钩子 | 中途session.update不能绕逐轮生图／次数保护，普通WS仍能使用 |
+| backend/internal/service/openai_ws_forwarder_ingress.go | 原生Ingress读取后续帧也接同一控制帧钩子 | 两种Ingress包号边界一致，原普通连接回归通过 |
+| backend/internal/handler/gateway_key_billing.go | 倍率自省增加可选dedicated_prepaid，客户有效倍率0；不改原配置参考倍率 | 包号／普通倍率显示准确，原字段保持兼容 |
+| backend/internal/server/routes/admin.go | 专用GET／PUT billing-policy接原管理员路由 | 普通用户无权写，缺失绑定404，冲突409，非法数值400 |
+| frontend/src/components/admin/usage/UsageTable.vue | 成本列标包号实扣0，Token／原始金额保持，用户页复用此表；其.spec.ts增加金额回归 | 类型2显示实扣0／参考金额非0；普通成本保持 |
+| frontend/src/components/admin/usage/UsageFilters.vue | 新增类型2筛选 | 可筛选包号，不混普通余额／订阅 |
+| frontend/src/views/user/UsageView.vue | 类型2筛选，CSV新增计费类型 | 包号CSV实扣0，参考金额另列，普通字段同原口径 |
+| frontend/src/views/admin/UsageView.vue | Excel新增计费类型 | 包号类型与实扣0可辨认，原成本明细不丢 |
+| frontend/src/i18n/locales/zh/admin/resources.ts、en/admin/resources.ts | 包号计费筛选／标识中英文 | i18n键完整，金额与标签一致 |
+| .github/workflows/backend-ci.yml | Unit job增加独立Postgres服务与DEDICATED_TEST_POSTGRES_DSN，使真实包号测试在CI实际执行 | PG专项不能只skip，服务为空库；shell更新脚本接线仅留工作区，本次不提交 |
+| Makefile | 前端关键Vitest列表加入包号策略／管理／配置及UsageTable | 本轮25文件372项通过，新CI包含这些回归 |
+
+验证：便携官方Go1.27.0与现有Linux Go测试镜像；真实空白PG随机schema，包号／WS定向81顶层测试＋82子场景成功；Linux全量unit通过，最终控制帧补丁后重跑定向、Go lint0 issues及embed构建；前端372关键回归、类型／相关lint／Vite构建通过。Windows全量第一次遇到路径／sh和Ollama时间精度失败，Linux初试只读ent与SDK代理问题已修正测试环境后重跑成功，未改这些无关业务源码。证据在output/dedicated-billing-20261001；新SHA的integration／CI／安全／GHCR、真实浏览器及收费账号仍待。22个原并行文件SHA256与开工快照一致，其余8个仅在原改动上新增本轮功能。
+
 ## 2026-10-01 用户授权发布门禁修复（已发布）
 
 - 功能293c091b3ab0c8f187c031bed1955bb843939d40已推origin/main，限定10文件；同一SHA的CI36842744777（Go lint、unit／integration、前端／shell／release）、Security36842744680、GHCR36842744656均success。镜像实际embed编译／推送成功，固定sha-293c091、摘要c517187b769f8b49f1fb29b1667277b745bb42deb5be05eabbf3f39e54274a06；完整链接、证据与手动更新说明见HANDOFF及deploy/UPDATE_GUIDE。源码包含上一轮47图／滚动／导航与目录诊断，真实账号的线上模型列表仍待验收，生产未操作。
