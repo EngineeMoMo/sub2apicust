@@ -4,7 +4,7 @@
 
 仅修改自有product-samples/magic-recipes/site/{model-ui.js,template.html,theme.css,ui.test.cjs}，无新增上游接缝、依赖或CSP例外。旧生成图片链接直接target=_blank打开data地址；现在每张图有页内预览按钮，以原生dialog和img展示原图，PNG／JPEG／WebP Base64链接仅用于download。远程HTTPS图沿原安全筛选、referrerpolicy=no-referrer，在dialog预览，提示长按或右键保存；不伪造跨域下载或追加收费请求。Esc／关闭回焦点、Tab循环，多图序号和MIME扩展名对应，材料／配方／连接／等待重置及pagehide清源。同步后不得恢复data新窗口跳转；母站frontend/src/custom/theme.css未改，产品新增预览布局复用既有配色。
 
-61配方＋3打包、类型和生产构建通过；旧构建在新回归失败，本机已有Logo夹具在独立及外置CSP的同源iframe实际解码512×512，桌面浅色／390深色无横溢出。下载事件超时，文件落地及真实线上生成未知；证据output/recipes-image-open-20261001，发布门禁和镜像以HANDOFF最新终态为准。没有重建本机Docker或部署生产。
+61配方＋3打包、类型和生产构建通过；旧构建在新回归失败，本机已有Logo夹具在独立及外置CSP的同源iframe实际解码512×512，桌面浅色／390深色无横溢出。下载事件超时，文件落地及真实线上生成未知；证据output/recipes-image-open-20261001。2026-10-02功能4bf1436fb同SHA CI／安全／GHCR全部成功，固定镜像sha-4bf1436及摘要见HANDOFF终态，含上一版包号免扣。没有重建本机Docker或部署生产。
 
 ## 2026-10-01 包号独立免扣与共享限制（已推送，门禁全绿）
 

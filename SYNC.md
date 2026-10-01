@@ -1,6 +1,6 @@
 # 同步上游 & 构建部署 Runbook
 
-2026-10-01配方图片打开修复：同步保留自有site的dialog原图按钮、Base64下载入口与材料／连接失效清理；不要恢复data地址的新窗口链接。运行配方四组Node测试和build-products.test.mjs，并检查独立及同源内嵌页的打开／Esc／窄屏。此轮无新上游接缝或CSP变更，新镜像以HANDOFF最新门禁记录为准，生产由用户备份更新。
+2026-10-02配方图片打开修复已发布：功能4bf1436fb同SHA CI／安全／GHCR全绿，固定镜像sha-4bf1436，摘要见HANDOFF，含上一版包号免扣。同步保留自有site的dialog原图按钮、Base64下载入口与材料／连接失效清理；不要恢复data地址的新窗口链接。运行配方四组Node测试和build-products.test.mjs，并检查独立及同源内嵌页的打开／Esc／窄屏。此轮无新上游接缝或CSP变更，生产由用户备份更新。
 
 2026-10-01包号免扣版已发布：功能acd73d716的CI（unit／integration、真实PG、lint、前端372项）、安全与GHCR全绿，使用固定镜像sha-acd73d7，详见[更新手册](deploy/UPDATE_GUIDE.md)。同步上游须保留迁移243、私有准入凭证、独立参考计量、共享限制与WS帧保护，并实际执行带DEDICATED_TEST_POSTGRES_DSN的PG回归；普通计费与已有多人多组隔离一并验。生产由用户备份后更新，更新脚本专项仍未提交，不用纯文档提交SHA猜镜像。
 

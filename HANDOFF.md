@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-01（Asia/Shanghai）。
+> 最后更新：2026-10-02（Asia/Shanghai）。
 
 ---
 
@@ -39,8 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **2026-10-01 配方“打开图片”空跳转修复（提交准备）**：用户报告生图已显示但打开图片1为空；读model.cjs／model-ui.js确认旧按钮将同一Base64 data地址作为新窗口href，本机旧版点击被浏览器测试安全策略阻止。未取得用户现场href／控制台，不能断言截图的线上根因。改为原生dialog页内原图预览，Base64 PNG／JPEG／WebP提供下载入口；远程图用原地址预览并提示长按／右键保存，错误可见。关闭／Esc恢复焦点，Tab循环；修改材料、重跑、换配方／连接和退出清预览，不放宽CSP、不新增依赖或收费请求。
-- **本轮验证与范围**：61项配方及3项打包测试、类型／Vite生产构建成功，新回归对旧构建确实失败；本机真实浏览器独立与生产外置资源同源iframe均显示已有Logo512×512夹具，Esc／关闭／390深色无横溢出，控制台无warn/error。下载完成事件超时，实际文件落地未验证；不把本机模型mock／宿主夹具当真实账号或线上恢复。证据output/recipes-image-open-20261001和本线程recipes-image-open截图。沿此前“提交并推送，我发布更新”授权限定发布，自有配方4文件及交接；更新脚本专项5文件原字节保留，8080和生产未改，新SHA门禁待推送后取证。
+- **2026-10-02 配方“打开图片”修复正式发布（最新终态）**：功能4bf1436fb8ecae0c0780c3b741e26cefba9dd170已推origin/main，11个限定文件，push与ls-remote核实；同SHA的[CI36887283643](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283643)、[Security36887283348](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283348)、[GHCR36887283175](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283175)均completed/success。Go unit／integration、lint0 issues、前端类型／lint及25文件372项通过；镜像embed编译成功，govulncheck未发现漏洞，前端审计既有例外通过。旧data新窗口href改原生dialog页内原图，Base64 PNG／JPEG／WebP提供下载入口；远程图原地址预览、保存提示和错误提示。关闭／Esc回焦点、Tab循环，材料／配方／连接变化或退出清预览，无CSP放宽、依赖或收费请求。
+- **本轮验证与范围**：61项配方及3项打包测试、类型／Vite生产构建成功，新回归对旧构建确实失败；本机真实浏览器独立与生产外置资源同源iframe均显示已有Logo512×512夹具，Esc／关闭／390深色无横溢出。独立控制台warn/error空；内嵌记录一条MutationObserver.observe参数错误且无来源栈，配方／共享运行时／宿主夹具无该调用，来源未知，不把控制台标全空。下载完成事件超时，实际文件落地未验证；未取得用户现场href／控制台，不知道截图的线上根因，不把本机模型mock／宿主夹具当真实账号或线上恢复。证据output/recipes-image-open-20261001/{ci-final,ghcr-image-proof,browser-standalone,browser-embedded,guide-preservation}.json、完整job日志和本线程recipes-image-open截图。沿此前“提交并推送，我发布更新”授权限定发布；更新脚本4文件字节SHA256等于基准，UPDATE_GUIDE去掉新增发布段后的SHA256也等于基准，原旧镜像清理节仍仅工作区。临时4178／4180服务与测试标签页已清理，8080和生产未改。
+- **本次实际固定镜像**：ghcr.io/engineemomo/sub2apicust:sha-4bf1436，linux/amd64，摘要sha256:038e95a020dc71a5615c02cec490a9a92cf8172242686977051b9686cdeae87e，版本0.2.8-custom.4bf1436fb；成功job的manifest推送、containerimage.digest及revision逐项核实。包含上一版包号免扣与迁移243，acd73d7不含本次配方修复。用户备份Postgres、部署配置与app_data（含studio-submissions）后执行./update.sh sha-4bf1436；刷新配方检查真实已返回图片的打开／关闭／手机／原图保存，无需为验证打开功能额外发模型请求。后续仅交接文档用skip-ci，不能拿文档SHA猜新镜像。
 
 - **2026-10-01 包号正式发布门禁全绿（本轮终态）**：功能acd73d716daa6a8e728a36fca5dce5fd523ae3f6已推origin/main，65个包号及依赖文件；直接读取同SHA的[CI36873854705](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854705)、[Security36873854536](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854536)、[GHCR36873854627](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36873854627)，均completed/success。Go unit／integration全量、独立PG准入／计量／认证、Go lint0 issues、前端类型与372项关键回归均成功；镜像日志确认embed构建成功，govulncheck No vulnerabilities found，前端Audit exceptions validated，既有两项SheetJS high例外未扩。
 - **本次实际固定镜像**：ghcr.io/engineemomo/sub2apicust:sha-acd73d7，linux/amd64，摘要sha256:b41acdce7446e1b7bca618e16e6f6dbdab5b13fd30732760247063deb576bfa7；成功任务的manifest推送、containerimage.digest和revision=acd73d716逐项核实，版本0.2.8-custom.acd73d716。用户备份Postgres、部署配置、app_data（含studio-submissions）后，在/sub2api-deploy执行./update.sh sha-acd73d7，迁移243随启动执行；更新后验0余额专属组实扣0、公共组原计费、共享策略、到期撤销及真实客户端。默认日上限0不限、生图关闭、WS仅生成与取消；严格Token／美元预算、IP异常和归档仍未实现。
@@ -300,7 +301,8 @@
 ## 五、待办 / 下一步
 
 - [x] **配方打开原图源码及本机验证**：data新窗口链接改页内dialog，61项配方＋3项打包、类型／生产构建及独立／内嵌真实浏览器通过，细节见第四节。
-- [ ] **配方打开原图发布与现场验收**：限定提交推送后核实同SHA CI／安全／GHCR，用户备份更新固定镜像；用真实生图结果点打开图片1／多图、手机关闭和原图保存。现场响应／href及下载落地仍未取证；不代部署生产。
+- [x] **配方打开原图发布门禁**：4bf1436fb已推，实际同SHA CI／安全／GHCR全成功，固定镜像sha-4bf1436与摘要已由成功job核实，详见第四节终态。
+- [ ] **配方打开原图现场验收**：用户备份后更新sha-4bf1436、刷新配方；用真实生图结果点打开图片1／多图、手机关闭和原图保存。现场响应／href及下载落地仍未取证；内嵌夹具MutationObserver错误来源未知，若现场出现再取栈，不代部署生产。
 
 - [x] **包号免扣余额源码与隔离验证**：按用户开发授权完成迁移243、正向准入、DB／缓存实扣0、独立参考计量、共享并发／RPM／日请求上限、WS控制帧防旁路、策略后台和用量报表。Linux全量unit、真实PG专项、Go lint／embed、372前端关键项／类型／lint／构建成功。默认2并发／30rpm／日0／2MiB／生图关，规则与实际局限见DEDICATED_BILLING_PLAN第六节。
 - [x] **包号新版本提交与发布门禁**：acd73d716已推origin/main，65文件；同SHA的CI（含unit／integration）、安全与GHCR全部success，固定镜像sha-acd73d7及摘要从成功job日志核实，详见第四节本轮终态。前后端＋243同版，旧293c091不含免扣。

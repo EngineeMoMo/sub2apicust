@@ -1,10 +1,19 @@
 # 日常更新操作手册（定制版 sub2api）
 
-## 2026-10-01 配方打开原图修复（发布准备）
+## 2026-10-02 配方打开原图修复（最新可更新版本）
 
-生成后的“打开图片”改为页内原图弹窗，避免把Base64 data地址交给新窗口；带关闭／Esc和手机完整预览，Base64提供下载原图入口，远程图可长按或右键保存。仅自有配方静态资源与交接，不改计费或新增迁移；含上一版包号免扣和迁移243。61项配方＋3项打包、类型／生产构建与独立／同源iframe夹具通过，下载文件落地和真实线上结果仍待用户验收。新SHA CI／安全／镜像发布后以HANDOFF终态的固定标签更新，不能使用下方旧标签认为包含本修复；更新脚本专项未纳入。
+功能4bf1436fb8ecae0c0780c3b741e26cefba9dd170已推origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283643)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283348)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283175)全部success；Go unit／integration、lint0、前端类型／lint和372项回归通过，镜像embed编译完成。实际固定镜像ghcr.io/engineemomo/sub2apicust:sha-4bf1436（linux/amd64），摘要sha256:038e95a020dc71a5615c02cec490a9a92cf8172242686977051b9686cdeae87e，经manifest推送与containerimage.digest核实。
 
-用户先备份Postgres、部署配置和app_data（含studio-submissions），记录旧镜像，再按本轮已确认成功的固定标签更新。更新后刷新配方并用真实已生成图片检查打开图片1、多图序号、手机关闭与原图保存；无需为了测试重新请求模型。代理未操作8080或生产。
+生成后的“打开图片”改页内原图弹窗，带关闭／Esc和手机完整预览；Base64提供下载入口，远程图可长按或右键保存。仅自有配方静态资源与交接，不新增迁移；含上一版包号免扣和迁移243，旧acd73d7不含本次图片修复。61项配方＋3项打包、类型／生产构建与独立／同源iframe夹具通过；下载落地、真实线上根因与结果仍待验收，内嵌测试的一条MutationObserver错误来源未知。更新脚本专项未纳入，代理未操作8080或生产。
+
+用户先备份Postgres、部署配置和app_data（含studio-submissions），记录旧镜像，再执行：
+
+```bash
+cd /sub2api-deploy
+./update.sh sha-4bf1436
+```
+
+更新后刷新配方，用真实已生成图片检查打开图片1、多图序号、手机关闭与原图保存；无需为了验证打开功能重新请求模型。包号策略与计费验收仍按下节执行。
 
 ## 2026-10-01 包号免扣与共享限制（最新可更新版本）
 
