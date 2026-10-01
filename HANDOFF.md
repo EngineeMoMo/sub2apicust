@@ -39,6 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-01 截图修正版已推送（最新发布状态，仍待门禁）**：功能提交`d84d60e07d9abb776f8d2dd8b0e8bdef60dc9f7e`已推origin/main，git push日志与ls-remote确认一致；65文件，47图及本轮滚动／SynaRoute／下拉诊断修正。实际发布源码Node106＋Vue538共644项、类型／源码lint／Vite构建通过；源码lint排除仅由builder生成且gitignored的public/recipes、public/studio副本，保留首轮格式失败日志。29个并行文件SHA256全部不变；共享theme撤去本轮三条新规则、恢复hint后的字节SHA256仍等于开工快照，证明原并行三条规则保留。
+- **本SHA的CI已启动，不能沿用旧SHA或宣称可更新**：[CI36836909715](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909715)、[Security36836909442](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909442)、[GHCR36836909685](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909685)当前均in_progress。`sha-d84d60e`只是预期固定标签，未确认构建发布成功或摘要，不给update.sh指令。已知依赖／Go lint阻塞仍未处理：安全依赖安装被自动审批拒绝，等待用户明确授权；收到答复后再处理并发新功能SHA，核对其CI／安全／镜像，不能直接更新当前公开站点。证据output/studio-refinement-release-20261001，未更新8080、调用收费模型或部署生产。
+
 - **2026-10-01 用户授权本轮提交推送（发布准备）**：用户要求修好后推送以便手动更新。已限定暂存65个界面／素材文件，导出实际index源码快照；Node106＋Vue538共644项、类型／Vite构建通过。完整lint首次扫到构建后的gitignored运行副本7项旧静态格式错误，随后按干净CI源码范围排除public/recipes、public/studio重查，结果以`output/studio-refinement-release-20261001/lint-source.log`终态为准。包号与更新脚本继续排除，共享theme只暂存本轮产品段落。旧765e5a9的单测／集成现已由GitHub job API核实success，Go lint及安全扫描failure仍有效。
 - **发布仍有明确阻塞**：官方公告／npm与Go模块目录确认Axios修复版1.20.0、x/image0.45.0；投稿handler八处未检查清理错误也已由失败日志定位。尝试安装Axios修复版时自动审批拒绝，理由是安全依赖升级超出当前授权；安装未执行、依赖及锁文件未改。已异步请求明确授权这两项依赖升级及清理检查修复，答复前不处理依赖，不把界面成功与可构建镜像当安全发布通过。取证在`output/studio-refinement-release-20261001`及旧SHA真实任务；本轮功能提交／推送及新CI状态待下续记录，不代部署生产。
 
@@ -272,6 +275,9 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] **截图修正版提交推送**：`d84d60e`已在origin/main，限定65文件与实际发布源码644项验证；并行包号、更新脚本和CI接线未提交。
+- [ ] **本轮发布阻塞需答复**：已请求授权Axios1.20.0、x/image0.45.0及投稿handler八处清理错误检查修复；Axios安装因自动审批认定超出当前授权而未执行，不绕过。用户答复前只完成界面／图库提交；新SHA三项任务尚在运行，仍不能给安全更新结论。后续按实际终态更新本节并等待新修复SHA门禁，生产由用户自行备份更新。
 
 - [x] **本轮截图所指源码修正**：滚动吸顶栏、SynaRoute选中态、首页提示文案、两图撤下、五类各两张新图与首页人像入库已完成；186项回归、类型／lint／构建与浏览器证据在`output/studio-refinement-20261001`。最新47图优先于下方历史数量，剩余素材由用户自行添加与审核。
 - [ ] **线上生图目录真实取证**：同一登录账号确认API密钥页是否有启用、未过期、额度可用且绑定启用分组的密钥；若文字有而生图无，核对分组生图权限；若有可用密钥却无模型，取所选密钥`/v1/models`响应／状态码（不发送密钥明文）。当前仅模拟目录流程通过，不能标线上问题已解决。本轮新源码尚未提交发布，需后续明确授权，并处理既有765e5a9门禁后再核对新SHA的CI／镜像；不代部署生产。
