@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **本轮安全扫描终态（覆盖下条刚启动状态）**：`d84d60e`的Security36836909442已completed/failure，直接读取frontend-security110286404922及backend-security110286405220日志确认：Axios七项high仍在，x/image0.41.0仍有GO-2026-6222／5061／4961可达漏洞，最高修复版0.45.0。本轮不是安全发布成功，镜像即使成功也先不更新公开站点；CI／GHCR取证时仍in_progress。代码已按用户授权推送，安全修复因自动审批拒绝正在等待用户明确答复。证据output/studio-refinement-release-20261001/security-confirmed.json与ci-status.json，后续文档skip-ci不生成替代应用镜像。
+
 - **2026-10-01 截图修正版已推送（最新发布状态，仍待门禁）**：功能提交`d84d60e07d9abb776f8d2dd8b0e8bdef60dc9f7e`已推origin/main，git push日志与ls-remote确认一致；65文件，47图及本轮滚动／SynaRoute／下拉诊断修正。实际发布源码Node106＋Vue538共644项、类型／源码lint／Vite构建通过；源码lint排除仅由builder生成且gitignored的public/recipes、public/studio副本，保留首轮格式失败日志。29个并行文件SHA256全部不变；共享theme撤去本轮三条新规则、恢复hint后的字节SHA256仍等于开工快照，证明原并行三条规则保留。
 - **本SHA的CI已启动，不能沿用旧SHA或宣称可更新**：[CI36836909715](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909715)、[Security36836909442](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909442)、[GHCR36836909685](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36836909685)当前均in_progress。`sha-d84d60e`只是预期固定标签，未确认构建发布成功或摘要，不给update.sh指令。已知依赖／Go lint阻塞仍未处理：安全依赖安装被自动审批拒绝，等待用户明确授权；收到答复后再处理并发新功能SHA，核对其CI／安全／镜像，不能直接更新当前公开站点。证据output/studio-refinement-release-20261001，未更新8080、调用收费模型或部署生产。
 

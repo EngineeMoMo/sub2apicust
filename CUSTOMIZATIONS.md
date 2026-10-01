@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+- **截图修正版安全扫描最新终态**：d84d60e的Security36836909442已failure；新任务两个job日志确认Axios七项high与x/image三个WebP／VP8L漏洞仍在，CI／GHCR仍运行时取证，不把已推送或镜像存在当安全通过。安全依赖安装被自动审批拒绝，未执行，等待用户明确授权；本轮代码推送完成，生产未改，见HANDOFF与output/studio-refinement-release-20261001。
+
 ## 2026-10-01 截图修正版已推送（最新状态）
 
 - 功能`d84d60e07d9abb776f8d2dd8b0e8bdef60dc9f7e`已推origin/main，65文件；实际源码644项、类型／源码lint／Vite构建通过。29个并行文件SHA256未变，共享theme原并行规则按还原本轮新增规则后的精确SHA256确认保留。范围与证据见output/studio-refinement-release-20261001。
