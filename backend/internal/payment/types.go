@@ -2,7 +2,10 @@
 // registry, load balancing, and shared utilities for the payment subsystem.
 package payment
 
-import "context"
+import (
+	"context"
+	"time" // [CUSTOM] 电脑端 WAP 支付使用订单的绝对截止时间。
+)
 
 // PaymentType represents a supported payment method.
 type PaymentType = string
@@ -111,7 +114,10 @@ type CreatePaymentRequest struct {
 	// AlipayMobilePrecreate routes a mobile Alipay request through
 	// alipay.trade.precreate instead of alipay.trade.wap.pay.
 	AlipayMobilePrecreate bool
-	InstanceSubMethods    string // Comma-separated sub-methods from instance supported_types (for Stripe)
+	// [CUSTOM] 服务端配置决定的电脑端 WAP 模式，不由客户端指定。
+	AlipayDesktopWapQRCode bool
+	ExpiresAt              time.Time
+	InstanceSubMethods     string // Comma-separated sub-methods from instance supported_types (for Stripe)
 }
 
 // CreatePaymentResultType describes the shape of the create-payment result.

@@ -109,7 +109,12 @@ func (s *PaymentService) confirmPayment(ctx context.Context, oid int64, tradeNo 
 		})
 		return fmt.Errorf("invalid paid amount from provider: %v", paid)
 	}
-	if math.Abs(paid-o.PayAmount) > paymentAmountToleranceForCurrency(PaymentOrderCurrency(o)) {
+	amountMatches := math.Abs(paid-o.PayAmount) <= paymentAmountToleranceForCurrency(PaymentOrderCurrency(o))
+	// [CUSTOM] 官方支付宝必须精确匹配网关金额，拒绝一分钱误差。
+	if strings.EqualFold(strings.TrimSpace(pk), payment.TypeAlipay) {
+		amountMatches = customAlipayAmountsMatch(paid, o.PayAmount)
+	}
+	if !amountMatches {
 		s.writeAuditLog(ctx, o.ID, "PAYMENT_AMOUNT_MISMATCH", pk, map[string]any{"expected": o.PayAmount, "paid": paid, "tradeNo": tradeNo})
 		return fmt.Errorf("amount mismatch: expected %s, got %s", strconv.FormatFloat(o.PayAmount, 'f', -1, 64), strconv.FormatFloat(paid, 'f', -1, 64))
 	}

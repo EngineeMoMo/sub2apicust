@@ -681,6 +681,8 @@ export interface SystemSettings {
   payment_cancel_rate_limit_unit: string;
   payment_cancel_rate_limit_window_mode: string;
   payment_alipay_force_qrcode?: boolean;
+  /** [CUSTOM] 仅电脑端官方支付宝使用 WAP 扫码。 */
+  payment_alipay_desktop_wap_qrcode?: boolean;
   payment_alipay_mobile_precreate_deep_link?: boolean;
   payment_visible_method_alipay_source?: string;
   payment_visible_method_wxpay_source?: string;
@@ -1002,6 +1004,8 @@ export interface UpdateSettingsRequest {
   payment_cancel_rate_limit_unit?: string;
   payment_cancel_rate_limit_window_mode?: string;
   payment_alipay_force_qrcode?: boolean;
+  /** [CUSTOM] 省略时保留当前设置。 */
+  payment_alipay_desktop_wap_qrcode?: boolean;
   payment_alipay_mobile_precreate_deep_link?: boolean;
   payment_visible_method_alipay_source?: string;
   payment_visible_method_wxpay_source?: string;

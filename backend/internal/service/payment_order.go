@@ -93,6 +93,12 @@ func (s *PaymentService) CreateOrder(ctx context.Context, req CreateOrderRequest
 	if err := validateSelectedCreateOrderAmountCurrency(payAmountStr, sel); err != nil {
 		return nil, err
 	}
+	// [CUSTOM] 在创建订单和签名前拒绝站外／不安全扫码地址，不信任 Referer。
+	if shouldUseAlipayDesktopWapQRCode(req, cfg, sel) {
+		if _, err := s.canonicalAlipayDesktopWapReturnURL(ctx, req); err != nil {
+			return nil, err
+		}
+	}
 	oauthResp, err := s.maybeBuildWeChatOAuthRequiredResponseForSelection(ctx, req, limitAmount, payAmount, feeRate, sel)
 	if err != nil {
 		return nil, err
@@ -171,6 +177,12 @@ func (s *PaymentService) createOrderInTx(ctx context.Context, req CreateOrderReq
 		return nil, err
 	}
 	providerSnapshot := buildPaymentOrderProviderSnapshot(sel, req)
+	// [CUSTOM] 电脑端 WAP 模式随订单冻结，开关变动不改变已生成的二维码。
+	if shouldUseAlipayDesktopWapQRCode(req, cfg, sel) {
+		exp = exp.Truncate(time.Minute)
+		providerSnapshot[customAlipayDesktopWapSnapshotKey] = true
+		providerSnapshot["payment_mode"] = "qrcode"
+	}
 	selectedInstanceID := ""
 	selectedProviderKey := ""
 	if sel != nil {
@@ -416,6 +428,10 @@ func (s *PaymentService) invokeProvider(ctx context.Context, order *dbent.Paymen
 	subject := s.buildPaymentSubject(plan, limitAmount, cfg, sel)
 	outTradeNo := order.OutTradeNo
 	canonicalReturnURL, err := CanonicalizeReturnURL(req.ReturnURL, req.SrcHost, req.SrcURL)
+	// [CUSTOM] 桌面二维码仅使用可信本站地址，旧手机／其他通道规则不变。
+	if shouldUseAlipayDesktopWapQRCode(req, cfg, sel) {
+		canonicalReturnURL, err = s.canonicalAlipayDesktopWapReturnURL(ctx, req)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +463,11 @@ func (s *PaymentService) invokeProvider(ctx context.Context, order *dbent.Paymen
 		ReturnURL:   providerReturnURL,
 	}, sel, outTradeNo, payAmountStr, subject)
 	providerReq.AlipayMobilePrecreate = shouldUseAlipayMobilePrecreate(req, cfg, sel)
+	// [CUSTOM] 服务端决定桌面 WAP，手机请求仍走原路由。
+	providerReq.AlipayDesktopWapQRCode = shouldUseAlipayDesktopWapQRCode(req, cfg, sel)
+	if providerReq.AlipayDesktopWapQRCode {
+		providerReq.ExpiresAt = order.ExpiresAt
+	}
 	finishProviderCall := servertiming.ObserveDependency(ctx, "payment")
 	pr, err := prov.CreatePayment(ctx, providerReq)
 	finishProviderCall()
@@ -458,6 +479,12 @@ func (s *PaymentService) invokeProvider(ctx context.Context, order *dbent.Paymen
 		return nil, classifyCreatePaymentError(req, sel.ProviderKey, err)
 	}
 	sanitizeCreatePaymentResponseDetails(pr)
+	// [CUSTOM] 长签名 URL 保存在订单内，二维码只编码本站随机令牌短入口。
+	if providerReq.AlipayDesktopWapQRCode {
+		if err := prepareAlipayDesktopWapQRCode(order, canonicalReturnURL, pr); err != nil {
+			return nil, err
+		}
+	}
 	_, err = s.entClient.PaymentOrder.UpdateOneID(order.ID).
 		SetNillablePaymentTradeNo(psNilIfEmpty(pr.TradeNo)).
 		SetNillablePayURL(psNilIfEmpty(pr.PayURL)).
@@ -482,6 +509,10 @@ func (s *PaymentService) invokeProvider(ctx context.Context, order *dbent.Paymen
 	}
 	resp := buildCreateOrderResponse(order, req, payAmount, sel, pr, resultType)
 	resp.ResumeToken = resumeToken
+	// [CUSTOM] 覆盖此订单的展示模式，不改实例或其他设备的 payment_mode。
+	if providerReq.AlipayDesktopWapQRCode {
+		resp.PaymentMode = "qrcode"
+	}
 	resp.AlipayMobilePrecreateDeepLink = providerReq.AlipayMobilePrecreate && strings.TrimSpace(pr.QRCode) != ""
 	return resp, nil
 }

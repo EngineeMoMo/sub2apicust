@@ -27,18 +27,20 @@ const (
 	SettingBalanceRechargeMult = "BALANCE_RECHARGE_MULTIPLIER"
 	// SettingSubscriptionUSDToCNYRate 是订阅 CNY 换算汇率（1 USD = X CNY）。
 	// 0/未配置 = 关闭换算（订阅按 price 数值直付），显式配置后 CNY 通道订阅按 price × rate 收款。
-	SettingSubscriptionUSDToCNYRate      = "SUBSCRIPTION_USD_TO_CNY_RATE"
-	SettingRechargeFeeRate               = "RECHARGE_FEE_RATE"
-	SettingProductNamePrefix             = "PRODUCT_NAME_PREFIX"
-	SettingProductNameSuffix             = "PRODUCT_NAME_SUFFIX"
-	SettingHelpImageURL                  = "PAYMENT_HELP_IMAGE_URL"
-	SettingHelpText                      = "PAYMENT_HELP_TEXT"
-	SettingCancelRateLimitOn             = "CANCEL_RATE_LIMIT_ENABLED"
-	SettingCancelRateLimitMax            = "CANCEL_RATE_LIMIT_MAX"
-	SettingCancelWindowSize              = "CANCEL_RATE_LIMIT_WINDOW"
-	SettingCancelWindowUnit              = "CANCEL_RATE_LIMIT_UNIT"
-	SettingCancelWindowMode              = "CANCEL_RATE_LIMIT_WINDOW_MODE"
-	SettingAlipayForceQRCode             = "ALIPAY_FORCE_QRCODE"
+	SettingSubscriptionUSDToCNYRate = "SUBSCRIPTION_USD_TO_CNY_RATE"
+	SettingRechargeFeeRate          = "RECHARGE_FEE_RATE"
+	SettingProductNamePrefix        = "PRODUCT_NAME_PREFIX"
+	SettingProductNameSuffix        = "PRODUCT_NAME_SUFFIX"
+	SettingHelpImageURL             = "PAYMENT_HELP_IMAGE_URL"
+	SettingHelpText                 = "PAYMENT_HELP_TEXT"
+	SettingCancelRateLimitOn        = "CANCEL_RATE_LIMIT_ENABLED"
+	SettingCancelRateLimitMax       = "CANCEL_RATE_LIMIT_MAX"
+	SettingCancelWindowSize         = "CANCEL_RATE_LIMIT_WINDOW"
+	SettingCancelWindowUnit         = "CANCEL_RATE_LIMIT_UNIT"
+	SettingCancelWindowMode         = "CANCEL_RATE_LIMIT_WINDOW_MODE"
+	SettingAlipayForceQRCode        = "ALIPAY_FORCE_QRCODE"
+	// [CUSTOM] 电脑端使用手机网站支付，手机原流程保持。
+	SettingAlipayDesktopWapQRCode        = "ALIPAY_DESKTOP_WAP_QRCODE"
 	SettingAlipayMobilePrecreateDeepLink = "ALIPAY_MOBILE_PRECREATE_DEEP_LINK"
 )
 
@@ -78,6 +80,8 @@ type PaymentConfig struct {
 
 	// Force Alipay mobile users to use QR code instead of mobile redirect
 	AlipayForceQRCode bool `json:"alipay_force_qrcode"`
+	// [CUSTOM] 仅官方支付宝电脑端使用 WAP 扫码。
+	AlipayDesktopWapQRCode bool `json:"alipay_desktop_wap_qrcode"`
 	// Use Alipay face-to-face precreate and an app deep link on mobile clients.
 	AlipayMobilePrecreateDeepLink bool `json:"alipay_mobile_precreate_deep_link"`
 }
@@ -110,6 +114,8 @@ type UpdatePaymentConfigRequest struct {
 
 	// Force Alipay mobile users to use QR code instead of mobile redirect
 	AlipayForceQRCode *bool `json:"alipay_force_qrcode"`
+	// [CUSTOM] nil 表示不更新现有配置。
+	AlipayDesktopWapQRCode *bool `json:"alipay_desktop_wap_qrcode"`
 	// Use Alipay face-to-face precreate and an app deep link on mobile clients.
 	AlipayMobilePrecreateDeepLink *bool `json:"alipay_mobile_precreate_deep_link"`
 
@@ -225,6 +231,7 @@ func (s *PaymentConfigService) GetPaymentConfig(ctx context.Context) (*PaymentCo
 		SettingCancelRateLimitOn, SettingCancelRateLimitMax,
 		SettingCancelWindowSize, SettingCancelWindowUnit, SettingCancelWindowMode,
 		SettingAlipayForceQRCode, SettingAlipayMobilePrecreateDeepLink,
+		SettingAlipayDesktopWapQRCode, // [CUSTOM] 电脑端 WAP 扫码开关。
 		SettingPaymentVisibleMethodAlipayEnabled, SettingPaymentVisibleMethodAlipaySource,
 		SettingPaymentVisibleMethodWxpayEnabled, SettingPaymentVisibleMethodWxpaySource,
 	}
@@ -263,6 +270,7 @@ func (s *PaymentConfigService) parsePaymentConfig(vals map[string]string) *Payme
 		CancelRateLimitMode:    vals[SettingCancelWindowMode],
 
 		AlipayForceQRCode:             vals[SettingAlipayForceQRCode] == "true",
+		AlipayDesktopWapQRCode:        vals[SettingAlipayDesktopWapQRCode] == "true", // [CUSTOM]
 		AlipayMobilePrecreateDeepLink: vals[SettingAlipayMobilePrecreateDeepLink] == "true",
 	}
 	cfg.AlipayMobilePrecreateDeepLink = pcEnvBoolOverride(
@@ -409,6 +417,10 @@ func (s *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, req Upda
 	}
 	if req.AlipayForceQRCode != nil {
 		m[SettingAlipayForceQRCode] = formatBoolOrEmpty(req.AlipayForceQRCode)
+	}
+	// [CUSTOM] 支持单独更新，遗漏时保留原值。
+	if req.AlipayDesktopWapQRCode != nil {
+		m[SettingAlipayDesktopWapQRCode] = formatBoolOrEmpty(req.AlipayDesktopWapQRCode)
 	}
 	if req.AlipayMobilePrecreateDeepLink != nil {
 		m[SettingAlipayMobilePrecreateDeepLink] = formatBoolOrEmpty(req.AlipayMobilePrecreateDeepLink)

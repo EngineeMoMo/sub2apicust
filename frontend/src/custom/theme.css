@@ -1629,3 +1629,66 @@ html .mofa-auth .mofa-auth-title {
 .dark .mofa-studio-contribute-tabs, .dark .mofa-studio-submission-row { border-color: #466269; }
 @media (max-width: 800px) { .mofa-studio-submit-grid, .mofa-studio-review-grid, .mofa-studio-field-grid { grid-template-columns: minmax(0,1fr); } .mofa-studio-contribute-heading { flex-direction: column; } }
 @media (max-width: 767px) { .mofa-product-workspace { height: calc(100dvh - 180px); min-height: 500px; } }
+
+/* [CUSTOM] 我的订阅：统一时间层级与响应式卡片，平台徽标沿用语义色。 */
+.mofa-subscriptions { width: 100%; max-width: 1280px; margin-inline: auto; color: rgb(var(--brand-text)); }
+.mofa-subscriptions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px; }
+.mofa-subscription-card { min-width: 0; overflow: hidden; border: 1px solid rgb(var(--brand-border)); border-radius: 16px; background: rgb(var(--brand-surface)); }
+.mofa-subscription-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid rgb(var(--brand-border)); }
+.mofa-subscription-identity { min-width: 0; flex: 1; }
+.mofa-subscription-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mofa-subscription-title h3 { font-size: 1rem; font-weight: 650; line-height: 1.55; overflow-wrap: anywhere; }
+.mofa-subscription-platform { flex-shrink: 0; padding: 2px 7px; border-width: 1px; border-radius: 5px; font-size: .6875rem; font-weight: 500; }
+.mofa-subscription-description, .mofa-subscription-rates { color: rgb(var(--brand-muted)); font-size: .75rem; line-height: 1.6; margin-top: 6px; overflow-wrap: anywhere; }
+.mofa-subscription-rates { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.mofa-subscription-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: end; gap: 8px; flex-shrink: 0; }
+.mofa-subscription-status { display: inline-flex; align-items: center; min-height: 26px; padding: 3px 9px; border-radius: 6px; background: rgb(var(--brand-page)); color: rgb(var(--brand-muted)); font-size: .75rem; font-weight: 500; white-space: nowrap; }
+.mofa-subscription-status[data-state="active"] { background: rgb(var(--brand-action) / .09); color: rgb(var(--brand-action)); }
+.mofa-subscription-renew.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 12px; font-size: .8125rem; white-space: nowrap; }
+.mofa-subscription-renew:focus-visible { outline: 2px solid rgb(var(--brand-focus)); outline-offset: 3px; }
+.mofa-subscription-body { padding: 22px 24px 24px; }
+.mofa-subscription-expiry { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 10px 16px; padding-bottom: 20px; }
+.mofa-subscription-expiry dt { display: flex; align-items: center; gap: 6px; color: rgb(var(--brand-muted)); font-size: .8125rem; line-height: 1.6; }
+.mofa-subscription-expiry dd { display: flex; flex-direction: column; gap: 5px; align-items: end; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.mofa-subscription-expiry time { font-weight: 600; }
+.mofa-subscription-remaining { font-size: .75rem; color: rgb(var(--brand-muted)); }
+.mofa-subscription-expiry[data-urgency="soon"] .mofa-subscription-remaining { color: #9c5d16; }
+.mofa-subscription-expiry[data-urgency="urgent"] .mofa-subscription-remaining { color: #b43c32; }
+.dark .mofa-subscription-expiry[data-urgency="soon"] .mofa-subscription-remaining { color: #efbc73; }
+.dark .mofa-subscription-expiry[data-urgency="urgent"] .mofa-subscription-remaining { color: #ffa99e; }
+.mofa-subscription-quotas { display: grid; gap: 22px; }
+.mofa-subscription-quota-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 9px; }
+.mofa-subscription-quota-heading h4 { font-size: .875rem; font-weight: 550; }
+.mofa-subscription-amount { font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.mofa-subscription-amount strong { font-weight: 600; }
+.mofa-subscription-amount > span { color: rgb(var(--brand-muted)); }
+.mofa-subscription-quota progress { --quota-fill: rgb(var(--brand-action)); display: block; width: 100%; height: 6px; border: 0; border-radius: 3px; overflow: hidden; appearance: none; background: rgb(var(--brand-border)); accent-color: var(--quota-fill); }
+.mofa-subscription-quota progress::-webkit-progress-bar { background: rgb(var(--brand-border)); }
+.mofa-subscription-quota progress::-webkit-progress-value { background: var(--quota-fill); border-radius: 3px; }
+.mofa-subscription-quota progress::-moz-progress-bar { background: var(--quota-fill); border-radius: 3px; }
+.mofa-subscription-quota progress[data-tone="medium"] { --quota-fill: #b77527; }
+.mofa-subscription-quota progress[data-tone="high"] { --quota-fill: #c45145; }
+.dark .mofa-subscription-quota progress[data-tone="medium"] { --quota-fill: #d9aa68; }
+.dark .mofa-subscription-quota progress[data-tone="high"] { --quota-fill: #e9958c; }
+.mofa-subscription-reset { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; margin-top: 9px; color: rgb(var(--brand-muted)); font-size: .75rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.mofa-subscription-reset > span { display: inline-flex; align-items: center; gap: 6px; }
+.mofa-subscription-reset[data-kind="countdown"] > span { color: rgb(var(--brand-action)); }
+.mofa-subscription-card:not([data-state="active"]) progress { --quota-fill: rgb(var(--brand-muted)); }
+.mofa-subscription-card:not([data-state="active"]) .mofa-subscription-expiry time { color: rgb(var(--brand-muted)); }
+.mofa-subscription-unlimited { display: flex; align-items: center; gap: 12px; padding-block: 8px; }
+.mofa-subscription-unlimited > svg { color: rgb(var(--brand-action)); }
+.mofa-subscription-unlimited strong { font-size: .875rem; font-weight: 600; }
+.mofa-subscription-unlimited p { color: rgb(var(--brand-muted)); font-size: .75rem; margin-top: 4px; }
+.mofa-subscription-notice { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; padding: 12px 16px; border: 1px solid rgb(var(--brand-border)); border-radius: 8px; font-size: .8125rem; }
+@media (max-width: 1100px) { .mofa-subscriptions-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .mofa-subscription-header { flex-wrap: wrap; padding: 20px; }
+  .mofa-subscription-identity { flex-basis: 100%; }
+  .mofa-subscription-actions { width: 100%; justify-content: space-between; }
+  .mofa-subscription-renew.btn { min-height: 44px; }
+  .mofa-subscription-body { padding: 20px; }
+  .mofa-subscription-expiry { flex-direction: column; gap: 8px; }
+  .mofa-subscription-expiry dd { align-items: start; }
+  .mofa-subscription-reset { align-items: start; flex-direction: column; }
+  .mofa-subscription-notice { align-items: start; flex-direction: column; }
+}

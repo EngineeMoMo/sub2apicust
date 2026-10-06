@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-02（Asia/Shanghai）。
+> 最后更新：2026-10-06（Asia/Shanghai）。
 
 ---
 
@@ -38,6 +38,29 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+
+- **2026-10-06 上游更新核查（只评估，未合并）**：用户询问开源更新是否值得同步。通过现有本地代理成功fetch upstream（直连未完成已中止），本仓HEAD=25b9071cf、上游共同基点a3eb7ef30／v0.2.8；官方最新稳定v0.2.13=3040209f2（10月2日），最新main=b8dece900（仅比tag多VERSION同步）。HEAD..main共165提交、共同基点到main共394文件／+18028/-1283；稳定tag差164提交。官方v0.2.12包含验证码原子尝试计数／重置密码token哈希单次消费、匿名订单查询限流、上游错误脱敏；v0.2.11余额在途预占与Key创建限制；v0.2.13含请求结束前Key被删除时仍结算用量的修复。建议保留现有fork，优先以稳定v0.2.13在隔离分支同步，先保全当前未提交工作。按规则执行git merge-tree --write-tree --name-only main upstream/main：退出1、唯一文本冲突backend/internal/server/routes/payment.go；这是已提交HEAD演算，不含未提交改动，与上游文件重叠的未提交文件共14个（主要支付／设置）。语义重点：上游余额预占与本仓包号免扣／余额0准入、充值赠金与支付宝安全补丁、数据库迁移回归；无文本冲突不等于业务兼容。上游994048e6a倒计时修复只涉及管理员账号UsageProgressBar，不替代本轮用户订阅卡片。仅fetch／演算与文档记录，无实际合并、业务源码变更、提交推送或部署；完整兼容性与合并后测试结果未知。
+
+- **2026-10-06 订阅改动二次审查（仅本线程范围）**：复读custom卡片／时间辅助、SubscriptionsView异步装配、订阅CSS与Makefile订阅测试接线；未发现新的明确可操作缺陷，原辅助请求阻塞列表的P2已由回归确认修复。重跑25项展示＋5项quota，并以临时用例补查时间先返回／列表后返回及卸载后两个请求迟到失败，共32项通过，证据output/subscription-timing-20261006/rereview.log；临时测试已清理，未修改业务实现。未审查并行支付宝／部署脚本，未做本轮真实账号浏览器或生产验收，不表示线上无问题；未提交推送部署。
+
+- **2026-10-06 订阅审查 P2 已修复（未发布）**：用户授权“修复”后，SubscriptionsView 的列表独立结束 loading，progress 通过已处理成功／失败的异步请求补齐；请求版本号防止重试前的迟到响应覆盖新结果，卸载后失效。新增慢响应补齐、延迟失败保留列表、重试后旧请求成功／失败四项回归；25项订阅展示＋5项旧quota共30项通过（output/subscription-timing-20261006/fix-targeted.log），vue-tsc --noEmit 与两个改动文件 ESLint 退出0。未修改后端或样式，未提交推送、重建8080或部署；本次未重新进行浏览器或生产验收，既有其他专项保持。
+
+- **2026-10-06 支付宝严格安全复查（源码完成，未发布）**：复查并修复短入口重复／畸形参数、HTTP 令牌传输、Referer 扩展信任站点、官方通知补商户／金额回退、未验签证书提示触发 SDK 下载、已付查询订单绑定及一分钱金额容差。默认公钥模式强制配置公钥验签；扫码优先信任管理员 HTTPS frontend_url，未配置时仅请求 Host，反代应拒绝未知 Host。Guard 在限流前设置禁止缓存／referrer，302 正文为空。新 service/provider 辅助文件优先新增，上游接缝已登记 CUSTOMIZATIONS；原手机发起和其他通道保持。
+- **安全证据与限制**：`output/alipay-security-review-20261006/` 保存修复前失败复现、最终111顶层＋103子项／7包定向unit、真实仓储SQLite的16并发通知＋重放仅入账一次（连续三轮）、Host模糊测试31,077次、embed构建及最终检查清单。详细发现、静态检查结果与发布边界见 [安全复查报告](deploy/ALIPAY_SECURITY_REVIEW.md) 和 verification.json；不是绝对安全承诺，也不是已证明生产盗款。Windows全量两项既有路径／时间精度失败未处理；本轮真实PostgreSQL并发、race、新SHA CI／漏洞扫描／镜像与支付宝App小额实付仍待。未提交／推送／部署，未请求商户接口或写业务库，保留既有更新脚本及并行订阅UI；生产由用户发布。
+
+- **2026-10-06 订阅时间改动专项代码审查（仅审查）**：按用户“只审查你改的”限定本线程新增 SubscriptionCard、timing、SubscriptionsView 接线、theme.css 订阅段及测试／Makefile 接线，不审查并行支付宝或部署脚本。确认 1 项 P2：SubscriptionsView.vue 的 Promise.allSettled 同时等待列表和辅助 progress，后者慢响应时已成功列表仍被 loading 隐藏，可能等到客户端 30 秒超时；建议列表独立结束 loading，时间异步补齐。临时 Vitest 慢接口用例复现：原 21 项通过、新增“列表应可见”断言失败，日志 output/subscription-timing-20261006/review-probe.log；临时测试已删除。首次复现误用 vite.config.ts 缺 DOM 环境，已改用 vitest.config.ts 重跑，结论仅依据正确配置结果。未修复业务实现、未提交／推送／部署；生产影响未知。
+
+- **2026-10-06 我的订阅时间提示与样式优化（源码完成，未发布）**：用户截图要求核查并补齐提示。原页面已有到期／额度重置文本，现提取custom/SubscriptionCard与subscriptions/timing.ts，用已有认证 `/subscriptions/progress` 的真实 `{subscription, progress}`／服务端resets_at取代本地窗口加小时；共享15秒本地显示时钟、可见性更新及卸载清理，不自动请求／清用量。显示具体到期／重置日期＋中文或英文剩余时间；过期／暂停／撤销不显示未来重置，过期保留实际日期；到期早于重置时提示本期额度在到期结束，已到窗口时刻只提示使用后更新。有效与过期续费仍沿原分组purchase路由，暂停／撤销无入口。卡片统一雾钛青深浅色、桌面双栏与手机单栏／长名称、数字对齐及44px续费按钮，样式仅theme.css，平台语义徽标保持；逐处接缝及同步事项已登记CUSTOMIZATIONS／custom/UPGRADE。
+- **本轮订阅验证与边界**：21项新回归＋5项旧quota回归通过；27文件399关键项、vue-tsc、相关ESLint、最终Vite构建成功。IAB真实浏览器以实际组件和明确标注的模拟数据夹具验证1440深浅、390手机深浅／英语、900中间宽度及长标题／未启用／暂停／即将到期状态：无横溢出，手机按钮44px，测试页warn/error为空。证据output/subscription-timing-20261006/{frontend-critical.log,frontend-build.log,browser-proof.json}及截图；夹具不等于真实登录、服务器镜像或实际付款。未改后端、依赖、配置、迁移／业务DB，未重建8080、提交／推送／部署。便携pnpm在8.3临时路径权限及构建PATH首次失败后使用原已有Node／依赖入口、工作区TEMP与.bin PATH通过，无安装；设计技能context因引擎缺失／不可写未运行，直接读取项目规范后完成，不称自动检测通过。此前支付宝与更新脚本专项保留，实际生产版本未知。收尾逐文件SHA256核验开工29个其他专项文件：24个不变、5个支付宝后端文件在工作期间出现并行修改，另有安全专项新文件；本轮未编辑这些后端文件，未覆盖／暂存／提交并行工作，详见protected-before／after.json。临时4187预览、测试标签页已清理，夹具保留在output的preview.html供复核。
+
+- **2026-10-06 重复购买订阅时长咨询（源码与定向测试核验）**：用户询问已有订阅再次订阅是否加时长。现有支付入账 `payment_fulfillment.go:584` 调用 `assignOrExtendSubscription`；按同一用户＋同一分组查原订阅（`subscription_service.go:232`），未到期从原到期时间加套餐天数，已到期从当前时间重新起算（同文件315–317），不同分组独立创建订阅。同一订单的完成状态／分配审计与订单备注保护避免重试重复加时长（`payment_fulfillment.go:514`、569–590）。后台“分配订阅”走 `AssignSubscription`，有效订阅语义一致时复用、不同则冲突，不自动累加（`subscription_service.go:506–542`）；延时需走 `ExtendSubscription`。使用现有已核验便携Go1.27.0、现有模块／编译缓存且GOPROXY=off，本轮执行 `go test -tags=unit ./internal/service -run '^Test(AssignOrExtendSubscription(UsesLockedCurrentRow|SerializedRenewalsAccumulateDays|_ExpiredDailyCardStartsNewOneTimeQuota|_ExpiredSubscriptionAppendsMatchingNotes)|AssignSubscriptionReuseWhenSemanticsMatch|ExecuteSubscriptionFulfillmentRecoversCommittedAssignmentWithoutExtendingAgain)$' -count=1 -v -timeout 2m`，6项全部PASS、退出0；另有Go telemetry目录权限提示，不影响测试结果，不标全量回归通过。仅更新本交接记录，未修改业务源码、配置、业务数据库，未提交／推送／部署或实际付款；生产运行版本及真实续购结果未知，既有支付宝与更新脚本专项保持。
+
+- **2026-10-06 电脑端支付宝 WAP 扫码源码完成（未发布）**：用户明确要求实施扫码计划。支付设置新增默认关闭的“电脑端支付宝使用手机网站支付扫码”，存储 `ALIPAY_DESKTOP_WAP_QRCODE`，管理员字段 `payment_alipay_desktop_wap_qrcode`、支付配置字段 `alipay_desktop_wap_qrcode`；遗漏字段保留原值。仅桌面选中的官方支付宝实例调用 WAP，跳过当面付及电脑网站支付；手机两项旧配置和其他通道保持原逻辑。订单 `expires_at` 向下对齐分钟，以东八区传入 WAP `time_expire`，原 WAP 地址、本站二维码及实际 `qrcode` 模式复用现有字段与 snapshot，无迁移。关闭开关只影响新订单。
+- **免登录扫码入口与取证**：新增 `GET /api/v1/payment/public/alipay/wap/:id?token=…`；本站 origin 取自原已校验回跳地址，32 字节随机令牌绑定订单，常量时间比较。校验通过直接 302 至保存的 `https://openapi.alipay.com/gateway.do` WAP 地址，不增加本站登录／中间操作页；方法、商户、金额、订单号和期限须与订单一致，错误令牌、非待支付状态、过期及非法目标被拦截。响应 no-store／no-referrer，应用现有请求日志只记 path，新代码不记录完整付款链接。真实 SDK 本地签名＋SQLite 订单／实际路由测试验证余额与订阅两种订单、无 Cookie/JWT 可 302、原个人订单仍需认证；没有向支付宝发网络请求或产生商户交易。启用与验收步骤见 [deploy/ALIPAY_DESKTOP_WAP.md](deploy/ALIPAY_DESKTOP_WAP.md)，逐处接缝见 CUSTOMIZATIONS 最新节。
+- **验证与限制**：证据 `output/alipay-desktop-wap-20261006/`。便携 Go1.27.0 来自此前核验过的 output 工具链，宿主仍未安装 Go；支付相关 195 顶层＋87 子测试、管理员设置、公共路由及重复通知幂等回归通过，API 契约 1 顶层＋11 子项通过；前端定向 128 项与 Makefile 26 文件／378 关键项、类型／相关 ESLint／Vite 构建通过，后端 embed 构建及 golangci-lint 0 issues。已执行 Windows 全量 `go test -tags=unit ./...`，不能标全量通过：API 契约新增字段已修正并重跑，PgDumper 三项缺 sh 已补现有便携 sh 后通过；剩余 `TestResolvePageImagePath` 的 Windows 路径及 `TestOllamaProbeCallback_StaleLongDoesNotOverrideNewShort` 的时间精度失败，未改无关源码。Linux 全量、integration 和本次代码提交的 CI／安全／镜像仍待发布时核验，不沿用 4bf1436fb 旧结果。
+- **范围与未知**：保留既有更新脚本专项；`.github/workflows/backend-ci.yml`、`deploy/UPDATE_GUIDE.md`、`deploy/update.sh` 与两个假 Docker 测试文件的字节 SHA256 与开工基准一致。未改 theme.css、依赖或迁移，未修改业务数据库，未重建本机 8080、提交／推送或部署生产。实际支付宝 App 扫码是否进入正确金额收银台、手机无本站登录及小额实付后电脑成功／仅入账一次尚未验证，不能把本地签名和 302 测试当实际付款成功。用户部署生产，真实小额支付由用户确认后验收。
+
+- **2026-10-02 Google AI Pro 视频配置咨询（仅核验）**：用户确认会员是 Google AI Pro，询问能否配置 key 直接生成视频。只读官方 [Pro 权益](https://support.google.com/googleone/answer/14534406?hl=en)、[开发者权益 FAQ](https://developers.google.com/profile/help/benefits)、[Gemini API 计费](https://ai.google.dev/gemini-api/docs/billing)、[视频 API](https://ai.google.dev/gemini-api/docs/video)及[价格](https://ai.google.dev/gemini-api/docs/pricing)：Pro 包含 Gemini／Flow 视频相关权益及每月 10 美元 Google Cloud credits，需关联开发者资料并将抵扣应用到账单账号；API 仍走项目计费，Veo 免费 API 档不可用，不能把会员网页额度当作不限量 API。预付项目使用符合条件的 Cloud credits 前仍需有有效预付余额，具体账户领取／余额／地区／模型权限未取证，不保证其 key 已可生成。源码 rg 核实 magic-studio/core.mjs:2 的 VIDEO_CONTENT_ENABLED=false；magic-recipes/site/model-ui.js:262–272 隐藏视频配置并禁用运行，model.cjs:30 只接受 text／image，当前子产品不能仅填 Google key 就生成视频。咨询不视为开发或收费调用授权；未改运行时代码／配置、未启用视频、未提交推送或部署，既有更新脚本专项保持。
 
 - **2026-10-02 配方“打开图片”修复正式发布（最新终态）**：功能4bf1436fb8ecae0c0780c3b741e26cefba9dd170已推origin/main，11个限定文件，push与ls-remote核实；同SHA的[CI36887283643](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283643)、[Security36887283348](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283348)、[GHCR36887283175](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283175)均completed/success。Go unit／integration、lint0 issues、前端类型／lint及25文件372项通过；镜像embed编译成功，govulncheck未发现漏洞，前端审计既有例外通过。旧data新窗口href改原生dialog页内原图，Base64 PNG／JPEG／WebP提供下载入口；远程图原地址预览、保存提示和错误提示。关闭／Esc回焦点、Tab循环，材料／配方／连接变化或退出清预览，无CSP放宽、依赖或收费请求。
 - **本轮验证与范围**：61项配方及3项打包测试、类型／Vite生产构建成功，新回归对旧构建确实失败；本机真实浏览器独立与生产外置资源同源iframe均显示已有Logo512×512夹具，Esc／关闭／390深色无横溢出。独立控制台warn/error空；内嵌记录一条MutationObserver.observe参数错误且无来源栈，配方／共享运行时／宿主夹具无该调用，来源未知，不把控制台标全空。下载完成事件超时，实际文件落地未验证；未取得用户现场href／控制台，不知道截图的线上根因，不把本机模型mock／宿主夹具当真实账号或线上恢复。证据output/recipes-image-open-20261001/{ci-final,ghcr-image-proof,browser-standalone,browser-embedded,guide-preservation}.json、完整job日志和本线程recipes-image-open截图。沿此前“提交并推送，我发布更新”授权限定发布；更新脚本4文件字节SHA256等于基准，UPDATE_GUIDE去掉新增发布段后的SHA256也等于基准，原旧镜像清理节仍仅工作区。临时4178／4180服务与测试标签页已清理，8080和生产未改。
@@ -299,6 +322,25 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **上游v0.2.13同步候选（待用户决定执行）**：建议值得同步安全／结算修复；先保全本轮支付、订阅、更新脚本未提交成果，再隔离合并并核对包号0余额、普通计费、订阅续期、支付幂等／赠金及迁移。当前只完成更新核查和已提交版本冲突演算，未开始合并。
+
+- [x] **订阅改动二次代码审查**：限定本线程改动，未发现新的明确缺陷；32项含临时竞态／卸载验证通过，真实账号与发布验收仍待。
+
+- 支付宝安全收尾：先读 [安全复查报告](deploy/ALIPAY_SECURITY_REVIEW.md)。发布时对实际新提交核验 Linux unit／integration、安全与镜像，补生产同型 PostgreSQL 并发验证；用户部署后按 [扫码验收](deploy/ALIPAY_DESKTOP_WAP.md) 核验 HTTPS／可信 Host／日志去敏、真实 App 无本站登录、正确金额、小额实付后电脑自动成功且仅入账一次。源码和本地测试不等于线上已完成验收。
+
+- [x] **订阅审查 P2 已修复**：辅助 `/subscriptions/progress` 慢响应不再阻塞订阅列表；列表独立结束 loading、时间异步补齐，重试／卸载丢弃旧响应，四项新回归及类型／相关lint通过；尚未发布。
+
+- [x] **订阅时间提示与样式优化源码**：服务端权威重置日期、显示倒计时／实际到期日期、过期／暂停等边界及深浅／响应式已完成；21新项、27文件399关键项、类型／相关lint／最终Vite和浏览器夹具通过，证据见第四节。
+- [ ] **订阅提示发布与真实账户验收**：本次未提交推送或重建8080；用户要求发布时核验实际代码SHA的CI／安全／镜像，不沿用旧4bf1436fb。部署后用真实账号核对日／周／月重置日期、到期／续购更新、未激活和过期状态；现有组件模拟数据不能当真实账户或付款验收。生产仍由用户部署。
+
+- [x] **重复订阅是否累加时长咨询**：现有购买入账、同组／跨组、过期续购、同订单重试与后台分配入口已核验，6项现有定向测试本轮通过；结论和证据见第四节。本次不视为开发、发布或真实付款授权，原发布与现场验收待办保持。
+
+- [x] **电脑端支付宝 WAP 扫码源码与本机回归**：后台默认关闭开关、仅桌面官方支付宝 WAP、32 字节令牌免登录 302、官方目标与订单状态校验、分钟期限、恢复和旧手机流程已实现；195 顶层＋87 子项支付回归、378 前端关键项、API 契约、类型／lint／前后端构建通过，详见第四节。
+- [ ] **本次支付宝代码发布门禁**：尚未提交／推送，发布时检查实际代码 SHA 对应的 Linux unit／integration、前端、安全及 GHCR；Windows 全量两项路径／时间精度失败未冒充全量成功。继续保留更新脚本专项，不混入本功能提交，不以旧 4bf1436fb 的 CI 或镜像代替本次结果。
+- [ ] **支付宝真机扫码与实付验收**：用户部署本版后开启设置，用支付宝 App 扫新电脑订单二维码；确认没有本站登录／二次支付操作、商户和金额正确，余额与订阅、手机旧流程、刷新恢复及过期／取消分别验证。用户确认小额实付后检查电脑自动成功、余额或订阅只入账一次；失败保留去敏后的错误码与时间，按 [验收说明](deploy/ALIPAY_DESKTOP_WAP.md) 取证，不保存完整付款链接／令牌／商户密钥。真机兼容性未知，生产由用户部署。
+
+- [x] **Google AI Pro 视频配置可行性咨询**：会员类型已确认，官方权益／API 计费与现有视频入口源码已核验，结论见第四节。若后续要求本站直接生成，先落实具体 API 项目、抵扣领取／预付余额、模型权限与费用预算，再按下方“视频与分镜重新开放条件”适配接口和验收；本次未授权开发、收费生成或恢复视频入口。
 
 - [x] **配方打开原图源码及本机验证**：data新窗口链接改页内dialog，61项配方＋3项打包、类型／生产构建及独立／内嵌真实浏览器通过，细节见第四节。
 - [x] **配方打开原图发布门禁**：4bf1436fb已推，实际同SHA CI／安全／GHCR全成功，固定镜像sha-4bf1436与摘要已由成功job核实，详见第四节终态。

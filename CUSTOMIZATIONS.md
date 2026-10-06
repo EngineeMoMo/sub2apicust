@@ -1,5 +1,69 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-06 支付宝支付安全复查补强（未发布）
+
+报告与证据边界见 [deploy/ALIPAY_SECURITY_REVIEW.md](deploy/ALIPAY_SECURITY_REVIEW.md)。新增 `backend/internal/payment/provider/custom_alipay_security.go` 统一严格签名字段／金额格式及固定公钥模式；新增 `backend/internal/service/custom_alipay_notification_security.go` 精确比较支付宝网关金额。对应真实RSA签名／SDK查询测试为 `custom_alipay_security_test.go`；实际仓储并发余额测试为 `backend/internal/server/routes/custom_alipay_fulfillment_security_test.go`，service中 `custom_alipay_desktop_wap_security_test.go` 覆盖URL歧义、可信站点、HTTPS与并发租约／Host fuzz。
+
+上游接缝均标 `[CUSTOM]`：
+
+- `backend/internal/payment/provider/alipay.go` 的 VerifyNotification 要求完整签名字段／app_id匹配及严格total_amount，SDK继续验签，禁止用配置补商户、用实收或买家金额补总额；剔除SDK不签名的alipay_cert_sn，裸公钥接入不能被请求触发下载证书。QueryOrder已付结果须原out_trade_no、非空trade_no及合法总额。
+- `backend/internal/payment/provider/alipay_test.go`：原金额回退测试改验严格总额解析，旧未使用的parseAlipayAmount随生产回退逻辑一同移除；provider整包unit复跑通过。
+- `backend/internal/service/payment_fulfillment.go:confirmPayment`：官方支付宝精确匹配两位网关金额，拒绝一分钱差异；其他通道原容差保持。
+- `backend/internal/service/payment_order.go`：创建新扫码订单前，以及invokeProvider准备地址时，使用新canonical helper，仅信任管理员frontend_url／未配置时请求Host，不再用Referer扩大允许站点；HTTPS强制，本机回环例外。
+- `backend/internal/server/routes/payment.go`：新增的公共扫码路由在原IP限流前挂AlipayDesktopWapGuard，保证错误和429也禁止缓存。
+
+已新增的custom文件内部补强：handler严格解析单一token、限制query长度／规范订单ID，正常302只写Location不输出付款URL正文；service拒绝WAP参数及biz_content重复键。配置、迁移不新增；手机发起分支不变，官方通知安全加固覆盖各支付模式。同步不可恢复金额回退／Referer信任／一分钱容差；须运行TestCustomAlipay和既有支付／恢复回归。既有更新脚本专项与并行订阅UI不属于本次安全修改。
+
+## 2026-10-06 我的订阅时间提示与样式优化（源码完成，未发布）
+
+审查后修复：`SubscriptionsView.vue` 列表独立结束 loading，辅助 progress 异步补齐；通过请求版本号丢弃重试前及卸载后的旧响应，不再用 Promise.allSettled 阻塞列表展示。`subscription-timing.spec.ts` 增加慢响应、延迟失败及旧请求成功／失败回归，共25项；加既有quota共30项及类型／相关lint通过。未更改样式或后端，未发布。
+
+用户要求核对并补齐截图中的到期／额度重置提示、优化现有样式。原页面已显示到期和重置文本，但只在渲染时计算，日窗口按首次使用加24小时、周／月按本地固定时长，过期窗口还会拼成“等待首次使用 后重置”。本轮仅调整订阅展示，服务端额度、续期、认证和数据库不变。
+
+- 新增 `frontend/src/custom/components/SubscriptionCard.vue`：提取原套餐名称／平台／描述／倍率／高峰费率／用量内容；到期日期始终保留，有效订阅显示剩余时间，3／7天提示、过期／暂停／撤销状态区分；用量条提供原生progress语义。有效及过期可沿原 `/purchase?tab=subscription&group=…` 续费，暂停／撤销不提供入口。非有效订阅不展示未来重置提示；到期早于下一重置时显示额度在到期结束，已到重置时刻但尚无新窗口时明确“使用后更新”，不假定额度已发放。
+- 新增 `frontend/src/custom/subscriptions/timing.ts`：通过原认证apiClient读取已有 `/subscriptions/progress` 的真实 `{subscription, progress}` 结构，只取服务端 `resets_at`；不复制服务端日历日、旧周／月锚点和最后不完整周期算法。共享15秒本地时钟、标签页可见变化时刷新及卸载清理，只更新时间显示，不自动发网络请求或清用量。窗口未启用显示等待首次使用，缺失／非法时间明确未读取。
+- 新增 `frontend/src/custom/__tests__/subscription-timing.spec.ts`：21项包括真实响应结构、权威日时间、跨到期／过期／日卡／暂停／撤销／无效时间、分钟更新／后台标签返回／卸载、失败重试、原续费路由与英语。新增文案在custom层按现有locale显示，原中英文键仍复用。
+
+上游接缝（均有 `[CUSTOM]` 标记）：`frontend/src/views/user/SubscriptionsView.vue` 提取原展示到custom组件，保留原列表API、空态、AppLayout和续费路由；并行读取已有时间接口，时间失败保留套餐用量并允许重试、列表失败明确错误而非空订阅。`Makefile` 关键回归新增一项，不删除原支付宝／包号等测试。视觉规则仅新增到 `frontend/src/custom/theme.css` 的 `mofa-subscription*` 作用域，复用既有雾钛青深浅tokens，平台徽标沿原语义色；桌面双栏／窄屏单栏、长名称换行、数字对齐及手机44px续费触控。
+
+验证：21项新回归＋5项旧订阅quota回归、27文件399项关键回归、vue-tsc、相关ESLint和最终Vite构建通过。真实IAB浏览器组件夹具验证1440桌面深浅、390手机深浅／英语、900中间宽度、长标题及不同状态，无横溢出；手机按钮44px，测试页warn／error为空。证据 `output/subscription-timing-20261006/`，截图明确标模拟数据，不能当真实登录／付款验收。未改后端、配置、依赖、迁移或业务库，未重建8080、提交推送或生产部署；此前支付宝和更新脚本专项保留。同步核对见custom/UPGRADE.md。
+
+## 2026-10-06 电脑端支付宝手机网站支付扫码（源码完成，未发布）
+
+用户授权实施电脑扫码计划：默认关闭开关，开启后仅选中的官方支付宝桌面订单使用 `alipay.trade.wap.pay`；手机浏览器与其他通道仍走原路由。扫码短入口使用本站已校验回跳 origin 与 32 字节随机令牌；校验通过直接 302 到订单保存的官方 WAP 收银台，无本站登录或中间操作页。实际 App 扫码兼容性及实付尚未验证。部署验收见 [deploy/ALIPAY_DESKTOP_WAP.md](deploy/ALIPAY_DESKTOP_WAP.md)。
+
+新增文件：
+
+- `backend/internal/service/custom_alipay_desktop_wap.go`：模式判定、随机短链接、官方网关／商户／金额／订单／分钟期限校验、令牌及状态授权。
+- `backend/internal/handler/custom_alipay_desktop_wap.go`：免登录 302／明确错误提示，no-store、no-referrer，不记录完整付款地址。
+- `frontend/src/custom/components/AlipayDesktopWapSetting.vue`：复用现有 Toggle、可访问标签及中英帮助文案，无主题样式变更。
+- 后端 `service`、`payment/provider`、`handler/admin`、`server/routes` 下四个 `custom_alipay_desktop_wap_test.go`：配置／SDK 路由、真实本地签名订单、免认证真实路由与攻击用例；前端 `src/custom/__tests__/alipay-desktop-wap.spec.ts`：开关、桌面余额／订阅扫码、恢复、手机旧跳转。
+- `deploy/ALIPAY_DESKTOP_WAP.md`：启用、真机验收和证据边界。
+
+逐处上游接缝（均标 `[CUSTOM]`）：
+
+| 文件 | 本轮接缝与同步检查 |
+| --- | --- |
+| `backend/internal/service/payment_config_service.go` | 新存储键 `ALIPAY_DESKTOP_WAP_QRCODE`、支付配置 bool／更新指针、批量读取／默认 false 解析／非 nil 保存；遗漏更新保留原值 |
+| `backend/internal/handler/dto/settings.go` | 管理员响应字段 `payment_alipay_desktop_wap_qrcode` |
+| `backend/internal/handler/admin/setting_handler.go` | 管理员读取响应映射 |
+| `backend/internal/handler/admin/setting_handler_update.go` | 指针字段、支付保存请求、更新响应及 hasPaymentFields；单独更新开关也必须生效 |
+| `backend/internal/payment/types.go` | 内部请求增加桌面 WAP 标记及 `ExpiresAt`，只能由订单服务赋值 |
+| `backend/internal/payment/provider/alipay.go` | 原手机分支之后、桌面分支之前选 WAP；桌面开关不受实例 redirect 模式影响；仅新模式设置东八区分钟 `time_expire`，不改变手机参数 |
+| `backend/internal/service/payment_order.go` | 创建订单截断分钟并冻结 snapshot 标记／实际 `payment_mode=qrcode`；调用 provider 传模式／期限；保存前构造本站短 QR；响应模式覆盖，原 WAP URL 与 QR 用现有订单字段保存 |
+| `backend/internal/server/routes/payment.go` | 在 payment/public 注册唯一 GET `/alipay/wap/:id`、PublicIP 限流；不得给个人订单接口解除认证 |
+| `backend/internal/server/api_contract_test.go` | 两个管理员设置响应 fixture 增加新 bool，原 API 契约保持 |
+| `frontend/src/api/admin/settings.ts` | 管理员读／写接口类型增加 optional bool，旧客户端遗漏兼容 |
+| `frontend/src/types/payment.ts` | 支付配置 `alipay_desktop_wap_qrcode` 类型；结账继续由服务端响应／订单 snapshot 决定显示模式 |
+| `frontend/src/views/admin/SettingsView.vue` | 新组件 import／支付区装配／form 默认 false／save payload；不改两个手机选项 |
+| `frontend/src/i18n/locales/zh/admin/settings.ts`、`en/admin/settings.ts` | 对齐新开关标题和免本站登录说明 |
+| `frontend/src/views/admin/__tests__/SettingsView.spec.ts` | 实际页面读取 true／保存 false／保留手机两项配置回归 |
+| `Makefile` | FRONTEND_CRITICAL_VITEST 增加新扫码回归，保留包号等原关键项；既有 CI 调用自动覆盖 |
+
+维护边界：不新增迁移、不修改 theme.css、依赖或现有支付通知入账逻辑；关闭开关只影响新订单。扫码令牌只授权读取该订单已保存的付款地址，不创建订单、不入账、不返回用户资料。白名单限定 HTTPS `openapi.alipay.com/gateway.do` 与 WAP 方法，禁止用户信息、端口及 fragment；保存地址与订单不匹配拒绝跳转。新功能不可降级成仅将完整 WAP 长地址直接塞入二维码。
+
+验证：本轮前端 26 文件／378 关键项、定向 128 项、类型／ESLint／Vite 构建，后端支付 195 顶层＋87 子项、API 契约 1 顶层＋11 子项、embed 构建及 Go lint 0 issues 通过；本地 SDK 仅生成签名，不调用商户网络。Windows 全量 unit 已执行但图片路径及 Ollama 时间精度两项仍失败，Linux CI／integration／真机扫码／用户确认的小额实付待验证，不能沿用旧提交门禁。证据 `output/alipay-desktop-wap-20261006/`；更新脚本、UPDATE_GUIDE、两个假 Docker 测试及 backend-ci.yml 字节与开工基准一致。未提交推送、重建 8080 或部署生产。
+
 ## 2026-10-01 配方打开原图修复
 
 仅修改自有product-samples/magic-recipes/site/{model-ui.js,template.html,theme.css,ui.test.cjs}，无新增上游接缝、依赖或CSP例外。旧生成图片链接直接target=_blank打开data地址；现在每张图有页内预览按钮，以原生dialog和img展示原图，PNG／JPEG／WebP Base64链接仅用于download。远程HTTPS图沿原安全筛选、referrerpolicy=no-referrer，在dialog预览，提示长按或右键保存；不伪造跨域下载或追加收费请求。Esc／关闭回焦点、Tab循环，多图序号和MIME扩展名对应，材料／配方／连接／等待重置及pagehide清源。同步后不得恢复data新窗口跳转；母站frontend/src/custom/theme.css未改，产品新增预览布局复用既有配色。

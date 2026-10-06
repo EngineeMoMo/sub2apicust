@@ -1,5 +1,11 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+- 2026-10-06支付宝严格安全复查已补强：签名字段／商户／总额与查询订单绑定，固定配置公钥、精确分金额，扫码HTTPS／可信站点、歧义参数拒绝及限流前no-store。111顶层＋103子项、真实仓储16并发重放仅入账一次连续三轮、Host fuzz与embed通过；静态检查最终结果见output/alipay-security-review-20261006/verification.json，报告deploy/ALIPAY_SECURITY_REVIEW.md。未提交推送部署；真实PG并发、新SHA CI及App实付待验，不承诺绝对安全，保留更新脚本和订阅UI专项。
+
+- 2026-10-06我的订阅时间／样式已完成未发布：原时间提示存在，现custom卡片读取原progress接口的服务端resets_at，15秒本地显示更新、实际到期日期及过期／暂停／最后不完整周期提示；续费仍原分组路由，样式只theme.css、平台语义色保持。21新回归／399关键项、类型／相关lint／Vite和1440／900／390深浅浏览器模拟夹具通过。未改后端／业务库／配置、未提交推送／重建8080／生产部署；支付宝及更新脚本专项保留，真实账号仍待验。接缝见CUSTOMIZATIONS与custom/UPGRADE，结果见HANDOFF四／五。
+
+- 2026-10-06电脑端支付宝 WAP 扫码源码完成，尚未提交／推送／部署。默认关闭开关 `payment_alipay_desktop_wap_qrcode`，仅电脑官方支付宝使用 WAP＋本站随机短 QR，免登录 302，分钟期限／状态／官方目标校验；手机与其他通道原流程保持。前端378关键项、支付195顶层＋87子项、API契约、类型／lint／Vite／Go embed通过，Windows全量两项路径／时间精度失败未标全绿，实际新SHA Linux CI及真机实付待验。使用output内已核验便携Go，覆盖下方本轮“无Go所以未编译”历史判断，宿主未安装工具链；更新脚本专项字节保持。接缝与启用验收见CUSTOMIZATIONS、HANDOFF四／五及deploy/ALIPAY_DESKTOP_WAP.md，不能把本地签名或302当真实扫码成功。
+
 - 2026-10-02配方图片打开修复已发布：功能4bf1436fb已推origin/main，同SHA CI（Go unit／integration、lint0、前端372项／类型／lint）、安全及GHCR全成功，固定镜像sha-4bf1436／摘要038e95a020dc71a5615c02cec490a9a92cf8172242686977051b9686cdeae87e，证据见HANDOFF终态。旧data新窗口href改dialog页内原图，Base64下载入口、远程保存提示、Esc／焦点与失效清理；本机61配方＋3打包、类型／构建及独立／生产资源iframe夹具通过。下载落地和线上根因未知，内嵌夹具有一条未知来源MutationObserver错误，不能说控制台全空。无CSP、认证、包号、8080或生产变更，更新脚本专项保持未提交，生产由用户备份后更新。
 
 - 2026-10-01用户授权包号代码已提交推送：功能acd73d716，65文件，包含免扣／共享策略及既有多人多组、成员移除、Key恢复、旧表单保护。该SHA的CI（Go unit／integration、lint、前端372项及类型）、安全和GHCR全部成功，实际镜像sha-acd73d7／摘要b41acdce7446e1b7bca618e16e6f6dbdab5b13fd30732760247063deb576bfa7；完整证据见HANDOFF最新终态。更新脚本专项仍未提交，不沿用293c091，不代部署生产；用户备份后更新并验收真实账号。

@@ -1,5 +1,22 @@
 # 雾钛青：上游同步核对清单
 
+## 2026-10-06 我的订阅时间提示
+
+- 审查修复须保留：列表独立结束 loading，progress 慢响应不阻塞卡片；重试／卸载使旧请求结果失效。保留慢响应补齐、延迟失败与旧请求成功／失败不覆盖新结果的四项回归。
+
+- `views/user/SubscriptionsView.vue` 的custom卡片装配、原列表API与AppLayout保持；共享时钟只更新显示，时间读取失败不能隐藏订阅／用量，列表失败不能误报暂无订阅。暂停／撤销不露续费，有效／过期续费仍携原分组到purchase。
+- 保留 `custom/subscriptions/timing.ts` 读取 `/subscriptions/progress` 的 `{subscription, progress}`＋`progress.{daily,weekly,monthly}.resets_at` 真实契约。不要沿旧前端 `SubscriptionProgress` 类型猜响应，或恢复window_start加24／168／720小时的本地算法；后端日历日与周／月旧锚点以服务端返回为准。
+- 倒计时15秒刷新、visibilitychange及时更新及卸载清理保持；窗口已到重置但无新读数只显示使用后更新，不能本地清用量／伪造下一周期。订阅先到期／日卡提示额度结束，已过期仍显示实际到期日期、不显示未来重置时间。
+- 新样式只位于theme.css的mofa-subscription作用域，雾钛青tokens与原平台语义徽标保留。回归 `custom/__tests__/subscription-timing.spec.ts`（21项），Makefile应包括该文件（本轮27文件399项）；类型／相关lint／Vite与1440／900／390深浅浏览器夹具已通过，真实账户与生产仍待发布后验收。
+
+## 2026-10-06 电脑端支付宝 WAP 扫码
+
+- 保留 `AlipayDesktopWapSetting.vue` 与 SettingsView 的 import／支付区装配、默认 false、保存字段；中英文 label／帮助及 Toggle 的 aria-labelledby／aria-describedby 共同保留。不改 theme.css。
+- 管理员读写 `payment_alipay_desktop_wap_qrcode`、支付配置 `alipay_desktop_wap_qrcode` 与后端存储 `ALIPAY_DESKTOP_WAP_QRCODE` 对齐；后端遗漏字段保留旧值，前端不要借此改动两个手机选项。
+- 结账和恢复继续用原 `qr_code`＋`payment_mode=qrcode` 路径；二维码内容为带随机令牌的本站短入口。订单保存原 WAP URL 与实际模式，前端不得因当前开关关闭而把旧电脑订单改成跳转，也不得将手机标记为新桌面流程。
+- 保留后端 public/alipay/wap/:id 的免登录令牌授权、no-store／no-referrer、分钟期限与官方网关校验；个人订单接口仍认证。完整后端接缝见根CUSTOMIZATIONS，无新迁移。
+- 回归 `src/custom/__tests__/alipay-desktop-wap.spec.ts`、SettingsView、原 PaymentView／PaymentResult、paymentFlow／paymentStatus；Makefile关键列表应含新项。已通过26文件378项、类型／lint／生产构建，实际支付宝App扫码和实付尚未验证，不能用jsdom恢复或302夹具代替。启用与真机验收见根deploy/ALIPAY_DESKTOP_WAP.md。
+
 - 配方生成图片的“打开图片”保留页内原生dialog，避免Base64 data新窗口空跳转；原图下载仅PNG／JPEG／WebP Base64，远程图提示长按／右键保存。保留Esc／关闭回焦点、Tab循环、换材料／配方／连接／退出清理及图片加载错误，独立与主站外置CSP共用。不改母站theme.css或放宽CSP；回归配方ui.test.cjs、model.test.cjs和build-products.test.mjs。
 
 - 2026-10-01 最新要求：默认浅色且保留用户已保存偏好。同步 `main.ts`、`AppSidebar.vue`、`HomeView.vue`、`KeyUsageView.vue` 的 `[CUSTOM]` 初始化，不恢复无偏好时跟随系统深色。内置产品走认证路由 `/tools/recipes`、`/tools/studio`，正文中的同源 iframe 跟随宿主主题；显式独立外部地址仍兼容新窗口。不要把 `.mofa-product-workspace` 改成与 AppLayout 根节点重复的 `.mofa-workspace`。

@@ -766,6 +766,9 @@ export default {
         cancelRateLimitWindowModeFixed: 'Fixed',
         alipayForceQRCode: 'Force Alipay QR Code',
         alipayForceQRCodeHint: 'When enabled, mobile Alipay users always see a QR code instead of being redirected to the mobile payment page',
+        // [CUSTOM] 桌面扫码与原手机设置分开。
+        alipayDesktopWapQRCode: 'Use Alipay mobile website payment for desktop QR checkout',
+        alipayDesktopWapQRCodeHint: 'For merchants with mobile website payment only. Desktop users scan with the Alipay app to pay directly, without signing in on their phone. Mobile browser checkout stays unchanged. Applies only to official Alipay providers.',
         alipayMobilePrecreateDeepLink: 'Mobile Alipay Precreate Handoff',
         alipayMobilePrecreateDeepLinkHint: 'Use official Alipay precreate on mobile, open the Alipay app, and show the dynamic QR only if handoff fails. This takes priority over Force Alipay QR Code',
         helpText: 'Help Text',

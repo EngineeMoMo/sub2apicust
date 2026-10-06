@@ -159,7 +159,16 @@ services:
 EOF
 ```
 
-`update.sh` 每次都会：拉镜像 → 重建容器 → **启动时自动跑数据库迁移** → 等 `/health` 就绪 → 清理悬空旧镜像。
+`update.sh` 每次都会：记录更新前镜像 → 拉镜像 → 重建容器 → **启动时自动跑数据库迁移** → 等 `/health` 就绪 → 定向清理本项目旧镜像。
+
+### 旧镜像保留规则（2026-10-01）
+
+- 仅处理 `ghcr.io/engineemomo/sub2apicust` 的 `sha-*`／`latest` 标签，以及带本仓来源标签的悬空镜像；保留当前镜像、实际更新前镜像和所有其他运行／停止容器引用的镜像。手工 `v*` 等标签保持，不清数据库、Redis、日志、备份、数据卷或其他项目镜像。
+- 更新成功后，更新前镜像增加本地 `rollback-previous` 标签，支持只拉 `latest` 时保留旧版；重复更新同版时不覆盖已有回退镜像。首次使用新版脚本却没有发生版本切换时，保留按镜像创建时间排序、比当前更早的最近一个 `sha-*` 镜像作为回退候选，这不等于已验证该候选曾运行成功。
+- `/health` 超时返回非零，跳过全部清理；拉取／重建失败同样不清理。检查失败时保留相关镜像并输出原因，删除不使用强制参数。`update-before` 是拉取前的保护标签，更新成功时移除；中断／失败时可能保留用于人工排查。
+- 部署目录 `.sub2api-update.lock` 防止同目录并发更新，正常退出自动移除。被强制终止时可能遗留；确认没有更新进程后，使用 `rmdir /sub2api-deploy/.sub2api-update.lock` 移除空锁目录再重试。
+- **服务器必须单独替换 `/sub2api-deploy/update.sh` 为本仓新版，并执行 `chmod +x /sub2api-deploy/update.sh`。仅拉取应用镜像不会更新宿主机脚本。** `rollback-previous`／`update-before` 为服务器本地标签，不是GHCR发布标签；指定版回退继续使用原 `sha-*` 标签，不把本地标签传给会执行pull的更新命令。
+- 回归：`bash -n deploy/update.sh`、`bash deploy/tests/update-test.sh`。后者仅使用假Docker，不连接daemon；当前22个升级、latest（含无sha别名）、同版、回滚、仓库切换、容器占用、检查／删除失败及并发锁场景通过。真实服务器回收量需升级后用 `df -h` 和 `docker image ls ghcr.io/engineemomo/sub2apicust` 核验。
 
 ---
 

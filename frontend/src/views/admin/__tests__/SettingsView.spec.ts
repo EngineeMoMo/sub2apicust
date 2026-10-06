@@ -1546,6 +1546,23 @@ describe("admin SettingsView payment visible method controls", () => {
     expect(weightedModeText).toContain("计费倍率");
   });
 
+  // [CUSTOM] 保存开关的接线必须实际进入后台更新请求。
+  it("loads and saves desktop Alipay WAP without changing mobile options", async () => {
+    getSettings.mockResolvedValue({ ...baseSettingsResponse, payment_alipay_desktop_wap_qrcode: true,
+      payment_alipay_force_qrcode: false, payment_alipay_mobile_precreate_deep_link: true });
+    const wrapper = mountView();
+    await flushPromises();
+    await openPaymentTab(wrapper);
+    const toggle = wrapper.get('[aria-labelledby="alipay-desktop-wap-label"]');
+    expect((toggle.element as HTMLInputElement).checked).toBe(true);
+    await toggle.setValue(false);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+    expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ payment_alipay_desktop_wap_qrcode: false,
+      payment_alipay_force_qrcode: false, payment_alipay_mobile_precreate_deep_link: true }));
+    wrapper.unmount();
+  });
+
   it("passes translated upload and remove labels to the payment help image uploader", async () => {
     const wrapper = mountView();
 

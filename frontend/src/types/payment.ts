@@ -39,6 +39,8 @@ export interface PaymentConfig {
   help_image_url: string
   help_text: string
   stripe_publishable_key: string
+  /** [CUSTOM] 电脑端官方支付宝使用 WAP 扫码，由服务端决定订单模式 */
+  alipay_desktop_wap_qrcode?: boolean
 }
 
 export interface MethodLimit {

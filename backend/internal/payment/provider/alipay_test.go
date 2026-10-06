@@ -432,7 +432,8 @@ func TestAlipayMerchantIdentityMetadata(t *testing.T) {
 func TestParseAlipayAmount(t *testing.T) {
 	t.Parallel()
 
-	amount, err := parseAlipayAmount("", "88.00", "77.00")
+	// [CUSTOM] 仅解析总额，不接受缺失总额时的其他金额回退。
+	amount, err := customAlipayPaidAmount("88.00")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -440,7 +441,9 @@ func TestParseAlipayAmount(t *testing.T) {
 		t.Fatalf("amount = %v, want 88", amount)
 	}
 
-	if _, err := parseAlipayAmount("", "not-a-number"); err == nil {
-		t.Fatal("expected error when no valid amount field exists")
+	for _, raw := range []string{"", "not-a-number", "NaN", "Inf", "-1", "0", "1.001", "1e2", " 88.00"} {
+		if _, err := customAlipayPaidAmount(raw); err == nil {
+			t.Fatalf("expected invalid total_amount: %q", raw)
+		}
 	}
 }

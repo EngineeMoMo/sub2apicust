@@ -52,6 +52,8 @@ func RegisterPaymentRoutes(
 	// persisted-state compatibility path for staggered upgrades.
 	public := v1.Group("/payment/public")
 	{
+		// [CUSTOM] 扫码令牌授权，手机免登录；按公开 IP 限流，无支付写入。
+		public.GET("/alipay/wap/:id", paymentHandler.AlipayDesktopWapGuard, panelRateLimiter.PublicIP(), paymentHandler.AlipayDesktopWapRedirect)
 		// [CUSTOM] 游客套餐目录仅返回展示字段，不开放结账或账户接口。
 		public.GET("/plans", paymentHandler.GetPublicPlans(settingService))
 		public.POST("/orders/verify", paymentHandler.VerifyOrderPublic)

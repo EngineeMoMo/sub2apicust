@@ -1,7 +1,9 @@
 .PHONY: build build-backend build-frontend test test-backend test-frontend test-frontend-critical
 
-# [CUSTOM] 包号免扣、共享限制与报表必须进入前端关键回归，不能只在本机手工执行。
+# [CUSTOM] 包号、电脑端支付宝 WAP 扫码与订阅时间展示必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
+	src/custom/__tests__/subscription-timing.spec.ts \
+	src/custom/__tests__/alipay-desktop-wap.spec.ts \
 	src/custom/__tests__/dedicated-billing-policy.spec.ts \
 	src/custom/__tests__/dedicated-view.spec.ts \
 	src/custom/__tests__/dedicated-config.spec.ts \

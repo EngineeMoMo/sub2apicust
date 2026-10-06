@@ -8372,6 +8372,8 @@
                     </div>
                   </div>
                 </div>
+                <!-- [CUSTOM] 电脑端 WAP 扫码设置复用现有支付区，手机设置保持。 -->
+                <AlipayDesktopWapSetting v-model="form.payment_alipay_desktop_wap_qrcode" />
                 <!-- Row 4: Enabled payment types (provider badges like sub2apipay) -->
                 <div>
                   <label class="input-label">{{
@@ -9022,6 +9024,8 @@ import PaymentProviderDialog from "@/components/payment/PaymentProviderDialog.vu
 import GroupBadge from "@/components/common/GroupBadge.vue";
 import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
 import Toggle from "@/components/common/Toggle.vue";
+// [CUSTOM] 电脑端支付宝 WAP 扫码设置。
+import AlipayDesktopWapSetting from "@/custom/components/AlipayDesktopWapSetting.vue";
 import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
@@ -9818,6 +9822,7 @@ const form = reactive<SettingsForm>({
   payment_cancel_rate_limit_unit: "day",
   payment_cancel_rate_limit_window_mode: "rolling",
   payment_alipay_force_qrcode: false,
+  payment_alipay_desktop_wap_qrcode: false, // [CUSTOM] 默认不改变原支付模式。
   payment_alipay_mobile_precreate_deep_link: false,
   table_default_page_size: tablePageSizeDefault,
   table_page_size_options: [10, 20, 50, 100],
@@ -11685,6 +11690,7 @@ async function saveSettings() {
       payment_cancel_rate_limit_window_mode:
         form.payment_cancel_rate_limit_window_mode,
       payment_alipay_force_qrcode: form.payment_alipay_force_qrcode,
+      payment_alipay_desktop_wap_qrcode: form.payment_alipay_desktop_wap_qrcode, // [CUSTOM]
       payment_alipay_mobile_precreate_deep_link:
         form.payment_alipay_mobile_precreate_deep_link,
       openai_low_upstream_rate_priority_enabled:

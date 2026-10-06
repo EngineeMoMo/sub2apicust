@@ -761,6 +761,9 @@ export default {
         cancelRateLimitWindowModeFixed: '固定',
         alipayForceQRCode: '支付宝强制二维码支付',
         alipayForceQRCodeHint: '启用后，移动端支付宝用户将统一使用二维码扫码支付，不再跳转至手机网站支付',
+        // [CUSTOM] 只改电脑端，不复用手机当面付开关。
+        alipayDesktopWapQRCode: '电脑端支付宝使用手机网站支付扫码',
+        alipayDesktopWapQRCodeHint: '适用于仅开通手机网站支付的商户。电脑端显示二维码，使用手机支付宝扫一扫直接付款，无需登录本站；手机浏览器支付保持原流程。仅对官方支付宝通道生效。',
         alipayMobilePrecreateDeepLink: '支付宝移动端当面付唤起',
         alipayMobilePrecreateDeepLinkHint: '启用后，移动端官方支付宝订单调用当面付并尝试打开支付宝；失败时显示动态二维码。该设置优先于强制二维码支付',
         helpText: '帮助文本',

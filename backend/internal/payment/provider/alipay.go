@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -104,6 +103,7 @@ func (a *Alipay) MerchantIdentityMetadata() map[string]string {
 }
 
 // CreatePayment creates an Alipay payment using the following routing:
+// [CUSTOM] 桌面 AlipayDesktopWapQRCode 使用 WAP，订单服务生成本站扫码短入口。
 //   - Mobile (H5), default: alipay.trade.wap.pay — browser redirect into Alipay.
 //   - Mobile with AlipayMobilePrecreate: alipay.trade.precreate — return the
 //     dynamic QR payload so the frontend can open it through the Alipay app.
@@ -138,6 +138,10 @@ func (a *Alipay) CreatePayment(ctx context.Context, req payment.CreatePaymentReq
 		}
 		return a.createWapTrade(client, req, notifyURL, returnURL)
 	}
+	// [CUSTOM] 仅电脑端启用 WAP 时跳过 precreate/pagepay，包括 redirect 模式。
+	if req.AlipayDesktopWapQRCode {
+		return a.createWapTrade(client, req, notifyURL, returnURL)
+	}
 	return a.createDesktopTrade(ctx, client, req, notifyURL, returnURL)
 }
 
@@ -147,6 +151,13 @@ func (a *Alipay) createWapTrade(client *alipay.Client, req payment.CreatePayment
 	param.TotalAmount = req.Amount
 	param.Subject = req.Subject
 	param.ProductCode = alipayProductCodeWapPay
+	// [CUSTOM] WAP 的分钟精度截止时间与本地订单保持一致，不改变手机参数。
+	if !req.IsMobile && req.AlipayDesktopWapQRCode {
+		if req.ExpiresAt.IsZero() {
+			return nil, fmt.Errorf("alipay desktop wap: missing expiry")
+		}
+		param.TimeExpire = req.ExpiresAt.In(time.FixedZone("CST", 8*60*60)).Format("2006-01-02 15:04")
+	}
 	param.NotifyURL = notifyURL
 	param.ReturnURL = returnURL
 
@@ -257,16 +268,11 @@ func (a *Alipay) QueryOrder(ctx context.Context, tradeNo string) (*payment.Query
 		status = payment.ProviderStatusFailed
 	}
 
-	amount, err := strconv.ParseFloat(result.TotalAmount, 64)
-	if err != nil {
-		amount, err = parseAlipayAmount(
-			result.TotalAmount,
-			result.ReceiptAmount,
-			result.BuyerPayAmount,
-			result.InvoiceAmount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("alipay parse amount: %w", err)
+	// [CUSTOM] 已付查询必须绑定原订单，只接受订单总金额，不补用其他金额。
+	amount, err := customAlipayPaidAmount(result.TotalAmount)
+	if status == payment.ProviderStatusPaid {
+		if err != nil || result.OutTradeNo != tradeNo || strings.TrimSpace(result.TradeNo) == "" {
+			return nil, fmt.Errorf("invalid alipay paid query result")
 		}
 	}
 
@@ -286,7 +292,8 @@ func (a *Alipay) VerifyNotification(ctx context.Context, rawBody string, _ map[s
 		return nil, err
 	}
 
-	values, err := url.ParseQuery(rawBody)
+	// [CUSTOM] 缺项、重复参数及商户不匹配均拒绝，不用配置值补齐签名数据。
+	values, err := customAlipayNotificationValues(rawBody, strings.TrimSpace(a.config["appId"]))
 	if err != nil {
 		return nil, fmt.Errorf("alipay parse notification: %w", err)
 	}
@@ -301,25 +308,13 @@ func (a *Alipay) VerifyNotification(ctx context.Context, rawBody string, _ map[s
 		status = payment.ProviderStatusSuccess
 	}
 
-	amount, err := strconv.ParseFloat(notification.TotalAmount, 64)
+	// [CUSTOM] 严格读取签名内 total_amount，拒绝 NaN、负数与非分精度金额。
+	amount, err := customAlipayPaidAmount(notification.TotalAmount)
 	if err != nil {
-		amount, err = parseAlipayAmount(
-			notification.TotalAmount,
-			notification.ReceiptAmount,
-			notification.BuyerPayAmount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("alipay parse notification amount: %w", err)
-		}
+		return nil, err
 	}
 
-	metadata := a.MerchantIdentityMetadata()
-	if appID := strings.TrimSpace(notification.AppId); appID != "" {
-		if metadata == nil {
-			metadata = map[string]string{}
-		}
-		metadata["app_id"] = appID
-	}
+	metadata := map[string]string{"app_id": notification.AppId} // [CUSTOM] 必须来自已验签通知。
 
 	return &payment.PaymentNotification{
 		TradeNo:  notification.TradeNo,
@@ -388,19 +383,7 @@ func isTradeNotExist(err error) bool {
 	return strings.Contains(err.Error(), alipayErrTradeNotExist)
 }
 
-func parseAlipayAmount(values ...string) (float64, error) {
-	for _, raw := range values {
-		raw = strings.TrimSpace(raw)
-		if raw == "" {
-			continue
-		}
-		amount, err := strconv.ParseFloat(raw, 64)
-		if err == nil {
-			return amount, nil
-		}
-	}
-	return 0, fmt.Errorf("no valid amount field")
-}
+// [CUSTOM] 金额解析统一由 customAlipayPaidAmount 严格读取 total_amount，不再回退。
 
 // Ensure interface compliance.
 var (

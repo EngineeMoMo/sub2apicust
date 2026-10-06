@@ -295,6 +295,8 @@ type SystemSettings struct {
 
 	// Force Alipay mobile clients to use QR code payment instead of mobile redirect
 	PaymentAlipayForceQRCode bool `json:"payment_alipay_force_qrcode"`
+	// [CUSTOM] 电脑端官方支付宝 WAP 扫码。
+	PaymentAlipayDesktopWapQRCode bool `json:"payment_alipay_desktop_wap_qrcode"`
 	// Use Alipay face-to-face precreate and an app deep link on mobile clients.
 	PaymentAlipayMobilePrecreateDeepLink bool `json:"payment_alipay_mobile_precreate_deep_link"`
 
