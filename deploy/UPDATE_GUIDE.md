@@ -1,6 +1,22 @@
 # 日常更新操作手册（定制版 sub2api）
 
-## 2026-10-06 v0.2.13本地合并候选（尚不可按新镜像部署）
+## 2026-10-07 v0.2.13定制合并版（最新可更新版本）
+
+功能提交 `4bc5abbb53544fe89f9fc3bc001f5a69b7ca07e5` 已推origin/main；同SHA的 [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464883)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464870)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492465165) 全部成功。固定镜像 `ghcr.io/engineemomo/sub2apicust:sha-4bc5abb`（linux/amd64），摘要 `sha256:df08bf887996ab87efe2a5f8a4c9958a925723ff9b0fd4764b30e4512dadde52`，由成功构建的manifest推送及digest输出确认；不要用中间失败候选2c282e409或a8baeb515作为更新目标。
+
+本版含上游v0.2.13、订阅到期与重置时间提示、支付宝桌面WAP扫码与安全修复、更新脚本镜像保留，以及已认证包号跳过余额预占的兼容修复。Vue／source-map-js新增高危依赖已更新，前端安全仍按原SheetJS例外通过。更新脚本的BSD sed与Bash 3兼容性已修，macOS CI及Linux22场景通过。
+
+先备份Postgres、部署配置、app_data，记录旧镜像；在实际部署目录执行：
+
+```bash
+./update.sh sha-4bc5abb
+```
+
+如需同步本轮更新脚本，可从仓库该功能提交的 `deploy/update.sh` 获取并替换部署目录中的脚本，保留原脚本备份。脚本代码推送不等于服务器脚本自动更新。
+
+两项上游241迁移与本仓241/242/243按完整文件名并存，勿重命名已应用文件。升级前未使用的重置密码链接需重新申请；Key创建默认每用户200个有效Key／每小时60次，余额并发预占默认启用，有效包号仍不预占客户余额。更新后核验health、运行镜像版本、订阅时间提示、包号零余额准入，并按ALIPAY_DESKTOP_WAP.md验收实际扫码支付；本地／CI成功不等于真实业务已验收。生产由用户部署。
+
+## 2026-10-06 v0.2.13本地合并候选（历史记录）
 
 已合并稳定上游源码及本轮支付宝／订阅／更新脚本定制，本地检查结果见HANDOFF。尚未推送、没有本次提交对应的CI或新镜像，下面已发布版本记录保持有效。发布前须核验本次SHA；保留包号预付跳过余额预占、支付严格金额与赠金／折扣的实付和到账区分。两项上游241迁移与本仓241/242/243并存，勿重命名已应用文件；升级前备份数据库及配置。上游重置密码令牌改哈希，升级前未使用链接需要重新申请；Key创建默认每用户200个有效Key／每小时60次，余额并发预占默认启用。生产仍由用户部署。
 

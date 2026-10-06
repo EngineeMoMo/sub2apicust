@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-07发布终态：用户授权后已推送功能4bc5abbb5，同SHA CI（unit／integration）、安全扫描和GHCR全部成功，固定镜像sha-4bc5abb；发布与更新步骤以HANDOFF第四节和deploy/UPDATE_GUIDE最新节为准，覆盖下方历史未发布状态。生产由用户部署。
+
 - 2026-10-06用户授权合并上游v0.2.13：48个未提交文件先备份并保存快照e2adf6005；处理支付路由冲突，保留扫码／游客目录和上游匿名查询限流，新增已认证包号跳过余额预占接缝。Linux全量unit、真实PG包号／迁移、2921项前端全量、类型／源码lint／构建和登录接口冒烟已核验，最终结果见HANDOFF。完整integration已在用户明确授权socket后补跑通过（52包），另补跑securityaudit的PG／Redis测试214项通过，剩余6项既有／外部依赖跳过已记录；未推送部署，不把本地检查等同新SHA CI或生产验收。
 
 - 2026-10-06支付宝严格安全复查已补强：签名字段／商户／总额与查询订单绑定，固定配置公钥、精确分金额，扫码HTTPS／可信站点、歧义参数拒绝及限流前no-store。111顶层＋103子项、真实仓储16并发重放仅入账一次连续三轮、Host fuzz与embed通过；静态检查最终结果见output/alipay-security-review-20261006/verification.json，报告deploy/ALIPAY_SECURITY_REVIEW.md。未提交推送部署；真实PG并发、新SHA CI及App实付待验，不承诺绝对安全，保留更新脚本和订阅UI专项。
