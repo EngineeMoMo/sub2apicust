@@ -1,5 +1,10 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-06 发布门禁补修
+
+- `deploy/update.sh` 指定标签替换：CI macOS 的 BSD sed 不支持 GNU `-i -E` 组合，改为先捕获 `sed -E` 输出再 printf 写回，保留原备份与文件权限，标注[CUSTOM]；Linux假Docker 22场景通过，macOS由本次CI复验。
+- `frontend/package.json` / `pnpm-lock.yaml`：Vue最低版本升至3.5.42，统一带入修复后的server-renderer；增加source-map-js<1.2.2的补丁override。依据本次pnpm audit的GHSA-g2v6-rqmx-r4w6／GHSA-68fv-2mgg-jv7q修复，不增加安全扫描例外。JSON不能写注释，以本节登记接缝。
+
 ## 2026-10-06 同步上游 v0.2.13（本地合并，未发布）
 
 - 基于稳定标签 `3040209f2` 合并；`backend/cmd/server/VERSION` 对齐上游随后 `b8dece900` 的0.2.13元数据。原未提交的支付、订阅、更新脚本等48文件先备份到output/upstream-merge-20261006/before并保存本地快照e2adf6005。

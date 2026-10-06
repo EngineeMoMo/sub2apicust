@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-06 发布门禁补修**：2c282e409已推送，CI的macOS更新脚本因BSD sed参数不兼容失败，安全扫描发现source-map-js及Vue SSR新高危。已改跨平台sed写回并保留备份／权限，Vue锁定到3.5.43、source-map-js升级补丁；未扩安全例外。Linux更新脚本22场景与升级依赖后的前端365文件／2921项全量通过，类型／构建及新SHA远程发布门禁继续核验。2c282e409镜像不得当作本轮推荐更新版本。
+
 - **2026-10-06 用户授权发布准备**：已将上游合并8d47c4253及完整integration交接01abba70d推送origin/main。历史上游提交含skip ci指令，本轮另提交发布记录触发新SHA的CI／安全检查，并手动触发该SHA的GHCR构建；成功结果及固定镜像待核实，不使用旧镜像替代。用户自行更新，智能体未操作生产。
 
 - **2026-10-06 完整 integration 补测完成**：用户明确授权临时测试容器挂载 Docker socket，覆盖此前审批阻塞。测试代码为5d155f9e0（业务合并8d47c4253）；Linux执行 `CI=true go test -tags=integration -count=1 -json ./...` 退出0，52包、6,997顶层＋6,586子项通过、无失败。使用测试指定postgres:18.1-alpine3.23／redis:8.4-alpine，仓储及认证限流实际运行。首轮15项跳过中9项安全审计因未配置专用PG／Redis，已创建隔离服务补跑整个securityaudit包：214项通过、0跳过、退出0。仍有6项既有跳过：钉钉占位、并发缓存TODO、TLS capture地址、TypeSafe实测凭据、OpenAI凭据及插件包缺失；未伪装全项执行。证据output/upstream-merge-20261006/integration-summary.json、integration.jsonl、integration-audit.jsonl及container-results。四个本轮临时容器、其测试匿名卷及专用网络已清理，testcontainers自动清理完成，Docker socket挂载已解除；before/after清单确认只剩原4个业务容器，ID与停止状态一致。无业务代码修改，未推送／部署；本地验证不替代新SHA CI／安全／镜像与真实付款／模型请求验收。

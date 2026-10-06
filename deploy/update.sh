@@ -160,7 +160,9 @@ if [[ -n "$TAG" ]]; then
   fi
   # 只改 image 的标签部分（最后一个冒号后的内容），并留一份备份便于回退
   cp docker-compose.override.yml "docker-compose.override.yml.bak.$(date +%s)"
-  sed -i -E "s|(image:[[:space:]]*[^[:space:]]+):[^[:space:]]+|\1:${TAG}|" docker-compose.override.yml
+  # [CUSTOM] BSD/GNU sed 的 -i 参数不兼容；先完成替换，再写回并保留原文件权限。
+  updated_compose=$(sed -E "s|(image:[[:space:]]*[^[:space:]]+):[^[:space:]]+|\1:${TAG}|" docker-compose.override.yml)
+  printf '%s\n' "$updated_compose" > docker-compose.override.yml
   echo "→ 镜像标签已切到 :${TAG}"
 fi
 
