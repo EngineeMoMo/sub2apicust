@@ -2,7 +2,7 @@
 
 ## 2026-10-06 发布门禁补修
 
-- `deploy/update.sh` 指定标签替换：CI macOS 的 BSD sed 不支持 GNU `-i -E` 组合，改为先捕获 `sed -E` 输出再 printf 写回，保留原备份与文件权限，标注[CUSTOM]；Linux假Docker 22场景通过，macOS由本次CI复验。
+- `deploy/update.sh` 指定标签替换：CI macOS 的 BSD sed 不支持 GNU `-i -E` 组合，改为先捕获 `sed -E` 输出再 printf 写回，保留原备份与文件权限，标注[CUSTOM]；Linux假Docker 22场景通过，macOS首次复验进一步发现Bash 3把相邻中文括号读入变量名，回退镜像提示改用显式花括号边界；由新SHA CI复验。
 - `frontend/package.json` / `pnpm-lock.yaml`：Vue最低版本升至3.5.42，统一带入修复后的server-renderer；增加source-map-js<1.2.2的补丁override。依据本次pnpm audit的GHSA-g2v6-rqmx-r4w6／GHSA-68fv-2mgg-jv7q修复，不增加安全扫描例外。JSON不能写注释，以本节登记接缝。
 
 ## 2026-10-06 同步上游 v0.2.13（本地合并，未发布）

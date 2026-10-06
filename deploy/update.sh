@@ -129,7 +129,8 @@ cleanup_old_images() {
 
   echo "→ 保留当前镜像：$CURRENT_IMAGE_ID"
   if [[ -n "$ROLLBACK_IMAGE_ID" ]]; then
-    echo "→ 保留回退镜像：$ROLLBACK_IMAGE（$ROLLBACK_IMAGE_ID）"
+    # [CUSTOM] Bash 3 在 UTF-8 locale 下可能将相邻中文符号读入变量名，显式界定边界。
+    echo "→ 保留回退镜像：${ROLLBACK_IMAGE}（${ROLLBACK_IMAGE_ID}）"
   fi
   if [[ -n "$PREVIOUS_IMAGE_ID" ]]; then
     docker image rm "$BEFORE_IMAGE" >/dev/null || return 1
