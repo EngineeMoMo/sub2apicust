@@ -8,7 +8,7 @@
 - custom支付宝测试适配createOrderInTx新增bonusAmount及RegisterPaymentRoutes新增Redis参数；增加赠金／折扣订单的签名实付金额校验，避免以到账额替代实付。
 - 上游测试接缝 `frontend/src/api/__tests__/settings.authSourceDefaults.spec.ts` 按实际新增TypeSafe保留六个平台；`frontend/src/views/user/__tests__/UsageView.spec.ts` 保留本仓用户CSV的Billing Type列，两处均标[CUSTOM]。Makefile关键测试加入这两个文件，避免只跑旧子集漏检。
 - 迁移仍按完整文件名记录，不重命名已发布的241/242/243包号迁移；新增241_add_payment_order_bonus_amount与241_add_typesafe_platform已在独立PG的新库、旧定制库升级及重复执行中验证。主题、SynaRoute与custom目录既有代码保留，无新的业务配置／数据库写入。
-- 验证与未完成门禁见HANDOFF最新状态，证据output/upstream-merge-20261006；完整integration因Docker socket权限被自动审批拒绝尚未运行，不能将unit、迁移与登录冒烟等同完整integration或真实付款／模型请求成功。
+- 验证与未完成门禁见HANDOFF最新状态，证据output/upstream-merge-20261006；完整integration已在用户明确授权socket后通过，52包／6,997顶层＋6,586子项；安全审计专用PG／Redis补测214项通过。仍有6项既有／外部依赖跳过，清单见integration-summary.json；不等同真实付款／模型请求成功。
 
 ## 2026-10-06 支付宝支付安全复查补强（未发布）
 

@@ -39,7 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **本轮合并收口**：功能合并提交 `8d47c42535bad245a9714248092493687a68eb1a` 已从隔离分支快进到本地main；双亲为快照e2adf6005与上游稳定v0.2.13=3040209f2，`git merge-base --is-ancestor v0.2.13 HEAD`退出0。合并后工作区干净（本条交接补记除外）；未推送，origin/main仍旧版本。6个本轮临时容器及codex-upstream-20261006网络已删除，证据与备份保留；container-results.txt确认unit／迁移生成构建／shell容器均退出0。完整integration的审批限制与真实业务验收待办仍有效。
+- **2026-10-06 完整 integration 补测完成**：用户明确授权临时测试容器挂载 Docker socket，覆盖此前审批阻塞。测试代码为5d155f9e0（业务合并8d47c4253）；Linux执行 `CI=true go test -tags=integration -count=1 -json ./...` 退出0，52包、6,997顶层＋6,586子项通过、无失败。使用测试指定postgres:18.1-alpine3.23／redis:8.4-alpine，仓储及认证限流实际运行。首轮15项跳过中9项安全审计因未配置专用PG／Redis，已创建隔离服务补跑整个securityaudit包：214项通过、0跳过、退出0。仍有6项既有跳过：钉钉占位、并发缓存TODO、TLS capture地址、TypeSafe实测凭据、OpenAI凭据及插件包缺失；未伪装全项执行。证据output/upstream-merge-20261006/integration-summary.json、integration.jsonl、integration-audit.jsonl及container-results。四个本轮临时容器、其测试匿名卷及专用网络已清理，testcontainers自动清理完成，Docker socket挂载已解除；before/after清单确认只剩原4个业务容器，ID与停止状态一致。无业务代码修改，未推送／部署；本地验证不替代新SHA CI／安全／镜像与真实付款／模型请求验收。
+
+- **本轮合并收口**：功能合并提交 `8d47c42535bad245a9714248092493687a68eb1a` 已从隔离分支快进到本地main；双亲为快照e2adf6005与上游稳定v0.2.13=3040209f2，`git merge-base --is-ancestor v0.2.13 HEAD`退出0。合并后工作区干净（本条交接补记除外）；未推送，origin/main仍旧版本。6个本轮临时容器及codex-upstream-20261006网络已删除，证据与备份保留；container-results.txt确认unit／迁移生成构建／shell容器均退出0。完整integration已按下方补测记录通过；新SHA CI／镜像及真实业务验收仍待。
 
 - **2026-10-06 用户授权同步上游v0.2.13（本地完成，未发布）**：原main=25b9071cf；开工48文件逐字节备份及manifest在output/upstream-merge-20261006/before，隔离分支codex/sync-upstream-v0.2.13先提交快照e2adf6005，然后merge稳定tag3040209f2（含164条上游提交），VERSION按上游b8dece900补为0.2.13。唯一文本冲突payment路由保留WAP Guard／公开IP限流、游客套餐目录，并纳入上游verify 20次/分钟限流。已复现并修复语义冲突：已认证包号私有凭证跳过新余额预占，否则余额0及普通请求占款会误拒包号；HTTP／WS共用入口，不取消普通Key预占或包号共享限额。新增回归、支付宝函数签名适配／赠金折扣扫码实付测试，以及两处前端旧断言修正，全部接缝登记CUSTOMIZATIONS；主题、SynaRoute、订阅卡片及更新脚本保持。
 - **本轮验证证据**：output/upstream-merge-20261006。Linux全量go test -tags=unit ./...容器退出0，58测试包通过、11,536顶层＋10,510子项、17项环境／外部依赖跳过（skipped-tests.json）；专用PG包号认证、零余额准入、成员隔离、并发账本等实际运行。新库和已有包号241/242/243库升级至新增上游两项241迁移、重复执行均通过（migration-smoke.log）。Ent生成前后SHA256无差异；Linux go build -tags embed成功；golangci-lint 0 issues。前端全量365文件／2921项、vue-tsc、源码ESLint（排除gitignored生成的public/recipes与studio）、Vite构建通过；Windows依赖初次EPERM导致Axios缺文件已备份损坏目录后按锁文件离线恢复，失败日志保留。上游TypeSafe三条旧断言与本仓CSV Billing Type一条旧断言已修正并重跑全量。最后新增WAP赠金／折扣签名金额与充值规则定向通过。Linux假Docker更新脚本22场景及Compose安全检查通过；Windowsbash缺dirname的尝试不计成功。
@@ -330,7 +332,7 @@
 ## 五、待办 / 下一步
 
 - [x] **上游v0.2.13本地合并**：用户已授权，完成快照备份、文本／包号预占兼容、Linux全量unit、真实PG及迁移、前端2921项、类型／源码lint／构建和隔离登录冒烟；详见第四节。
-- [ ] **v0.2.13发布门禁**：完整integration的Docker socket权限被自动审批拒绝，待明确授权或在可信CI验证；新提交CI／安全／镜像和真实业务验收未完成。用户尚未要求推送／生产部署，本地通过不等于可沿用旧镜像上线。
+- [ ] **v0.2.13发布门禁**：完整integration已在用户明确授权后本地通过（52包，安全审计环境依赖另补跑通过，剩余6项跳过见第四节）；新提交CI／安全／镜像和真实业务验收未完成。用户尚未要求推送／生产部署，本地通过不等于可沿用旧镜像上线。
 
 - [x] **订阅改动二次代码审查**：限定本线程改动，未发现新的明确缺陷；32项含临时竞态／卸载验证通过，真实账号与发布验收仍待。
 
