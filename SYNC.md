@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-06本地同步v0.2.13：稳定tag3040209f2＋随后0.2.13 VERSION元数据；合并保留WAP扫码、游客目录与上游verify限流。新增余额在途预占必须跳过已认证包号凭证，否则零余额包号并发被误拒；接缝与回归见CUSTOMIZATIONS。新老241迁移按完整文件名并存，独立PG新库／升级／幂等通过，禁止重命名既有已应用迁移。本轮尚未推送或部署，完整integration权限及新SHA CI仍待，不沿用历史CI结果。
+
 2026-10-06支付宝安全补强同步要求：保留CUSTOMIZATIONS登记的官方通知严格字段／配置公钥／总额、查询订单绑定、精确分金额及新扫码HTTPS／可信站点规则；不得恢复金额回退或用Referer扩大可信Host。路由Guard在限流前禁止缓存，302正文为空。运行TestCustomAlipay及支付履约回归，真实仓储并发测试也要保留；发布与真实扫码边界见deploy/ALIPAY_SECURITY_REVIEW.md。生产由用户部署，不沿用历史CI结论。
 
 2026-10-06我的订阅提示源码完成未发布：同步保留SubscriptionsView的custom卡片与独立列表／重置时间读取、原progress接口真实嵌套结构和服务端resets_at，不恢复本地固定小时推算；15秒共享显示时钟、标签返回更新与卸载清理、过期实际日期及最后周期结束提示保持。样式仅theme.css，原平台语义色保持；Makefile增加subscription-timing.spec.ts，本轮27文件399项、类型／lint／Vite及深浅／手机浏览器模拟夹具通过。未改后端或实际部署，真实账号及本次代码发布门禁待用户要求发布后核验，不能借旧CI／镜像说明线上已改；详见CUSTOMIZATIONS、custom/UPGRADE和HANDOFF。

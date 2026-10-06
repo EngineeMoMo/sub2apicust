@@ -123,8 +123,18 @@ func TestCustomAlipayDesktopWapSignedOrderAndScan(t *testing.T) {
 	require.NoError(t, err)
 	public, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 	require.NoError(t, err)
-	for _, orderType := range []string{payment.OrderTypeBalance, payment.OrderTypeSubscription} {
-		t.Run(orderType, func(t *testing.T) {
+	for _, scenario := range []struct {
+		name, orderType       string
+		credited, paid, bonus float64
+	}{
+		{"balance", payment.OrderTypeBalance, 10, 10, 0},
+		{"subscription", payment.OrderTypeSubscription, 10, 10, 0},
+		{"balance_bonus", payment.OrderTypeBalance, 12, 10, 2},
+		{"balance_discount", payment.OrderTypeBalance, 10, 8, 0},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			orderType := scenario.orderType
+			paidText := strconv.FormatFloat(scenario.paid, 'f', 2, 64)
 			ctx := context.Background()
 			client := newPaymentConfigServiceTestClient(t)
 			user, err := client.User.Create().SetEmail("wap@example.test").SetPasswordHash("hash").SetUsername("wap").Save(ctx)
@@ -136,12 +146,14 @@ func TestCustomAlipayDesktopWapSignedOrderAndScan(t *testing.T) {
 			cfg := &PaymentConfig{AlipayDesktopWapQRCode: true, OrderTimeoutMin: 30, MaxPendingOrders: 3}
 			svc := &PaymentService{entClient: client, resumeService: NewPaymentResumeService([]byte("test-resume-signing-key"))}
 			req := CreateOrderRequest{UserID: user.ID, PaymentType: payment.TypeAlipay, OrderType: orderType, SrcHost: "merchant.example", ReturnURL: "https://merchant.example/payment/result"}
-			order, err := svc.createOrderInTx(ctx, req, &User{ID: user.ID, Email: user.Email, Username: user.Username}, nil, cfg, 10, 10, 0, 10, sel)
+			order, err := svc.createOrderInTx(ctx, req, &User{ID: user.ID, Email: user.Email, Username: user.Username}, nil, cfg, scenario.credited, scenario.paid, 0, scenario.paid, scenario.bonus, sel)
 			require.NoError(t, err)
+			require.Equal(t, scenario.credited, order.Amount)
+			require.Equal(t, scenario.bonus, order.BonusAmount)
 			require.Zero(t, order.ExpiresAt.Second())
 			require.Equal(t, true, order.ProviderSnapshot[customAlipayDesktopWapSnapshotKey])
 			require.Equal(t, "qrcode", order.ProviderSnapshot["payment_mode"])
-			resp, err := svc.invokeProvider(ctx, order, req, cfg, 10, "10.00", 10, nil, sel)
+			resp, err := svc.invokeProvider(ctx, order, req, cfg, scenario.paid, paidText, scenario.paid, nil, sel)
 			require.NoError(t, err)
 			require.Equal(t, "qrcode", resp.PaymentMode)
 			require.Equal(t, "redirect", sel.PaymentMode)
@@ -154,6 +166,11 @@ func TestCustomAlipayDesktopWapSignedOrderAndScan(t *testing.T) {
 			payURL, err := svc.ResolveAlipayDesktopWapURL(ctx, order.ID, token)
 			require.NoError(t, err)
 			require.Equal(t, resp.PayURL, payURL)
+			gatewayURL, err := url.Parse(payURL)
+			require.NoError(t, err)
+			var signedBiz map[string]any
+			require.NoError(t, json.Unmarshal([]byte(gatewayURL.Query().Get("biz_content")), &signedBiz))
+			require.Equal(t, paidText, signedBiz["total_amount"], "签名和扫码校验必须使用实付金额，不使用含赠金的到账额")
 			for _, invalid := range []string{"", token[:42], strings.Repeat("A", 43)} {
 				_, err = svc.ResolveAlipayDesktopWapURL(ctx, order.ID, invalid)
 				require.Equal(t, "INVALID_ALIPAY_WAP_TOKEN", infraerrors.Reason(err))
@@ -161,7 +178,7 @@ func TestCustomAlipayDesktopWapSignedOrderAndScan(t *testing.T) {
 			_, err = svc.ResolveAlipayDesktopWapURL(ctx, order.ID+1, token)
 			require.Equal(t, "INVALID_ALIPAY_WAP_TOKEN", infraerrors.Reason(err))
 			cfg.AlipayDesktopWapQRCode = true
-			other, err := svc.createOrderInTx(ctx, req, &User{ID: user.ID, Email: user.Email, Username: user.Username}, nil, cfg, 10, 10, 0, 10, sel)
+			other, err := svc.createOrderInTx(ctx, req, &User{ID: user.ID, Email: user.Email, Username: user.Username}, nil, cfg, 10, 10, 0, 10, 0, sel)
 			require.NoError(t, err)
 			otherResp, err := svc.invokeProvider(ctx, other, req, cfg, 10, "10.00", 10, nil, sel)
 			require.NoError(t, err)

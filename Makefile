@@ -2,6 +2,8 @@
 
 # [CUSTOM] 包号、电脑端支付宝 WAP 扫码与订阅时间展示必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
+	src/api/__tests__/settings.authSourceDefaults.spec.ts \
+	src/views/user/__tests__/UsageView.spec.ts \
 	src/custom/__tests__/subscription-timing.spec.ts \
 	src/custom/__tests__/alipay-desktop-wap.spec.ts \
 	src/custom/__tests__/dedicated-billing-policy.spec.ts \

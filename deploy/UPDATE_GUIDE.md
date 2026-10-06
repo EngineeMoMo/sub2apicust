@@ -1,5 +1,9 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-06 v0.2.13本地合并候选（尚不可按新镜像部署）
+
+已合并稳定上游源码及本轮支付宝／订阅／更新脚本定制，本地检查结果见HANDOFF。尚未推送、没有本次提交对应的CI或新镜像，下面已发布版本记录保持有效。发布前须核验本次SHA；保留包号预付跳过余额预占、支付严格金额与赠金／折扣的实付和到账区分。两项上游241迁移与本仓241/242/243并存，勿重命名已应用文件；升级前备份数据库及配置。上游重置密码令牌改哈希，升级前未使用链接需要重新申请；Key创建默认每用户200个有效Key／每小时60次，余额并发预占默认启用。生产仍由用户部署。
+
 ## 2026-10-02 配方打开原图修复（最新可更新版本）
 
 功能4bf1436fb8ecae0c0780c3b741e26cefba9dd170已推origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283643)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283348)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/36887283175)全部success；Go unit／integration、lint0、前端类型／lint和372项回归通过，镜像embed编译完成。实际固定镜像ghcr.io/engineemomo/sub2apicust:sha-4bf1436（linux/amd64），摘要sha256:038e95a020dc71a5615c02cec490a9a92cf8172242686977051b9686cdeae87e，经manifest推送与containerimage.digest核实。

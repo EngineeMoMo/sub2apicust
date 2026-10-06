@@ -61,7 +61,7 @@ func TestCustomAlipayDesktopWapPublicRouteNeedsNoLogin(t *testing.T) {
 	router := gin.New()
 	rejectAuth := func(c *gin.Context) { c.AbortWithStatus(http.StatusUnauthorized) }
 	RegisterPaymentRoutes(router.Group("/api/v1"), handler.NewPaymentHandler(svc, nil), &handler.PaymentWebhookHandler{}, &admin.PaymentHandler{},
-		middleware.JWTAuthMiddleware(rejectAuth), middleware.AdminAuthMiddleware(rejectAuth), middleware.AuditLogMiddleware(func(c *gin.Context) { c.Next() }), nil, nil)
+		middleware.JWTAuthMiddleware(rejectAuth), middleware.AdminAuthMiddleware(rejectAuth), middleware.AuditLogMiddleware(func(c *gin.Context) { c.Next() }), nil, nil, nil)
 	get := func(target string) *httptest.ResponseRecorder {
 		r := httptest.NewRecorder()
 		router.ServeHTTP(r, httptest.NewRequest(http.MethodGet, target, nil))

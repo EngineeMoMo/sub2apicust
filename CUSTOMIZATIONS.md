@@ -1,5 +1,15 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-06 同步上游 v0.2.13（本地合并，未发布）
+
+- 基于稳定标签 `3040209f2` 合并；`backend/cmd/server/VERSION` 对齐上游随后 `b8dece900` 的0.2.13元数据。原未提交的支付、订阅、更新脚本等48文件先备份到output/upstream-merge-20261006/before并保存本地快照e2adf6005。
+- `backend/internal/server/routes/payment.go` 唯一文本冲突：同时保留标注[CUSTOM]的WAP扫码Guard／IP限流与游客套餐目录，以及上游匿名订单verify独立20次/分钟限流；不丢任一分支。
+- 新上游接缝 `backend/internal/handler/gateway_inflight_reservation.go:reserveInflightBalanceCtx` 标[CUSTOM]：有效私有包号凭证跳过余额估价与预占；普通Key、身份不匹配Key及订阅原逻辑保持。包号准入／共享限额仍在认证层独立执行。新增 `custom_dedicated_inflight_test.go` 通过真实资格解析构造凭证，验证HTTP／WS共用入口、零余额及已有预占、未定价fail-closed、普通与不匹配Key不豁免。
+- custom支付宝测试适配createOrderInTx新增bonusAmount及RegisterPaymentRoutes新增Redis参数；增加赠金／折扣订单的签名实付金额校验，避免以到账额替代实付。
+- 上游测试接缝 `frontend/src/api/__tests__/settings.authSourceDefaults.spec.ts` 按实际新增TypeSafe保留六个平台；`frontend/src/views/user/__tests__/UsageView.spec.ts` 保留本仓用户CSV的Billing Type列，两处均标[CUSTOM]。Makefile关键测试加入这两个文件，避免只跑旧子集漏检。
+- 迁移仍按完整文件名记录，不重命名已发布的241/242/243包号迁移；新增241_add_payment_order_bonus_amount与241_add_typesafe_platform已在独立PG的新库、旧定制库升级及重复执行中验证。主题、SynaRoute与custom目录既有代码保留，无新的业务配置／数据库写入。
+- 验证与未完成门禁见HANDOFF最新状态，证据output/upstream-merge-20261006；完整integration因Docker socket权限被自动审批拒绝尚未运行，不能将unit、迁移与登录冒烟等同完整integration或真实付款／模型请求成功。
+
 ## 2026-10-06 支付宝支付安全复查补强（未发布）
 
 报告与证据边界见 [deploy/ALIPAY_SECURITY_REVIEW.md](deploy/ALIPAY_SECURITY_REVIEW.md)。新增 `backend/internal/payment/provider/custom_alipay_security.go` 统一严格签名字段／金额格式及固定公钥模式；新增 `backend/internal/service/custom_alipay_notification_security.go` 精确比较支付宝网关金额。对应真实RSA签名／SDK查询测试为 `custom_alipay_security_test.go`；实际仓储并发余额测试为 `backend/internal/server/routes/custom_alipay_fulfillment_security_test.go`，service中 `custom_alipay_desktop_wap_security_test.go` 覆盖URL歧义、可信站点、HTTPS与并发租约／Host fuzz。

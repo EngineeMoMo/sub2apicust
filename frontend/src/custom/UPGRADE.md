@@ -1,5 +1,10 @@
 # 雾钛青：上游同步核对清单
 
+## 2026-10-06 同步 v0.2.13
+
+- 订阅custom卡片／主题与SynaRoute接线保留；设置新增TypeSafe及充值赠金／折扣字段，与桌面支付宝开关共存。
+- settings.authSourceDefaults.spec.ts包含六个平台，UsageView.spec.ts保留用户CSV Billing Type列；两项纳入Makefile关键回归。全量365文件2921项通过，不能只凭旧关键子集说明同步成功。
+
 ## 2026-10-06 我的订阅时间提示
 
 - 审查修复须保留：列表独立结束 loading，progress 慢响应不阻塞卡片；重试／卸载使旧请求结果失效。保留慢响应补齐、延迟失败与旧请求成功／失败不覆盖新结果的四项回归。
