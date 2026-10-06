@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **本轮合并收口**：功能合并提交 `8d47c42535bad245a9714248092493687a68eb1a` 已从隔离分支快进到本地main；双亲为快照e2adf6005与上游稳定v0.2.13=3040209f2，`git merge-base --is-ancestor v0.2.13 HEAD`退出0。合并后工作区干净（本条交接补记除外）；未推送，origin/main仍旧版本。6个本轮临时容器及codex-upstream-20261006网络已删除，证据与备份保留；container-results.txt确认unit／迁移生成构建／shell容器均退出0。完整integration的审批限制与真实业务验收待办仍有效。
+
 - **2026-10-06 用户授权同步上游v0.2.13（本地完成，未发布）**：原main=25b9071cf；开工48文件逐字节备份及manifest在output/upstream-merge-20261006/before，隔离分支codex/sync-upstream-v0.2.13先提交快照e2adf6005，然后merge稳定tag3040209f2（含164条上游提交），VERSION按上游b8dece900补为0.2.13。唯一文本冲突payment路由保留WAP Guard／公开IP限流、游客套餐目录，并纳入上游verify 20次/分钟限流。已复现并修复语义冲突：已认证包号私有凭证跳过新余额预占，否则余额0及普通请求占款会误拒包号；HTTP／WS共用入口，不取消普通Key预占或包号共享限额。新增回归、支付宝函数签名适配／赠金折扣扫码实付测试，以及两处前端旧断言修正，全部接缝登记CUSTOMIZATIONS；主题、SynaRoute、订阅卡片及更新脚本保持。
 - **本轮验证证据**：output/upstream-merge-20261006。Linux全量go test -tags=unit ./...容器退出0，58测试包通过、11,536顶层＋10,510子项、17项环境／外部依赖跳过（skipped-tests.json）；专用PG包号认证、零余额准入、成员隔离、并发账本等实际运行。新库和已有包号241/242/243库升级至新增上游两项241迁移、重复执行均通过（migration-smoke.log）。Ent生成前后SHA256无差异；Linux go build -tags embed成功；golangci-lint 0 issues。前端全量365文件／2921项、vue-tsc、源码ESLint（排除gitignored生成的public/recipes与studio）、Vite构建通过；Windows依赖初次EPERM导致Axios缺文件已备份损坏目录后按锁文件离线恢复，失败日志保留。上游TypeSafe三条旧断言与本仓CSV Billing Type一条旧断言已修正并重跑全量。最后新增WAP赠金／折扣签名金额与充值规则定向通过。Linux假Docker更新脚本22场景及Compose安全检查通过；Windowsbash缺dirname的尝试不计成功。
 - **隔离应用冒烟与边界**：新编译二进制连接专用空库及Redis，在127.0.0.1:4189真实登录成功，profile、订阅列表／progress、包号列表、支付config均200，匿名订阅401，前端嵌入资源200。新管理员settings因尚未人工确认合规条款返回预期423，未替用户接受条款。业务数据库／8080容器／生产均未修改；未做实际模型调用或商户交易。完整integration测试要求容器访问宿主Docker socket，自动审批以授予管理全部Docker资源的权限超出隔离验证为由拒绝；没有绕过，完整integration及新SHA CI／镜像仍待，不能称全部发布门禁通过。未推送或部署；本轮临时容器与测试网络在收尾清理，保留日志、备份及二进制。
