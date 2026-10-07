@@ -6,6 +6,7 @@ FRONTEND_CRITICAL_VITEST := \
 	src/views/user/__tests__/UsageView.spec.ts \
 	src/custom/__tests__/subscription-timing.spec.ts \
 	src/custom/__tests__/alipay-desktop-wap.spec.ts \
+	src/custom/__tests__/xlsx-export.spec.ts \
 	src/custom/__tests__/dedicated-billing-policy.spec.ts \
 	src/custom/__tests__/dedicated-view.spec.ts \
 	src/custom/__tests__/dedicated-config.spec.ts \

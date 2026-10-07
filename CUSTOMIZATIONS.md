@@ -1,5 +1,11 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-07 发布门禁：移除SheetJS过期例外
+
+- ba405f1a8推送后安全检查被原xlsx两项例外于2026-10-06到期拦截，未延长例外。frontend/package.json与pnpm-lock.yaml改用官方固定包https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz及锁文件SHA512完整性；不使用latest、不从第三方镜像获取。官方修复说明：https://cdn.sheetjs.com/advisories/CVE-2023-30533 与 https://cdn.sheetjs.com/advisories/CVE-2024-22363，分别要求至少0.19.3／0.20.2。
+- .github/audit-exceptions.yml移除对应两条例外并标[CUSTOM]；不取消审计。JSON无法写注释，本节登记依赖接缝。
+- 新增frontend/src/custom/__tests__/xlsx-export.spec.ts使用真实库验证分页追加、中文／数字／包号零实扣、公式样式文字以文本导出并读回；Makefile的[CUSTOM]关键回归加入此文件。管理员导出业务源码不变。
+
 ## 2026-10-07 开通额度周期与支付宝官方直码（待发布）
 
 本地最终Linux unit58包／22,052项、integration52包／13,583项、embed构建、Go lint0及前端56项通过；真实PG迁移已执行。17／15跳过清单与退出码见output/subscription-wap-20261007/summary.json，未将缺外部配置的测试记为执行成功。尚未提交推送或生产部署。
