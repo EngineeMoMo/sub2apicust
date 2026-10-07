@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-07最新发布终态：功能07f0ee69e已推origin/main，同SHA CI（含Go unit／integration）、安全与GHCR全部成功，固定镜像sha-07f0ee6；版本仅管理员展示、公开version为空及17条依赖告警清零已发布，生产由用户备份后自行更新。详见HANDOFF与deploy/UPDATE_GUIDE；本条覆盖下方本轮未发布记录。
+
 2026-10-07后续用户要求修复：已移除未使用@lobehub/icons依赖链、DOMPurify3.4.16及锁文件同步，生产依赖复扫所有严重度0；前端全量368文件／2928项、类型／生产构建及相关lint通过。覆盖下条17告警待处理状态，保留版本权限修复；尚未提交推送部署，详见HANDOFF及安全报告。
 
 2026-10-07版本权限与安全抽查已本地完成未发布：VersionBadge仅管理员可见，公开JSON／HTML注入version为空；13项前端、公开设置／权限支付定向Go、类型／lint与前后端构建通过。生产依赖审计仍13中危／4低危、0高危／严重，未证实业务可利用性，详见HANDOFF及deploy/SECURITY_REVIEW_20261007.md。未推送部署，不将旧80c30c825 CI当本轮结果。

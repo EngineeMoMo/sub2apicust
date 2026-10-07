@@ -1,5 +1,19 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-07 版本权限与依赖安全修复（最新可更新版本）
+
+功能`07f0ee69e0b9318edbdea0694e2d5ecd0ae2e24a`已推送；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687152)（含Go unit／integration）、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687062)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687015)全部成功。包含版本仅管理员展示、公开版本值清空、依赖17告警清零；前端本地2928项通过。
+
+实际镜像`ghcr.io/engineemomo/sub2apicust:sha-07f0ee6`（linux/amd64），摘要`sha256:638ef47fc3b3d7f185849f90ef0bd8cd48b38732032c20f6176962b87e14821e`，成功manifest推送与containerimage.digest已核验。
+
+用户先备份数据库、部署配置和app_data并记录旧镜像，再在部署目录执行：
+
+```bash
+./update.sh sha-07f0ee6
+```
+
+更新后验证健康检查、管理员版本可见、普通用户与游客无徽标，公开`/api/v1/settings/public`及首页注入的version为空，原有图标／公告展示正常。本版包含此前244迁移与支付宝官方直码，仍需按下节新建订单真机验收。未代用户生产部署；下方本轮未发布提示为历史记录，纯文档skip-ci提交不替代本功能镜像。
+
 > [CUSTOM] 2026-10-07版本权限修改尚未发布，下方已发布镜像不含该改动。发布后验证管理员版本可见、普通用户与游客无徽标，公开settings/public及首页注入version为空。详见[安全报告](SECURITY_REVIEW_20261007.md)与HANDOFF最新状态。
 
 > 同轮依赖安全修复也尚未发布：移除未使用图标依赖链、DOMPurify3.4.16，生产依赖复扫全0、前端2928项及类型／构建通过。需以新SHA完成CI／安全／镜像门禁后再更新，不将旧sha-80c30c8视为包含本次修复。

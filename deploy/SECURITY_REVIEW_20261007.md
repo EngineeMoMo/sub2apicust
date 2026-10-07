@@ -1,5 +1,11 @@
 # 2026-10-07 项目安全抽查与版本可见性
 
+## 发布记录（覆盖下方修复过程中的未提交状态）
+
+用户授权后，功能提交 `07f0ee69e0b9318edbdea0694e2d5ecd0ae2e24a` 已推送 `origin/main`。
+同SHA[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687062)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687015)、[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687152)均completed/success，包含Go单元／集成测试、lint、前端与脚本；远端后端govulncheck日志确认No vulnerabilities found，前端Audit exceptions validated。
+实际镜像 `ghcr.io/engineemomo/sub2apicust:sha-07f0ee6`，摘要 `sha256:638ef47fc3b3d7f185849f90ef0bd8cd48b38732032c20f6176962b87e14821e`，由成功任务manifest推送与containerimage.digest确认。未代部署生产。证据 `output/security-review-20261007/release-runs.json`、`release-jobs-*`、`job-*`。
+
 ## 范围与证据
 
 源码基线 `18c27bb9e`，应用 VERSION 为 `0.2.13`；用户截图显示 `v0.2.13-custom.80c30c825`。截图不是服务器部署取证，本轮未连接生产。

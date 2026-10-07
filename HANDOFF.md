@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-07 版本权限与依赖安全修复发布完成（最新终态）**：功能07f0ee69e0b9318edbdea0694e2d5ecd0ae2e24a已推origin/main；同SHA的[CI37582687152](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687152)、[安全37582687062](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687062)、[GHCR37582687015](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687015)全部completed/success，含Go unit／integration、lint、前端与脚本。实际镜像ghcr.io/engineemomo/sub2apicust:sha-07f0ee6（linux/amd64），摘要sha256:638ef47fc3b3d7f185849f90ef0bd8cd48b38732032c20f6176962b87e14821e，manifest推送与containerimage.digest已确认；证据output/security-review-20261007/release-runs.json、release-jobs-*、job-*。前端生产依赖全0告警，本地368文件／2928项通过，远端govulncheck无漏洞、Audit exceptions validated。用户备份后执行./update.sh sha-07f0ee6；验证仅管理员版本可见、公开JSON／首页注入version为空、图标和公告正常。生产未代部署，真实账号验收待用户完成；纯文档skip-ci提交不产生新镜像。此条覆盖下方本轮未提交／门禁待定状态。
+
 - **2026-10-07 用户授权提交推送本轮安全修复**：发布范围为版本仅管理员可见、两个公开版本出口去除实际值、依赖告警清零及回归／交接文件。前端2928项、类型／构建／相关lint与后端embed已本地通过；推送后须核验本次功能SHA的CI、安全扫描与GHCR，不沿用80c30c825。生产由用户部署。
 
 - **2026-10-07 用户要求修复依赖告警（本地已修，未发布）**：移除无源码导入的@lobehub/icons及其UI／Mermaid依赖链，DOMPurify最低版本和override升至3.4.16，锁文件同步，图标SVG保持。生产依赖在线复扫所有严重度均0，退出0，未增加豁免。全量前端368文件／2928项、含vue-tsc的完整build与相关lint通过，SVG安全回归加入Makefile；前轮版本仅管理员可见修复保留。本地重装先遇沙箱清理长时间无进展，终止后获自动审批在沙箱外完成；随后确认Vue入口缺失，按frozen-lockfile强制重导入后回归成功。证据output/security-review-20261007/*-fixed.log、audit-fixed.json及dependency-repair.log，报告deploy/SECURITY_REVIEW_20261007.md。未提交推送部署，线上仍未验证，不声称全项目无漏洞。此条覆盖下方17项待处理状态。
@@ -356,7 +358,8 @@
 ## 五、待办 / 下一步
 
 - [x] **版本仅管理员展示源码与安全抽查**：组件及两个公开版本出口已修，定向回归、类型、lint及前后端构建通过，详见第四节与安全报告。
-- [ ] **本轮版本权限修改发布／验收**：尚未提交推送；后续核验实际新SHA CI／安全／镜像，再由用户更新并以管理员／普通用户／游客核实，不能沿用80c30c825门禁。
+- [x] **本轮版本权限与依赖修复发布**：功能07f0ee69e已推送，同SHA CI／安全／GHCR全部通过，固定sha-07f0ee6，见第四节。
+- [ ] **本轮版本权限真实账号验收**：用户备份更新sha-07f0ee6后，以管理员／普通用户／游客核实版本显隐，公开JSON／首页注入version为空，图标与公告正常；未代部署生产。
 - [x] **17条生产依赖告警处置**：删除未使用图标依赖链、DOMPurify升级3.4.16，生产审计全0；全量2928项、类型／构建与相关lint通过。修复前是否可在本站利用仍未证实；源码尚未发布，详见deploy/SECURITY_REVIEW_20261007.md。
 
 - [x] **订阅开通周期与支付宝直码发布**：80c30c825已推origin/main，同SHA CI／安全／镜像全通过，固定sha-80c30c8，见第四节。
