@@ -25,6 +25,8 @@
 
 ---
 
+2026-10-07新增版本权限接缝：同步后保留VersionBadge仅管理员渲染，以及setting_handler.go／setting_public.go两个公开version空串出口。运行新增custom_version_visibility_test.go及VersionBadge.visibility.spec.ts（已接Makefile）；管理员版本仍走受保护接口。后续已移除未使用@lobehub/icons链并升级DOMPurify3.4.16，保留锁文件与svg-sanitization.spec.ts关键回归；生产依赖审计全0、全量2928项通过。源码未发布，见HANDOFF及安全报告。
+
 ## 0. 一次性初始化（已完成的部分打勾）
 
 - [x] `git clone` 上游为基线

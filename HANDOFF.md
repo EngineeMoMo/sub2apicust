@@ -39,6 +39,12 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-07 用户授权提交推送本轮安全修复**：发布范围为版本仅管理员可见、两个公开版本出口去除实际值、依赖告警清零及回归／交接文件。前端2928项、类型／构建／相关lint与后端embed已本地通过；推送后须核验本次功能SHA的CI、安全扫描与GHCR，不沿用80c30c825。生产由用户部署。
+
+- **2026-10-07 用户要求修复依赖告警（本地已修，未发布）**：移除无源码导入的@lobehub/icons及其UI／Mermaid依赖链，DOMPurify最低版本和override升至3.4.16，锁文件同步，图标SVG保持。生产依赖在线复扫所有严重度均0，退出0，未增加豁免。全量前端368文件／2928项、含vue-tsc的完整build与相关lint通过，SVG安全回归加入Makefile；前轮版本仅管理员可见修复保留。本地重装先遇沙箱清理长时间无进展，终止后获自动审批在沙箱外完成；随后确认Vue入口缺失，按frozen-lockfile强制重导入后回归成功。证据output/security-review-20261007/*-fixed.log、audit-fixed.json及dependency-repair.log，报告deploy/SECURITY_REVIEW_20261007.md。未提交推送部署，线上仍未验证，不声称全项目无漏洞。此条覆盖下方17项待处理状态。
+
+- **2026-10-07 安全抽查与版本仅管理员可见（源码完成，未发布）**：用户要求审查漏洞并隐藏普通用户版本。修复 VersionBadge 非管理员分支，同时公开 JSON 与 HTML 注入的 version 保留空串，不再暴露部署 SHA；管理接口原鉴权保持。13项前端回归、类型／相关lint／Vite构建、公开配置与schema 3包及权限／支付定向4包测试、便携Go1.27.0 embed编译通过；新增测试接入Makefile。在线生产依赖审计0 high／critical、13 moderate／4 low，未升级依赖，未证实可利用性；报告deploy/SECURITY_REVIEW_20261007.md、证据output/security-review-20261007。未全仓逐行审计、未重跑后端govulncheck或全量Linux／PG测试，不承诺无漏洞。未提交推送、未改容器或生产；实际已发布版本仍为下条80c30c825。
+
 - **2026-10-07 开通周期与支付宝直码正式发布完成（当前终态）**：用户授权提交并推送供自行更新。最终功能80c30c8250d7de59da55b964251f1c437bcf6ddd已推origin/main；同SHA的[CI37575276507](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276507)、[Security37575276518](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276518)、[GHCR37575276525](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276525)均completed/success，CI含unit／integration、Go lint、前端类型及关键回归、macOS脚本和发布辅助检查。前一候选ba405f1a8安全扫描被原SheetJS两项过期例外拦截，已升级官方固定0.20.3并移除例外，未延长豁免；本地前端366文件／2923项、类型／构建通过，审计0 high／critical（4 low／13 moderate），远端Audit exceptions validated及后端No vulnerabilities found已保存。成功镜像日志核实ghcr.io/engineemomo/sub2apicust:sha-80c30c8（linux/amd64），摘要sha256:f3ed8f3fa622bc3ed629472c5c2f0d6e343723646ec030a5d50ee99ca59989f3；证据output/subscription-wap-20261007/release-runs.json、release-jobs-*及job-*。用户先备份，再在部署目录执行./update.sh sha-80c30c8；244迁移对齐周／月开通周期并保留已用量／到期时间，旧聚合用量保守结转。支付宝必须新建订单才使用官方直码；旧码兼容附加flow参数。真实App直达、商户权限及小额实付仍待用户更新验收，未代用户生产部署。此条覆盖以下历史未发布状态。
 
 - **2026-10-07 发布门禁补修过程（已完成，见上条）**：功能ba405f1a8已推origin/main，安全扫描因原xlsx两条high例外于10月6日到期失败。改用SheetJS官方固定0.20.3包并锁完整性、移除对应旧例外，未延长豁免；真实导出回归加入关键测试。pnpm audit已无high／critical（仍4 low／13 moderate），全量前端366文件／2923项、vue-tsc与生产构建通过（sheetjs-tests.log／sheetjs-build.log）；新SHA远程工作流需核实后才交付更新标签。
@@ -348,6 +354,10 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] **版本仅管理员展示源码与安全抽查**：组件及两个公开版本出口已修，定向回归、类型、lint及前后端构建通过，详见第四节与安全报告。
+- [ ] **本轮版本权限修改发布／验收**：尚未提交推送；后续核验实际新SHA CI／安全／镜像，再由用户更新并以管理员／普通用户／游客核实，不能沿用80c30c825门禁。
+- [x] **17条生产依赖告警处置**：删除未使用图标依赖链、DOMPurify升级3.4.16，生产审计全0；全量2928项、类型／构建与相关lint通过。修复前是否可在本站利用仍未证实；源码尚未发布，详见deploy/SECURITY_REVIEW_20261007.md。
 
 - [x] **订阅开通周期与支付宝直码发布**：80c30c825已推origin/main，同SHA CI／安全／镜像全通过，固定sha-80c30c8，见第四节。
 - [ ] **本轮真机与订阅迁移验收**：用户备份更新sha-80c30c8后新建订单，核实扫码直达、小额实付及电脑自动成功／仅入账一次；检查订阅按开通7／30天重置、迁移保留用量及到期时间。未代用户部署，未知商户与App实际接受情况。

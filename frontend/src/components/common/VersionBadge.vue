@@ -1,5 +1,6 @@
 <template>
-  <div class="relative">
+  <!-- [CUSTOM] 版本信息仅管理员可见，旧公开配置或缓存也不得向普通用户展示。 -->
+  <div v-if="isAdmin" class="relative">
     <!-- Admin: Full version badge with dropdown -->
     <template v-if="isAdmin">
       <button
@@ -630,10 +631,6 @@
       </transition>
     </template>
 
-    <!-- Non-admin: Simple static version text -->
-    <span v-else-if="version" class="text-xs text-gray-500 dark:text-dark-400">
-      v{{ version }}
-    </span>
   </div>
 </template>
 

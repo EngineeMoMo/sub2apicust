@@ -709,7 +709,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BackendModeEnabled:                  settings.BackendModeEnabled,
 		PaymentEnabled:                      settings.PaymentEnabled,
 		PaymentBalanceDisabled:              settings.PaymentBalanceDisabled,
-		Version:                             s.version,
+		Version:                             "", // [CUSTOM] HTML 共享注入不暴露部署版本，避免匿名访问与缓存泄露。
 		ServerTimezone:                      timezone.Name(),
 		ServerUTCOffset:                     timezone.UTCOffset(),
 		BalanceLowNotifyEnabled:             settings.BalanceLowNotifyEnabled,

@@ -1,5 +1,19 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-07 前端依赖安全修复（未发布）
+
+- `[CUSTOM] frontend/package.json` 与 `frontend/pnpm-lock.yaml`：移除未被源码导入的 `@lobehub/icons`，图标仍使用ModelIcon／ProviderIcon中的现有SVG路径；清除其引入的UI／Mermaid等依赖链。DOMPurify最低版本及安全override提升为3.4.16，继续使用既有净化API。JSON／自动生成锁文件不支持源码注释，以本节登记接缝。
+- 不新增安全豁免；同步上游后不要无故恢复未使用依赖或降低净化库版本。验证与最终审计结果见HANDOFF及安全报告。
+- 新增 `frontend/src/custom/__tests__/svg-sanitization.spec.ts` 验证SVG图标的路径／颜色保留与脚本／事件／javascript协议移除；Makefile的[CUSTOM]关键回归列表纳入该文件。
+
+## 2026-10-07 版本仅管理员可见（未发布）
+
+- `frontend/src/components/common/VersionBadge.vue`：[CUSTOM] 根节点按 isAdmin 渲染，删除普通用户静态版本分支；管理员查询与操作保持。
+- `backend/internal/handler/setting_handler.go`：[CUSTOM] 公开设置 version 固定空串，兼容旧字段但不公开部署版本。
+- `backend/internal/service/setting_public.go`：[CUSTOM] HTML 共享注入 version 同样空串，防止绕过前端或共享缓存泄露。
+- 新增 `backend/internal/handler/custom_version_visibility_test.go` 和 `frontend/src/components/common/__tests__/VersionBadge.visibility.spec.ts`；`Makefile` 的[CUSTOM]关键测试列表纳入权限回归。
+- 验证：前端13项／类型／lint／Vite、Go公开设置与schema及权限／支付定向测试、embed通过。合并上游后须核实普通用户／游客不渲染、管理员可查，两种公开数据均无实际版本。审查边界与依赖待办见 `deploy/SECURITY_REVIEW_20261007.md`，未提交部署。
+
 ## 2026-10-07 发布门禁：移除SheetJS过期例外
 
 - ba405f1a8推送后安全检查被原xlsx两项例外于2026-10-06到期拦截，未延长例外。frontend/package.json与pnpm-lock.yaml改用官方固定包https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz及锁文件SHA512完整性；不使用latest、不从第三方镜像获取。官方修复说明：https://cdn.sheetjs.com/advisories/CVE-2023-30533 与 https://cdn.sheetjs.com/advisories/CVE-2024-22363，分别要求至少0.19.3／0.20.2。

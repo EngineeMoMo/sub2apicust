@@ -1,5 +1,9 @@
 # 日常更新操作手册（定制版 sub2api）
 
+> [CUSTOM] 2026-10-07版本权限修改尚未发布，下方已发布镜像不含该改动。发布后验证管理员版本可见、普通用户与游客无徽标，公开settings/public及首页注入version为空。详见[安全报告](SECURITY_REVIEW_20261007.md)与HANDOFF最新状态。
+
+> 同轮依赖安全修复也尚未发布：移除未使用图标依赖链、DOMPurify3.4.16，生产依赖复扫全0、前端2928项及类型／构建通过。需以新SHA完成CI／安全／镜像门禁后再更新，不将旧sha-80c30c8视为包含本次修复。
+
 ## 2026-10-07 开通周期与支付宝直码（最新可更新版本）
 
 功能提交 `80c30c8250d7de59da55b964251f1c437bcf6ddd` 已推origin/main，包含订阅开通周期、支付宝官方直码及SheetJS安全依赖补修。同SHA的 [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276507)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276518)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276525) 全部completed/success，CI含unit／integration、Go静态检查、前端类型／关键回归、脚本及发布辅助检查。

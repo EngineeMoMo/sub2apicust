@@ -97,7 +97,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		BackendModeEnabled:                  settings.BackendModeEnabled,
 		PaymentEnabled:                      settings.PaymentEnabled,
 		PaymentBalanceDisabled:              settings.PaymentBalanceDisabled,
-		Version:                             h.version,
+		Version:                             "", // [CUSTOM] 公开接口不暴露部署版本；管理员走受保护的 system/version。
 		ServerTimezone:                      timezone.Name(),
 		ServerUTCOffset:                     timezone.UTCOffset(),
 		BalanceLowNotifyEnabled:             settings.BalanceLowNotifyEnabled,
