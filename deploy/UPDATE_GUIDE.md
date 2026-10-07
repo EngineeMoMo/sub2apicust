@@ -1,6 +1,23 @@
 # 日常更新操作手册（定制版 sub2api）
 
-## 2026-10-07 v0.2.13定制合并版（最新可更新版本）
+## 2026-10-07 开通周期与支付宝直码（最新可更新版本）
+
+功能提交 `80c30c8250d7de59da55b964251f1c437bcf6ddd` 已推origin/main，包含订阅开通周期、支付宝官方直码及SheetJS安全依赖补修。同SHA的 [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276507)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276518)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37575276525) 全部completed/success，CI含unit／integration、Go静态检查、前端类型／关键回归、脚本及发布辅助检查。
+
+成功构建日志确认镜像 `ghcr.io/engineemomo/sub2apicust:sha-80c30c8`（linux/amd64），摘要 `sha256:f3ed8f3fa622bc3ed629472c5c2f0d6e343723646ec030a5d50ee99ca59989f3`。前一候选ba405f1a8因SheetJS例外到期导致安全失败，不作为本轮推荐版本；现已升级官方0.20.3并移除两条例外。
+
+先备份Postgres、部署配置及app_data并记录旧镜像，在部署目录执行：
+
+```bash
+./update.sh sha-80c30c8
+```
+
+本版新增244迁移：周／月按开通时间的7／30天周期计算，旧未对齐窗口回填当前周期，保留已用额度与到期时间；无法按新边界精确拆分的旧聚合用量保守结转到下个周期，不在迁移时赠送新额度。
+
+支付宝必须重新创建支付订单后扫码，新码直接编码官方签名WAP地址；恢复旧订单仍显示旧码。更新后核对实际运行镜像、订阅重置时间、扫码付款页的商户／金额、小额支付后电脑自动成功与仅入账一次。真实App直达和商户权限仍待用户验收，CI成功不能替代真机验证；生产由用户部署。
+
+
+## 2026-10-07 v0.2.13定制合并版（历史版本）
 
 功能提交 `4bc5abbb53544fe89f9fc3bc001f5a69b7ca07e5` 已推origin/main；同SHA的 [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464883)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464870)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492465165) 全部成功。固定镜像 `ghcr.io/engineemomo/sub2apicust:sha-4bc5abb`（linux/amd64），摘要 `sha256:df08bf887996ab87efe2a5f8a4c9958a925723ff9b0fd4764b30e4512dadde52`，由成功构建的manifest推送及digest输出确认；不要用中间失败候选2c282e409或a8baeb515作为更新目标。
 

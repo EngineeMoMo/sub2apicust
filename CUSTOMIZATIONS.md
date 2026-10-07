@@ -6,9 +6,9 @@
 - .github/audit-exceptions.yml移除对应两条例外并标[CUSTOM]；不取消审计。JSON无法写注释，本节登记依赖接缝。
 - 新增frontend/src/custom/__tests__/xlsx-export.spec.ts使用真实库验证分页追加、中文／数字／包号零实扣、公式样式文字以文本导出并读回；Makefile的[CUSTOM]关键回归加入此文件。管理员导出业务源码不变。
 
-## 2026-10-07 开通额度周期与支付宝官方直码（待发布）
+## 2026-10-07 开通额度周期与支付宝官方直码（已发布，待真机验收）
 
-本地最终Linux unit58包／22,052项、integration52包／13,583项、embed构建、Go lint0及前端56项通过；真实PG迁移已执行。17／15跳过清单与退出码见output/subscription-wap-20261007/summary.json，未将缺外部配置的测试记为执行成功。尚未提交推送或生产部署。
+本地最终Linux unit58包／22,052项、integration52包／13,583项、embed构建、Go lint0及前端56项通过；真实PG迁移已执行。17／15跳过清单与退出码见output/subscription-wap-20261007/summary.json，未将缺外部配置的测试记为执行成功。已随80c30c825推送origin/main，同SHA CI／安全／GHCR全部成功，固定镜像sha-80c30c8；未代用户生产部署。
 
 - 用户明确要求周／月从开通计算、新扫码不经过本站。`backend/internal/service/subscription_service.go` 的createSubscription开通即设置日／周／月窗口；旧未激活窗口回填StartsAt；EnsureWindowMaintenance及异步入口在激活后重读CAS快照再推进，避免下一请求清零新计量；normalizeExpiredWindowsAt保留周／月当前起点，calculateProgress在副本上同规则投影，列表和进度倒计时一致。上游改动均标[CUSTOM]，日历日、有效订阅续费与管理员主动重置的既有语义保留。
 - 新增迁移 `244_custom_subscription_opening_windows.sql`：未删除且未到期的旧订阅，未初始化或偏离开通周期的周／月锚点对齐到当前开通周期，已对齐窗口保留，已用额度和到期时间不变。历史聚合计量无法精确拆分新周期，保守保留直至下一边界，不能凭迁移额外发额度；迁移在升级时执行，需备份数据库，不改旧迁移。
