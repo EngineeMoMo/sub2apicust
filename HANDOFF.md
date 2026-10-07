@@ -39,6 +39,13 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-07 用户授权发布本轮修复**：提交并推送订阅开通周期／244迁移与支付宝官方直码，供用户更新真机测试。已完成的本地验证见下一条；本次实际SHA的CI、安全和镜像需另核验，不能沿用4bc5abb结果。生产由用户部署。
+
+
+- **2026-10-07 按用户要求修复订阅开通周期与支付宝直码（源码完成，未发布）**：用户确认继续访问后显示“付款入口无效”，要求扫码直接付款、不经过本站。已用源码与路由回归定位旧入口拒绝支付宝追加flowT／flowSign／flow；旧码只放行这三种单值有界参数，token／订单／目标校验仍保留。新订单QRCode直接使用经过严格校验的支付宝官方签名WAP地址，不生成本站token链接，2300字节上限防二维码溢出；官方SDK四类实付金额与前端M级编码／恢复回归通过。支付宝App真正直接唤起及商户权限仍待真机，新订单必须重建，旧码不自动变新码。订阅开通即启动周／月窗口（7／30天），旧数据通过新增244迁移对齐当前开通周期并保留已用额度与到期时间，已对齐窗口保持。首次兼容激活后重读再推进，列表与progress同周期投影；日历日／有效期续费／管理员主动重置原语义保留。新PG测试独立schema验证回填、幂等及用量／到期保护；首轮测试夹具重名已修后重跑。Go lint 0 issues、前端56项及SDK定向通过；最终Linux unit58包／22,052项通过、17跳过，integration52包／13,583项通过、15跳过（9项安全审计PG/Redis未配置及6项既有／外部依赖，逐项见summary.json），两套均退出0、无失败；新增244真实PG回归实际执行，完整integration的新库迁移及embed构建通过。三个临时容器与专用网络／测试卷已清理，socket挂载已解除，原4个业务容器ID及停止状态保持。证据output/subscription-wap-20261007。未修改业务库或容器，未提交推送生产部署。
+
+- **2026-10-07 用户真机问题核查（未改业务逻辑）**：用户截图显示支付宝对本站public/alipay/wap付款入口提示“您即将离开支付宝”，带继续访问按钮；源码prepareAlipayDesktopWapQRCode生成本站带随机令牌的URL，handler校验订单后302到官方WAP地址。因此先前真机“一扫直达”的预期在该设备未满足，不能再称零中间页。是否点击后能进入收银台、触发提示的具体支付宝规则／域名状态未知，已询问用户；未访问截图中的令牌链接或发起交易。订阅截图的到期时间已确定；createSubscription开通即设StartsAt/ExpiresAt，首次使用只激活周／月额度窗口（7天／30天），由后端CheckAndActivateWindow维护，v0.2.13上游同逻辑；前端window_start为空显示“等待首次使用”，不是延迟订阅有效期。文案可能混淆两种时间，计费规则未擅改。
+
 - **2026-10-07 本轮正式发布完成（最新终态，覆盖下方未发布记录）**：用户授权提交推送以便自行更新。最终功能4bc5abbb53544fe89f9fc3bc001f5a69b7ca07e5已推origin/main；同SHA的[CI37492464883](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464883)、[Security37492464870](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492464870)、[GHCR37492465165](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37492465165)均completed/success。CI含完整unit／integration、专用PG包号测试、Go lint、前端类型与关键回归、macOS脚本与发布辅助检查。首次发布发现BSD sed和Bash 3中文变量边界问题已修；Vue升级3.5.43及source-map-js补丁消除新增两项high，govulncheck无漏洞，前端Audit exceptions validated（原SheetJS例外保留，未扩例外）；修复后本地全量2921项与类型／构建、Linux更新脚本22场景通过。实际固定镜像ghcr.io/engineemomo/sub2apicust:sha-4bc5abb（linux/amd64），摘要sha256:df08bf887996ab87efe2a5f8a4c9958a925723ff9b0fd4764b30e4512dadde52，由成功构建日志的manifest推送和containerimage.digest确认。证据output/upstream-merge-20261006/release-runs.json、release-jobs-*及job-*。用户先备份再在部署目录执行./update.sh sha-4bc5abb；更新后按支付宝／包号／订阅验收说明核实实际业务。未代用户部署，本机业务容器未动，真实付款／模型请求仍待用户验收。
 
 - **2026-10-06 发布门禁补修**：2c282e409已推送，CI的macOS更新脚本因BSD sed参数不兼容失败，安全扫描发现source-map-js及Vue SSR新高危。已改跨平台sed写回并保留备份／权限，Vue锁定到3.5.43、source-map-js升级补丁；未扩安全例外。Linux更新脚本22场景与升级依赖后的前端365文件／2921项全量通过，类型／构建及新SHA远程发布门禁继续核验。2c282e409镜像不得当作本轮推荐更新版本。后续a8baeb515安全扫描已通过，macOS暴露Bash 3的UTF-8相邻变量边界问题，已以显式花括号补修；新发布版本结果待核验。
@@ -336,6 +343,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **订阅开通周期与支付宝直码发布／真机验收**：源码及244迁移已完成，旧码追加参数兼容，新码直接官方签名地址；本轮本地验证见第四节。发布前核验新SHA CI／安全／镜像，用户备份升级后新建订单验收扫码直达、小额实付与电脑自动成功，并核对已有订阅额度及到期不变。旧4bc5abb不含本轮修复。
 
 - [x] **上游v0.2.13本地合并**：用户已授权，完成快照备份、文本／包号预占兼容、Linux全量unit、真实PG及迁移、前端2921项、类型／源码lint／构建和隔离登录冒烟；详见第四节。
 - [x] **v0.2.13代码与镜像发布门禁**：4bc5abbb5已推送，同SHA CI／安全／GHCR全部成功，固定镜像sha-4bc5abb；真实业务验收仍待用户更新后完成。

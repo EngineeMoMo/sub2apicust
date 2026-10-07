@@ -74,6 +74,11 @@ func TestCustomAlipayDesktopWapPublicRouteNeedsNoLogin(t *testing.T) {
 	require.Equal(t, "no-referrer", r.Header().Get("Referrer-Policy"))
 	require.NotContains(t, r.Header().Get("Location"), "/login")
 	require.Empty(t, r.Body.String())
+	// 真机支付宝的外链确认页会追加流程参数，不能将合法订单误判为404。
+	r = get(path + "?token=" + token + "&flowT=1791344936544&flowSign=9dfb5850c7&flow=flow")
+	require.Equal(t, http.StatusFound, r.Code)
+	require.Equal(t, payURL, r.Header().Get("Location"))
+	require.NotContains(t, r.Header().Get("Location"), "flowSign")
 	require.Equal(t, http.StatusUnauthorized, get("/api/v1/payment/orders/"+strconv.FormatInt(order.ID, 10)).Code)
 	r = get(path + "?token=invalid")
 	require.Equal(t, http.StatusNotFound, r.Code)
@@ -82,6 +87,9 @@ func TestCustomAlipayDesktopWapPublicRouteNeedsNoLogin(t *testing.T) {
 	for _, target := range []string{
 		path + "?token=" + token + "&token=other",
 		path + "?token=" + token + "&other=value",
+		path + "?token=" + token + "&flow=flow&flow=other",
+		path + "?token=" + token + "&flowSign=" + strings.Repeat("A", 129),
+		path + "?flow=flow&flowT=1791344936544&flowSign=test",
 		path + "?token=" + token + "&bad=%ZZ",
 		path + "?token=" + strings.Repeat("A", 10000),
 		path + "?token=" + token + "%0A",

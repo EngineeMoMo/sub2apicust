@@ -434,6 +434,11 @@ func (s *SubscriptionService) createSubscription(ctx context.Context, input *Ass
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
+	// [CUSTOM] 开通即启动额度周期，周/月与 StartsAt 对齐，不等待首次请求。
+	dailyStart := timezone.StartOfDay(now)
+	sub.DailyWindowStart = &dailyStart
+	sub.WeeklyWindowStart = &now
+	sub.MonthlyWindowStart = &now
 	// 只有当 AssignedBy > 0 时才设置（0 表示系统分配，如兑换码）
 	if input.AssignedBy > 0 {
 		sub.AssignedBy = &input.AssignedBy
@@ -838,16 +843,23 @@ func normalizeExpiredWindowsAt(subs []UserSubscription, now time.Time) {
 			sub.DailyWindowStart = nil
 			sub.DailyUsageUSD = 0
 		}
-		// 周窗口过期：清零展示数据
-		if sub.canAutomaticallyResetWeeklyAt(now) {
-			sub.WeeklyWindowStart = nil
-			sub.WeeklyUsageUSD = 0
-		}
-		// 月窗口过期：清零展示数据
-		if sub.canAutomaticallyResetMonthlyAt(now) {
-			sub.MonthlyWindowStart = nil
-			sub.MonthlyUsageUSD = 0
-		}
+		// [CUSTOM] 周/月周期投影与进度接口保持一致。
+		normalizePeriodicWindowsAt(sub, now)
+	}
+}
+
+// [CUSTOM] 只投影周/月窗口，不改变日额度既有语义或持久化数据。
+func normalizePeriodicWindowsAt(sub *UserSubscription, now time.Time) {
+	// 周窗口过期：清零展示数据
+	if start, ok := sub.automaticWindowStartAt(sub.WeeklyWindowStart, 7*24*time.Hour, now); ok {
+		// [CUSTOM] 展示当前周期起点，不能把已开启窗口重新显示为等待首次使用。
+		sub.WeeklyWindowStart = &start
+		sub.WeeklyUsageUSD = 0
+	}
+	// 月窗口过期：清零展示数据
+	if start, ok := sub.automaticWindowStartAt(sub.MonthlyWindowStart, 30*24*time.Hour, now); ok {
+		sub.MonthlyWindowStart = &start
+		sub.MonthlyUsageUSD = 0
 	}
 }
 
@@ -878,9 +890,12 @@ func (s *SubscriptionService) checkAndActivateWindowAt(ctx context.Context, sub 
 		return nil
 	}
 
-	// 日窗口锚定当天 0 点（日历日语义）；周/月窗口锚定首次使用时刻（期限对齐语义，
-	// 锚点不得早于 StartsAt，否则最后一个不完整周期会重复发放额度，见 issue #5051）。
-	return s.userSubRepo.ActivateWindows(ctx, sub.ID, timezone.StartOfDay(now), now)
+	// [CUSTOM] 兼容旧的未激活订阅：周/月以开通时间为锚点，后续维护推进到当前周期。
+	periodicStart := sub.StartsAt
+	if periodicStart.IsZero() {
+		periodicStart = now
+	}
+	return s.userSubRepo.ActivateWindows(ctx, sub.ID, timezone.StartOfDay(now), periodicStart)
 }
 
 // AdminResetQuota manually resets the daily, weekly, and/or monthly usage windows.
@@ -967,6 +982,12 @@ func (s *SubscriptionService) EnsureWindowMaintenance(ctx context.Context, sub *
 	}
 	if !sub.IsWindowActivated() {
 		if err := s.CheckAndActivateWindow(ctx, sub); err != nil {
+			return nil, err
+		}
+		// [CUSTOM] 激活旧订阅后重读CAS结果，再推进开通锚点，避免下一次请求再次清额度。
+		var err error
+		sub, err = s.userSubRepo.GetByID(ctx, sub.ID)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -1073,20 +1094,10 @@ func (s *SubscriptionService) doWindowMaintenance(sub *UserSubscription) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// 激活窗口（首次使用时）
-	if !sub.IsWindowActivated() {
-		if err := s.CheckAndActivateWindow(ctx, sub); err != nil {
-			log.Printf("Failed to activate subscription windows: %v", err)
-		}
+	// [CUSTOM] 异步入口也需在激活后重读，再推进到开通周期，避免延迟清零新用量。
+	if _, err := s.EnsureWindowMaintenance(ctx, sub); err != nil {
+		log.Printf("Failed to maintain subscription windows: %v", err)
 	}
-
-	// 重置过期窗口
-	if err := s.CheckAndResetWindows(ctx, sub); err != nil {
-		log.Printf("Failed to reset subscription windows: %v", err)
-	}
-
-	// 失效 L1 缓存，确保后续请求拿到更新后的数据
-	s.InvalidateSubCache(sub.UserID, sub.GroupID)
 }
 
 // RecordUsage 记录使用量到订阅
@@ -1136,6 +1147,14 @@ func (s *SubscriptionService) GetSubscriptionProgress(ctx context.Context, subsc
 
 // calculateProgress 根据已加载的订阅和分组数据计算使用进度（纯内存计算，无 DB 查询）
 func (s *SubscriptionService) calculateProgress(sub *UserSubscription, group *Group) *SubscriptionProgress {
+	// [CUSTOM] 与列表使用同一窗口投影；仅读取时也应显示当前周期，而非过期重置时间。
+	projection := []UserSubscription{*sub}
+	now := time.Now()
+	if s.now != nil {
+		now = s.now()
+	}
+	normalizePeriodicWindowsAt(&projection[0], now)
+	sub = &projection[0]
 	progress := &SubscriptionProgress{
 		ID:            sub.ID,
 		GroupName:     group.Name,

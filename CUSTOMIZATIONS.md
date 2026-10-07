@@ -1,5 +1,16 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-07 开通额度周期与支付宝官方直码（待发布）
+
+本地最终Linux unit58包／22,052项、integration52包／13,583项、embed构建、Go lint0及前端56项通过；真实PG迁移已执行。17／15跳过清单与退出码见output/subscription-wap-20261007/summary.json，未将缺外部配置的测试记为执行成功。尚未提交推送或生产部署。
+
+- 用户明确要求周／月从开通计算、新扫码不经过本站。`backend/internal/service/subscription_service.go` 的createSubscription开通即设置日／周／月窗口；旧未激活窗口回填StartsAt；EnsureWindowMaintenance及异步入口在激活后重读CAS快照再推进，避免下一请求清零新计量；normalizeExpiredWindowsAt保留周／月当前起点，calculateProgress在副本上同规则投影，列表和进度倒计时一致。上游改动均标[CUSTOM]，日历日、有效订阅续费与管理员主动重置的既有语义保留。
+- 新增迁移 `244_custom_subscription_opening_windows.sql`：未删除且未到期的旧订阅，未初始化或偏离开通周期的周／月锚点对齐到当前开通周期，已对齐窗口保留，已用额度和到期时间不变。历史聚合计量无法精确拆分新周期，保守保留直至下一边界，不能凭迁移额外发额度；迁移在升级时执行，需备份数据库，不改旧迁移。
+- 新增custom_subscription_opening_test.go／custom_subscription_opening_postgres_test.go覆盖开通即有重置时间、周期推进、投影不修改源用量、下一请求不二次清零、PG回填／用量到期保护／幂等；上游subscription_monthly_window_test.go调整首次使用锚点与周期投影断言，subscription_calculate_progress_test.go固定legacy测试时钟，均标[CUSTOM]。
+- `custom_alipay_desktop_wap.go:prepareAlipayDesktopWapQRCode` 新订单QRCode直接等于已校验的官方签名PayURL，不生成本站token中转地址。保留严格HTTPS官方网关、商户／订单／实付金额／分钟期限匹配和签名原文，不拼接支付宝scheme或截断签名；2300字节上限避免前端M级二维码编码溢出。手机流程、通知／查单和重复入账保护保持。
+- 旧码仍保留public路由：custom_alipay_desktop_wap.go（handler）允许支付宝外链页追加的单值有界flowT／flowSign／flow，不把其当授权或转发到最终付款地址；重复token、未知参数、过长内容仍拒绝。用户截图及“付款入口无效”已确认旧代码len(query)!=1与该现象一致，但不声称可控制支付宝App的提醒或商户权限。
+- 更新后必须新建订单扫码；旧订单恢复仍使用原二维码直到失效。官方直码不经过本站，因此本站无法在每次扫码时额外拦截已取消订单；沿用手机WAP的上游关单／签名到期与支付回调核验，不能宣称客户端取消会销毁已保存的签名链接。真实扫码直达和小额实付仍需商户真机验收。
+
 ## 2026-10-06 发布门禁补修
 
 - `deploy/update.sh` 指定标签替换：CI macOS 的 BSD sed 不支持 GNU `-i -E` 组合，改为先捕获 `sed -E` 输出再 printf 写回，保留原备份与文件权限，标注[CUSTOM]；Linux假Docker 22场景通过，macOS首次复验进一步发现Bash 3把相邻中文括号读入变量名，回退镜像提示改用显式花括号边界；由新SHA CI复验。

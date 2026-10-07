@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createI18n } from 'vue-i18n'
+import QRCode from 'qrcode'
 import AlipayDesktopWapSetting from '../components/AlipayDesktopWapSetting.vue'
 import zhSettings from '@/i18n/locales/zh/admin/settings'
 import enSettings from '@/i18n/locales/en/admin/settings'
 import { decidePaymentLaunch, readPaymentRecoverySnapshot } from '@/components/payment/paymentFlow'
 
 describe('电脑端支付宝 WAP 扫码', () => {
+  it('官方签名长地址在后端2300字节上限仍可用M级纠错编码', () => {
+    const prefix = 'https://openapi.alipay.com/gateway.do?sign='
+    const payload = prefix + 'a'.repeat(2300 - prefix.length)
+    const qr = QRCode.create(payload, { errorCorrectionLevel: 'M' })
+    expect(qr.modules.size).toBeGreaterThan(0)
+    expect(qr.modules.size).toBeLessThanOrEqual(177)
+  })
   it.each(['zh', 'en'])('设置有说明、可访问名称和显式开关事件（%s）', async (locale) => {
     const wrapper = mount(AlipayDesktopWapSetting, {
       props: { modelValue: false },
@@ -33,8 +41,8 @@ describe('电脑端支付宝 WAP 扫码', () => {
     wrapper.unmount()
   })
 
-  it.each(['balance', 'subscription'] as const)('电脑端使用短二维码，刷新可恢复原订单（%s）', (orderType) => {
-    const qr = 'https://merchant.example/api/v1/payment/public/alipay/wap/101?token=test'
+  it.each(['balance', 'subscription'] as const)('电脑端直接编码官方付款地址，刷新可恢复原订单（%s）', (orderType) => {
+    const qr = 'https://openapi.alipay.com/gateway.do?method=alipay.trade.wap.pay&sign=fixture'
     const result = { order_id: 101, amount: 10, pay_amount: 10, fee_rate: 0, expires_at: '2099-01-01T00:30:00Z',
       qr_code: qr, pay_url: 'https://openapi.alipay.com/gateway.do?method=alipay.trade.wap.pay', payment_mode: 'qrcode' }
     const launch = decidePaymentLaunch(result, { visibleMethod: 'alipay', orderType, isMobile: false })

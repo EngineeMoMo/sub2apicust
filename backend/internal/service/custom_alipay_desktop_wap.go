@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
@@ -66,14 +65,12 @@ func prepareAlipayDesktopWapQRCode(order *dbent.PaymentOrder, canonicalReturnURL
 	if err != nil || u == nil || u.Host == "" || u.User != nil || !isSecureAlipayDesktopWapOrigin(u) {
 		return infraerrors.BadRequest("INVALID_RETURN_URL", "电脑端支付宝扫码需要 HTTPS 本站回跳地址（本机回环允许 HTTP）")
 	}
-	tokenBytes := make([]byte, 32)
-	if _, err := rand.Read(tokenBytes); err != nil {
-		return fmt.Errorf("generate alipay wap token: %w", err)
+	// 直接扫描官方签名WAP地址，不再经过本站外链确认和302入口。
+	// 前端M级纠错的二维码字节容量为2331，保留余量，禁止截断付款签名。
+	if len(pr.PayURL) > 2300 {
+		return infraerrors.BadRequest("ALIPAY_WAP_QR_TOO_LONG", "支付宝付款地址过长，无法生成可扫描二维码，请缩短订单标题或回跳地址")
 	}
-	u.Path = customAlipayDesktopWapPath + strconv.FormatInt(order.ID, 10)
-	u.RawPath, u.Fragment, u.RawFragment = "", "", ""
-	u.RawQuery = url.Values{"token": {base64.RawURLEncoding.EncodeToString(tokenBytes)}}.Encode()
-	pr.QRCode = u.String()
+	pr.QRCode = pr.PayURL
 	return nil
 }
 

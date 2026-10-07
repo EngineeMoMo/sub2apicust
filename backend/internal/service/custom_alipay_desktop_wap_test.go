@@ -105,16 +105,15 @@ func TestCustomAlipayDesktopWapRejectsUnsafeTargets(t *testing.T) {
 	require.NoError(t, prepareAlipayDesktopWapQRCode(order, "https://merchant.example/payment/result?old=query#fragment", pr))
 	u, err := url.Parse(pr.QRCode)
 	require.NoError(t, err)
-	require.Equal(t, "merchant.example", u.Host)
-	require.Equal(t, customAlipayDesktopWapPath+"123", u.Path)
+	require.Equal(t, "openapi.alipay.com", u.Host)
+	require.Equal(t, "/gateway.do", u.Path)
 	require.Empty(t, u.Fragment)
-	require.Len(t, u.Query(), 1)
-	token := u.Query().Get("token")
-	decoded, err := base64.RawURLEncoding.Strict().DecodeString(token)
-	require.NoError(t, err)
-	require.Len(t, decoded, 32)
+	require.Equal(t, raw, pr.QRCode)
+	require.Empty(t, u.Query().Get("token"))
 	require.NoError(t, prepareAlipayDesktopWapQRCode(order, "https://merchant.example/payment/result", pr))
-	require.NotContains(t, pr.QRCode, token)
+	require.Equal(t, raw, pr.QRCode)
+	oversized := &payment.CreatePaymentResponse{PayURL: raw + "&passback_params=" + strings.Repeat("A", 2301)}
+	require.Error(t, prepareAlipayDesktopWapQRCode(order, "https://merchant.example/payment/result", oversized))
 }
 
 // 真实 SDK 本地生成签名，不向支付宝发网络请求，不创建商户交易。
@@ -160,8 +159,16 @@ func TestCustomAlipayDesktopWapSignedOrderAndScan(t *testing.T) {
 			require.NotEmpty(t, resp.ResumeToken)
 			u, err := url.Parse(resp.QRCode)
 			require.NoError(t, err)
-			require.Equal(t, customAlipayDesktopWapPath+strconv.FormatInt(order.ID, 10), u.Path)
-			token := u.Query().Get("token")
+			require.Equal(t, "openapi.alipay.com", u.Host)
+			require.Equal(t, "/gateway.do", u.Path)
+			require.Equal(t, resp.PayURL, resp.QRCode)
+			require.LessOrEqual(t, len(resp.QRCode), 2300)
+			t.Logf("signed official QR bytes=%d", len(resp.QRCode))
+			// 历史短码仍可恢复，但新订单从不生成本站token链接。
+			token := base64.RawURLEncoding.EncodeToString([]byte("0123456789abcdef0123456789abcdef"))
+			legacyQR := "https://merchant.example" + customAlipayDesktopWapPath + strconv.FormatInt(order.ID, 10) + "?token=" + token
+			_, err = client.PaymentOrder.UpdateOneID(order.ID).SetQrCode(legacyQR).Save(ctx)
+			require.NoError(t, err)
 			cfg.AlipayDesktopWapQRCode = false // 已保存的订单不读取当前开关。
 			payURL, err := svc.ResolveAlipayDesktopWapURL(ctx, order.ID, token)
 			require.NoError(t, err)

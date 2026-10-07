@@ -36,7 +36,8 @@ func (r *activateWindowUserSubRepo) ActivateWindows(_ context.Context, _ int64, 
 	return nil
 }
 
-func TestDelayedFirstUseAnchorsMonthlyWindowAtActivation(t *testing.T) {
+// [CUSTOM] 首次使用再晚也不改变开通锚点。
+func TestDelayedFirstUseAnchorsMonthlyWindowAtOpening(t *testing.T) {
 	repo := &activateWindowUserSubRepo{}
 	svc := NewSubscriptionService(groupRepoNoop{}, repo, nil, nil, nil)
 	startsAt := time.Date(2026, 7, 1, 9, 0, 0, 0, time.UTC)
@@ -50,13 +51,12 @@ func TestDelayedFirstUseAnchorsMonthlyWindowAtActivation(t *testing.T) {
 
 	require.NoError(t, svc.CheckAndActivateWindow(context.Background(), sub))
 
-	require.Equal(t, activatedAt, repo.periodicStart)
+	require.Equal(t, startsAt, repo.periodicStart)
 	require.Equal(t, timezone.StartOfDay(activatedAt), repo.dailyStart)
 	monthlyWindowStart := repo.periodicStart
 	resetAt, ok := sub.automaticWindowStartAt(&monthlyWindowStart, 30*24*time.Hour, activatedAt.Add(30*24*time.Hour))
 	require.True(t, ok)
-	require.Equal(t, activatedAt.Add(30*24*time.Hour), resetAt)
-	require.NotEqual(t, startsAt.Add(30*24*time.Hour), resetAt)
+	require.Equal(t, startsAt.Add(30*24*time.Hour), resetAt)
 }
 
 func TestThirtyDaySubscriptionDoesNotResetMonthlyQuotaBeforeExpiry(t *testing.T) {
@@ -148,7 +148,8 @@ func TestNormalizeExpiredWindowsResetsMonthlyUsageWithPartialFinalPeriod(t *test
 	normalizeExpiredWindowsAt(subs, now)
 
 	require.Zero(t, subs[0].MonthlyUsageUSD)
-	require.Nil(t, subs[0].MonthlyWindowStart)
+	// [CUSTOM] 当前周期起点仍可显示倒计时，不再标为等待首次使用。
+	require.Equal(t, now, *subs[0].MonthlyWindowStart)
 }
 
 func TestValidateAndCheckLimitsKeepsLegacyMonthlyUsageBeforeExpiry(t *testing.T) {

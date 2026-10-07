@@ -120,6 +120,8 @@ func TestCalculateProgress_WeeklyUsage(t *testing.T) {
 func TestCalculateProgress_WeeklyResetsAt_LegacyMidnightAnchor(t *testing.T) {
 	svc := newTestSubscriptionService()
 	startsAt := time.Date(2026, 7, 31, 13, 37, 6, 0, time.FixedZone("UTC+8", 8*3600))
+	// [CUSTOM] 当前周期投影依赖时钟；固定在旧锚点的第一个周期内。
+	svc.now = func() time.Time { return startsAt.Add(time.Hour) }
 	weeklyStart := time.Date(startsAt.Year(), startsAt.Month(), startsAt.Day(), 0, 0, 0, 0, startsAt.Location())
 
 	sub := &UserSubscription{
