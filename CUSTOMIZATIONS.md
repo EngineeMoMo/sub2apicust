@@ -1,5 +1,18 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-08 收款限制与联系管理员开通（未发布）
+
+- 审查补修：上游 `backend/internal/payment/provider/alipay.go` 的 `[CUSTOM]` 关单逻辑保留所有错误并检查 `TradeCloseRsp.IsSuccess()`，不可把交易不存在或 SDK 业务失败当成成功；新增 `custom_alipay_collection_test.go` 本地签名响应回归。自有 `SubscriptionCard.vue` 人工续费转公开 `/plans`，无需在线支付开关；`plan-stock.spec.ts` 覆盖续费路由及关闭支付仍展示联系说明。84项前端、两包支付定向测试与类型／lint通过，真实商户待验。
+
+- 新增 `backend/migrations/247_custom_payment_collection.sql`：默认online开通方式、默认关闭的人民币共享策略、保留收款独立账本与事务触发器，所有通道及两类订单共用额度。保留跨日预占、付款幂等、退款／删除不减收款、确认渠道关单才释放；不要用按用户旧日限额替代。
+- 新增服务 `custom_payment_collection.go` 与管理员handler同名文件，及服务／仓储真实PG回归。`backend/internal/service/payment_config_service.go` 添加collection和sales_mode请求、设置读取／严格校验；`payment_config_plans.go`创建／PATCH兼容；`payment_order.go`封堵人工套餐及关闭自定义后的API入口并映射数据库限制；`payment_order_lifecycle.go`只在渠道取消成功后释放。
+- `backend/ent/schema/subscription_plan.go`新增sales_mode，9份对应生成文件（migrate/schema、mutation、runtime/runtime、subscriptionplan实体／常量／条件／create／query／update）必须重新生成，不手改字段序号。
+- `backend/internal/handler/{payment_handler.go,admin/payment_handler.go}`套餐投影和checkout collection；自有`custom_public_plans.go`只公开sales_mode与联系纯文本；`backend/internal/server/routes/payment.go`的collection统计／人工登记／查询关闭仅注册在现有管理员鉴权、审计与合规中间件组。普通用户不返回实收和剩余账户总额。
+- 新增 `frontend/src/custom/{paymentCollection.ts,components/PaymentCollectionSettings.vue,components/PlanContactPanel.vue,__tests__/payment-collection.spec.ts}`。`views/admin/SettingsView.vue`支付页独立保存组件；`views/admin/orders/{PlanEditDialog,AdminPaymentPlansView}.vue`开通方式编辑／展示；`api/admin/payment.ts`与`types/payment.ts`契约。样式只改`custom/theme.css`。
+- `components/payment/{SubscriptionPlanCard,AmountInput}.vue`联系按钮、自定义开关和支付币种符号；`views/user/PaymentView.vue`含费用上限过滤、确认拦截、深链接及联系面板；自有`custom/{guest/api.ts,views/PublicPlansView.vue,components/SubscriptionCard.vue}`同步游客和续费。`PaymentView.spec.ts`、公开套餐投影测试同步新契约，Makefile纳入收款关键回归。
+- 单笔上限控制最终实付；日上限按配置时区统计全部用户，当前是一个共享人民币账户池，启用后其他币种新在线支付关闭。库存仍由245／246维护，咨询不占、实际管理员分配扣减。说明、边界和验证见 `deploy/PAYMENT_COLLECTION_LIMITS.md`；本轮未提交推送部署。
+
+
 2026-10-08发布终态：本页库存／帮助改动及生图权限说明已包含于功能70e66cf7305e0cb4610671b5120e3612f3478fb6，CI／安全／GHCR同SHA全部成功，镜像sha-70e66cf。以下“未发布”标题为实现期记录；最终证据及生产待验项以HANDOFF为准。
 
 ## 2026-10-08 帮助入口与教程分类（未发布）

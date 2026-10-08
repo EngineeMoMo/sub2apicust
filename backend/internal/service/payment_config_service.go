@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -52,15 +53,17 @@ const (
 
 // PaymentConfig holds the payment system configuration.
 type PaymentConfig struct {
-	Enabled                   bool     `json:"enabled"`
-	MinAmount                 float64  `json:"min_amount"`
-	MaxAmount                 float64  `json:"max_amount"`
-	DailyLimit                float64  `json:"daily_limit"`
-	OrderTimeoutMin           int      `json:"order_timeout_minutes"`
-	MaxPendingOrders          int      `json:"max_pending_orders"`
-	EnabledTypes              []string `json:"enabled_payment_types"`
-	BalanceDisabled           bool     `json:"balance_disabled"`
-	BalanceRechargeMultiplier float64  `json:"balance_recharge_multiplier"`
+	// [CUSTOM] 独立收款账户限额与充值入口配置。
+	Collection                *CustomCollectionPolicy `json:"collection"`
+	Enabled                   bool                    `json:"enabled"`
+	MinAmount                 float64                 `json:"min_amount"`
+	MaxAmount                 float64                 `json:"max_amount"`
+	DailyLimit                float64                 `json:"daily_limit"`
+	OrderTimeoutMin           int                     `json:"order_timeout_minutes"`
+	MaxPendingOrders          int                     `json:"max_pending_orders"`
+	EnabledTypes              []string                `json:"enabled_payment_types"`
+	BalanceDisabled           bool                    `json:"balance_disabled"`
+	BalanceRechargeMultiplier float64                 `json:"balance_recharge_multiplier"`
 	// SubscriptionUSDToCNYRate 为 0 时订阅换算关闭（兼容存量行为）。
 	SubscriptionUSDToCNYRate float64 `json:"subscription_usd_to_cny_rate"`
 	RechargeFeeRate          float64 `json:"recharge_fee_rate"`
@@ -94,17 +97,19 @@ type PaymentConfig struct {
 
 // UpdatePaymentConfigRequest contains fields to update payment configuration.
 type UpdatePaymentConfigRequest struct {
-	Enabled                   *bool    `json:"enabled"`
-	MinAmount                 *float64 `json:"min_amount"`
-	MaxAmount                 *float64 `json:"max_amount"`
-	DailyLimit                *float64 `json:"daily_limit"`
-	OrderTimeoutMin           *int     `json:"order_timeout_minutes"`
-	MaxPendingOrders          *int     `json:"max_pending_orders"`
-	EnabledTypes              []string `json:"enabled_payment_types"`
-	BalanceDisabled           *bool    `json:"balance_disabled"`
-	BalanceRechargeMultiplier *float64 `json:"balance_recharge_multiplier"`
-	SubscriptionUSDToCNYRate  *float64 `json:"subscription_usd_to_cny_rate"`
-	RechargeFeeRate           *float64 `json:"recharge_fee_rate"`
+	// [CUSTOM] 遗漏保留原值；整体保存前严格校验。
+	Collection                *CustomCollectionPolicy `json:"collection"`
+	Enabled                   *bool                   `json:"enabled"`
+	MinAmount                 *float64                `json:"min_amount"`
+	MaxAmount                 *float64                `json:"max_amount"`
+	DailyLimit                *float64                `json:"daily_limit"`
+	OrderTimeoutMin           *int                    `json:"order_timeout_minutes"`
+	MaxPendingOrders          *int                    `json:"max_pending_orders"`
+	EnabledTypes              []string                `json:"enabled_payment_types"`
+	BalanceDisabled           *bool                   `json:"balance_disabled"`
+	BalanceRechargeMultiplier *float64                `json:"balance_recharge_multiplier"`
+	SubscriptionUSDToCNYRate  *float64                `json:"subscription_usd_to_cny_rate"`
+	RechargeFeeRate           *float64                `json:"recharge_fee_rate"`
 	// RechargeBonusTiers nil 表示不更新；空切片表示清空阶梯。
 	RechargeBonusTiers  *[]RechargeBonusTier `json:"recharge_bonus_tiers"`
 	RechargeBonusMode   *string              `json:"recharge_bonus_mode"`
@@ -180,6 +185,7 @@ type UpdateProviderInstanceRequest struct {
 }
 type CreatePlanRequest struct {
 	// [CUSTOM] 遗漏时创建默认不限量，更新保留原限额；0 售罄。
+	SalesMode     *string  `json:"sales_mode"`
 	StockLimit    *int     `json:"stock_limit"`
 	GroupID       int64    `json:"group_id"`
 	Name          string   `json:"name"`
@@ -197,6 +203,7 @@ type CreatePlanRequest struct {
 
 type UpdatePlanRequest struct {
 	// [CUSTOM] 遗漏时创建默认不限量，更新保留原限额；0 售罄。
+	SalesMode     *string  `json:"sales_mode"`
 	StockLimit    *int     `json:"stock_limit"`
 	GroupID       *int64   `json:"group_id"`
 	Name          *string  `json:"name"`
@@ -237,6 +244,7 @@ func (s *PaymentConfigService) IsPaymentEnabled(ctx context.Context) bool {
 // GetPaymentConfig returns the full payment configuration.
 func (s *PaymentConfigService) GetPaymentConfig(ctx context.Context) (*PaymentConfig, error) {
 	keys := []string{
+		customCollectionKey, // [CUSTOM] 共享收款限额。
 		SettingPaymentEnabled, SettingMinRechargeAmount, SettingMaxRechargeAmount,
 		SettingDailyRechargeLimit, SettingOrderTimeoutMinutes, SettingMaxPendingOrders,
 		SettingEnabledPaymentTypes, SettingBalancePayDisabled, SettingBalanceRechargeMult, SettingSubscriptionUSDToCNYRate, SettingRechargeFeeRate, SettingLoadBalanceStrategy,
@@ -308,6 +316,7 @@ func (s *PaymentConfigService) parsePaymentConfig(vals map[string]string) *Payme
 		}
 		cfg.EnabledTypes = NormalizeVisibleMethods(types)
 	}
+	cfg.Collection = customParseCollection(vals[customCollectionKey]) // [CUSTOM]
 	return cfg
 }
 
@@ -378,7 +387,18 @@ func (s *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, req Upda
 			return infraerrors.BadRequest("INVALID_RECHARGE_BONUS_NOTICE", err.Error())
 		}
 	}
+	// [CUSTOM] 在写入任意设置前验证。
+	if err := customValidateCollection(req.Collection); err != nil {
+		return err
+	}
 	m := make(map[string]string)
+	if req.Collection != nil {
+		raw, err := json.Marshal(req.Collection)
+		if err != nil {
+			return err
+		}
+		m[customCollectionKey] = string(raw)
+	}
 	if req.Enabled != nil {
 		m[SettingPaymentEnabled] = formatBoolOrEmpty(req.Enabled)
 	}

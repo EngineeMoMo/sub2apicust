@@ -13,6 +13,8 @@ const (
 	Label = "subscription_plan"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldSalesMode holds the string denoting the sales_mode field in the database.
+	FieldSalesMode = "sales_mode"
 	// FieldStockLimit holds the string denoting the stock_limit field in the database.
 	FieldStockLimit = "stock_limit"
 	// FieldStockUsed holds the string denoting the stock_used field in the database.
@@ -52,6 +54,7 @@ const (
 // Columns holds all SQL columns for subscriptionplan fields.
 var Columns = []string{
 	FieldID,
+	FieldSalesMode,
 	FieldStockLimit,
 	FieldStockUsed,
 	FieldGroupID,
@@ -81,6 +84,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultSalesMode holds the default value on creation for the "sales_mode" field.
+	DefaultSalesMode string
+	// SalesModeValidator is a validator for the "sales_mode" field. It is called by the builders before save.
+	SalesModeValidator func(string) error
 	// DefaultStockLimit holds the default value on creation for the "stock_limit" field.
 	DefaultStockLimit int
 	// StockLimitValidator is a validator for the "stock_limit" field. It is called by the builders before save.
@@ -127,6 +134,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// BySalesMode orders the results by the sales_mode field.
+func BySalesMode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSalesMode, opts...).ToFunc()
 }
 
 // ByStockLimit orders the results by the stock_limit field.

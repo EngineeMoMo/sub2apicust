@@ -40941,6 +40941,7 @@ type SubscriptionPlanMutation struct {
 	op                Op
 	typ               string
 	id                *int64
+	sales_mode        *string
 	stock_limit       *int
 	addstock_limit    *int
 	stock_used        *int
@@ -41066,6 +41067,42 @@ func (m *SubscriptionPlanMutation) IDs(ctx context.Context) ([]int64, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetSalesMode sets the "sales_mode" field.
+func (m *SubscriptionPlanMutation) SetSalesMode(s string) {
+	m.sales_mode = &s
+}
+
+// SalesMode returns the value of the "sales_mode" field in the mutation.
+func (m *SubscriptionPlanMutation) SalesMode() (r string, exists bool) {
+	v := m.sales_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSalesMode returns the old "sales_mode" field's value of the SubscriptionPlan entity.
+// If the SubscriptionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionPlanMutation) OldSalesMode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSalesMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSalesMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSalesMode: %w", err)
+	}
+	return oldValue.SalesMode, nil
+}
+
+// ResetSalesMode resets all changes to the "sales_mode" field.
+func (m *SubscriptionPlanMutation) ResetSalesMode() {
+	m.sales_mode = nil
 }
 
 // SetStockLimit sets the "stock_limit" field.
@@ -41832,7 +41869,10 @@ func (m *SubscriptionPlanMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionPlanMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
+	if m.sales_mode != nil {
+		fields = append(fields, subscriptionplan.FieldSalesMode)
+	}
 	if m.stock_limit != nil {
 		fields = append(fields, subscriptionplan.FieldStockLimit)
 	}
@@ -41889,6 +41929,8 @@ func (m *SubscriptionPlanMutation) Fields() []string {
 // schema.
 func (m *SubscriptionPlanMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case subscriptionplan.FieldSalesMode:
+		return m.SalesMode()
 	case subscriptionplan.FieldStockLimit:
 		return m.StockLimit()
 	case subscriptionplan.FieldStockUsed:
@@ -41930,6 +41972,8 @@ func (m *SubscriptionPlanMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *SubscriptionPlanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case subscriptionplan.FieldSalesMode:
+		return m.OldSalesMode(ctx)
 	case subscriptionplan.FieldStockLimit:
 		return m.OldStockLimit(ctx)
 	case subscriptionplan.FieldStockUsed:
@@ -41971,6 +42015,13 @@ func (m *SubscriptionPlanMutation) OldField(ctx context.Context, name string) (e
 // type.
 func (m *SubscriptionPlanMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case subscriptionplan.FieldSalesMode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSalesMode(v)
+		return nil
 	case subscriptionplan.FieldStockLimit:
 		v, ok := value.(int)
 		if !ok {
@@ -42228,6 +42279,9 @@ func (m *SubscriptionPlanMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *SubscriptionPlanMutation) ResetField(name string) error {
 	switch name {
+	case subscriptionplan.FieldSalesMode:
+		m.ResetSalesMode()
+		return nil
 	case subscriptionplan.FieldStockLimit:
 		m.ResetStockLimit()
 		return nil

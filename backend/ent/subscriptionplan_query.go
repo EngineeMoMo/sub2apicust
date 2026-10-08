@@ -264,12 +264,12 @@ func (_q *SubscriptionPlanQuery) Clone() *SubscriptionPlanQuery {
 // Example:
 //
 //	var v []struct {
-//		StockLimit int `json:"stock_limit,omitempty"`
+//		SalesMode string `json:"sales_mode,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.SubscriptionPlan.Query().
-//		GroupBy(subscriptionplan.FieldStockLimit).
+//		GroupBy(subscriptionplan.FieldSalesMode).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *SubscriptionPlanQuery) GroupBy(field string, fields ...string) *SubscriptionPlanGroupBy {
@@ -287,11 +287,11 @@ func (_q *SubscriptionPlanQuery) GroupBy(field string, fields ...string) *Subscr
 // Example:
 //
 //	var v []struct {
-//		StockLimit int `json:"stock_limit,omitempty"`
+//		SalesMode string `json:"sales_mode,omitempty"`
 //	}
 //
 //	client.SubscriptionPlan.Query().
-//		Select(subscriptionplan.FieldStockLimit).
+//		Select(subscriptionplan.FieldSalesMode).
 //		Scan(ctx, &v)
 func (_q *SubscriptionPlanQuery) Select(fields ...string) *SubscriptionPlanSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

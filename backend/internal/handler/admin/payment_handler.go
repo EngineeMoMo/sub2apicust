@@ -291,9 +291,10 @@ func (h *PaymentHandler) ListPlans(c *gin.Context) {
 
 type AdminSubscriptionPlanResult struct {
 	// [CUSTOM] 库存展示由服务端计数派生。
-	StockLimit     int `json:"stock_limit"`
-	StockUsed      int `json:"stock_used"`
-	StockRemaining int `json:"stock_remaining"`
+	SalesMode      string `json:"sales_mode"` // [CUSTOM]
+	StockLimit     int    `json:"stock_limit"`
+	StockUsed      int    `json:"stock_used"`
+	StockRemaining int    `json:"stock_remaining"`
 
 	ID              int64     `json:"id"`
 	GroupID         int64     `json:"group_id"`
@@ -328,7 +329,7 @@ func adminSubscriptionPlansForResponse(plans []*dbent.SubscriptionPlan, groupInf
 		gi := groupInfo[p.GroupID]
 		result = append(result, AdminSubscriptionPlanResult{
 			// [CUSTOM] 包含售罄套餐，客户端展示不可购买状态。
-			StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
+			SalesMode: p.SalesMode, StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
 			ID:              int64(p.ID),
 			GroupID:         p.GroupID,
 			GroupPlatform:   gi.Platform,

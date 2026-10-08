@@ -55,6 +55,7 @@ func TestPublicPlansProjection(t *testing.T) {
 	allowed := map[string]bool{"id": true, "name": true, "description": true, "price": true, "original_price": true, "currency": true, "validity_days": true, "validity_unit": true, "features": true, "daily_limit_usd": true, "weekly_limit_usd": true, "monthly_limit_usd": true, "supported_model_scopes": true}
 	// [CUSTOM] 游客只新增剩余份数，不公开总限额及历史已售。
 	allowed["stock_remaining"] = true
+	allowed["sales_mode"] = true
 	for key := range fields {
 		require.True(t, allowed[key], "unexpected field: %s", key)
 	}
@@ -114,7 +115,7 @@ func TestPublicPlansAnonymousCatalog(t *testing.T) {
 				service.SettingKeySubscriptionEnabled: "true",
 				service.SettingPaymentEnabled:         enabled,
 			}}, &config.Config{})
-			handler := NewPaymentHandler(nil, service.NewPaymentConfigService(client, nil, nil))
+			handler := NewPaymentHandler(nil, service.NewPaymentConfigService(client, publicCatalogSettings{values: map[string]string{}}, nil))
 			router := gin.New()
 			router.GET("/api/v1/payment/public/plans", handler.GetPublicPlans(settings))
 			recorder := httptest.NewRecorder()

@@ -203,8 +203,14 @@ func (s *PaymentService) checkPaidWithOptions(ctx context.Context, o *dbent.Paym
 	}
 	if cp, ok := prov.(payment.CancelableProvider); ok {
 		finishProviderCall := servertiming.ObserveDependency(ctx, "payment")
-		_ = cp.CancelPayment(ctx, queryRef)
+		closeErr := cp.CancelPayment(ctx, queryRef)
 		finishProviderCall()
+		// [CUSTOM] 渠道未关单时不释放收款额度。
+		if closeErr == nil {
+			if err := s.customReleaseCollection(ctx, o.ID); err != nil {
+				slog.Error("release collection hold failed", "orderID", o.ID, "error", err)
+			}
+		}
 	}
 	return ""
 }

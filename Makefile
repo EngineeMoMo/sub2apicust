@@ -2,6 +2,7 @@
 
 # [CUSTOM] 包号、电脑端支付宝 WAP、订阅时间／库存及版本权限展示必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
+	src/custom/__tests__/payment-collection.spec.ts \
 	src/custom/__tests__/svg-sanitization.spec.ts \
 	src/components/common/__tests__/VersionBadge.visibility.spec.ts \
 	src/api/__tests__/settings.authSourceDefaults.spec.ts \

@@ -102,6 +102,10 @@ func RegisterPaymentRoutes(
 		adminGroup.GET("/dashboard", adminPaymentHandler.GetDashboard)
 
 		// Config
+		// [CUSTOM] 管理员收款账本，不向普通用户暴露总额。
+		adminGroup.GET("/collection", adminPaymentHandler.GetCollection)
+		adminGroup.POST("/collection/manual", adminPaymentHandler.RecordCollection)
+		adminGroup.POST("/collection/:id/close", adminPaymentHandler.CloseCollection)
 		adminGroup.GET("/config", adminPaymentHandler.GetConfig)
 		adminGroup.PUT("/config", adminPaymentHandler.UpdateConfig)
 

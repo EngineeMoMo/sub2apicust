@@ -23,6 +23,20 @@ const dialog = defineComponent({ template: '<div><slot /><slot name="footer" /><
 beforeEach(() => { vi.clearAllMocks(); api.updatePlan.mockResolvedValue({}); api.createPlan.mockResolvedValue({}) })
 
 describe('套餐库存交互', () => {
+  it('人工续费进入不受在线支付开关限制的公开目录', async () => {
+    const wrapper = mount(SubscriptionCard, { props: { subscription: { id: 1, group_id: 1, status: 'active', expires_at: '2099-01-01' } as UserSubscription, now: Date.now(), plans: [{ ...plan(3), sales_mode: 'contact_admin' }] } })
+    await wrapper.get('button').trigger('click')
+    expect(api.push).toHaveBeenCalledWith('/plans')
+  })
+  it('在线支付关闭时人工套餐仍可展示联系说明', async () => {
+    api.fetchPublicPlans.mockResolvedValue({ purchase_enabled: false, contact_text: '联系测试管理员', plans: [{ ...plan(3), sales_mode: 'contact_admin', supported_model_scopes: [] }] })
+    const wrapper = mount(PublicPlansView, { props: { embedded: true }, global: { stubs: { RouterLink: true, BaseDialog: dialog } } })
+    await flushPromises()
+    await wrapper.get('article button').trigger('click')
+    expect(wrapper.text()).toContain('联系测试管理员')
+    expect(wrapper.text()).toContain('复制开通信息')
+    expect(wrapper.find('[data-guest]').exists()).toBe(false)
+  })
   it.each([0, undefined])('我的订阅库存 %s 不可续订', async remaining => {
     const wrapper = mount(SubscriptionCard, { props: { subscription: { id: 1, group_id: 1, status: 'active', expires_at: '2099-01-01' } as UserSubscription, now: Date.now(), plans: [plan(remaining)] } })
     expect(wrapper.get('[data-test="subscription-stock"]').text()).toContain(remaining === 0 ? 'payment.stock.soldOut' : 'payment.stock.loadFailed')

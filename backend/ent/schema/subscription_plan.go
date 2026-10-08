@@ -30,6 +30,8 @@ func (SubscriptionPlan) Annotations() []schema.Annotation {
 
 func (SubscriptionPlan) Fields() []ent.Field {
 	return []ent.Field{
+		// [CUSTOM] 展示套餐可由管理员开通，不生成在线订单。
+		field.String("sales_mode").Default("online").MaxLen(20),
 		// [CUSTOM] 售卖总限额与数据库事务维护的已占用份数。
 		field.Int("stock_limit").Default(-1).Min(-1),
 		field.Int("stock_used").Default(0).NonNegative(),

@@ -22,6 +22,20 @@ type SubscriptionPlanCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetSalesMode sets the "sales_mode" field.
+func (_c *SubscriptionPlanCreate) SetSalesMode(v string) *SubscriptionPlanCreate {
+	_c.mutation.SetSalesMode(v)
+	return _c
+}
+
+// SetNillableSalesMode sets the "sales_mode" field if the given value is not nil.
+func (_c *SubscriptionPlanCreate) SetNillableSalesMode(v *string) *SubscriptionPlanCreate {
+	if v != nil {
+		_c.SetSalesMode(*v)
+	}
+	return _c
+}
+
 // SetStockLimit sets the "stock_limit" field.
 func (_c *SubscriptionPlanCreate) SetStockLimit(v int) *SubscriptionPlanCreate {
 	_c.mutation.SetStockLimit(v)
@@ -257,6 +271,10 @@ func (_c *SubscriptionPlanCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *SubscriptionPlanCreate) defaults() {
+	if _, ok := _c.mutation.SalesMode(); !ok {
+		v := subscriptionplan.DefaultSalesMode
+		_c.mutation.SetSalesMode(v)
+	}
 	if _, ok := _c.mutation.StockLimit(); !ok {
 		v := subscriptionplan.DefaultStockLimit
 		_c.mutation.SetStockLimit(v)
@@ -309,6 +327,14 @@ func (_c *SubscriptionPlanCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *SubscriptionPlanCreate) check() error {
+	if _, ok := _c.mutation.SalesMode(); !ok {
+		return &ValidationError{Name: "sales_mode", err: errors.New(`ent: missing required field "SubscriptionPlan.sales_mode"`)}
+	}
+	if v, ok := _c.mutation.SalesMode(); ok {
+		if err := subscriptionplan.SalesModeValidator(v); err != nil {
+			return &ValidationError{Name: "sales_mode", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.sales_mode": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.StockLimit(); !ok {
 		return &ValidationError{Name: "stock_limit", err: errors.New(`ent: missing required field "SubscriptionPlan.stock_limit"`)}
 	}
@@ -411,6 +437,10 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 		_spec = sqlgraph.NewCreateSpec(subscriptionplan.Table, sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64))
 	)
 	_spec.OnConflict = _c.conflict
+	if value, ok := _c.mutation.SalesMode(); ok {
+		_spec.SetField(subscriptionplan.FieldSalesMode, field.TypeString, value)
+		_node.SalesMode = value
+	}
 	if value, ok := _c.mutation.StockLimit(); ok {
 		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
 		_node.StockLimit = value
@@ -482,7 +512,7 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 // of the `INSERT` statement. For example:
 //
 //	client.SubscriptionPlan.Create().
-//		SetStockLimit(v).
+//		SetSalesMode(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -491,7 +521,7 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SubscriptionPlanUpsert) {
-//			SetStockLimit(v+v).
+//			SetSalesMode(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *SubscriptionPlanCreate) OnConflict(opts ...sql.ConflictOption) *SubscriptionPlanUpsertOne {
@@ -526,6 +556,18 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetSalesMode sets the "sales_mode" field.
+func (u *SubscriptionPlanUpsert) SetSalesMode(v string) *SubscriptionPlanUpsert {
+	u.Set(subscriptionplan.FieldSalesMode, v)
+	return u
+}
+
+// UpdateSalesMode sets the "sales_mode" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsert) UpdateSalesMode() *SubscriptionPlanUpsert {
+	u.SetExcluded(subscriptionplan.FieldSalesMode)
+	return u
+}
 
 // SetStockLimit sets the "stock_limit" field.
 func (u *SubscriptionPlanUpsert) SetStockLimit(v int) *SubscriptionPlanUpsert {
@@ -798,6 +840,20 @@ func (u *SubscriptionPlanUpsertOne) Update(set func(*SubscriptionPlanUpsert)) *S
 		set(&SubscriptionPlanUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetSalesMode sets the "sales_mode" field.
+func (u *SubscriptionPlanUpsertOne) SetSalesMode(v string) *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetSalesMode(v)
+	})
+}
+
+// UpdateSalesMode sets the "sales_mode" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertOne) UpdateSalesMode() *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateSalesMode()
+	})
 }
 
 // SetStockLimit sets the "stock_limit" field.
@@ -1201,7 +1257,7 @@ func (_c *SubscriptionPlanCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SubscriptionPlanUpsert) {
-//			SetStockLimit(v+v).
+//			SetSalesMode(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *SubscriptionPlanCreateBulk) OnConflict(opts ...sql.ConflictOption) *SubscriptionPlanUpsertBulk {
@@ -1275,6 +1331,20 @@ func (u *SubscriptionPlanUpsertBulk) Update(set func(*SubscriptionPlanUpsert)) *
 		set(&SubscriptionPlanUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetSalesMode sets the "sales_mode" field.
+func (u *SubscriptionPlanUpsertBulk) SetSalesMode(v string) *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetSalesMode(v)
+	})
+}
+
+// UpdateSalesMode sets the "sales_mode" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertBulk) UpdateSalesMode() *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateSalesMode()
+	})
 }
 
 // SetStockLimit sets the "stock_limit" field.

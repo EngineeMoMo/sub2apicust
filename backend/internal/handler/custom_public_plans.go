@@ -11,6 +11,7 @@ import (
 )
 
 type publicPlan struct {
+	SalesMode       string   `json:"sales_mode"`
 	StockRemaining  int      `json:"stock_remaining"`
 	ID              int64    `json:"id"`
 	Name            string   `json:"name"`
@@ -43,8 +44,8 @@ func publicPlans(plans []*dbent.SubscriptionPlan, groups map[int64]service.PlanG
 			scopes = []string{}
 		}
 		result = append(result, publicPlan{
-			StockRemaining: service.CustomPlanStockRemaining(plan),
-			ID:             plan.ID, Name: plan.Name, Description: plan.Description,
+			SalesMode: plan.SalesMode, StockRemaining: service.CustomPlanStockRemaining(plan),
+			ID: plan.ID, Name: plan.Name, Description: plan.Description,
 			Price: plan.Price, OriginalPrice: plan.OriginalPrice, Currency: plan.Currency,
 			ValidityDays: plan.ValidityDays, ValidityUnit: plan.ValidityUnit, Features: features,
 			DailyLimitUSD: info.DailyLimitUSD, WeeklyLimitUSD: info.WeeklyLimitUSD,
@@ -75,7 +76,13 @@ func (h *PaymentHandler) GetPublicPlans(settings *service.SettingService) gin.Ha
 			response.ErrorFrom(c, err)
 			return
 		}
+		paymentCfg, err := h.configService.GetPaymentConfig(c.Request.Context())
+		if err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
 		response.Success(c, gin.H{
+			"contact_text":     paymentCfg.Collection.ContactText,
 			"plans":            publicPlans(plans, h.configService.GetGroupInfoMap(c.Request.Context(), plans)),
 			"purchase_enabled": config.PaymentEnabled,
 		})

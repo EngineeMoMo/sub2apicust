@@ -2,6 +2,7 @@ import axios from 'axios'
 import { getAPIBaseURL } from '@/api/url'
 
 export interface PublicPlan {
+ sales_mode?: "online" | "contact_admin"
   // [CUSTOM] -1 不限量；旧接口遗漏字段时兼容原购买行为。
   stock_limit?: number
   stock_used?: number
@@ -22,6 +23,7 @@ export interface PublicPlan {
 }
 
 export interface PublicCatalog {
+ contact_text?: string
   plans: PublicPlan[]
   purchase_enabled: boolean
 }

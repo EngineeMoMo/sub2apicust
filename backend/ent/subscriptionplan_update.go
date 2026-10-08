@@ -28,6 +28,20 @@ func (_u *SubscriptionPlanUpdate) Where(ps ...predicate.SubscriptionPlan) *Subsc
 	return _u
 }
 
+// SetSalesMode sets the "sales_mode" field.
+func (_u *SubscriptionPlanUpdate) SetSalesMode(v string) *SubscriptionPlanUpdate {
+	_u.mutation.SetSalesMode(v)
+	return _u
+}
+
+// SetNillableSalesMode sets the "sales_mode" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdate) SetNillableSalesMode(v *string) *SubscriptionPlanUpdate {
+	if v != nil {
+		_u.SetSalesMode(*v)
+	}
+	return _u
+}
+
 // SetStockLimit sets the "stock_limit" field.
 func (_u *SubscriptionPlanUpdate) SetStockLimit(v int) *SubscriptionPlanUpdate {
 	_u.mutation.ResetStockLimit()
@@ -328,6 +342,11 @@ func (_u *SubscriptionPlanUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *SubscriptionPlanUpdate) check() error {
+	if v, ok := _u.mutation.SalesMode(); ok {
+		if err := subscriptionplan.SalesModeValidator(v); err != nil {
+			return &ValidationError{Name: "sales_mode", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.sales_mode": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.StockLimit(); ok {
 		if err := subscriptionplan.StockLimitValidator(v); err != nil {
 			return &ValidationError{Name: "stock_limit", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_limit": %w`, err)}
@@ -372,6 +391,9 @@ func (_u *SubscriptionPlanUpdate) sqlSave(ctx context.Context) (_node int, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.SalesMode(); ok {
+		_spec.SetField(subscriptionplan.FieldSalesMode, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.StockLimit(); ok {
 		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
@@ -460,6 +482,20 @@ type SubscriptionPlanUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *SubscriptionPlanMutation
+}
+
+// SetSalesMode sets the "sales_mode" field.
+func (_u *SubscriptionPlanUpdateOne) SetSalesMode(v string) *SubscriptionPlanUpdateOne {
+	_u.mutation.SetSalesMode(v)
+	return _u
+}
+
+// SetNillableSalesMode sets the "sales_mode" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdateOne) SetNillableSalesMode(v *string) *SubscriptionPlanUpdateOne {
+	if v != nil {
+		_u.SetSalesMode(*v)
+	}
+	return _u
 }
 
 // SetStockLimit sets the "stock_limit" field.
@@ -775,6 +811,11 @@ func (_u *SubscriptionPlanUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *SubscriptionPlanUpdateOne) check() error {
+	if v, ok := _u.mutation.SalesMode(); ok {
+		if err := subscriptionplan.SalesModeValidator(v); err != nil {
+			return &ValidationError{Name: "sales_mode", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.sales_mode": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.StockLimit(); ok {
 		if err := subscriptionplan.StockLimitValidator(v); err != nil {
 			return &ValidationError{Name: "stock_limit", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_limit": %w`, err)}
@@ -836,6 +877,9 @@ func (_u *SubscriptionPlanUpdateOne) sqlSave(ctx context.Context) (_node *Subscr
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.SalesMode(); ok {
+		_spec.SetField(subscriptionplan.FieldSalesMode, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.StockLimit(); ok {
 		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)

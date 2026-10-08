@@ -57,9 +57,11 @@
                 data-testid="recharge-bonus-notice"
                 v-html="renderedBonusNotice"
               ></div>
+              <p v-if="checkout.collection?.enabled" class="mofa-stock-help">单笔实付不超过 ¥{{ checkout.collection.single_max }}，包含手续费；到账额度另行显示。</p>
               <AmountInput
                 v-model="amount"
-                :amounts="[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]"
+                :amounts="collectionQuickAmounts"
+                :allow-custom="checkout.collection?.allow_custom_amount !== false"
                 :min="globalMinAmount"
                 :max="globalMaxAmount"
                 :bonus-tiers="rechargeBonusTiers"
@@ -119,7 +121,12 @@
           <!-- Subscribe Tab -->
           <template v-else-if="activeTab === 'subscription'">
             <!-- Subscription confirm (inline, replaces plan list) -->
-            <template v-if="selectedPlan">
+            <template v-if="selectedPlan?.sales_mode === 'contact_admin'">
+              <p v-if="selectedPlan.stock_remaining === 0" role="status">已售罄</p>
+              <PlanContactPanel v-else :name="selectedPlan.name" :contact="checkout.collection?.contact_text" />
+              <button type="button" class="btn btn-secondary" @click="selectedPlan = null">返回套餐</button>
+            </template>
+            <template v-else-if="selectedPlan">
               <div class="card p-5">
                 <!-- Header: platform badge + plan name -->
                 <div class="mb-3 flex flex-wrap items-center gap-2">
@@ -202,6 +209,8 @@
                 </span>
                 <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
               </button>
+              <p v-if="!collectionAllows(checkout.collection, subTotalAmount, selectedCurrency)" class="mofa-stock-help" role="status">套餐实付超过收款限额，请联系管理员开通。</p>
+              <PlanContactPanel v-if="selectedPlan.stock_remaining !== 0 && !collectionAllows(checkout.collection, subTotalAmount, selectedCurrency)" :name="selectedPlan.name" :contact="checkout.collection?.contact_text" />
               <!-- [CUSTOM] 深链接选中的售罄套餐显示原因。 -->
               <p v-if="selectedPlan.stock_remaining === 0" class="mofa-stock-note" role="status">{{ t('payment.stock.soldOut') }}</p>
               <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
@@ -316,6 +325,8 @@ import {
   writePaymentRecoverySnapshot,
 } from '@/components/payment/paymentFlow'
 import { platformAccentBarClass, platformBadgeLightClass, platformBadgeClass, platformTextClass, platformLabel } from '@/utils/platformColors'
+import { collectionAllows } from '@/custom/paymentCollection'
+import PlanContactPanel from '@/custom/components/PlanContactPanel.vue'
 import SubscriptionPlanCard from '@/components/payment/SubscriptionPlanCard.vue'
 import PaymentStatusPanel from '@/components/payment/PaymentStatusPanel.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -703,6 +714,7 @@ const totalAmount = computed(() =>
 const showActualPay = computed(() => feeRate.value > 0 || discountAmount.value > 0)
 
 const amountError = computed(() => {
+  if (validAmount.value > 0 && !collectionAllows(checkout.value.collection, totalAmount.value, selectedCurrency.value)) return '实付金额超过人民币单笔收款上限，请调整金额或联系管理员'
   if (validAmount.value <= 0) return ''
   // No method can handle this amount
   if (!enabledMethods.value.some((m) => amountFitsMethod(payBaseAmount.value, m))) {
@@ -717,8 +729,16 @@ const amountError = computed(() => {
   return ''
 })
 
+// [CUSTOM] 实付金额受共享上限约束，不能靠自定义输入绕过。
+const collectionQuickAmounts = computed(() => (checkout.value.collection?.quick_amounts ?? [10,20,50,100,200,500,1000,2000,5000]).filter(value => {
+ const quote = quoteRechargeBonus(rechargeBonusTiers.value, value, { multiplier: balanceRechargeMultiplier.value, mode: rechargeBonusMode.value, currencyDigits: currencyFractionDigits(selectedCurrency.value) })
+ const total = roundPaymentAmount(quote.payBase + ceilPaymentAmount(quote.payBase * feeRate.value / 100, selectedCurrency.value), selectedCurrency.value)
+ return collectionAllows(checkout.value.collection, total, selectedCurrency.value)
+}))
 const canSubmit = computed(() =>
   validAmount.value > 0
+    && collectionAllows(checkout.value.collection, totalAmount.value, selectedCurrency.value)
+    && (checkout.value.collection?.allow_custom_amount !== false || collectionQuickAmounts.value.includes(validAmount.value))
     && amountFitsMethod(payBaseAmount.value, selectedMethod.value)
     && selectedLimit.value?.available !== false
 )
@@ -763,6 +783,8 @@ const subMethodOptions = computed<PaymentMethodOption[]>(() => {
 const canSubmitSubscription = computed(() =>
   selectedPlan.value !== null
     // [CUSTOM] 深链接和恢复入口也不能提交售罄套餐。
+    && selectedPlan.value.sales_mode !== 'contact_admin'
+    && collectionAllows(checkout.value.collection, subTotalAmount.value, selectedCurrency.value)
     && selectedPlan.value.stock_remaining !== 0
     && amountFitsMethod(subTotalAmount.value, selectedMethod.value)
     && selectedLimit.value?.available !== false
@@ -839,7 +861,7 @@ async function handleSubmitRecharge() {
 
 async function confirmSubscribe() {
   // [CUSTOM] 库存不足不发起新订单。
-  if (!selectedPlan.value || selectedPlan.value.stock_remaining === 0 || submitting.value) return
+  if (!canSubmitSubscription.value || !selectedPlan.value || submitting.value) return
   await createOrder(selectedPlan.value.price, 'subscription', selectedPlan.value.id)
 }
 

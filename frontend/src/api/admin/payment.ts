@@ -1,3 +1,4 @@
+import type { CollectionPolicy } from "@/custom/paymentCollection"
 /**
  * Admin Payment API endpoints
  * Handles payment management operations for administrators
@@ -15,6 +16,7 @@ import type { BasePaginationResponse } from '@/types'
 
 /** Admin-facing payment config returned by GET /admin/payment/config */
 export interface AdminPaymentConfig {
+ collection?: CollectionPolicy // [CUSTOM]
   enabled: boolean
   min_amount: number
   max_amount: number
@@ -35,6 +37,7 @@ export interface AdminPaymentConfig {
 
 /** Fields accepted by PUT /admin/payment/config (all optional via pointer semantics) */
 export interface UpdatePaymentConfigRequest {
+ collection?: CollectionPolicy // [CUSTOM]
   enabled?: boolean
   min_amount?: number
   max_amount?: number

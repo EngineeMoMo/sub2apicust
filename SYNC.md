@@ -1,5 +1,9 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-08审查补修接缝：保留Alipay.CancelPayment的SDK响应成功码校验及交易不存在错误；不得恢复忽略业务失败即释放额度。保留人工续费到公开目录的入口，运行custom_alipay_collection_test.go及plan-stock.spec.ts；本轮仍未发布。
+
+2026-10-08最新源码：收款限制与人工开通已完成但未发布，新增247迁移及默认关闭的50／1000人民币共享限额、可配置快捷充值／自定义开关、套餐contact_admin与联系说明，人工发放继续扣库存。迁移、接缝、证据与待办以HANDOFF最新状态、CUSTOMIZATIONS及deploy/PAYMENT_COLLECTION_LIMITS.md为准；旧sha-70e66cf不含此功能，不能沿用旧CI结论。发布前须核对历史付款链接及线下到账，前后端同版，生产由用户部署。
+
 2026-10-08已发布库存与帮助定制：最终70e66cf73的CI（unit／integration／lint／前端与脚本）、安全、GHCR全绿，固定镜像sha-70e66cf。后续同步保留下列245／246库存事务与帮助接缝，真实PG测试不得跳过冒充通过；生产更新须先备份并核对历史人工归属。详见HANDOFF最新终态，下方未发布说明为历史。
 
 2026-10-08帮助页同步注意：保留AppSidebar的FaqIcon／GuideIcon两种语义图标、router教程新旧锚点白名单；自有层GuideToolSteps和六节教程、FAQ分类筛选／16题与预览问号图标。合并后运行guide／guest／guest-preview／family-home测试并检查窄屏浅深色；官方文档会变，技术步骤更新须重新查证。当前未发布。

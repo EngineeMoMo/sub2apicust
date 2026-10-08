@@ -75,6 +75,8 @@ try {
 
 ## 7. 本轮智力效率发布记录
 
+- **2026-10-08 收款限制与审查补修本地部署**：用户授权更新。代理200后首次构建成功，旧镜像保留`sub2apicust:before-collection-20261008`，数据库备份616870字节且pg_restore目录验证通过。仅重建应用，原数据库／Redis容器及全部挂载一致；新镜像`2a844d6e77237dd55986627d8fbb9609af29ab4ce2022b3437d0980234246bc0`与运行镜像一致，三服务healthy，health及页面入口200。库存／sales_mode／收款账本存在，用户3／套餐1／订单0保持。证据output/local-collection-20261008；8080已供测试，recipes保持停止，未修改付款设置或测试实付，生产未改。
+
 - **2026-09-30 已部署本机Docker（优先于本轮未部署记录）**：用户授权本机测试。原三容器处于停止状态，保留原卷启动Postgres／Redis，先完成597905字节数据库备份与pg_restore目录校验、旧镜像标签sub2apicust:before-console-20260930，再代理预检200并构建。前端类型／国际化3测／构建及Go embed成功；仅应用容器重建，运行镜像与标签一致be2f26f98e8c3dee62d765a8b78e6cd33021dc3b6f618c76085e310180b234b8，三服务healthy，health=ok。迁移242两列和三个索引确认存在；数据库／Redis容器ID及app_data卷不变，用户2／密钥0／组3／套餐1／订单0／包号0／设置280计数保持。备份逐项比较只有Claude版本2.1.283→2.1.285与Codex版本0.158.0→0.159.2两键自动同步，09:44启动日志证实，其余278键不变。HTTP入口index-Ckx_MqIV.js及三个新页面chunk验证通过，账户与管理员接口匿名401；浏览器8080官网正常打开并留给用户测试，尚未做带数据管理员交互验收。证据output/console-deploy-20260930，备份SHA256=1D900EC14FB9915B5E912F0A84778271CEB149178B7CC526E3A9F55411EE037E。未提交推送或操作生产；迁移后的回退需兼顾数据库，不能直接跑旧单用户版本。
 
 **2026-09-28游客适配修正（最新）**：代理授权200、备份校验后build退出0，前端／Go embed成功；仅应用容器更新，镜像与容器一致ea6e3a5ecc3c021f3f128725320fcee293751c69dc795cc6ac8fb678b65e1b2d，三服务healthy、health=ok。数据库／Redis ID、用户／密钥／套餐／订单计数及设置摘要不变。8080浏览器2031px左右留白均40.609px；证据output/preview-responsive-20260928含before.json、database.dump（595135字节，pg_restore目录校验）、build.log、verification.json、responsive-checks.json、docker-wide-fixed.png；回退sub2apicust:before-preview-responsive-20260928。未Go单测、未付款／提交推送／生产部署。

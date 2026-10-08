@@ -1539,6 +1539,7 @@ var (
 	// SubscriptionPlansColumns holds the columns for the "subscription_plans" table.
 	SubscriptionPlansColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "sales_mode", Type: field.TypeString, Size: 20, Default: "online"},
 		{Name: "stock_limit", Type: field.TypeInt, Default: -1},
 		{Name: "stock_used", Type: field.TypeInt, Default: 0},
 		{Name: "group_id", Type: field.TypeInt64},
@@ -1565,12 +1566,12 @@ var (
 			{
 				Name:    "subscriptionplan_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{SubscriptionPlansColumns[3]},
+				Columns: []*schema.Column{SubscriptionPlansColumns[4]},
 			},
 			{
 				Name:    "subscriptionplan_for_sale",
 				Unique:  false,
-				Columns: []*schema.Column{SubscriptionPlansColumns[13]},
+				Columns: []*schema.Column{SubscriptionPlansColumns[14]},
 			},
 		},
 	}

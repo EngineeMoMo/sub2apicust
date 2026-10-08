@@ -1,3 +1,4 @@
+import type { CollectionPolicy } from "@/custom/paymentCollection"
 /**
  * Payment System Type Definitions
  */
@@ -70,6 +71,7 @@ export interface MethodLimitsResponse {
 
 /** Response from /payment/checkout-info API — single call for the payment page */
 export interface CheckoutInfoResponse {
+ collection?: CollectionPolicy // [CUSTOM]
   methods: Record<string, MethodLimit>
   global_min: number
   global_max: number
@@ -125,6 +127,7 @@ export interface PaymentOrder {
 // ==================== Plans & Channels ====================
 
 export interface SubscriptionPlan {
+ sales_mode?: "online" | "contact_admin" // [CUSTOM]
   // [CUSTOM] -1 不限量；旧接口遗漏字段时兼容原购买行为。
   stock_limit?: number
   stock_used?: number

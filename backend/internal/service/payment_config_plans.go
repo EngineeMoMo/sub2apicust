@@ -137,6 +137,9 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 		return nil, err
 	}
 	// [CUSTOM] 库存只接受总限额，不接受客户端覆盖已占用数。
+	if err := customValidateSalesMode(req.SalesMode); err != nil {
+		return nil, err
+	} // [CUSTOM]
 	if err := customValidateStockLimit(req.StockLimit); err != nil {
 		return nil, err
 	}
@@ -156,6 +159,9 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 	if req.StockLimit != nil {
 		b.SetStockLimit(*req.StockLimit)
 	}
+	if req.SalesMode != nil {
+		b.SetSalesMode(*req.SalesMode)
+	} // [CUSTOM]
 	return b.Save(ctx)
 }
 
@@ -167,10 +173,16 @@ func (s *PaymentConfigService) UpdatePlan(ctx context.Context, id int64, req Upd
 		return nil, err
 	}
 	// [CUSTOM] PATCH 遗漏库存不得变成售罄或重置库存。
+	if err := customValidateSalesMode(req.SalesMode); err != nil {
+		return nil, err
+	} // [CUSTOM]
 	if err := customValidateStockLimit(req.StockLimit); err != nil {
 		return nil, err
 	}
 	u := s.entClient.SubscriptionPlan.UpdateOneID(id)
+	if req.SalesMode != nil {
+		u.SetSalesMode(*req.SalesMode)
+	} // [CUSTOM]
 	if req.StockLimit != nil {
 		u.SetStockLimit(*req.StockLimit)
 	}

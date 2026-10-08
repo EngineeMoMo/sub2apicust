@@ -17,6 +17,8 @@ type SubscriptionPlan struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int64 `json:"id,omitempty"`
+	// SalesMode holds the value of the "sales_mode" field.
+	SalesMode string `json:"sales_mode,omitempty"`
 	// StockLimit holds the value of the "stock_limit" field.
 	StockLimit int `json:"stock_limit,omitempty"`
 	// StockUsed holds the value of the "stock_used" field.
@@ -63,7 +65,7 @@ func (*SubscriptionPlan) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case subscriptionplan.FieldID, subscriptionplan.FieldStockLimit, subscriptionplan.FieldStockUsed, subscriptionplan.FieldGroupID, subscriptionplan.FieldValidityDays, subscriptionplan.FieldSortOrder:
 			values[i] = new(sql.NullInt64)
-		case subscriptionplan.FieldName, subscriptionplan.FieldDescription, subscriptionplan.FieldCurrency, subscriptionplan.FieldValidityUnit, subscriptionplan.FieldFeatures, subscriptionplan.FieldProductName:
+		case subscriptionplan.FieldSalesMode, subscriptionplan.FieldName, subscriptionplan.FieldDescription, subscriptionplan.FieldCurrency, subscriptionplan.FieldValidityUnit, subscriptionplan.FieldFeatures, subscriptionplan.FieldProductName:
 			values[i] = new(sql.NullString)
 		case subscriptionplan.FieldCreatedAt, subscriptionplan.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -88,6 +90,12 @@ func (_m *SubscriptionPlan) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int64(value.Int64)
+		case subscriptionplan.FieldSalesMode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sales_mode", values[i])
+			} else if value.Valid {
+				_m.SalesMode = value.String
+			}
 		case subscriptionplan.FieldStockLimit:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field stock_limit", values[i])
@@ -221,6 +229,9 @@ func (_m *SubscriptionPlan) String() string {
 	var builder strings.Builder
 	builder.WriteString("SubscriptionPlan(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("sales_mode=")
+	builder.WriteString(_m.SalesMode)
+	builder.WriteString(", ")
 	builder.WriteString("stock_limit=")
 	builder.WriteString(fmt.Sprintf("%v", _m.StockLimit))
 	builder.WriteString(", ")

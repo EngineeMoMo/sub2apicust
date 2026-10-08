@@ -48,14 +48,14 @@
       </div>
     </div>
 
-    <!-- Custom Amount Input -->
-    <div>
+    <!-- [CUSTOM] 自定义开关与实际币种。 -->
+    <div v-if="allowCustom">
       <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
         {{ t('payment.customAmount') }}
       </label>
       <div class="relative">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-500">
-          $
+          {{ currencySymbol(currency || 'USD') }}
         </span>
         <input
           type="text"
@@ -75,9 +75,10 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RechargeBonusTier } from '@/types/payment'
 import { formatRechargeBonusNumber, quoteRechargeBonus, type RechargeBonusMode } from '@/utils/rechargeBonus'
-import { formatPaymentAmount } from './currency'
+import { currencySymbol, formatPaymentAmount } from './currency'
 
 const props = withDefaults(defineProps<{
+  allowCustom?: boolean
   amounts?: number[]
   modelValue: number | null
   min?: number
@@ -91,6 +92,7 @@ const props = withDefaults(defineProps<{
   /** 支付币种（折扣模式第二行实付金额的币种与精度） */
   currency?: string
 }>(), {
+  allowCustom: true,
   amounts: () => [10, 20, 50, 100, 200, 500, 1000, 2000, 5000],
   min: 0,
   max: 0,

@@ -130,6 +130,19 @@ func (s *PaymentService) validateOrderInput(ctx context.Context, req CreateOrder
 	if req.OrderType == payment.OrderTypeBalance && cfg.BalanceDisabled {
 		return nil, infraerrors.Forbidden("BALANCE_PAYMENT_DISABLED", "balance recharge has been disabled")
 	}
+	// [CUSTOM] 关闭自定义金额后，直接调用接口也只能使用配置的快捷金额。
+	if req.OrderType == payment.OrderTypeBalance && cfg.Collection != nil && !cfg.Collection.AllowCustomAmount {
+		found := false
+		for _, v := range cfg.Collection.QuickAmounts {
+			if v == req.Amount {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, infraerrors.BadRequest("CUSTOM_AMOUNT_DISABLED", "请选择配置的快捷充值金额")
+		}
+	}
 	if req.OrderType == payment.OrderTypeSubscription {
 		return s.validateSubOrder(ctx, req)
 	}
@@ -151,6 +164,9 @@ func (s *PaymentService) validateSubOrder(ctx context.Context, req CreateOrderRe
 	if err != nil || !plan.ForSale {
 		return nil, infraerrors.NotFound("PLAN_NOT_AVAILABLE", "plan not found or not for sale")
 	}
+	if plan.SalesMode == "contact_admin" {
+		return nil, customCollectionError(fmt.Errorf("CUSTOM_PLAN_CONTACT_ADMIN"))
+	} // [CUSTOM]
 	// [CUSTOM] 快速售罄提示；最终并发裁决仍由订单事务中的数据库触发器负责。
 	if CustomPlanStockRemaining(plan) == 0 {
 		return nil, customPlanOutOfStock()
@@ -234,7 +250,7 @@ func (s *PaymentService) createOrderInTx(ctx context.Context, req CreateOrderReq
 	}
 	order, err := b.Save(ctx)
 	if err != nil {
-		return nil, customPlanStockError(fmt.Errorf("create order: %w", err)) // [CUSTOM] 并发库存不足映射为 409。
+		return nil, customCollectionError(customPlanStockError(fmt.Errorf("create order: %w", err))) // [CUSTOM] 并发库存不足映射为 409。
 	}
 	code := fmt.Sprintf("PAY-%d-%d", order.ID, time.Now().UnixNano()%100000)
 	order, err = tx.PaymentOrder.UpdateOneID(order.ID).SetRechargeCode(code).Save(ctx)

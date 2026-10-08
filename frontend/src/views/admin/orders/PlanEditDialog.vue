@@ -59,6 +59,8 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('payment.admin.currencyHint') }}</p>
         </div>
       </div>
+      <!-- [CUSTOM] 独立于上下架与库存的开通方式。 -->
+      <label class="input-label">开通方式<select v-model="planForm.sales_mode" class="input"><option value="online">在线购买</option><option value="contact_admin">联系管理员开通（展示套餐，不在线付款）</option></select></label>
       <!-- [CUSTOM] 库存总限额包含已售和待付预占，禁止提交客户端计数。 -->
       <div>
         <label for="plan-stock-limit" class="input-label">{{ t('payment.stock.limit') }}</label>
@@ -130,7 +132,7 @@ const appStore = useAppStore()
 
 const saving = ref(false)
 // [CUSTOM] 默认不限量，避免旧套餐升级后被误停售。
-const planForm = reactive({ stock_limit: -1, name: '', group_id: null as number | null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
+const planForm = reactive({ sales_mode: 'online', stock_limit: -1, name: '', group_id: null as number | null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
 const planFeaturesText = ref('')
 
 const validityUnitOptions = computed(() => [
@@ -183,10 +185,10 @@ const subscriptionCnyPreview = computed(() => {
 watch(() => props.show, (visible) => {
   if (!visible) return
   if (props.plan) {
-    Object.assign(planForm, { stock_limit: props.plan.stock_limit ?? -1, name: props.plan.name, group_id: props.plan.group_id, description: props.plan.description, price: props.plan.price, original_price: props.plan.original_price || 0, currency: props.plan.currency || '', validity_days: props.plan.validity_days, validity_unit: props.plan.validity_unit || 'days', sort_order: props.plan.sort_order || 0, for_sale: props.plan.for_sale })
+    Object.assign(planForm, { sales_mode: props.plan.sales_mode || 'online', stock_limit: props.plan.stock_limit ?? -1, name: props.plan.name, group_id: props.plan.group_id, description: props.plan.description, price: props.plan.price, original_price: props.plan.original_price || 0, currency: props.plan.currency || '', validity_days: props.plan.validity_days, validity_unit: props.plan.validity_unit || 'days', sort_order: props.plan.sort_order || 0, for_sale: props.plan.for_sale })
     planFeaturesText.value = (props.plan.features || []).join('\n')
   } else {
-    Object.assign(planForm, { stock_limit: -1, name: '', group_id: null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
+    Object.assign(planForm, { sales_mode: 'online', stock_limit: -1, name: '', group_id: null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
     planFeaturesText.value = ''
   }
 })
@@ -196,6 +198,7 @@ function buildPlanPayload() {
   const features = planFeaturesText.value.split('\n').map(f => f.trim()).filter(Boolean).join('\n')
   return {
     // [CUSTOM] 只传可编辑的总限额。
+    sales_mode: planForm.sales_mode,
     stock_limit: planForm.stock_limit,
     name: planForm.name,
     group_id: planForm.group_id,

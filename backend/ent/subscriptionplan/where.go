@@ -54,6 +54,11 @@ func IDLTE(id int64) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldLTE(FieldID, id))
 }
 
+// SalesMode applies equality check predicate on the "sales_mode" field. It's identical to SalesModeEQ.
+func SalesMode(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldSalesMode, v))
+}
+
 // StockLimit applies equality check predicate on the "stock_limit" field. It's identical to StockLimitEQ.
 func StockLimit(v int) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldEQ(FieldStockLimit, v))
@@ -132,6 +137,71 @@ func CreatedAt(v time.Time) predicate.SubscriptionPlan {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// SalesModeEQ applies the EQ predicate on the "sales_mode" field.
+func SalesModeEQ(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldSalesMode, v))
+}
+
+// SalesModeNEQ applies the NEQ predicate on the "sales_mode" field.
+func SalesModeNEQ(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNEQ(FieldSalesMode, v))
+}
+
+// SalesModeIn applies the In predicate on the "sales_mode" field.
+func SalesModeIn(vs ...string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldIn(FieldSalesMode, vs...))
+}
+
+// SalesModeNotIn applies the NotIn predicate on the "sales_mode" field.
+func SalesModeNotIn(vs ...string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNotIn(FieldSalesMode, vs...))
+}
+
+// SalesModeGT applies the GT predicate on the "sales_mode" field.
+func SalesModeGT(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGT(FieldSalesMode, v))
+}
+
+// SalesModeGTE applies the GTE predicate on the "sales_mode" field.
+func SalesModeGTE(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGTE(FieldSalesMode, v))
+}
+
+// SalesModeLT applies the LT predicate on the "sales_mode" field.
+func SalesModeLT(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLT(FieldSalesMode, v))
+}
+
+// SalesModeLTE applies the LTE predicate on the "sales_mode" field.
+func SalesModeLTE(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLTE(FieldSalesMode, v))
+}
+
+// SalesModeContains applies the Contains predicate on the "sales_mode" field.
+func SalesModeContains(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldContains(FieldSalesMode, v))
+}
+
+// SalesModeHasPrefix applies the HasPrefix predicate on the "sales_mode" field.
+func SalesModeHasPrefix(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldHasPrefix(FieldSalesMode, v))
+}
+
+// SalesModeHasSuffix applies the HasSuffix predicate on the "sales_mode" field.
+func SalesModeHasSuffix(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldHasSuffix(FieldSalesMode, v))
+}
+
+// SalesModeEqualFold applies the EqualFold predicate on the "sales_mode" field.
+func SalesModeEqualFold(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEqualFold(FieldSalesMode, v))
+}
+
+// SalesModeContainsFold applies the ContainsFold predicate on the "sales_mode" field.
+func SalesModeContainsFold(v string) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldContainsFold(FieldSalesMode, v))
 }
 
 // StockLimitEQ applies the EQ predicate on the "stock_limit" field.

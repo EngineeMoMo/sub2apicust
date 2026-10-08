@@ -366,12 +366,17 @@ func (a *Alipay) CancelPayment(ctx context.Context, tradeNo string) error {
 		return err
 	}
 
-	_, err = client.TradeClose(ctx, alipay.TradeClose{OutTradeNo: tradeNo})
+	result, err := client.TradeClose(ctx, alipay.TradeClose{OutTradeNo: tradeNo})
 	if err != nil {
-		if isTradeNotExist(err) {
-			return nil
-		}
+		// [CUSTOM] 交易不存在不代表签名 WAP/PagePay 链接失效，必须保留错误及收款预占。
 		return fmt.Errorf("alipay TradeClose: %w", err)
+	}
+	// [CUSTOM] SDK 的业务失败也可能仅在响应中返回，只有明确成功才确认关单。
+	if result == nil {
+		return fmt.Errorf("alipay TradeClose: empty response")
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("alipay TradeClose: %s", result.Error.Error())
 	}
 	return nil
 }

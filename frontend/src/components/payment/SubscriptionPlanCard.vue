@@ -101,7 +101,7 @@
         :disabled="plan.stock_remaining === 0"
         @click="plan.stock_remaining !== 0 && emit('select', plan)"
       >
-        {{ plan.stock_remaining === 0 ? t('payment.stock.soldOut') : isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
+        {{ plan.stock_remaining === 0 ? t('payment.stock.soldOut') : plan.sales_mode === 'contact_admin' ? '联系管理员开通' : isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
       </button>
     </div>
   </div>

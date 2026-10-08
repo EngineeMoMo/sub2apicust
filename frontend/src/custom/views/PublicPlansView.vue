@@ -12,7 +12,7 @@
       <button type="button" class="btn btn-secondary" @click="load">重新加载</button>
     </div>
     <template v-else>
-      <p v-if="!catalog.purchase_enabled && catalog.plans.length" class="mofa-public-state" role="status">在线支付暂未开放，当前仅供浏览，暂不能购买。</p>
+      <p v-if="!catalog.purchase_enabled && catalog.plans.length" class="mofa-public-state" role="status">在线支付暂未开放；标为“联系管理员开通”的套餐仍可咨询管理员。</p>
       <div v-if="!catalog.plans.length" class="mofa-public-state"><h2>暂无在售套餐</h2><p>套餐上架后会在这里展示。你可以先查看常见问题，了解接入方式。</p></div>
       <div v-else class="mofa-plan-grid">
         <article v-for="plan in catalog.plans" :key="plan.id" class="mofa-public-plan">
@@ -30,11 +30,13 @@
           <p v-if="plan.supported_model_scopes.length">模型范围：{{ plan.supported_model_scopes.join('、') }}</p>
           <ul v-if="plan.features.length"><li v-for="(feature, index) in plan.features" :key="index">{{ feature }}</li></ul>
           <p v-if="plan.stock_remaining != null && plan.stock_remaining >= 0" class="mofa-stock-note">{{ plan.stock_remaining === 0 ? '已售罄' : `剩余 ${plan.stock_remaining} 份` }}</p>
-          <GuestAction v-if="catalog.purchase_enabled && plan.stock_remaining !== 0" :to="`/purchase?tab=subscription&plan=${plan.id}`" button-class="btn btn-primary" message="登录后会返回此套餐的购买页面。请确认权益和实付金额后再下单。">选择此套餐</GuestAction>
+          <button v-if="plan.sales_mode === 'contact_admin' && plan.stock_remaining !== 0" type="button" class="btn btn-primary" @click="contactPlan = plan">联系管理员开通</button>
+          <GuestAction v-else-if="catalog.purchase_enabled && plan.stock_remaining !== 0" :to="`/purchase?tab=subscription&plan=${plan.id}`" button-class="btn btn-primary" message="登录后会返回此套餐的购买页面。请确认权益和实付金额后再下单。">选择此套餐</GuestAction>
           <button v-else type="button" class="btn btn-secondary" disabled>{{ plan.stock_remaining === 0 ? '已售罄' : '暂不可购买' }}</button>
         </article>
       </div>
     </template>
+    <BaseDialog :show="!!contactPlan" title="联系管理员开通" @close="contactPlan = null"><PlanContactPanel v-if="contactPlan" :name="contactPlan.name" :contact="catalog.contact_text" /></BaseDialog>
     <p class="mofa-public-note">不确定订阅和充值有什么区别？<router-link :to="embedded ? '/preview/faq' : '/faq'">查看常见问题</router-link></p>
   </component>
 </template>
@@ -43,6 +45,9 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import axios from 'axios'
+import BaseDialog from '@/components/common/BaseDialog.vue'
+import PlanContactPanel from '@/custom/components/PlanContactPanel.vue'
+import type { PublicPlan } from '@/custom/guest/api'
 import PublicLayout from '@/custom/components/PublicLayout.vue'
 import GuestAction from '@/custom/components/GuestAction.vue'
 import { fetchPublicPlans, type PublicCatalog } from '@/custom/guest/api'
@@ -51,6 +56,7 @@ import { planValiditySuffix } from '@/components/payment/validity'
 
 const { t } = useI18n()
 defineProps<{ embedded?: boolean }>()
+const contactPlan = ref<PublicPlan | null>(null)
 const loading = ref(true)
 const error = ref(false)
 const unavailable = ref(false)

@@ -943,3 +943,33 @@ describe('PaymentView subscription feature flag', () => {
     wrapper.unmount()
   })
 })
+
+// [CUSTOM] 联系开通和实付上限覆盖卡片、深链接与快捷输入。
+describe('收款限额与联系开通', () => {
+  const collection = { enabled: true, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [10,20,50,100], allow_custom_amount: false, contact_text: '请联系测试管理员' }
+  it('深链接人工套餐不显示支付提交，仍显示联系面板', async () => {
+    const wrapper = await mountSubscriptionConfirm({ plan: { sales_mode: 'contact_admin' }, checkout: { collection } })
+    expect(wrapper.findComponent({ name: 'PlanContactPanel' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PlanContactPanel' }).props('contact')).toBe(collection.contact_text)
+    expect(wrapper.findAll('button').some(button => button.text().includes('payment.createOrder'))).toBe(false)
+    expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('手续费导致套餐实付超过50时禁用支付', async () => {
+    const wrapper = await mountSubscriptionConfirm({ plan: { price: 50 }, checkout: { collection, recharge_fee_rate: 1 } })
+    expect(wrapper.text()).toContain('套餐实付超过收款限额')
+    const submit = wrapper.findAll('button').find(button => button.text().includes('payment.createOrder'))!
+    expect(submit.attributes('disabled')).toBeDefined()
+    await submit.trigger('click'); expect(createOrder).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('快捷金额按含手续费实付过滤，自定义开关传递', async () => {
+    routeState.query = {}; routeState.path = '/purchase'; window.localStorage.clear()
+    getCheckoutInfo.mockResolvedValue(checkoutInfoFixture({ collection, recharge_fee_rate: 1 }))
+    const wrapper = shallowMount(PaymentView, { global: { stubs: { AppLayout: { template: '<div><slot /></div>' }, Teleport: true, Transition: false } } })
+    await flushPromises()
+    expect(wrapper.findComponent(AmountInput).props('amounts')).toEqual([10,20])
+    expect(wrapper.findComponent(AmountInput).props('allowCustom')).toBe(false)
+    wrapper.unmount()
+  })
+})

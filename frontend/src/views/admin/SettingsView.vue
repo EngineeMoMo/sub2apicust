@@ -8466,6 +8466,8 @@
           </div>
 
           <!-- 充值优惠阶梯（独立卡片，与服务商管理同级） -->
+          <!-- [CUSTOM] 独立保存收款设置，不混入通用设置表单。 -->
+          <PaymentCollectionSettings v-if="activeTab === 'payment'" />
           <RechargeBonusTierEditor
             v-if="form.payment_enabled"
             v-model="form.payment_recharge_bonus_tiers"
@@ -9050,6 +9052,7 @@ import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
 import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue";
+import PaymentCollectionSettings from "@/custom/components/PaymentCollectionSettings.vue";
 import RechargeBonusTierEditor from "@/components/admin/settings/RechargeBonusTierEditor.vue";
 import {
   normalizeRechargeBonusMode,

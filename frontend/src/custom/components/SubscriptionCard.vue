@@ -50,8 +50,15 @@ function resetLabel(period: QuotaPeriod): string {
   }
 }
 
+// [CUSTOM] 人工套餐续费同样进入联系开通流程。
+const contactRenewal = computed(() => !!props.plans?.length && props.plans.filter(p => p.stock_remaining !== 0).every(p => p.sales_mode === 'contact_admin'))
 function renew() {
   if (!canRenewStock.value) return
+  if (contactRenewal.value) {
+    // 人工开通目录不依赖在线支付开关，仍可查看套餐及管理员联系方式。
+    router.push('/plans')
+    return
+  }
   router.push({ path: '/purchase', query: { tab: 'subscription', group: String(props.subscription.group_id) } })
 }
 </script>
@@ -75,7 +82,7 @@ function renew() {
       <div class="mofa-subscription-actions">
         <span class="mofa-subscription-status" :data-state="status">{{ statusLabel }}</span>
         <button v-if="status === 'active' || status === 'expired'" type="button" class="btn btn-primary mofa-subscription-renew" :disabled="!canRenewStock" @click="renew">
-          {{ canRenewStock ? t('payment.renewNow') : stockLoading ? t('common.loading') : t('payment.stock.unavailableRenewal') }}
+          {{ canRenewStock ? (contactRenewal ? '联系管理员续费' : t('payment.renewNow')) : stockLoading ? t('common.loading') : t('payment.stock.unavailableRenewal') }}
           <Icon name="arrowRight" size="sm" aria-hidden="true" />
         </button>
       </div>
