@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-08已发布库存与帮助定制：最终70e66cf73的CI（unit／integration／lint／前端与脚本）、安全、GHCR全绿，固定镜像sha-70e66cf。后续同步保留下列245／246库存事务与帮助接缝，真实PG测试不得跳过冒充通过；生产更新须先备份并核对历史人工归属。详见HANDOFF最新终态，下方未发布说明为历史。
+
 2026-10-08帮助页同步注意：保留AppSidebar的FaqIcon／GuideIcon两种语义图标、router教程新旧锚点白名单；自有层GuideToolSteps和六节教程、FAQ分类筛选／16题与预览问号图标。合并后运行guide／guest／guest-preview／family-home测试并检查窄屏浅深色；官方文档会变，技术步骤更新须重新查证。当前未发布。
 
 2026-10-08同轮库存补充：保留246迁移／归属账本、SubscriptionService内权益与扣减同事务及过期幂等重查、付款私有来源不重扣、管理员plan_id选择、我的订阅库存读取／售罄保护。新增TestCustomSubscriptionStockPostgres，真实PG覆盖人工与购买混合争抢、回滚、历史回填与重跑；前端plan-stock与管理员交互回归须保留。历史归属不确定部分上线前核对，详见库存说明。最终216前端／421后端定向及构建通过，未发布。
