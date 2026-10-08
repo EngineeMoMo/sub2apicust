@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-08 收款限制与人工开通发布完成（最新终态）**：功能`575467a5f4d194ebd01cf771edacef9f0075d395`已推origin/main，同SHA [CI37749962687](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962687)、[安全37749962637](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962637)、[GHCR37749962677](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962677)全部completed/success，含Go unit／integration／lint及前端。实际发布镜像`ghcr.io/engineemomo/sub2apicust:sha-575467a`（linux/amd64），摘要`sha256:5539364a4f724569a4f0ef22bf12db74357fce5b6e3669327be619137d5e408e`。证据output/collection-release-20261008。包含247迁移、共享收款上限、快捷充值配置、人工开通模式及两项审查修复。用户备份后执行`./update.sh sha-575467a`，先核对旧付款链接与线下收款再启用限额；真实商户与生产交互待验，未代部署生产。本条覆盖此前待发布记录；后续文档skip-ci提交不生成新镜像。
+
 - **2026-10-08 用户授权发布收款限制与人工开通**：本轮完整源码、两项审查修复及交接文档提交推送origin/main；本地84项补修回归、后端支付定向与Docker生产构建／迁移健康已通过。发布须检查实际功能SHA的CI、安全、GHCR，不沿用旧结果；生产由用户自行更新。
 
 - **2026-10-08 本机Docker已更新供用户测试**：用户授权本地更新，代理预检200、首次构建成功；运行镜像与构建镜像一致`2a844d6e77237dd55986627d8fbb9609af29ab4ce2022b3437d0980234246bc0`。原Postgres／Redis启动并保持容器ID、卷，应用仅重建且挂载不变，三服务healthy；health、brand、login、plans及公开套餐接口200。库存／sales_mode字段与独立收款账本已确认存在，更新前后用户3／套餐1／订单0不变。旧镜像`sub2apicust:before-collection-20261008`、616870字节数据库备份已pg_restore目录验证，证据`output/local-collection-20261008`。地址http://127.0.0.1:8080；原recipes容器保持停止。未改付款设置、未下单或真实商户验收；未提交推送、未操作生产。此条覆盖本轮旧“未本地部署”状态。
@@ -376,6 +378,9 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] 收款限制本轮功能已提交推送，实际功能SHA 575467a5f的CI／安全／GHCR全部通过，固定镜像sha-575467a；以下同轮“待提交／CI”条目为历史步骤，已完成。
+- [ ] 用户备份并更新生产到sha-575467a，核对历史收款、启用配置，再验人工开通／库存及真实商户关单付款；生产未代部署。
 
 - [ ] 用户在本机8080验收收款配置、人工开通与库存交互；本机已更新，新SHA远程发布仍待，真实商户待验。
 

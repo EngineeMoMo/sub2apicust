@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-08发布终态：收款限制与人工开通及两项审查修复已推送575467a5f，同SHA CI（含unit／integration／lint）、安全、GHCR全部成功；固定镜像sha-575467a。更新及证据见HANDOFF和deploy/UPDATE_GUIDE，下方本轮待发布记录为历史；生产由用户备份后更新。
+
 ## 2026-10-08 收款限制与联系管理员开通（未发布）
 
 - 审查补修：上游 `backend/internal/payment/provider/alipay.go` 的 `[CUSTOM]` 关单逻辑保留所有错误并检查 `TradeCloseRsp.IsSuccess()`，不可把交易不存在或 SDK 业务失败当成成功；新增 `custom_alipay_collection_test.go` 本地签名响应回归。自有 `SubscriptionCard.vue` 人工续费转公开 `/plans`，无需在线支付开关；`plan-stock.spec.ts` 覆盖续费路由及关闭支付仍展示联系说明。84项前端、两包支付定向测试与类型／lint通过，真实商户待验。

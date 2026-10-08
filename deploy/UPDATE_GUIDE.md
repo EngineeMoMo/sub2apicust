@@ -1,5 +1,17 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-08 收款限制与人工开通（最新可更新版本）
+
+功能`575467a5f4d194ebd01cf771edacef9f0075d395`已推送；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962687)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962637)、[镜像](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962677)全部成功。
+
+固定镜像`ghcr.io/engineemomo/sub2apicust:sha-575467a`（linux/amd64），摘要`sha256:5539364a4f724569a4f0ef22bf12db74357fce5b6e3669327be619137d5e408e`。备份数据库、配置和app_data后，在部署目录执行：
+
+```bash
+./update.sh sha-575467a
+```
+
+新增247迁移及共享收款限额、快捷充值配置、套餐人工开通模式。限额默认关闭；先按[收款说明](PAYMENT_COLLECTION_LIMITS.md)核对旧付款链接及线下到账，再配置单笔50（严格少于50设49.99）／每日1000并启用。支付宝交易不存在不释放预占，人工续费在关闭在线支付时仍可联系管理员。真实商户和生产交互待用户验收，未代部署。下方待发布提示为历史，不影响此终态；纯文档提交不生成新镜像。
+
 2026-10-08审查补修未发布：支付宝交易不存在或SDK业务失败继续保留额度，人工续费使用不受在线支付开关限制的公开套餐联系入口。待新版本发布后验收，不将既有镜像当作包含修复。
 
 2026-10-08最新源码：收款限制与人工开通已完成但未发布，新增247迁移及默认关闭的50／1000人民币共享限额、可配置快捷充值／自定义开关、套餐contact_admin与联系说明，人工发放继续扣库存。迁移、接缝、证据与待办以HANDOFF最新状态、CUSTOMIZATIONS及deploy/PAYMENT_COLLECTION_LIMITS.md为准；旧sha-70e66cf不含此功能，不能沿用旧CI结论。发布前须核对历史付款链接及线下到账，前后端同版，生产由用户部署。
