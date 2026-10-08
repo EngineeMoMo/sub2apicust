@@ -15,7 +15,7 @@ func TestCustomSubscriptionStockPaidOrderDoesNotChargeAgain(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	client := dbent.NewClient(dbent.Driver(entsql.OpenDB(dialect.Postgres, db)))
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	svc := &SubscriptionService{entClient: client}
 	planID := int64(42)
 	order := &dbent.PaymentOrder{ID: 7, PlanID: &planID}
