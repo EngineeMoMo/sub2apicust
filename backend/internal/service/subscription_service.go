@@ -192,6 +192,8 @@ func (s *SubscriptionService) invalidateSubscriptionCaches(userID, groupID int64
 
 // AssignSubscriptionInput 分配订阅输入
 type AssignSubscriptionInput struct {
+	// [CUSTOM] 指定非购买分配扣库存的套餐。
+	PlanID       int64
 	UserID       int64
 	GroupID      int64
 	ValidityDays int
@@ -219,6 +221,8 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 }
 
 func (s *SubscriptionService) assignOrExtendSubscription(ctx context.Context, input *AssignSubscriptionInput, deferCacheInvalidation bool) (*UserSubscription, bool, error) {
+	// [CUSTOM] 单次、批量、兑换码及默认分配共用库存来源。
+	ctx = WithSubscriptionStockPlan(ctx, input.PlanID)
 	// 检查分组是否存在且为订阅类型
 	group, err := s.groupRepo.GetByID(ctx, input.GroupID)
 	if err != nil {
@@ -311,6 +315,10 @@ func (s *SubscriptionService) updateExistingSubscriptionTerm(
 		if assignmentSemantics {
 			isExpired = existingSub.Status == SubscriptionStatusExpired ||
 				(existingSub.Status != SubscriptionStatusSuspended && !existingSub.ExpiresAt.After(now))
+			// [CUSTOM] 等待行锁期间若已被另一分配恢复，幂等复用，不再续期扣库存。
+			if !isExpired {
+				return nil
+			}
 		}
 		newExpiresAt := existingSub.ExpiresAt.AddDate(0, 0, validityDays)
 		if isExpired {
@@ -328,7 +336,8 @@ func (s *SubscriptionService) updateExistingSubscriptionTerm(
 			if err := s.userSubRepo.Update(txCtx, renewed); err != nil {
 				return fmt.Errorf("renew expired subscription: %w", err)
 			}
-			return nil
+			// [CUSTOM] 已过期的重新开通也扣一份。
+			return s.customConsumeSubscriptionStock(txCtx, existingSub.ID, existingSub.UserID, existingSub.GroupID)
 		}
 
 		// 更新过期时间
@@ -350,6 +359,10 @@ func (s *SubscriptionService) updateExistingSubscriptionTerm(
 			}
 		}
 
+		// [CUSTOM] 续期只在有效期真正增加时扣减；到最大日期的空操作不扣。
+		if newExpiresAt.After(existingSub.ExpiresAt) {
+			return s.customConsumeSubscriptionStock(txCtx, existingSub.ID, existingSub.UserID, existingSub.GroupID)
+		}
 		return nil
 	})
 }
@@ -408,7 +421,12 @@ func appendSubscriptionNotes(existingNotes, newNotes string) string {
 }
 
 // createSubscription 创建新订阅（内部方法）
+// [CUSTOM] 创建订阅与库存扣减同事务。
 func (s *SubscriptionService) createSubscription(ctx context.Context, input *AssignSubscriptionInput) (*UserSubscription, error) {
+	return s.customCreateSubscriptionWithStock(WithSubscriptionStockPlan(ctx, input.PlanID), input)
+}
+
+func (s *SubscriptionService) createSubscriptionWithoutStock(ctx context.Context, input *AssignSubscriptionInput) (*UserSubscription, error) {
 	validityDays := input.ValidityDays
 	if validityDays <= 0 {
 		validityDays = 30
@@ -454,6 +472,8 @@ func (s *SubscriptionService) createSubscription(ctx context.Context, input *Ass
 
 // BulkAssignSubscriptionInput 批量分配订阅输入
 type BulkAssignSubscriptionInput struct {
+	// [CUSTOM] 指定非购买分配扣库存的套餐。
+	PlanID       int64
 	UserIDs      []int64
 	GroupID      int64
 	ValidityDays int
@@ -482,6 +502,8 @@ func (s *SubscriptionService) BulkAssignSubscription(ctx context.Context, input 
 
 	for _, userID := range input.UserIDs {
 		sub, reused, err := s.assignSubscriptionWithReuse(ctx, &AssignSubscriptionInput{
+			// [CUSTOM] 每个实际新增／续期独立扣减，幂等复用不扣。
+			PlanID:       input.PlanID,
 			UserID:       userID,
 			GroupID:      input.GroupID,
 			ValidityDays: input.ValidityDays,
@@ -509,6 +531,8 @@ func (s *SubscriptionService) BulkAssignSubscription(ctx context.Context, input 
 }
 
 func (s *SubscriptionService) assignSubscriptionWithReuse(ctx context.Context, input *AssignSubscriptionInput) (*UserSubscription, bool, error) {
+	// [CUSTOM] 单次、批量、兑换码及默认分配共用库存来源。
+	ctx = WithSubscriptionStockPlan(ctx, input.PlanID)
 	// 检查分组是否存在且为订阅类型
 	group, err := s.groupRepo.GetByID(ctx, input.GroupID)
 	if err != nil {
@@ -713,6 +737,10 @@ func (s *SubscriptionService) ExtendSubscription(ctx context.Context, subscripti
 			if err := s.userSubRepo.UpdateStatus(txCtx, subscriptionID, SubscriptionStatusActive); err != nil {
 				return err
 			}
+		}
+		// [CUSTOM] 管理员正向调整也不能绕过库存，缩短不返还库存。
+		if newExpiresAt.After(sub.ExpiresAt) {
+			return s.customConsumeSubscriptionStock(txCtx, sub.ID, sub.UserID, sub.GroupID)
 		}
 		return nil
 	})

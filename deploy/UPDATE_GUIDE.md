@@ -1,5 +1,11 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-08帮助页改进尚未发布：更新后应看到常见问题用问号、接入教程用书本；教程六类目录与FAQ分类筛选在控制台／公开页／游客预览可用。本地56项、类型／lint／构建和四种公开夹具布局通过，不代表真实客户端接入成功。当前无本轮新镜像标签，未代用户部署。
+
+2026-10-08同轮库存补充包含246人工库存归属迁移：管理员分配、默认赠送／兑换、延长期限同样受库存约束，我的订阅展示库存并禁用售罄续订。上线前核对无套餐／多套餐分组及历史混合来源，不能假定旧人工分配全部自动还原；操作见[库存说明](SUBSCRIPTION_PLAN_STOCK.md)。本轮尚无发布标签，仍未部署。
+
+2026-10-08套餐库存仅源码完成，当前没有本轮可用镜像标签。待授权发布并核验对应SHA CI／安全／GHCR后，备份数据库再更新同版前后端；245迁移保留旧套餐不限量并回填现存已售／预占。库存总限额包括历史占用，补货方法及晚付人工处理见[SUBSCRIPTION_PLAN_STOCK.md](SUBSCRIPTION_PLAN_STOCK.md)。不把sha-07f0ee6当作已有库存功能，不代用户部署。
+
 ## 2026-10-07 版本权限与依赖安全修复（最新可更新版本）
 
 功能`07f0ee69e0b9318edbdea0694e2d5ecd0ae2e24a`已推送；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687152)（含Go unit／integration）、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687062)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37582687015)全部成功。包含版本仅管理员展示、公开版本值清空、依赖17告警清零；前端本地2928项通过。

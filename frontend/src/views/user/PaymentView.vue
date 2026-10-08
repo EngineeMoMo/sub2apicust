@@ -202,6 +202,8 @@
                 </span>
                 <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
               </button>
+              <!-- [CUSTOM] 深链接选中的售罄套餐显示原因。 -->
+              <p v-if="selectedPlan.stock_remaining === 0" class="mofa-stock-note" role="status">{{ t('payment.stock.soldOut') }}</p>
               <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
             </template>
             <!-- Plan list -->
@@ -760,6 +762,8 @@ const subMethodOptions = computed<PaymentMethodOption[]>(() => {
 
 const canSubmitSubscription = computed(() =>
   selectedPlan.value !== null
+    // [CUSTOM] 深链接和恢复入口也不能提交售罄套餐。
+    && selectedPlan.value.stock_remaining !== 0
     && amountFitsMethod(subTotalAmount.value, selectedMethod.value)
     && selectedLimit.value?.available !== false
 )
@@ -808,11 +812,15 @@ function planPeakRateLabel(plan: SubscriptionPlan): string {
 }
 
 function selectPlan(plan: SubscriptionPlan) {
+  // [CUSTOM] 与卡片禁用状态保持一致。
+  if (plan.stock_remaining === 0) { appStore.showError(t('payment.stock.soldOut')); return }
   selectedPlan.value = plan
   errorMessage.value = ''
 }
 
 function selectPlanFromModal(plan: SubscriptionPlan) {
+  // [CUSTOM] 续费同样消耗一份库存。
+  if (plan.stock_remaining === 0) { appStore.showError(t('payment.stock.soldOut')); return }
   showRenewalModal.value = false
   renewGroupId.value = null
   selectedPlan.value = plan
@@ -830,7 +838,8 @@ async function handleSubmitRecharge() {
 }
 
 async function confirmSubscribe() {
-  if (!selectedPlan.value || submitting.value) return
+  // [CUSTOM] 库存不足不发起新订单。
+  if (!selectedPlan.value || selectedPlan.value.stock_remaining === 0 || submitting.value) return
   await createOrder(selectedPlan.value.price, 'subscription', selectedPlan.value.id)
 }
 

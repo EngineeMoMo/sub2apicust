@@ -11,6 +11,7 @@ const { getList, getProgress, push, showError } = vi.hoisted(() => ({ getList: v
 const locale = ref('zh')
 vi.mock('@/api/subscriptions', () => ({ default: { getMySubscriptions: getList } }))
 vi.mock('@/api/client', () => ({ apiClient: { get: getProgress } }))
+vi.mock('@/api/payment', () => ({ paymentAPI: { getPlans: vi.fn().mockResolvedValue({ data: [{ id: 1, group_id: 11, name: '套餐', stock_remaining: 5 }] }) } }))
 vi.mock('@/components/layout/AppLayout.vue', () => ({ default: { template: '<main><slot /></main>' } }))
 vi.mock('@/stores/app', () => ({ useAppStore: () => ({ showError, cachedPublicSettings: { server_utc_offset: '+08:00' } }) }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))

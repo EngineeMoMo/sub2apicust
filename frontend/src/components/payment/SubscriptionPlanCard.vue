@@ -92,13 +92,16 @@
 
       <div class="flex-1" />
 
+      <!-- [CUSTOM] 显示服务端剩余库存，并保留售罄卡片。 -->
+      <p v-if="plan.stock_remaining != null && plan.stock_remaining >= 0" class="mofa-stock-note" role="status">{{ plan.stock_remaining === 0 ? t('payment.stock.soldOut') : t('payment.stock.remaining', { count: plan.stock_remaining }) }}</p>
       <!-- Subscribe Button -->
       <button
         type="button"
-        :class="['w-full rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-[0.98]', btnClass]"
-        @click="emit('select', plan)"
+        :class="['w-full rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-[0.98]', btnClass, { 'mofa-stock-disabled': plan.stock_remaining === 0 }]"
+        :disabled="plan.stock_remaining === 0"
+        @click="plan.stock_remaining !== 0 && emit('select', plan)"
       >
-        {{ isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
+        {{ plan.stock_remaining === 0 ? t('payment.stock.soldOut') : isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
       </button>
     </div>
   </div>

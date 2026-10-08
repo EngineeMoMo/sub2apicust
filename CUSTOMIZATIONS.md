@@ -1,5 +1,36 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-08 帮助入口与教程分类（未发布）
+
+用户发布前补充：PublicGuideView接入前准备及guest/faq.ts新增“本站支持生图（图像生成），需联系管理员开通权限”，FAQ现17题；仅说明文案，不修改任何账户／分组权限。
+
+- 上游接缝：`frontend/src/components/layout/AppSidebar.vue` 的 `[CUSTOM]` FaqIcon／GuideIcon 包装复用公共Icon，用于两项帮助导航；`frontend/src/router/index.ts` 既有 `[CUSTOM]` 教程锚点白名单扩展至六节及桌面客户端子节，旧锚点保留。
+- 自有层：新增`custom/components/GuideToolSteps.vue`复用工具步骤；`custom/views/PublicGuideView.vue`六节目录、补充准备／配置／验收／排错；`PublicFaqView.vue`分类和搜索组合；`custom/guest/{faq,preview}.ts`增加四问及问号图标类型；样式仅`custom/theme.css`，浅深色与窄屏沿用品牌令牌。
+- 回归：`custom/__tests__/{guide,guest,guest-preview}.spec.ts`更新分类、锚点、预览断言。56项与类型／lint／构建通过，真实浏览器用公开数据夹具验证四种宽度／主题组合，非生产或客户端实付验证；来源与证据见GUEST_PORTAL、HANDOFF。
+
+## 2026-10-08 订阅套餐售卖库存（源码完成，未发布）
+
+同轮管理员／非购买补充：新增 `backend/migrations/246_custom_subscription_manual_stock.sql`、`backend/internal/service/custom_subscription_stock.go`／`_test.go`、`backend/internal/repository/custom_subscription_stock_test.go`、`frontend/src/custom/components/SubscriptionStockPicker.vue`。归属账本与权益同事务；人工／默认／兑换实际分配扣库存，已付订单只登记归属。旧记录只回填无已付订单且分组唯一套餐者，多来源历史须核对。最终 216 前端／421 后端定向及构建通过，详见运维说明 manual-* 证据。
+
+新增上游接缝（均标 `[CUSTOM]`）：`backend/internal/service/subscription_service.go` 的单次／批量／续期库存调用与并发幂等复查、`payment_fulfillment.go` 的私有已付款来源、`backend/internal/handler/admin/subscription_handler.go` 的 plan_id 入参；`frontend/src/types/index.ts` 请求类型、`views/admin/SubscriptionsView.vue` 库存来源选择、`views/user/SubscriptionsView.vue` 独立库存加载。`subscription_bulk_action_transaction_test.go` 更新事务 SQL 预期；`views/admin/__tests__/SubscriptionsView.{bulkActions,userUsageLink}.spec.ts` 验证库存选择随请求提交。自有 `custom/components/SubscriptionCard.vue` 增加库存显示与续订禁用，`custom/__tests__/{plan-stock,subscription-timing}.spec.ts` 增加行为覆盖及独立接口夹具；中英文 misc.ts 文案和 theme.css 样式仍是前述接缝。新测试沿用已有关键回归入口。
+
+操作与验证见 [deploy/SUBSCRIPTION_PLAN_STOCK.md](deploy/SUBSCRIPTION_PLAN_STOCK.md)。每套餐总限额 -1 默认不限量、0 停售，包含历史已售及待付预占；新购／续费各一份，未付结束释放，已付／退款／到期不补货。旧配置保持。不是有效订阅席位上限。
+
+新增：`backend/migrations/245_custom_subscription_plan_stock.sql`（原子条件扣减、订单事务触发器、历史回填／幂等）；`backend/internal/service/custom_plan_stock.go` 及 `_test.go`；`backend/internal/repository/custom_plan_stock_postgres_test.go`（真实并发／状态／完整迁移）；`frontend/src/custom/__tests__/plan-stock.spec.ts`；上述运维说明。
+
+上游接缝（均标 `[CUSTOM]`，生成文件除外）：
+
+- `backend/ent/schema/subscription_plan.go`：stock_limit／stock_used；生成产物 `ent/subscriptionplan.go`、`subscriptionplan/{subscriptionplan,where}.go`、`subscriptionplan_{create,query,update}.go`、`mutation.go`、`migrate/schema.go`、`runtime/runtime.go`。生成文件通过 Ent 生成维护，不手工插注释。数据库触发器由正式迁移安装，不能只跑 Schema.Create。
+- `backend/internal/service/payment_config_service.go`、`payment_config_plans.go`：创建／更新指针限额，遗漏保留／默认 -1，非法范围拒绝，不接收 stock_used。
+- `backend/internal/service/payment_order.go`：售罄预检、事务触发器冲突映射409、网关失败只结束 PENDING，防覆盖已付款状态。
+- `backend/internal/service/payment_fulfillment.go`：已验付款但库存不足写审计并拒绝自动履约；FAILED 未付款订阅须先验真实回调取得库存，不能手工重试白送订阅；余额和原过期宽限期不变。
+- `backend/internal/handler/{payment_handler.go,admin/payment_handler.go}`：套餐列表／结账库存投影；自有 `custom_public_plans.go` 与测试只向游客新增剩余份数。
+- `frontend/src/types/payment.ts`、自有 `custom/guest/api.ts`：可选库存类型；`views/admin/orders/{PlanEditDialog,AdminPaymentPlansView}.vue`：限额表单、使用说明与列表计数；`components/payment/SubscriptionPlanCard.vue` 与 `views/user/PaymentView.vue`：剩余／售罄及深链接／续费购买保护。
+- `frontend/src/i18n/locales/{zh,en}/misc.ts`：库存及错误文案；自有 `custom/views/PublicPlansView.vue`：游客售罄禁止购买；样式仅 `custom/theme.css`。
+- `Makefile`：新增库存前端关键回归；真实 PG 测试复用已有 CI 的 DEDICATED_TEST_POSTGRES_DSN，无新 workflow 权限或服务。
+
+184 项前端、236 项后端定向、真实 PG 并发／完整迁移及前后端构建通过；范围与未测项见说明。不自动发布／部署，不以旧 SHA 的 CI 代替本轮验证。
+
 ## 2026-10-07 前端依赖安全修复（未发布）
 
 - `[CUSTOM] frontend/package.json` 与 `frontend/pnpm-lock.yaml`：移除未被源码导入的 `@lobehub/icons`，图标仍使用ModelIcon／ProviderIcon中的现有SVG路径；清除其引入的UI／Mermaid等依赖链。DOMPurify最低版本及安全override提升为3.4.16，继续使用既有净化API。JSON／自动生成锁文件不支持源码注释，以本节登记接缝。

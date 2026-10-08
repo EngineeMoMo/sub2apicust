@@ -40941,6 +40941,10 @@ type SubscriptionPlanMutation struct {
 	op                Op
 	typ               string
 	id                *int64
+	stock_limit       *int
+	addstock_limit    *int
+	stock_used        *int
+	addstock_used     *int
 	group_id          *int64
 	addgroup_id       *int64
 	name              *string
@@ -41062,6 +41066,118 @@ func (m *SubscriptionPlanMutation) IDs(ctx context.Context) ([]int64, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetStockLimit sets the "stock_limit" field.
+func (m *SubscriptionPlanMutation) SetStockLimit(i int) {
+	m.stock_limit = &i
+	m.addstock_limit = nil
+}
+
+// StockLimit returns the value of the "stock_limit" field in the mutation.
+func (m *SubscriptionPlanMutation) StockLimit() (r int, exists bool) {
+	v := m.stock_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStockLimit returns the old "stock_limit" field's value of the SubscriptionPlan entity.
+// If the SubscriptionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionPlanMutation) OldStockLimit(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStockLimit is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStockLimit requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStockLimit: %w", err)
+	}
+	return oldValue.StockLimit, nil
+}
+
+// AddStockLimit adds i to the "stock_limit" field.
+func (m *SubscriptionPlanMutation) AddStockLimit(i int) {
+	if m.addstock_limit != nil {
+		*m.addstock_limit += i
+	} else {
+		m.addstock_limit = &i
+	}
+}
+
+// AddedStockLimit returns the value that was added to the "stock_limit" field in this mutation.
+func (m *SubscriptionPlanMutation) AddedStockLimit() (r int, exists bool) {
+	v := m.addstock_limit
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStockLimit resets all changes to the "stock_limit" field.
+func (m *SubscriptionPlanMutation) ResetStockLimit() {
+	m.stock_limit = nil
+	m.addstock_limit = nil
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (m *SubscriptionPlanMutation) SetStockUsed(i int) {
+	m.stock_used = &i
+	m.addstock_used = nil
+}
+
+// StockUsed returns the value of the "stock_used" field in the mutation.
+func (m *SubscriptionPlanMutation) StockUsed() (r int, exists bool) {
+	v := m.stock_used
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStockUsed returns the old "stock_used" field's value of the SubscriptionPlan entity.
+// If the SubscriptionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionPlanMutation) OldStockUsed(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStockUsed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStockUsed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStockUsed: %w", err)
+	}
+	return oldValue.StockUsed, nil
+}
+
+// AddStockUsed adds i to the "stock_used" field.
+func (m *SubscriptionPlanMutation) AddStockUsed(i int) {
+	if m.addstock_used != nil {
+		*m.addstock_used += i
+	} else {
+		m.addstock_used = &i
+	}
+}
+
+// AddedStockUsed returns the value that was added to the "stock_used" field in this mutation.
+func (m *SubscriptionPlanMutation) AddedStockUsed() (r int, exists bool) {
+	v := m.addstock_used
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStockUsed resets all changes to the "stock_used" field.
+func (m *SubscriptionPlanMutation) ResetStockUsed() {
+	m.stock_used = nil
+	m.addstock_used = nil
 }
 
 // SetGroupID sets the "group_id" field.
@@ -41716,7 +41832,13 @@ func (m *SubscriptionPlanMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionPlanMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 16)
+	if m.stock_limit != nil {
+		fields = append(fields, subscriptionplan.FieldStockLimit)
+	}
+	if m.stock_used != nil {
+		fields = append(fields, subscriptionplan.FieldStockUsed)
+	}
 	if m.group_id != nil {
 		fields = append(fields, subscriptionplan.FieldGroupID)
 	}
@@ -41767,6 +41889,10 @@ func (m *SubscriptionPlanMutation) Fields() []string {
 // schema.
 func (m *SubscriptionPlanMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		return m.StockLimit()
+	case subscriptionplan.FieldStockUsed:
+		return m.StockUsed()
 	case subscriptionplan.FieldGroupID:
 		return m.GroupID()
 	case subscriptionplan.FieldName:
@@ -41804,6 +41930,10 @@ func (m *SubscriptionPlanMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *SubscriptionPlanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		return m.OldStockLimit(ctx)
+	case subscriptionplan.FieldStockUsed:
+		return m.OldStockUsed(ctx)
 	case subscriptionplan.FieldGroupID:
 		return m.OldGroupID(ctx)
 	case subscriptionplan.FieldName:
@@ -41841,6 +41971,20 @@ func (m *SubscriptionPlanMutation) OldField(ctx context.Context, name string) (e
 // type.
 func (m *SubscriptionPlanMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStockLimit(v)
+		return nil
+	case subscriptionplan.FieldStockUsed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStockUsed(v)
+		return nil
 	case subscriptionplan.FieldGroupID:
 		v, ok := value.(int64)
 		if !ok {
@@ -41947,6 +42091,12 @@ func (m *SubscriptionPlanMutation) SetField(name string, value ent.Value) error 
 // this mutation.
 func (m *SubscriptionPlanMutation) AddedFields() []string {
 	var fields []string
+	if m.addstock_limit != nil {
+		fields = append(fields, subscriptionplan.FieldStockLimit)
+	}
+	if m.addstock_used != nil {
+		fields = append(fields, subscriptionplan.FieldStockUsed)
+	}
 	if m.addgroup_id != nil {
 		fields = append(fields, subscriptionplan.FieldGroupID)
 	}
@@ -41970,6 +42120,10 @@ func (m *SubscriptionPlanMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *SubscriptionPlanMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		return m.AddedStockLimit()
+	case subscriptionplan.FieldStockUsed:
+		return m.AddedStockUsed()
 	case subscriptionplan.FieldGroupID:
 		return m.AddedGroupID()
 	case subscriptionplan.FieldPrice:
@@ -41989,6 +42143,20 @@ func (m *SubscriptionPlanMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *SubscriptionPlanMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStockLimit(v)
+		return nil
+	case subscriptionplan.FieldStockUsed:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStockUsed(v)
+		return nil
 	case subscriptionplan.FieldGroupID:
 		v, ok := value.(int64)
 		if !ok {
@@ -42060,6 +42228,12 @@ func (m *SubscriptionPlanMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *SubscriptionPlanMutation) ResetField(name string) error {
 	switch name {
+	case subscriptionplan.FieldStockLimit:
+		m.ResetStockLimit()
+		return nil
+	case subscriptionplan.FieldStockUsed:
+		m.ResetStockUsed()
+		return nil
 	case subscriptionplan.FieldGroupID:
 		m.ResetGroupID()
 		return nil

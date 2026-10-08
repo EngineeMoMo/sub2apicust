@@ -13,6 +13,18 @@ beforeEach(() => {
 })
 
 describe('接入教程', () => {
+  it('目录按场景分类且所有锚点都有对应正文', () => {
+    const wrapper = mount(PublicGuideView, { props: { embedded: true }, global })
+    const links = wrapper.findAll('nav[aria-label="教程目录"] a')
+    expect(links).toHaveLength(6)
+    for (const link of links) expect(wrapper.find(link.attributes('href')!).exists()).toBe(true)
+    expect(wrapper.get('#guide-cli').text()).toContain('Codex CLI')
+    expect(wrapper.get('#guide-cli').text()).toContain('Aider')
+    expect(wrapper.get('#guide-desktop').text()).toContain('Cherry Studio')
+    expect(wrapper.get('#guide-editors').text()).toContain('Continue')
+    expect(wrapper.get('#guide-verify').text()).toContain('核对本站记录')
+    wrapper.unmount()
+  })
   it('公开和控制台路由分别保留匿名及认证边界', () => {
     expect(customRoutes.find(route => route.path === '/guide')?.meta?.requiresAuth).toBe(false)
     expect(customRoutes.find(route => route.path === '/help/guide')?.meta?.requiresAuth).toBe(true)

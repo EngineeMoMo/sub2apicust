@@ -11,6 +11,7 @@ import (
 )
 
 type publicPlan struct {
+	StockRemaining  int      `json:"stock_remaining"`
 	ID              int64    `json:"id"`
 	Name            string   `json:"name"`
 	Description     string   `json:"description"`
@@ -42,7 +43,8 @@ func publicPlans(plans []*dbent.SubscriptionPlan, groups map[int64]service.PlanG
 			scopes = []string{}
 		}
 		result = append(result, publicPlan{
-			ID: plan.ID, Name: plan.Name, Description: plan.Description,
+			StockRemaining: service.CustomPlanStockRemaining(plan),
+			ID:             plan.ID, Name: plan.Name, Description: plan.Description,
 			Price: plan.Price, OriginalPrice: plan.OriginalPrice, Currency: plan.Currency,
 			ValidityDays: plan.ValidityDays, ValidityUnit: plan.ValidityUnit, Features: features,
 			DailyLimitUSD: info.DailyLimitUSD, WeeklyLimitUSD: info.WeeklyLimitUSD,

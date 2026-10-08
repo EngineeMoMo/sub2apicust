@@ -161,6 +161,8 @@ func (s *PaymentService) toPaid(ctx context.Context, o *dbent.PaymentOrder, trad
 		paymentorder.Or(
 			paymentorder.StatusEQ(OrderStatusPending),
 			paymentorder.StatusEQ(OrderStatusCancelled),
+			// [CUSTOM] 网关创建失败仍可能实际收款；验证通知后重新占库存。
+			paymentorder.And(paymentorder.OrderTypeEQ(payment.OrderTypeSubscription), paymentorder.StatusEQ(OrderStatusFailed), paymentorder.PaidAtIsNil()),
 			paymentorder.And(
 				paymentorder.StatusEQ(OrderStatusExpired),
 				paymentorder.UpdatedAtGTE(grace),
@@ -168,7 +170,11 @@ func (s *PaymentService) toPaid(ctx context.Context, o *dbent.PaymentOrder, trad
 		),
 	).SetStatus(OrderStatusPaid).SetPayAmount(paid).SetPaymentTradeNo(tradeNo).SetPaidAt(now).ClearFailedAt().ClearFailedReason().Save(ctx)
 	if err != nil {
-		return fmt.Errorf("update to PAID: %w", err)
+		// [CUSTOM] 延迟付款须重新取得库存；不足不履约，留下可核对的审计记录。
+		if strings.Contains(err.Error(), "CUSTOM_PLAN_OUT_OF_STOCK") {
+			s.writeAuditLog(ctx, o.ID, "PAYMENT_STOCK_UNAVAILABLE", pk, map[string]any{"tradeNo": tradeNo, "paidAmount": paid, "action": "核实商户到账与订单状态；仍在恢复期限内可补货重试，否则人工退款"})
+		}
+		return customPlanStockError(fmt.Errorf("update to PAID: %w", err))
 	}
 	if c == 0 {
 		return s.alreadyProcessed(ctx, o)
@@ -525,6 +531,10 @@ func (s *PaymentService) ExecuteSubscriptionFulfillment(ctx context.Context, oid
 	if o.Status != OrderStatusPaid && o.Status != OrderStatusFailed && o.Status != OrderStatusRecharging {
 		return infraerrors.BadRequest("INVALID_STATUS", "order cannot fulfill in status "+o.Status)
 	}
+	// [CUSTOM] 先验证到账再重试；避免未付网关失败订单绕过付款与库存恢复。
+	if o.Status == OrderStatusFailed && o.PaidAt == nil {
+		return infraerrors.BadRequest("INVALID_STATUS", "未确认付款的失败订单不能开通订阅")
+	}
 	if o.SubscriptionGroupID == nil || o.SubscriptionDays == nil {
 		return infraerrors.BadRequest("INVALID_STATUS", "missing subscription info")
 	}
@@ -586,7 +596,8 @@ func (s *PaymentService) ensurePaymentSubscriptionAssigned(ctx context.Context, 
 		case lookupErr != nil && !errors.Is(lookupErr, ErrSubscriptionNotFound):
 			return fmt.Errorf("check existing subscription assignment: %w", lookupErr)
 		default:
-			if _, _, err := s.subscriptionSvc.assignOrExtendSubscription(txCtx, &AssignSubscriptionInput{
+			// [CUSTOM] 已付订单已扣库存，写入归属但不重复扣减。
+			if _, _, err := s.subscriptionSvc.assignOrExtendSubscription(customWithPaidSubscriptionStock(txCtx, o), &AssignSubscriptionInput{
 				UserID:       o.UserID,
 				GroupID:      groupID,
 				ValidityDays: days,

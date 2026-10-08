@@ -3,6 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
 import SubscriptionsView from '../SubscriptionsView.vue'
+// [CUSTOM] 库存来源必须随分配请求提交。
+vi.mock('@/api/admin/payment', () => ({ adminPaymentAPI: { getPlans: vi.fn().mockResolvedValue({ data: [{ id: 31, group_id: 3, name: '套餐', stock_remaining: 5 }] }) } }))
 
 const { listSubscriptions, assignSubscription, getAllGroups, listUsers, searchUsageUsers, showError } = vi.hoisted(() => ({
   listSubscriptions: vi.fn(),
@@ -162,6 +164,7 @@ describe('admin subscription users', () => {
       await vi.advanceTimersByTimeAsync(300)
       await flushPromises()
       await wrapper.get('[data-assign-user-search] button').trigger('click')
+      await form.get('#subscription-stock-plan').setValue('31')
 
       await search.setValue(keyword)
       await form.trigger('submit')
@@ -182,7 +185,7 @@ describe('admin subscription users', () => {
 
       expect(assignSubscription).toHaveBeenCalledTimes(1)
       expect(assignSubscription).toHaveBeenCalledWith({
-        user_id: 84, group_id: 3, validity_days: 30
+        user_id: 84, group_id: 3, plan_id: 31, validity_days: 30
       })
     } finally {
       wrapper.unmount()

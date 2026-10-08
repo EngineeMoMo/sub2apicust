@@ -83,21 +83,33 @@ describe('公开套餐', () => {
 })
 
 describe('常见问题', () => {
-  it('提供四类十二题并可搜索', () => {
-    expect(faqItems).toHaveLength(12)
-    expect(new Set(faqItems.map(item => item.id)).size).toBe(12)
+  it('分类筛选与关键词组合生效，清空结果恢复全部分类', async () => {
+    const wrapper = mount(PublicFaqView, { global })
+    const category = wrapper.findAll('.mofa-help-filters button').find(button => button.text() === '充值与订阅')!
+    await category.trigger('click')
+    expect(category.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.findAll('.mofa-faq-group h2').map(heading => heading.text())).toEqual(['充值与订阅'])
+    await wrapper.get('input').setValue('终端')
+    expect(wrapper.findAll('details')).toHaveLength(0)
+    await wrapper.get('.mofa-public-state button').trigger('click')
+    expect(wrapper.findAll('.mofa-faq-group')).toHaveLength(4)
+    wrapper.unmount()
+  })
+  it('提供四类问题并可搜索，问题标识不重复', () => {
+    expect(faqItems.length).toBeGreaterThanOrEqual(16)
+    expect(new Set(faqItems.map(item => item.id)).size).toBe(faqItems.length)
     expect(new Set(faqItems.map(item => item.group)).size).toBe(4)
     expect(searchFaq(' api key ').length).toBeGreaterThan(0)
   })
   it('使用原生可键盘展开问答，搜索无结果可恢复', async () => {
     const wrapper = mount(PublicFaqView, { global })
-    expect(wrapper.findAll('details summary')).toHaveLength(12)
+    expect(wrapper.findAll('details summary')).toHaveLength(faqItems.length)
     await wrapper.get('input').setValue('api key')
     expect(wrapper.findAll('details').length).toBeLessThan(12)
     expect(wrapper.get('details').attributes('open')).toBeDefined()
     await wrapper.get('input').setValue('不可能匹配的关键词')
     expect(wrapper.text()).toContain('没有找到相关问题')
-    await wrapper.get('button').trigger('click')
-    expect(wrapper.findAll('details summary')).toHaveLength(12)
+    await wrapper.get('.mofa-public-state button').trigger('click')
+    expect(wrapper.findAll('details summary')).toHaveLength(faqItems.length)
   })
 })

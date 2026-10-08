@@ -125,6 +125,10 @@ export interface PaymentOrder {
 // ==================== Plans & Channels ====================
 
 export interface SubscriptionPlan {
+  // [CUSTOM] -1 不限量；旧接口遗漏字段时兼容原购买行为。
+  stock_limit?: number
+  stock_used?: number
+  stock_remaining?: number
   id: number
   group_id: number
   group_platform?: string

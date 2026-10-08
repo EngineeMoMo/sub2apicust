@@ -1,5 +1,11 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-08帮助页同步注意：保留AppSidebar的FaqIcon／GuideIcon两种语义图标、router教程新旧锚点白名单；自有层GuideToolSteps和六节教程、FAQ分类筛选／16题与预览问号图标。合并后运行guide／guest／guest-preview／family-home测试并检查窄屏浅深色；官方文档会变，技术步骤更新须重新查证。当前未发布。
+
+2026-10-08同轮库存补充：保留246迁移／归属账本、SubscriptionService内权益与扣减同事务及过期幂等重查、付款私有来源不重扣、管理员plan_id选择、我的订阅库存读取／售罄保护。新增TestCustomSubscriptionStockPostgres，真实PG覆盖人工与购买混合争抢、回滚、历史回填与重跑；前端plan-stock与管理员交互回归须保留。历史归属不确定部分上线前核对，详见库存说明。最终216前端／421后端定向及构建通过，未发布。
+
+2026-10-08新增库存接缝待发布：同步保留245迁移的原子条件更新与订单触发器、Ent两字段、套餐CRUD默认／遗漏语义、晚付与失败订阅保护、四类目录／结账库存投影及前端售罄入口。运行TestCustomPlanStock（真实PG环境变量）与plan-stock.spec.ts；不要只用Ent Schema.Create替代迁移。详见CUSTOMIZATIONS和deploy/SUBSCRIPTION_PLAN_STOCK.md，尚未推送／部署。
+
 2026-10-07最新发布终态：功能80c30c8250d7de59da55b964251f1c437bcf6ddd已推origin/main，同SHA CI（unit／integration）、安全扫描与GHCR均成功，固定镜像sha-80c30c8。包含周／月按开通计时、244迁移、支付宝新订单官方直码及SheetJS0.20.3补修；更新前备份，更新后必须新建支付订单真机验收。生产由用户部署，证据与步骤见HANDOFF四／五和deploy/UPDATE_GUIDE；本条覆盖下方历史未发布状态。
 
 2026-10-07发布终态：用户授权后已推送功能4bc5abbb5，同SHA CI（unit／integration）、安全扫描和GHCR全部成功，固定镜像sha-4bc5abb；发布与更新步骤以HANDOFF第四节和deploy/UPDATE_GUIDE最新节为准，覆盖下方历史未发布状态。生产由用户部署。

@@ -114,6 +114,9 @@ func TestBulkSubscriptionAction_RollsBackPostWriteFailureBeforeRetry(t *testing.
 			input := &BulkSubscriptionActionInput{SubscriptionIDs: []int64{1}, Action: tc.action, Days: 7, Daily: true}
 
 			mock.ExpectBegin()
+			if tc.action == "extend" && !tc.statusFailure {
+				expectBulkSubscriptionStock(mock)
+			}
 			mock.ExpectRollback()
 			result, err := svc.BulkSubscriptionAction(context.Background(), input)
 			require.NoError(t, err)
@@ -124,6 +127,9 @@ func TestBulkSubscriptionAction_RollsBackPostWriteFailureBeforeRetry(t *testing.
 
 			repo.postReadFailure, repo.statusFailure = false, false
 			mock.ExpectBegin()
+			if tc.action == "extend" {
+				expectBulkSubscriptionStock(mock)
+			}
 			mock.ExpectCommit()
 			result, err = svc.BulkSubscriptionAction(context.Background(), input)
 			require.NoError(t, err)
@@ -137,4 +143,12 @@ func TestBulkSubscriptionAction_RollsBackPostWriteFailureBeforeRetry(t *testing.
 			require.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
+}
+
+// [CUSTOM] 延长期限与扣库存使用同一事务；刷新失败也必须回滚。
+func expectBulkSubscriptionStock(mock sqlmock.Sqlmock) {
+	mock.ExpectQuery("SELECT plan_id FROM custom_subscription_stock_allocations").WithArgs(int64(1)).WillReturnRows(sqlmock.NewRows([]string{"plan_id"}).AddRow(9))
+	mock.ExpectQuery("SELECT .*subscription_plans").WithArgs(int64(9)).WillReturnRows(sqlmock.NewRows([]string{"id", "group_id", "stock_limit", "stock_used"}).AddRow(9, 20, 10, 0))
+	mock.ExpectExec("UPDATE .*subscription_plans").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec("INSERT INTO custom_subscription_stock_allocations").WillReturnResult(sqlmock.NewResult(1, 1))
 }

@@ -4,6 +4,9 @@
       <h1 v-if="!hideTitle">常见问题</h1>
       <p class="mofa-public-lead">从了解服务到接入工具，先把基础问题弄清楚。</p>
       <p><router-link :to="guideTarget">查看 Claude Code、Codex 与常用工具接入教程</router-link></p>
+      <div class="mofa-help-filters" role="group" aria-label="问题分类">
+        <button v-for="category in ['全部', ...faqGroups]" :key="category" type="button" class="btn" :aria-pressed="selectedGroup === category" @click="selectedGroup = category">{{ category }}</button>
+      </div>
       <label for="faq-search">搜索问题或关键词</label>
       <input id="faq-search" v-model="query" class="input mofa-faq-search" type="search" placeholder="例如：充值、API Key、额度" aria-controls="faq-results">
       <p role="status">找到 {{ results.length }} 个问题</p>
@@ -16,7 +19,7 @@
           <p>{{ item.answer }}</p>
         </details>
       </section>
-      <div v-if="!results.length" class="mofa-public-state"><h2>没有找到相关问题</h2><p>试试“充值”“密钥”或“模型”等关键词。</p><button type="button" class="btn btn-secondary" @click="query = ''">查看全部问题</button></div>
+      <div v-if="!results.length" class="mofa-public-state"><h2>没有找到相关问题</h2><p>试试“充值”“密钥”或“模型”等关键词，或切换问题分类。</p><button type="button" class="btn btn-secondary" @click="query = ''; selectedGroup = '全部'">查看全部问题</button></div>
     </div>
   </component>
 </template>
@@ -27,6 +30,7 @@ import PublicLayout from '@/custom/components/PublicLayout.vue'
 import { faqGroups, searchFaq } from '@/custom/guest/faq'
 withDefaults(defineProps<{ embedded?: boolean; hideTitle?: boolean; guideTarget?: string }>(), { guideTarget: '/guide' })
 const query = ref('')
-const results = computed(() => searchFaq(query.value))
+const selectedGroup = ref('全部')
+const results = computed(() => searchFaq(query.value).filter(item => selectedGroup.value === '全部' || item.group === selectedGroup.value))
 const groups = computed(() => faqGroups.map(name => ({ name, items: results.value.filter(item => item.group === name) })).filter(group => group.items.length))
 </script>

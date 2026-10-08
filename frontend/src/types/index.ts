@@ -2139,18 +2139,24 @@ export interface SubscriptionProgress {
 }
 
 export interface AssignSubscriptionRequest {
+  // [CUSTOM] 非购买订阅与商品共用库存。
+  plan_id?: number
   user_id: number
   group_id: number
   validity_days?: number
 }
 
 export interface BulkAssignSubscriptionRequest {
+  // [CUSTOM] 批量逐人扣同一套餐库存。
+  plan_id?: number
   user_ids: number[]
   group_id: number
   validity_days?: number
 }
 
 export interface ExtendSubscriptionRequest {
+  // [CUSTOM] 正向调整库存来源。
+  plan_id?: number
   days: number
 }
 

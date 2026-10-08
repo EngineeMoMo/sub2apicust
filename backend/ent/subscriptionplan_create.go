@@ -22,6 +22,34 @@ type SubscriptionPlanCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetStockLimit sets the "stock_limit" field.
+func (_c *SubscriptionPlanCreate) SetStockLimit(v int) *SubscriptionPlanCreate {
+	_c.mutation.SetStockLimit(v)
+	return _c
+}
+
+// SetNillableStockLimit sets the "stock_limit" field if the given value is not nil.
+func (_c *SubscriptionPlanCreate) SetNillableStockLimit(v *int) *SubscriptionPlanCreate {
+	if v != nil {
+		_c.SetStockLimit(*v)
+	}
+	return _c
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (_c *SubscriptionPlanCreate) SetStockUsed(v int) *SubscriptionPlanCreate {
+	_c.mutation.SetStockUsed(v)
+	return _c
+}
+
+// SetNillableStockUsed sets the "stock_used" field if the given value is not nil.
+func (_c *SubscriptionPlanCreate) SetNillableStockUsed(v *int) *SubscriptionPlanCreate {
+	if v != nil {
+		_c.SetStockUsed(*v)
+	}
+	return _c
+}
+
 // SetGroupID sets the "group_id" field.
 func (_c *SubscriptionPlanCreate) SetGroupID(v int64) *SubscriptionPlanCreate {
 	_c.mutation.SetGroupID(v)
@@ -229,6 +257,14 @@ func (_c *SubscriptionPlanCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *SubscriptionPlanCreate) defaults() {
+	if _, ok := _c.mutation.StockLimit(); !ok {
+		v := subscriptionplan.DefaultStockLimit
+		_c.mutation.SetStockLimit(v)
+	}
+	if _, ok := _c.mutation.StockUsed(); !ok {
+		v := subscriptionplan.DefaultStockUsed
+		_c.mutation.SetStockUsed(v)
+	}
 	if _, ok := _c.mutation.Description(); !ok {
 		v := subscriptionplan.DefaultDescription
 		_c.mutation.SetDescription(v)
@@ -273,6 +309,22 @@ func (_c *SubscriptionPlanCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *SubscriptionPlanCreate) check() error {
+	if _, ok := _c.mutation.StockLimit(); !ok {
+		return &ValidationError{Name: "stock_limit", err: errors.New(`ent: missing required field "SubscriptionPlan.stock_limit"`)}
+	}
+	if v, ok := _c.mutation.StockLimit(); ok {
+		if err := subscriptionplan.StockLimitValidator(v); err != nil {
+			return &ValidationError{Name: "stock_limit", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_limit": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.StockUsed(); !ok {
+		return &ValidationError{Name: "stock_used", err: errors.New(`ent: missing required field "SubscriptionPlan.stock_used"`)}
+	}
+	if v, ok := _c.mutation.StockUsed(); ok {
+		if err := subscriptionplan.StockUsedValidator(v); err != nil {
+			return &ValidationError{Name: "stock_used", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_used": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.GroupID(); !ok {
 		return &ValidationError{Name: "group_id", err: errors.New(`ent: missing required field "SubscriptionPlan.group_id"`)}
 	}
@@ -359,6 +411,14 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 		_spec = sqlgraph.NewCreateSpec(subscriptionplan.Table, sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64))
 	)
 	_spec.OnConflict = _c.conflict
+	if value, ok := _c.mutation.StockLimit(); ok {
+		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
+		_node.StockLimit = value
+	}
+	if value, ok := _c.mutation.StockUsed(); ok {
+		_spec.SetField(subscriptionplan.FieldStockUsed, field.TypeInt, value)
+		_node.StockUsed = value
+	}
 	if value, ok := _c.mutation.GroupID(); ok {
 		_spec.SetField(subscriptionplan.FieldGroupID, field.TypeInt64, value)
 		_node.GroupID = value
@@ -422,7 +482,7 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 // of the `INSERT` statement. For example:
 //
 //	client.SubscriptionPlan.Create().
-//		SetGroupID(v).
+//		SetStockLimit(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -431,7 +491,7 @@ func (_c *SubscriptionPlanCreate) createSpec() (*SubscriptionPlan, *sqlgraph.Cre
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SubscriptionPlanUpsert) {
-//			SetGroupID(v+v).
+//			SetStockLimit(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *SubscriptionPlanCreate) OnConflict(opts ...sql.ConflictOption) *SubscriptionPlanUpsertOne {
@@ -466,6 +526,42 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetStockLimit sets the "stock_limit" field.
+func (u *SubscriptionPlanUpsert) SetStockLimit(v int) *SubscriptionPlanUpsert {
+	u.Set(subscriptionplan.FieldStockLimit, v)
+	return u
+}
+
+// UpdateStockLimit sets the "stock_limit" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsert) UpdateStockLimit() *SubscriptionPlanUpsert {
+	u.SetExcluded(subscriptionplan.FieldStockLimit)
+	return u
+}
+
+// AddStockLimit adds v to the "stock_limit" field.
+func (u *SubscriptionPlanUpsert) AddStockLimit(v int) *SubscriptionPlanUpsert {
+	u.Add(subscriptionplan.FieldStockLimit, v)
+	return u
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (u *SubscriptionPlanUpsert) SetStockUsed(v int) *SubscriptionPlanUpsert {
+	u.Set(subscriptionplan.FieldStockUsed, v)
+	return u
+}
+
+// UpdateStockUsed sets the "stock_used" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsert) UpdateStockUsed() *SubscriptionPlanUpsert {
+	u.SetExcluded(subscriptionplan.FieldStockUsed)
+	return u
+}
+
+// AddStockUsed adds v to the "stock_used" field.
+func (u *SubscriptionPlanUpsert) AddStockUsed(v int) *SubscriptionPlanUpsert {
+	u.Add(subscriptionplan.FieldStockUsed, v)
+	return u
+}
 
 // SetGroupID sets the "group_id" field.
 func (u *SubscriptionPlanUpsert) SetGroupID(v int64) *SubscriptionPlanUpsert {
@@ -702,6 +798,48 @@ func (u *SubscriptionPlanUpsertOne) Update(set func(*SubscriptionPlanUpsert)) *S
 		set(&SubscriptionPlanUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetStockLimit sets the "stock_limit" field.
+func (u *SubscriptionPlanUpsertOne) SetStockLimit(v int) *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetStockLimit(v)
+	})
+}
+
+// AddStockLimit adds v to the "stock_limit" field.
+func (u *SubscriptionPlanUpsertOne) AddStockLimit(v int) *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.AddStockLimit(v)
+	})
+}
+
+// UpdateStockLimit sets the "stock_limit" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertOne) UpdateStockLimit() *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateStockLimit()
+	})
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (u *SubscriptionPlanUpsertOne) SetStockUsed(v int) *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetStockUsed(v)
+	})
+}
+
+// AddStockUsed adds v to the "stock_used" field.
+func (u *SubscriptionPlanUpsertOne) AddStockUsed(v int) *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.AddStockUsed(v)
+	})
+}
+
+// UpdateStockUsed sets the "stock_used" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertOne) UpdateStockUsed() *SubscriptionPlanUpsertOne {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateStockUsed()
+	})
 }
 
 // SetGroupID sets the "group_id" field.
@@ -1063,7 +1201,7 @@ func (_c *SubscriptionPlanCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.SubscriptionPlanUpsert) {
-//			SetGroupID(v+v).
+//			SetStockLimit(v+v).
 //		}).
 //		Exec(ctx)
 func (_c *SubscriptionPlanCreateBulk) OnConflict(opts ...sql.ConflictOption) *SubscriptionPlanUpsertBulk {
@@ -1137,6 +1275,48 @@ func (u *SubscriptionPlanUpsertBulk) Update(set func(*SubscriptionPlanUpsert)) *
 		set(&SubscriptionPlanUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetStockLimit sets the "stock_limit" field.
+func (u *SubscriptionPlanUpsertBulk) SetStockLimit(v int) *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetStockLimit(v)
+	})
+}
+
+// AddStockLimit adds v to the "stock_limit" field.
+func (u *SubscriptionPlanUpsertBulk) AddStockLimit(v int) *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.AddStockLimit(v)
+	})
+}
+
+// UpdateStockLimit sets the "stock_limit" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertBulk) UpdateStockLimit() *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateStockLimit()
+	})
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (u *SubscriptionPlanUpsertBulk) SetStockUsed(v int) *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.SetStockUsed(v)
+	})
+}
+
+// AddStockUsed adds v to the "stock_used" field.
+func (u *SubscriptionPlanUpsertBulk) AddStockUsed(v int) *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.AddStockUsed(v)
+	})
+}
+
+// UpdateStockUsed sets the "stock_used" field to the value that was provided on create.
+func (u *SubscriptionPlanUpsertBulk) UpdateStockUsed() *SubscriptionPlanUpsertBulk {
+	return u.Update(func(s *SubscriptionPlanUpsert) {
+		s.UpdateStockUsed()
+	})
 }
 
 // SetGroupID sets the "group_id" field.

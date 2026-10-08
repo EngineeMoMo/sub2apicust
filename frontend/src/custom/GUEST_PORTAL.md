@@ -1,5 +1,16 @@
 # 游客官网维护说明
 
+## 帮助分类与图标（2026-10-08，源码未发布）
+
+发布前用户补充：教程准备段和API接入FAQ同时说明本站支持生图（图像生成），需要联系管理员开通权限；FAQ从16增至17题。服务说明来自用户明确要求，没有自动开启权限。
+
+- 控制台FAQ与教程此前都用ChannelIcon，改为公共图标questionCircle／book；游客预览同步区别。上游仅AppSidebar与router锚点白名单两个接缝，样式仍只在theme.css。
+- 教程分六节：接入准备、命令行工具、桌面应用、编辑器扩展、验证接入、排错反馈。原guide-claude／codex／others等锚点保留，新增分类锚点；GuideToolSteps维护通用客户端步骤。模型ID仍是占位符，地址仍来自公开设置，不读取密钥或发模型请求。
+- FAQ保留四类，新增协议、桌面环境、接通确认与密钥泄露问题，共16题；分类与关键词组合，空结果可清除两项筛选。
+- 官方资料核对（2026-10-08）：[Codex配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)确认用户级提供商、env_key与Responses字段；[Claude桌面环境](https://code.claude.com/docs/en/desktop#local-sessions)确认本机环境编辑入口及Windows不读PowerShell profile；[Cline](https://docs.cline.bot/provider-config/openai-compatible)、[Continue](https://docs.continue.dev/reference)、[OpenCode](https://opencode.ai/docs/providers)、[Aider](https://aider.chat/docs/llms/openai-compat.html)各自配置说明；[Cherry Studio自定义服务商](https://docs.cherryai.com.cn/pre-basic/providers/zi-ding-yi-fu-wu-shang)为旧链接迁移后的入口。Cursor旧API Key链接跳转至[文档首页](https://cursor.com/docs)，仅保留版本能力核对提示，不承诺本站兼容其全部功能。
+- 56项组件回归、相关ESLint、类型／生产构建通过，日志output/help-{tests,lint,build}.log。Edge使用隔离上下文及公开设置夹具检查375／1440浅深色四组合，无横向溢出／页面异常，六节目录跳转与FAQ分类通过；截图及visual.json在output/help-20261008。初次浏览器夹具误拦Vite的src/api模块，修正为仅/api/接口后通过，未改业务接口。初次构建缺预览图标联合类型，已补后通过。
+- 未认证真实控制台、未实际操作第三方客户端或调用模型，未重建业务镜像／部署；生产与真实客户端验收仍待。
+
 ## 接入教程（2026-09-30，本地完成未发布）
 
 - 公开 `/guide`、认证后 `/help/guide` 和预览 `/preview/guide` 共用PublicGuideView；控制台用ConsoleGuideView保留AppLayout，预览只加载公开设置。

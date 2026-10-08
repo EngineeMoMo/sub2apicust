@@ -30,6 +30,9 @@ func (SubscriptionPlan) Annotations() []schema.Annotation {
 
 func (SubscriptionPlan) Fields() []ent.Field {
 	return []ent.Field{
+		// [CUSTOM] 售卖总限额与数据库事务维护的已占用份数。
+		field.Int("stock_limit").Default(-1).Min(-1),
+		field.Int("stock_used").Default(0).NonNegative(),
 		field.Int64("group_id"),
 		field.String("name").
 			MaxLen(100).

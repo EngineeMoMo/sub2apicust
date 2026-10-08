@@ -1,4 +1,10 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
+
+2026-10-08帮助补充：AppSidebar分别使用questionCircle／book，预览图标类型同步；PublicGuideView六节分类／GuideToolSteps与新旧锚点、PublicFaqView分类搜索、16题和theme.css响应式样式须保留。回归见guide／guest／guest-preview；来源核对及验证范围见GUEST_PORTAL。
+
+2026-10-08库存补充：保留自有SubscriptionStockPicker、SubscriptionCard库存及加载／失败／售罄禁用；管理员SubscriptionsView显式选择plan_id，用户SubscriptionsView独立加载库存，types/index请求字段。自有plan-stock与subscription-timing，以及两组管理员分配交互测试已覆盖。样式仍只在theme.css。后端245／246与非购买事务扣减必须同版发布。
+
+2026-10-08套餐库存：保留PlanEditDialog限额默认-1／0停售／遗漏保留、AdminPaymentPlansView占用及剩余、SubscriptionPlanCard与PaymentView深链接／续费售罄保护、PublicPlansView游客限制、两类API类型和中英文文案；样式仅theme.css的mofa-stock-*。plan-stock.spec.ts进入Makefile关键测试。后端245正式迁移触发器是并发权威；用户界面不可替代库存裁决。详见仓库deploy/SUBSCRIPTION_PLAN_STOCK.md，源码未发布。
 # 雾钛青：上游同步核对清单
 
 ## 2026-10-06 同步 v0.2.13

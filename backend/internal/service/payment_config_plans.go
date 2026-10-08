@@ -136,6 +136,10 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 	if err := validatePlanRequired(req.Name, req.GroupID, req.Price, req.ValidityDays, req.ValidityUnit, req.OriginalPrice); err != nil {
 		return nil, err
 	}
+	// [CUSTOM] 库存只接受总限额，不接受客户端覆盖已占用数。
+	if err := customValidateStockLimit(req.StockLimit); err != nil {
+		return nil, err
+	}
 	currency, err := normalizePlanCurrency(req.Currency)
 	if err != nil {
 		return nil, err
@@ -148,6 +152,10 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 	if req.OriginalPrice != nil {
 		b.SetOriginalPrice(*req.OriginalPrice)
 	}
+	// [CUSTOM] 不提供字段时使用 schema 的 -1 默认值。
+	if req.StockLimit != nil {
+		b.SetStockLimit(*req.StockLimit)
+	}
 	return b.Save(ctx)
 }
 
@@ -158,7 +166,14 @@ func (s *PaymentConfigService) UpdatePlan(ctx context.Context, id int64, req Upd
 	if err := validatePlanPatch(req); err != nil {
 		return nil, err
 	}
+	// [CUSTOM] PATCH 遗漏库存不得变成售罄或重置库存。
+	if err := customValidateStockLimit(req.StockLimit); err != nil {
+		return nil, err
+	}
 	u := s.entClient.SubscriptionPlan.UpdateOneID(id)
+	if req.StockLimit != nil {
+		u.SetStockLimit(*req.StockLimit)
+	}
 	if req.GroupID != nil {
 		u.SetGroupID(*req.GroupID)
 	}

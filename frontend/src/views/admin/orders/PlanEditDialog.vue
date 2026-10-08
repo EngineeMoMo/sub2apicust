@@ -59,6 +59,13 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('payment.admin.currencyHint') }}</p>
         </div>
       </div>
+      <!-- [CUSTOM] 库存总限额包含已售和待付预占，禁止提交客户端计数。 -->
+      <div>
+        <label for="plan-stock-limit" class="input-label">{{ t('payment.stock.limit') }}</label>
+        <input id="plan-stock-limit" v-model.number="planForm.stock_limit" type="number" min="-1" max="2147483647" step="1" required class="input" aria-describedby="plan-stock-hint" />
+        <p id="plan-stock-hint" class="mofa-stock-help">{{ t('payment.stock.hint') }}</p>
+        <p v-if="plan" class="mofa-stock-help">{{ t('payment.stock.used', { count: plan.stock_used ?? 0 }) }}</p>
+      </div>
       <div>
         <label class="input-label">{{ t('payment.admin.features') }}</label>
         <textarea v-model="planFeaturesText" rows="3" class="input" :placeholder="t('payment.admin.featuresPlaceholder')"></textarea>
@@ -122,7 +129,8 @@ const { t } = useI18n()
 const appStore = useAppStore()
 
 const saving = ref(false)
-const planForm = reactive({ name: '', group_id: null as number | null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
+// [CUSTOM] 默认不限量，避免旧套餐升级后被误停售。
+const planForm = reactive({ stock_limit: -1, name: '', group_id: null as number | null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
 const planFeaturesText = ref('')
 
 const validityUnitOptions = computed(() => [
@@ -171,14 +179,14 @@ const subscriptionCnyPreview = computed(() => {
   }
 })
 
-// Reset form when dialog opens
+// [CUSTOM] 打开时同步库存；新套餐和旧接口缺字段时均默认不限量。
 watch(() => props.show, (visible) => {
   if (!visible) return
   if (props.plan) {
-    Object.assign(planForm, { name: props.plan.name, group_id: props.plan.group_id, description: props.plan.description, price: props.plan.price, original_price: props.plan.original_price || 0, currency: props.plan.currency || '', validity_days: props.plan.validity_days, validity_unit: props.plan.validity_unit || 'days', sort_order: props.plan.sort_order || 0, for_sale: props.plan.for_sale })
+    Object.assign(planForm, { stock_limit: props.plan.stock_limit ?? -1, name: props.plan.name, group_id: props.plan.group_id, description: props.plan.description, price: props.plan.price, original_price: props.plan.original_price || 0, currency: props.plan.currency || '', validity_days: props.plan.validity_days, validity_unit: props.plan.validity_unit || 'days', sort_order: props.plan.sort_order || 0, for_sale: props.plan.for_sale })
     planFeaturesText.value = (props.plan.features || []).join('\n')
   } else {
-    Object.assign(planForm, { name: '', group_id: null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
+    Object.assign(planForm, { stock_limit: -1, name: '', group_id: null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
     planFeaturesText.value = ''
   }
 })
@@ -187,6 +195,8 @@ watch(() => props.show, (visible) => {
 function buildPlanPayload() {
   const features = planFeaturesText.value.split('\n').map(f => f.trim()).filter(Boolean).join('\n')
   return {
+    // [CUSTOM] 只传可编辑的总限额。
+    stock_limit: planForm.stock_limit,
     name: planForm.name,
     group_id: planForm.group_id,
     description: planForm.description,
@@ -212,6 +222,11 @@ async function handleSavePlan() {
   }
   if (!planForm.validity_days || planForm.validity_days < 1) {
     appStore.showError(t('payment.admin.validityRequired'))
+    return
+  }
+  // [CUSTOM] 浏览器校验之外保留提交保护。
+  if (!Number.isInteger(planForm.stock_limit) || planForm.stock_limit < -1 || planForm.stock_limit > 2147483647) {
+    appStore.showError(t('payment.stock.invalid'))
     return
   }
   saving.value = true

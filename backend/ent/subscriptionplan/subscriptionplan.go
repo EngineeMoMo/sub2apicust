@@ -13,6 +13,10 @@ const (
 	Label = "subscription_plan"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldStockLimit holds the string denoting the stock_limit field in the database.
+	FieldStockLimit = "stock_limit"
+	// FieldStockUsed holds the string denoting the stock_used field in the database.
+	FieldStockUsed = "stock_used"
 	// FieldGroupID holds the string denoting the group_id field in the database.
 	FieldGroupID = "group_id"
 	// FieldName holds the string denoting the name field in the database.
@@ -48,6 +52,8 @@ const (
 // Columns holds all SQL columns for subscriptionplan fields.
 var Columns = []string{
 	FieldID,
+	FieldStockLimit,
+	FieldStockUsed,
 	FieldGroupID,
 	FieldName,
 	FieldDescription,
@@ -75,6 +81,14 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultStockLimit holds the default value on creation for the "stock_limit" field.
+	DefaultStockLimit int
+	// StockLimitValidator is a validator for the "stock_limit" field. It is called by the builders before save.
+	StockLimitValidator func(int) error
+	// DefaultStockUsed holds the default value on creation for the "stock_used" field.
+	DefaultStockUsed int
+	// StockUsedValidator is a validator for the "stock_used" field. It is called by the builders before save.
+	StockUsedValidator func(int) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultDescription holds the default value on creation for the "description" field.
@@ -113,6 +127,16 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByStockLimit orders the results by the stock_limit field.
+func ByStockLimit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStockLimit, opts...).ToFunc()
+}
+
+// ByStockUsed orders the results by the stock_used field.
+func ByStockUsed(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStockUsed, opts...).ToFunc()
 }
 
 // ByGroupID orders the results by the group_id field.

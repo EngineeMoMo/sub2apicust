@@ -232,6 +232,20 @@ html.dark .mofa-product-capsule .mofa-switch-synaroute.mofa-product-current { co
 .mofa-faq-group details p { padding: 0 0 24px; color: rgb(var(--brand-muted)); }
 /* [CUSTOM] 接入教程沿用公共页品牌与主题，代码块只展示占位符。 */
 .mofa-guide { min-width: 0; }
+/* [CUSTOM] 帮助分类、场景目录与步骤层级，复用当前主题。 */
+.mofa-guide .mofa-guide-intro { max-width: 980px; }
+.mofa-guide .mofa-guide-categories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mofa-guide .mofa-guide-categories a { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid rgb(var(--brand-border)); border-radius: 10px; text-decoration: none; background: rgb(var(--brand-surface)); }
+.mofa-guide-categories a span { color: rgb(var(--brand-muted)); font-size: .875rem; line-height: 1.6; }
+.mofa-guide-categories a:hover { border-color: currentColor; }
+.mofa-guide-tool { padding: 20px 0; border-top: 1px solid rgb(var(--brand-border)); scroll-margin-top: 24px; }
+.mofa-guide-tool p { max-width: 78ch; margin: 14px 0; line-height: 1.8; color: rgb(var(--brand-muted)); }
+.mofa-guide-tool h4 { margin: 24px 0 12px; font-weight: 600; }
+.mofa-help-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+.mofa-help-filters button { min-height: 44px; background: rgb(var(--brand-surface)); color: rgb(var(--brand-text)); border: 1px solid rgb(var(--brand-border)); }
+.mofa-help-filters button[aria-pressed="true"] { color: rgb(var(--color-primary-600)); border-color: currentColor; text-decoration: underline; text-underline-offset: 4px; font-weight: 700; }
+.dark .mofa-help-filters button[aria-pressed="true"] { color: rgb(var(--color-primary-200)); }
+@media (max-width: 640px) { .mofa-guide .mofa-guide-categories { grid-template-columns: 1fr; } }
 .mofa-guide-intro { max-width: 78ch; padding-bottom: 28px; border-bottom: 1px solid rgb(var(--brand-border)); }
 .mofa-guide-intro > p { margin-top: 18px; color: rgb(var(--brand-muted)); font-size: 1.0625rem; }
 .mofa-guide-index { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 28px; }
@@ -1692,3 +1706,12 @@ html .mofa-auth .mofa-auth-title {
   .mofa-subscription-reset { align-items: start; flex-direction: column; }
   .mofa-subscription-notice { align-items: start; flex-direction: column; }
 }
+
+/* [CUSTOM] 库存提示复用现有色彩，售罄以文字与原生 disabled 共同表达。 */
+.mofa-stock-help { margin-top: .25rem; font-size: .75rem; line-height: 1.6; color: rgb(var(--brand-muted)); }
+.mofa-stock-note { margin: .5rem 0; font-size: .875rem; font-weight: 600; }
+.mofa-stock-disabled:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.mofa-subscription-stock { padding-bottom: 1rem; }
+.mofa-subscription-stock h4 { margin-bottom: .5rem; font-size: .875rem; }
+.mofa-subscription-stock li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .25rem 0; font-size: .875rem; }
+.mofa-subscription-renew:disabled { opacity: .6; cursor: not-allowed; }

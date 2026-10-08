@@ -179,6 +179,8 @@ type UpdateProviderInstanceRequest struct {
 	AllowUserRefund *bool             `json:"allow_user_refund"`
 }
 type CreatePlanRequest struct {
+	// [CUSTOM] 遗漏时创建默认不限量，更新保留原限额；0 售罄。
+	StockLimit    *int     `json:"stock_limit"`
 	GroupID       int64    `json:"group_id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
@@ -194,6 +196,8 @@ type CreatePlanRequest struct {
 }
 
 type UpdatePlanRequest struct {
+	// [CUSTOM] 遗漏时创建默认不限量，更新保留原限额；0 售罄。
+	StockLimit    *int     `json:"stock_limit"`
 	GroupID       *int64   `json:"group_id"`
 	Name          *string  `json:"name"`
 	Description   *string  `json:"description"`

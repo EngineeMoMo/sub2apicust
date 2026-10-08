@@ -2,6 +2,10 @@ import axios from 'axios'
 import { getAPIBaseURL } from '@/api/url'
 
 export interface PublicPlan {
+  // [CUSTOM] -1 不限量；旧接口遗漏字段时兼容原购买行为。
+  stock_limit?: number
+  stock_used?: number
+  stock_remaining?: number
   id: number
   name: string
   description: string

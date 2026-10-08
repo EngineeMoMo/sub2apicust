@@ -1,6 +1,11 @@
 export const faqGroups = ['入门', '充值与订阅', 'API 接入', '常见排错'] as const
 
 export const faqItems = [
+  { id: 'image-generation', group: 'API 接入', question: '本站支持生图吗？如何开通？', answer: '本站支持生图（图像生成），但需要联系管理员开通权限。使用前请先联系管理员，确认权限已开启，再按管理员提供的模型和接入方式配置。' },
+  { id: 'choose-protocol', group: 'API 接入', question: 'Claude Code、Codex 和聊天客户端的地址能通用吗？', answer: '不能直接照搬完整路径。Claude Code 使用 Anthropic Messages，Codex 使用 OpenAI Responses，其他工具需核对其兼容协议。接入教程已按命令行、桌面应用和编辑器扩展分别列出步骤，并展示本站动态服务地址。' },
+  { id: 'desktop-environment', group: 'API 接入', question: '终端能用，桌面应用为什么还报密钥错误？', answer: '终端中的临时环境变量通常只影响该终端启动的程序。请按桌面端教程配置本机环境或用户级配置，保存后完全退出应用、重新打开并新建会话，再核对提供商和模型选择。' },
+  { id: 'verify-connection', group: '常见排错', question: '收到模型回复就代表已接入本站了吗？', answer: '还需在本站用量页核对测试时间和模型。客户端可能仍在使用原来的提供商；若没有对应记录，请先核对服务地址、密钥所属账户和当前选择的提供商，再进行批量任务。' },
+  { id: 'leaked-key', group: 'API 接入', question: 'API Key 泄露后应该怎么处理？', answer: '立即在控制台停用或删除泄露密钥，检查近期用量记录，再创建新密钥并更新自己使用的客户端。仅从聊天或截图中删除文字不能让已经泄露的密钥失效。' },
   { id: 'service', group: '入门', question: '这里是什么服务？是聊天软件会员吗？', answer: '这里提供多模型 API 接入和账户管理。API 服务与模型厂商的聊天软件会员不是同一种产品，购买本站套餐不等于获得其他网站的会员权益。具体可用范围以套餐与控制台为准。' },
   { id: 'guest', group: '入门', question: '不注册可以先看看吗？', answer: '可以。产品介绍、在售订阅套餐和本页均可免登录查看。购买、充值、创建 API Key 或查看个人用量时才需要登录。浏览套餐不会创建订单。' },
   { id: 'start', group: '入门', question: '第一次使用应该从哪里开始？', answer: '先了解套餐权益与接入方式；需要使用时注册或登录，按实际需要充值或购买订阅，再到控制台创建 API Key，并在兼容的工具中配置服务地址、密钥和模型。' },

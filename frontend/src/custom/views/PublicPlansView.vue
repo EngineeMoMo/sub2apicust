@@ -29,8 +29,9 @@
           <p v-if="limits.every(limit => plan[limit.key] == null)" class="mofa-public-muted">未提供额度说明，请在购买前确认套餐权益。</p>
           <p v-if="plan.supported_model_scopes.length">模型范围：{{ plan.supported_model_scopes.join('、') }}</p>
           <ul v-if="plan.features.length"><li v-for="(feature, index) in plan.features" :key="index">{{ feature }}</li></ul>
-          <GuestAction v-if="catalog.purchase_enabled" :to="`/purchase?tab=subscription&plan=${plan.id}`" button-class="btn btn-primary" message="登录后会返回此套餐的购买页面。请确认权益和实付金额后再下单。">选择此套餐</GuestAction>
-          <button v-else type="button" class="btn btn-secondary" disabled>暂不可购买</button>
+          <p v-if="plan.stock_remaining != null && plan.stock_remaining >= 0" class="mofa-stock-note">{{ plan.stock_remaining === 0 ? '已售罄' : `剩余 ${plan.stock_remaining} 份` }}</p>
+          <GuestAction v-if="catalog.purchase_enabled && plan.stock_remaining !== 0" :to="`/purchase?tab=subscription&plan=${plan.id}`" button-class="btn btn-primary" message="登录后会返回此套餐的购买页面。请确认权益和实付金额后再下单。">选择此套餐</GuestAction>
+          <button v-else type="button" class="btn btn-secondary" disabled>{{ plan.stock_remaining === 0 ? '已售罄' : '暂不可购买' }}</button>
         </article>
       </div>
     </template>

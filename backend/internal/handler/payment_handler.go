@@ -51,6 +51,11 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 	}
 	// Enrich plans with group platform for frontend color coding
 	type planWithPlatform struct {
+		// [CUSTOM] 库存展示由服务端计数派生。
+		StockLimit     int `json:"stock_limit"`
+		StockUsed      int `json:"stock_used"`
+		StockRemaining int `json:"stock_remaining"`
+
 		ID                 int64    `json:"id"`
 		GroupID            int64    `json:"group_id"`
 		GroupPlatform      string   `json:"group_platform"`
@@ -77,6 +82,8 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 	for _, p := range plans {
 		gi := groupInfo[p.GroupID]
 		result = append(result, planWithPlatform{
+			// [CUSTOM] 包含售罄套餐，客户端展示不可购买状态。
+			StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
 			ID: int64(p.ID), GroupID: p.GroupID,
 			GroupPlatform: gi.Platform, GroupName: gi.Name,
 			RateMultiplier: gi.RateMultiplier, PeakRateEnabled: gi.PeakRateEnabled,
@@ -125,6 +132,8 @@ func (h *PaymentHandler) GetCheckoutInfo(c *gin.Context) {
 	for _, p := range plans {
 		gi := groupInfo[p.GroupID]
 		planList = append(planList, checkoutPlan{
+			// [CUSTOM] 包含售罄套餐，客户端展示不可购买状态。
+			StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
 			ID: int64(p.ID), GroupID: p.GroupID,
 			GroupPlatform: gi.Platform, GroupName: gi.Name,
 			RateMultiplier:  gi.RateMultiplier,
@@ -180,6 +189,11 @@ type checkoutInfoResponse struct {
 }
 
 type checkoutPlan struct {
+	// [CUSTOM] 库存展示由服务端计数派生。
+	StockLimit     int `json:"stock_limit"`
+	StockUsed      int `json:"stock_used"`
+	StockRemaining int `json:"stock_remaining"`
+
 	ID                 int64    `json:"id"`
 	GroupID            int64    `json:"group_id"`
 	GroupPlatform      string   `json:"group_platform"`

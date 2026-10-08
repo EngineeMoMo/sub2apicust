@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { UserSubscription } from '@/types'
+import type { SubscriptionPlan } from '@/types/payment'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateTimeToMinute } from '@/utils/format'
 import { platformBadgeClass, platformLabel } from '@/utils/platformColors'
@@ -10,7 +11,8 @@ import { hasPeakRate, formatPeakRateWindow, serverTimezoneLabel } from '@/utils/
 import { effectiveSubscriptionStatus, quotaPeriods, remainingTimeLabel, subscriptionResetHint,
   type QuotaPeriod, type SubscriptionResetTimes } from '@/custom/subscriptions/timing'
 
-const props = defineProps<{ subscription: UserSubscription; now: number; resets?: SubscriptionResetTimes; utcOffset?: string }>()
+const props = defineProps<{ subscription: UserSubscription; now: number; resets?: SubscriptionResetTimes; utcOffset?: string; plans?: SubscriptionPlan[]; stockLoading?: boolean; stockError?: boolean }>()
+const canRenewStock = computed(() => !props.stockLoading && !props.stockError && (props.plans === undefined || props.plans.some(plan => plan.stock_remaining != null && plan.stock_remaining !== 0)))
 const { t, locale } = useI18n()
 const router = useRouter()
 const zh = computed(() => locale.value.startsWith('zh'))
@@ -49,6 +51,7 @@ function resetLabel(period: QuotaPeriod): string {
 }
 
 function renew() {
+  if (!canRenewStock.value) return
   router.push({ path: '/purchase', query: { tab: 'subscription', group: String(props.subscription.group_id) } })
 }
 </script>
@@ -71,14 +74,24 @@ function renew() {
       </div>
       <div class="mofa-subscription-actions">
         <span class="mofa-subscription-status" :data-state="status">{{ statusLabel }}</span>
-        <button v-if="status === 'active' || status === 'expired'" type="button" class="btn btn-primary mofa-subscription-renew" @click="renew">
-          {{ t('payment.renewNow') }}
+        <button v-if="status === 'active' || status === 'expired'" type="button" class="btn btn-primary mofa-subscription-renew" :disabled="!canRenewStock" @click="renew">
+          {{ canRenewStock ? t('payment.renewNow') : stockLoading ? t('common.loading') : t('payment.stock.unavailableRenewal') }}
           <Icon name="arrowRight" size="sm" aria-hidden="true" />
         </button>
       </div>
     </header>
 
     <div class="mofa-subscription-body">
+      <div v-if="plans !== undefined" class="mofa-subscription-stock" data-test="subscription-stock">
+        <h4>{{ t('payment.stock.renewalStock') }}</h4>
+        <p v-if="stockLoading" role="status">{{ t('common.loading') }}</p>
+        <p v-else-if="stockError" role="status">{{ t('payment.stock.loadFailed') }}</p>
+        <p v-else-if="!plans.length">{{ t('payment.stock.noPlans') }}</p>
+        <ul v-else><li v-for="plan in plans" :key="plan.id">
+          <span>{{ plan.name }}</span>
+          <strong>{{ plan.stock_remaining == null ? t('payment.stock.loadFailed') : plan.stock_remaining < 0 ? t('payment.stock.unlimited') : plan.stock_remaining === 0 ? t('payment.stock.soldOut') : t('payment.stock.remaining', { count: plan.stock_remaining }) }}</strong>
+        </li></ul>
+      </div>
       <dl class="mofa-subscription-expiry" :data-urgency="urgency">
         <dt><Icon name="clock" size="sm" aria-hidden="true" />{{ t('userSubscriptions.expires') }}</dt>
         <dd>

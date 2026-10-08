@@ -37,6 +37,11 @@
         <template #cell-validity_days="{ value, row }">
           <span class="text-sm">{{ value }} {{ t('payment.admin.' + (row.validity_unit || 'days')) }}</span>
         </template>
+        <!-- [CUSTOM] 同时呈现剩余、总限额和占用，便于管理员补货。 -->
+        <template #cell-stock_limit="{ row }">
+          <span>{{ row.stock_limit == null || row.stock_limit < 0 ? t('payment.stock.unlimited') : t('payment.stock.summary', { remaining: row.stock_remaining ?? 0, limit: row.stock_limit }) }}</span>
+          <p class="mofa-stock-help">{{ t('payment.stock.used', { count: row.stock_used ?? 0 }) }}</p>
+        </template>
         <template #cell-for_sale="{ value, row }">
           <button
             type="button"
@@ -148,6 +153,8 @@ const planColumns = computed((): Column[] => [
   { key: 'group_id', label: t('payment.admin.group') },
   { key: 'price', label: t('payment.admin.price') },
   { key: 'validity_days', label: t('payment.admin.validity') },
+  // [CUSTOM] 套餐售卖库存。
+  { key: 'stock_limit', label: t('payment.stock.title') },
   { key: 'for_sale', label: t('payment.admin.forSale') },
   { key: 'sort_order', label: t('payment.admin.sortOrder') },
   { key: 'actions', label: t('common.actions') },

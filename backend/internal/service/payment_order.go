@@ -117,7 +117,8 @@ func (s *PaymentService) CreateOrder(ctx context.Context, req CreateOrderRequest
 	}
 	resp, err := s.invokeProvider(ctx, order, req, cfg, limitAmount, payAmountStr, payAmount, plan, sel)
 	if err != nil {
-		_, _ = s.entClient.PaymentOrder.UpdateOneID(order.ID).
+		// [CUSTOM] 网关错误只结束仍待付的订单，不覆盖抢先到达的付款回调。
+		_, _ = s.entClient.PaymentOrder.Update().Where(paymentorder.IDEQ(order.ID), paymentorder.StatusEQ(OrderStatusPending)).
 			SetStatus(OrderStatusFailed).
 			Save(ctx)
 		return nil, err
@@ -149,6 +150,10 @@ func (s *PaymentService) validateSubOrder(ctx context.Context, req CreateOrderRe
 	plan, err := s.configService.GetPlan(ctx, req.PlanID)
 	if err != nil || !plan.ForSale {
 		return nil, infraerrors.NotFound("PLAN_NOT_AVAILABLE", "plan not found or not for sale")
+	}
+	// [CUSTOM] 快速售罄提示；最终并发裁决仍由订单事务中的数据库触发器负责。
+	if CustomPlanStockRemaining(plan) == 0 {
+		return nil, customPlanOutOfStock()
 	}
 	group, err := s.groupRepo.GetByID(ctx, plan.GroupID)
 	if err != nil || group.Status != payment.EntityStatusActive {
@@ -229,7 +234,7 @@ func (s *PaymentService) createOrderInTx(ctx context.Context, req CreateOrderReq
 	}
 	order, err := b.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("create order: %w", err)
+		return nil, customPlanStockError(fmt.Errorf("create order: %w", err)) // [CUSTOM] 并发库存不足映射为 409。
 	}
 	code := fmt.Sprintf("PAY-%d-%d", order.ID, time.Now().UnixNano()%100000)
 	order, err = tx.PaymentOrder.UpdateOneID(order.ID).SetRechargeCode(code).Save(ctx)

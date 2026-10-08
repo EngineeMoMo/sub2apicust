@@ -606,6 +606,8 @@
           </Select>
           <p class="input-hint">{{ t('admin.subscriptions.groupHint') }}</p>
         </div>
+        <!-- [CUSTOM] 单次与批量共用指定商品库存。 -->
+        <SubscriptionStockPicker v-if="showAssignModal" v-model="assignForm.plan_id" :group-id="assignForm.group_id" @available="assignmentStockAvailable = $event" />
         <div>
           <label class="input-label">{{ t('admin.subscriptions.form.validityDays') }}</label>
           <input v-model.number="assignForm.validity_days" type="number" min="1" max="36500" step="1" :disabled="submitting" class="input" />
@@ -627,7 +629,7 @@
           <button
             type="submit"
             form="assign-subscription-form"
-            :disabled="submitting || (batchAssignEnabled && assignUsers.length === 0)"
+            :disabled="submitting || !assignmentStockAvailable || (batchAssignEnabled && assignUsers.length === 0)"
             class="btn btn-primary"
           >
             <svg
@@ -706,6 +708,8 @@
           </div>
           <p class="input-hint">{{ t('admin.subscriptions.adjustHint') }}</p>
         </div>
+        <!-- [CUSTOM] 正向调整视作一次续期，负向调整不扣不返。 -->
+        <SubscriptionStockPicker v-if="showExtendModal && extendForm.days > 0" v-model="extendForm.plan_id" input-id="extend-stock-plan" :group-id="extendingSubscription.group_id" @available="extensionStockAvailable = $event" />
       </form>
       <template #footer>
         <div v-if="extendingSubscription" class="flex justify-end gap-3">
@@ -715,7 +719,7 @@
           <button
             type="submit"
             form="extend-subscription-form"
-            :disabled="submitting"
+            :disabled="submitting || (extendForm.days > 0 && !extensionStockAvailable)"
             class="btn btn-primary"
           >
             {{ submitting ? t('admin.subscriptions.adjusting') : t('admin.subscriptions.adjust') }}
@@ -846,6 +850,8 @@ import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, UserSubscription, Group, GroupPlatform, SubscriptionType } from '@/types'
 import type { SimpleUser } from '@/api/admin/usage'
+// [CUSTOM] 套餐选择与库存提示在自有组件维护。
+import SubscriptionStockPicker from '@/custom/components/SubscriptionStockPicker.vue'
 import type { SubscriptionBulkAction, SubscriptionBulkActionResult, BulkAssignSubscriptionResult } from '@/api/admin/subscriptions'
 import { useTableSelection } from '@/composables/useTableSelection'
 import BulkSubscriptionActionDialog from '@/components/admin/subscription/BulkSubscriptionActionDialog.vue'
@@ -1093,13 +1099,18 @@ const extendingSubscription = ref<UserSubscription | null>(null)
 const revokingSubscription = ref<UserSubscription | null>(null)
 const restoringSubscription = ref<UserSubscription | null>(null)
 
+// [CUSTOM] 直接分配必须选库存套餐。
+const assignmentStockAvailable = ref(false)
+const extensionStockAvailable = ref(false)
 const assignForm = reactive({
+  plan_id: null as number | null,
   user_id: null as number | null,
   group_id: null as number | null,
   validity_days: 30
 })
 
 const extendForm = reactive({
+  plan_id: null as number | null,
   days: 30
 })
 
@@ -1332,6 +1343,8 @@ const closeAssignModal = () => {
   batchAssignResult.value = null
   assignForm.user_id = null
   assignForm.group_id = null
+  assignForm.plan_id = null
+  assignmentStockAvailable.value = false
   assignForm.validity_days = 30
   // Clear user search state
   selectedUser.value = null
@@ -1355,11 +1368,14 @@ const handleAssignSubscription = async () => {
     return
   }
 
+  // [CUSTOM] 零库存、无套餐或库存读取失败均不能发起分配。
+  if (!assignForm.plan_id || !assignmentStockAvailable.value) { appStore.showError(t('payment.stock.selectAvailable')); return }
   submitting.value = true
   try {
     if (batchAssignEnabled.value) {
       batchAssignResult.value = await adminAPI.subscriptions.bulkAssign({
         user_ids: assignUsers.value.map((user) => user.id),
+        plan_id: assignForm.plan_id, // [CUSTOM] 指定扣库存来源。
         group_id: assignForm.group_id,
         validity_days: assignForm.validity_days
       })
@@ -1374,6 +1390,7 @@ const handleAssignSubscription = async () => {
     }
     await adminAPI.subscriptions.assign({
       user_id: assignForm.user_id!,
+      plan_id: assignForm.plan_id, // [CUSTOM] 单次同样扣库存。
       group_id: assignForm.group_id,
       validity_days: assignForm.validity_days
     })
@@ -1382,7 +1399,7 @@ const handleAssignSubscription = async () => {
     closeAssignModal()
     loadSubscriptions()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.subscriptions.failedToAssign'))
+    appStore.showError(error.response?.data?.detail || error.response?.data?.message || t('admin.subscriptions.failedToAssign'))
     console.error('Error assigning subscription:', error)
   } finally {
     submitting.value = false
@@ -1392,6 +1409,8 @@ const handleAssignSubscription = async () => {
 const handleExtend = (subscription: UserSubscription) => {
   extendingSubscription.value = subscription
   extendForm.days = 30
+  extendForm.plan_id = null
+  extensionStockAvailable.value = false
   showExtendModal.value = true
 }
 
@@ -1401,6 +1420,8 @@ const closeExtendModal = () => {
 }
 
 const handleExtendSubscription = async () => {
+  // [CUSTOM] 禁止通过延期绕过售罄校验。
+  if (extendForm.days > 0 && (!extendForm.plan_id || !extensionStockAvailable.value)) { appStore.showError(t('payment.stock.selectAvailable')); return }
   if (!extendingSubscription.value) return
 
   // 前端验证：调整后的过期时间必须在未来
@@ -1416,6 +1437,7 @@ const handleExtendSubscription = async () => {
   submitting.value = true
   try {
     await adminAPI.subscriptions.extend(extendingSubscription.value.id, {
+      plan_id: extendForm.days > 0 ? extendForm.plan_id! : undefined, // [CUSTOM] 续期库存来源。
       days: extendForm.days
     })
     appStore.showSuccess(t('admin.subscriptions.subscriptionAdjusted'))

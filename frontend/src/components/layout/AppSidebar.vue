@@ -399,6 +399,10 @@ const FolderIcon = {
     )
 }
 
+// [CUSTOM] 帮助入口复用公共图标，问答与操作教程使用不同语义。
+const FaqIcon = { render: () => h(Icon, { name: 'questionCircle', 'aria-hidden': 'true' }) }
+const GuideIcon = { render: () => h(Icon, { name: 'book', 'aria-hidden': 'true' }) }
+
 const ChannelIcon = {
   render: () =>
     h(
@@ -748,9 +752,9 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     // [CUSTOM] 用户与管理员个人区共用，沿用认证路由守卫。
     { path: '/intelligence', label: intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'].title, icon: IntelligenceIcon },
     // [CUSTOM] 控制台内嵌帮助页，保留侧栏；游客仍可访问公开 /faq。
-    { path: '/help/faq', label: '常见问题', icon: ChannelIcon },
+    { path: '/help/faq', label: '常见问题', icon: FaqIcon },
     // [CUSTOM] 接入教程保留控制台侧栏，同时提供无需登录的公开入口。
-    { path: '/help/guide', label: '接入教程', icon: ChannelIcon },
+    { path: '/help/guide', label: '接入教程', icon: GuideIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
       label: item.label,

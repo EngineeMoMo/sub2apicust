@@ -745,7 +745,7 @@ const router = createRouter({
       return savedPosition
     }
     // [CUSTOM] 接入教程目录使用限定锚点，保留其他页面的原滚动行为。
-    if (['/guide', '/help/guide', '/preview/guide'].includes(to.path) && /^#guide-(prepare|claude|codex|others|troubleshoot)$/.test(to.hash)) {
+    if (['/guide', '/help/guide', '/preview/guide'].includes(to.path) && /^#guide-(prepare|cli|claude|codex|desktop|claude-desktop|codex-desktop|editors|others|verify|troubleshoot)$/.test(to.hash)) {
       return { el: to.hash }
     }
     // Scroll to top for new routes

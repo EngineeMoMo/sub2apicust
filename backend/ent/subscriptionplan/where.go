@@ -54,6 +54,16 @@ func IDLTE(id int64) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldLTE(FieldID, id))
 }
 
+// StockLimit applies equality check predicate on the "stock_limit" field. It's identical to StockLimitEQ.
+func StockLimit(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldStockLimit, v))
+}
+
+// StockUsed applies equality check predicate on the "stock_used" field. It's identical to StockUsedEQ.
+func StockUsed(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldStockUsed, v))
+}
+
 // GroupID applies equality check predicate on the "group_id" field. It's identical to GroupIDEQ.
 func GroupID(v int64) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldEQ(FieldGroupID, v))
@@ -122,6 +132,86 @@ func CreatedAt(v time.Time) predicate.SubscriptionPlan {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.SubscriptionPlan {
 	return predicate.SubscriptionPlan(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// StockLimitEQ applies the EQ predicate on the "stock_limit" field.
+func StockLimitEQ(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldStockLimit, v))
+}
+
+// StockLimitNEQ applies the NEQ predicate on the "stock_limit" field.
+func StockLimitNEQ(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNEQ(FieldStockLimit, v))
+}
+
+// StockLimitIn applies the In predicate on the "stock_limit" field.
+func StockLimitIn(vs ...int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldIn(FieldStockLimit, vs...))
+}
+
+// StockLimitNotIn applies the NotIn predicate on the "stock_limit" field.
+func StockLimitNotIn(vs ...int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNotIn(FieldStockLimit, vs...))
+}
+
+// StockLimitGT applies the GT predicate on the "stock_limit" field.
+func StockLimitGT(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGT(FieldStockLimit, v))
+}
+
+// StockLimitGTE applies the GTE predicate on the "stock_limit" field.
+func StockLimitGTE(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGTE(FieldStockLimit, v))
+}
+
+// StockLimitLT applies the LT predicate on the "stock_limit" field.
+func StockLimitLT(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLT(FieldStockLimit, v))
+}
+
+// StockLimitLTE applies the LTE predicate on the "stock_limit" field.
+func StockLimitLTE(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLTE(FieldStockLimit, v))
+}
+
+// StockUsedEQ applies the EQ predicate on the "stock_used" field.
+func StockUsedEQ(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldEQ(FieldStockUsed, v))
+}
+
+// StockUsedNEQ applies the NEQ predicate on the "stock_used" field.
+func StockUsedNEQ(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNEQ(FieldStockUsed, v))
+}
+
+// StockUsedIn applies the In predicate on the "stock_used" field.
+func StockUsedIn(vs ...int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldIn(FieldStockUsed, vs...))
+}
+
+// StockUsedNotIn applies the NotIn predicate on the "stock_used" field.
+func StockUsedNotIn(vs ...int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldNotIn(FieldStockUsed, vs...))
+}
+
+// StockUsedGT applies the GT predicate on the "stock_used" field.
+func StockUsedGT(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGT(FieldStockUsed, v))
+}
+
+// StockUsedGTE applies the GTE predicate on the "stock_used" field.
+func StockUsedGTE(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldGTE(FieldStockUsed, v))
+}
+
+// StockUsedLT applies the LT predicate on the "stock_used" field.
+func StockUsedLT(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLT(FieldStockUsed, v))
+}
+
+// StockUsedLTE applies the LTE predicate on the "stock_used" field.
+func StockUsedLTE(v int) predicate.SubscriptionPlan {
+	return predicate.SubscriptionPlan(sql.FieldLTE(FieldStockUsed, v))
 }
 
 // GroupIDEQ applies the EQ predicate on the "group_id" field.

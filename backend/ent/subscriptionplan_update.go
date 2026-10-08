@@ -28,6 +28,48 @@ func (_u *SubscriptionPlanUpdate) Where(ps ...predicate.SubscriptionPlan) *Subsc
 	return _u
 }
 
+// SetStockLimit sets the "stock_limit" field.
+func (_u *SubscriptionPlanUpdate) SetStockLimit(v int) *SubscriptionPlanUpdate {
+	_u.mutation.ResetStockLimit()
+	_u.mutation.SetStockLimit(v)
+	return _u
+}
+
+// SetNillableStockLimit sets the "stock_limit" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdate) SetNillableStockLimit(v *int) *SubscriptionPlanUpdate {
+	if v != nil {
+		_u.SetStockLimit(*v)
+	}
+	return _u
+}
+
+// AddStockLimit adds value to the "stock_limit" field.
+func (_u *SubscriptionPlanUpdate) AddStockLimit(v int) *SubscriptionPlanUpdate {
+	_u.mutation.AddStockLimit(v)
+	return _u
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (_u *SubscriptionPlanUpdate) SetStockUsed(v int) *SubscriptionPlanUpdate {
+	_u.mutation.ResetStockUsed()
+	_u.mutation.SetStockUsed(v)
+	return _u
+}
+
+// SetNillableStockUsed sets the "stock_used" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdate) SetNillableStockUsed(v *int) *SubscriptionPlanUpdate {
+	if v != nil {
+		_u.SetStockUsed(*v)
+	}
+	return _u
+}
+
+// AddStockUsed adds value to the "stock_used" field.
+func (_u *SubscriptionPlanUpdate) AddStockUsed(v int) *SubscriptionPlanUpdate {
+	_u.mutation.AddStockUsed(v)
+	return _u
+}
+
 // SetGroupID sets the "group_id" field.
 func (_u *SubscriptionPlanUpdate) SetGroupID(v int64) *SubscriptionPlanUpdate {
 	_u.mutation.ResetGroupID()
@@ -286,6 +328,16 @@ func (_u *SubscriptionPlanUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *SubscriptionPlanUpdate) check() error {
+	if v, ok := _u.mutation.StockLimit(); ok {
+		if err := subscriptionplan.StockLimitValidator(v); err != nil {
+			return &ValidationError{Name: "stock_limit", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_limit": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.StockUsed(); ok {
+		if err := subscriptionplan.StockUsedValidator(v); err != nil {
+			return &ValidationError{Name: "stock_used", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_used": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := subscriptionplan.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.name": %w`, err)}
@@ -320,6 +372,18 @@ func (_u *SubscriptionPlanUpdate) sqlSave(ctx context.Context) (_node int, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.StockLimit(); ok {
+		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStockLimit(); ok {
+		_spec.AddField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.StockUsed(); ok {
+		_spec.SetField(subscriptionplan.FieldStockUsed, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStockUsed(); ok {
+		_spec.AddField(subscriptionplan.FieldStockUsed, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.GroupID(); ok {
 		_spec.SetField(subscriptionplan.FieldGroupID, field.TypeInt64, value)
@@ -396,6 +460,48 @@ type SubscriptionPlanUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *SubscriptionPlanMutation
+}
+
+// SetStockLimit sets the "stock_limit" field.
+func (_u *SubscriptionPlanUpdateOne) SetStockLimit(v int) *SubscriptionPlanUpdateOne {
+	_u.mutation.ResetStockLimit()
+	_u.mutation.SetStockLimit(v)
+	return _u
+}
+
+// SetNillableStockLimit sets the "stock_limit" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdateOne) SetNillableStockLimit(v *int) *SubscriptionPlanUpdateOne {
+	if v != nil {
+		_u.SetStockLimit(*v)
+	}
+	return _u
+}
+
+// AddStockLimit adds value to the "stock_limit" field.
+func (_u *SubscriptionPlanUpdateOne) AddStockLimit(v int) *SubscriptionPlanUpdateOne {
+	_u.mutation.AddStockLimit(v)
+	return _u
+}
+
+// SetStockUsed sets the "stock_used" field.
+func (_u *SubscriptionPlanUpdateOne) SetStockUsed(v int) *SubscriptionPlanUpdateOne {
+	_u.mutation.ResetStockUsed()
+	_u.mutation.SetStockUsed(v)
+	return _u
+}
+
+// SetNillableStockUsed sets the "stock_used" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdateOne) SetNillableStockUsed(v *int) *SubscriptionPlanUpdateOne {
+	if v != nil {
+		_u.SetStockUsed(*v)
+	}
+	return _u
+}
+
+// AddStockUsed adds value to the "stock_used" field.
+func (_u *SubscriptionPlanUpdateOne) AddStockUsed(v int) *SubscriptionPlanUpdateOne {
+	_u.mutation.AddStockUsed(v)
+	return _u
 }
 
 // SetGroupID sets the "group_id" field.
@@ -669,6 +775,16 @@ func (_u *SubscriptionPlanUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *SubscriptionPlanUpdateOne) check() error {
+	if v, ok := _u.mutation.StockLimit(); ok {
+		if err := subscriptionplan.StockLimitValidator(v); err != nil {
+			return &ValidationError{Name: "stock_limit", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_limit": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.StockUsed(); ok {
+		if err := subscriptionplan.StockUsedValidator(v); err != nil {
+			return &ValidationError{Name: "stock_used", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.stock_used": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Name(); ok {
 		if err := subscriptionplan.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SubscriptionPlan.name": %w`, err)}
@@ -720,6 +836,18 @@ func (_u *SubscriptionPlanUpdateOne) sqlSave(ctx context.Context) (_node *Subscr
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.StockLimit(); ok {
+		_spec.SetField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStockLimit(); ok {
+		_spec.AddField(subscriptionplan.FieldStockLimit, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.StockUsed(); ok {
+		_spec.SetField(subscriptionplan.FieldStockUsed, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStockUsed(); ok {
+		_spec.AddField(subscriptionplan.FieldStockUsed, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.GroupID(); ok {
 		_spec.SetField(subscriptionplan.FieldGroupID, field.TypeInt64, value)
