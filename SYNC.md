@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+> 2026-10-10安全补修进行中：用户已授权修复发布阻塞。Go最低版本及根/部署Docker构建镜像统一1.27.2，CI、安全和release版本断言同步；x/net升级0.60.0，Go模块解析同步升级crypto/mod/sync/sys/term/text/tools。保留安全扫描，不新增忽略项。隔离快照32个顶层测试及34个子场景通过，5项PG因缺DSN跳过；工作树与发布快照govulncheck均0可达漏洞（模块中仍有2项未调用的漏洞，不宣称所有依赖全0），最终发布仍须新SHA的CI/安全/GHCR成功；生产未操作。
+
 > 2026-10-10发布检查：包号功能提交80191c2afa4a16af6e8d6c3197d2ffff46835052已推送origin/main。当前安全扫描38023308260失败，govulncheck报告12项可达漏洞，涉及现有Go1.27.0与golang.org/x/net v0.58.0；日志给出的修复版本为Go1.27.2与x/net v0.60.0。本轮未修改这些依赖，不把安全失败误记为通过，也不交付上线命令。CI38023308250与GHCR38023308257仍在运行，真实PG结果尚未确认，生产未操作。证据位于output/dedicated-release-20261010；本条覆盖下方“未提交推送”历史状态。
 
 > 2026-10-10未发布包号职责收敛：保留归属/有效期/免扣，独立限额与billing-policy接口已移除。同步时不要恢复历史策略入口，保留免扣凭证与原生网关限制；接缝见CUSTOMIZATIONS和deploy/DEDICATED_ENTITLEMENT_ONLY.md。
