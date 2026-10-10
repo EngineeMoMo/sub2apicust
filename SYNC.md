@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+> 2026-10-10未发布包号职责收敛：保留归属/有效期/免扣，独立限额与billing-policy接口已移除。同步时不要恢复历史策略入口，保留免扣凭证与原生网关限制；接缝见CUSTOMIZATIONS和deploy/DEDICATED_ENTITLEMENT_ONLY.md。
+
 2026-10-08发布终态：收款限制与人工开通及两项审查修复已推送575467a5f，同SHA CI（含unit／integration／lint）、安全、GHCR全部成功；固定镜像sha-575467a。更新及证据见HANDOFF和deploy/UPDATE_GUIDE，下方本轮待发布记录为历史；生产由用户备份后更新。
 
 2026-10-08审查补修接缝：保留Alipay.CancelPayment的SDK响应成功码校验及交易不存在错误；不得恢复忽略业务失败即释放额度。保留人工续费到公开目录的入口，运行custom_alipay_collection_test.go及plan-stock.spec.ts；本轮仍未发布。

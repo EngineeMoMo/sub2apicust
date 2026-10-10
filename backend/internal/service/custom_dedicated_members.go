@@ -20,7 +20,7 @@ func customDedicatedMembers(binding CustomDedicatedBinding) []int64 {
 }
 
 func validateCustomDedicatedMembers(members []int64) error {
-	if len(members) == 0 || len(members) > 100 {
+	if len(members) == 0 {
 		return ErrDedicatedInput
 	}
 	seen := make(map[int64]bool, len(members))

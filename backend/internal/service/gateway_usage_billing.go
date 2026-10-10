@@ -129,12 +129,11 @@ func QuotaPlatform(ctx context.Context, apiKey *APIKey) string {
 }
 
 func (p *postUsageBillingParams) shouldDeductAPIKeyQuota() bool {
-	// [CUSTOM] 包号实扣0仍按原始参考用量累计Key额度。
-	return p.customDedicatedMeterCost() > 0 && p.APIKey.Quota > 0 && p.APIKeyService != nil
+	return p.Cost.ActualCost > 0 && p.APIKey.Quota > 0 && p.APIKeyService != nil
 }
 
 func (p *postUsageBillingParams) shouldUpdateRateLimits() bool {
-	return p.customDedicatedMeterCost() > 0 && p.APIKey.HasRateLimits() && p.APIKeyService != nil // [CUSTOM] 包号独立计量。
+	return p.Cost.ActualCost > 0 && p.APIKey.HasRateLimits() && p.APIKeyService != nil
 }
 
 func (p *postUsageBillingParams) shouldUpdateAccountQuota() bool {
@@ -350,10 +349,10 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 	}
 
 	if p.shouldDeductAPIKeyQuota() {
-		cmd.APIKeyQuotaCost = p.customDedicatedMeterCost() // [CUSTOM] 包号免扣与Key限额分离。
+		cmd.APIKeyQuotaCost = p.Cost.ActualCost
 	}
 	if p.shouldUpdateRateLimits() {
-		cmd.APIKeyRateLimitCost = p.customDedicatedMeterCost() // [CUSTOM] 包号计量不受免扣倍率影响。
+		cmd.APIKeyRateLimitCost = p.Cost.ActualCost
 	}
 	if p.shouldUpdateAccountQuota() {
 		cmd.AccountQuotaCost = p.Cost.TotalCost * p.AccountRateMultiplier
@@ -436,8 +435,8 @@ func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, de
 		syncBalanceCacheAfterDeduction(ctx, p, deps, result)
 	}
 
-	if p.customDedicatedMeterCost() > 0 && p.APIKey != nil && p.APIKey.HasRateLimits() && deps.billingCacheService != nil {
-		deps.billingCacheService.QueueUpdateAPIKeyRateLimitUsage(p.APIKey.ID, p.customDedicatedMeterCost()) // [CUSTOM] 实扣0仍更新限额缓存。
+	if p.Cost.ActualCost > 0 && p.APIKey != nil && p.APIKey.HasRateLimits() && deps.billingCacheService != nil {
+		deps.billingCacheService.QueueUpdateAPIKeyRateLimitUsage(p.APIKey.ID, p.Cost.ActualCost)
 	}
 
 	deps.deferredService.ScheduleLastUsedUpdate(p.Account.ID)

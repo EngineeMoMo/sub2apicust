@@ -339,7 +339,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if apiKey.IsCustomDedicatedPrepaid() {
 		requestID = apiKey.CustomDedicatedUsageRequestID(result.RequestID)
 	}
-	if result.OpenAIWSMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号WS保留服务端租约＋轮次身份。
+	if result.OpenAIWSMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号WS保留服务端免扣凭证＋轮次身份。
 		if upstreamRequestID := strings.TrimSpace(result.RequestID); upstreamRequestID != "" {
 			requestID = upstreamRequestID
 		}

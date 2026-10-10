@@ -3,48 +3,19 @@ package service
 import (
 	"context"
 	"crypto/sha256"
-	"database/sql"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
-
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
 const BillingTypeDedicated int8 = 2
-
-var (
-	ErrDedicatedLimit    = infraerrors.TooManyRequests("DEDICATED_USAGE_LIMIT", "包号共享请求频率、并发或每日请求上限已达到，请稍后重试")
-	ErrDedicatedPolicy   = infraerrors.BadRequest("DEDICATED_BILLING_POLICY", "请检查包号共享使用限制")
-	ErrDedicatedEndpoint = infraerrors.Forbidden("DEDICATED_ENDPOINT_NOT_ALLOWED", "此包号不支持该入口或尚未开放生图权益，请联系管理员")
-)
-
-// CustomDedicatedBillingPolicy 只限制包号使用；参考金额不充当真实上游账单。
-type CustomDedicatedBillingPolicy struct {
-	ConcurrencyLimit  int        `json:"concurrency_limit"`
-	RPMLimit          int        `json:"rpm_limit"`
-	DailyRequestLimit int        `json:"daily_request_limit"`
-	MaxBodyBytes      int64      `json:"max_body_bytes"`
-	AllowImages       bool       `json:"allow_images"`
-	UpdatedAt         *time.Time `json:"updated_at"`
-}
-
-func defaultCustomDedicatedPolicy() CustomDedicatedBillingPolicy {
-	return CustomDedicatedBillingPolicy{ConcurrencyLimit: 2, RPMLimit: 30, MaxBodyBytes: 2 << 20}
-}
-
-func (p CustomDedicatedBillingPolicy) valid() bool {
-	return p.ConcurrencyLimit >= 1 && p.ConcurrencyLimit <= 200 && p.RPMLimit >= 1 && p.RPMLimit <= 10000 && p.DailyRequestLimit >= 0 && p.DailyRequestLimit <= 1000000 && p.MaxBodyBytes >= 1024 && p.MaxBodyBytes <= 32<<20
-}
 
 // 凭证只附着在单次认证返回的Key副本，不能写入共享认证缓存或由客户端构造。
 type customDedicatedBillingGrant struct {
 	BindingID, AccountID, UserID, APIKeyID, GroupID int64
 	WebSocket                                       bool
 	LeaseID                                         string
-	Policy                                          CustomDedicatedBillingPolicy
 }
 
 func (k *APIKey) IsCustomDedicatedPrepaid() bool {
@@ -99,89 +70,8 @@ func (s *APIKeyService) PrepareCustomDedicatedBilling(ctx context.Context, key *
 		return nil, ErrDedicatedAccess
 	}
 	copyKey := *key
-	policy, err := loadCustomDedicatedPolicy(ctx, s.customDedicated.db, binding.ID)
-	if err != nil || !policy.valid() {
-		return nil, ErrDedicatedAccess
-	}
 	copyKey.customDedicatedBilling = &customDedicatedBillingGrant{BindingID: binding.ID, AccountID: binding.AccountID, UserID: key.UserID, APIKeyID: key.ID, GroupID: *key.GroupID}
-	copyKey.customDedicatedBilling.Policy = policy
 	return &copyKey, nil
-}
-
-func (k *APIKey) CustomDedicatedMaxBodyBytes() int64 {
-	if !k.IsCustomDedicatedPrepaid() {
-		return 0
-	}
-	return k.customDedicatedBilling.Policy.MaxBodyBytes
-}
-
-const customDedicatedPolicySQL = `SELECT concurrency_limit,rpm_limit,daily_request_limit,max_body_bytes,allow_images,updated_at FROM custom_dedicated_billing_policies WHERE binding_id=$1`
-
-func loadCustomDedicatedPolicy(ctx context.Context, query customDedicatedQuery, id int64) (CustomDedicatedBillingPolicy, error) {
-	p := defaultCustomDedicatedPolicy()
-	err := query.QueryRowContext(ctx, customDedicatedPolicySQL, id).Scan(&p.ConcurrencyLimit, &p.RPMLimit, &p.DailyRequestLimit, &p.MaxBodyBytes, &p.AllowImages, &p.UpdatedAt)
-	if errors.Is(err, sql.ErrNoRows) {
-		return p, nil
-	}
-	return p, err
-}
-
-func (s *CustomDedicatedService) BillingPolicy(ctx context.Context, id int64) (CustomDedicatedBillingPolicy, error) {
-	if s.simpleMode {
-		return CustomDedicatedBillingPolicy{}, ErrDedicatedMode
-	}
-	var exists bool
-	if err := s.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM custom_dedicated_accounts WHERE id=$1 AND deleted_at IS NULL)", id).Scan(&exists); err != nil {
-		return CustomDedicatedBillingPolicy{}, err
-	}
-	if !exists {
-		return CustomDedicatedBillingPolicy{}, ErrDedicatedNotFound
-	}
-	return loadCustomDedicatedPolicy(ctx, s.db, id)
-}
-
-func (s *CustomDedicatedService) UpdateBillingPolicy(ctx context.Context, id int64, policy CustomDedicatedBillingPolicy) (CustomDedicatedBillingPolicy, error) {
-	if s.simpleMode {
-		return CustomDedicatedBillingPolicy{}, ErrDedicatedMode
-	}
-	if !policy.valid() {
-		return CustomDedicatedBillingPolicy{}, ErrDedicatedPolicy
-	}
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return CustomDedicatedBillingPolicy{}, err
-	}
-	defer func() { _ = tx.Rollback() }()
-	var found int64
-	if err := tx.QueryRowContext(ctx, "SELECT id FROM custom_dedicated_accounts WHERE id=$1 AND deleted_at IS NULL FOR UPDATE", id).Scan(&found); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return CustomDedicatedBillingPolicy{}, ErrDedicatedNotFound
-		}
-		return CustomDedicatedBillingPolicy{}, err
-	}
-	current, err := loadCustomDedicatedPolicy(ctx, tx, id)
-	if err != nil {
-		return CustomDedicatedBillingPolicy{}, err
-	}
-	if (current.UpdatedAt == nil) != (policy.UpdatedAt == nil) || (current.UpdatedAt != nil && !current.UpdatedAt.Equal(*policy.UpdatedAt)) {
-		return CustomDedicatedBillingPolicy{}, ErrDedicatedStale
-	}
-	if err := tx.QueryRowContext(ctx, `INSERT INTO custom_dedicated_billing_policies(binding_id,concurrency_limit,rpm_limit,daily_request_limit,max_body_bytes,allow_images)
- VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(binding_id) DO UPDATE SET concurrency_limit=$2,rpm_limit=$3,daily_request_limit=$4,max_body_bytes=$5,allow_images=$6,updated_at=clock_timestamp() RETURNING updated_at`, id, policy.ConcurrencyLimit, policy.RPMLimit, policy.DailyRequestLimit, policy.MaxBodyBytes, policy.AllowImages).Scan(&policy.UpdatedAt); err != nil {
-		return CustomDedicatedBillingPolicy{}, err
-	}
-	return policy, tx.Commit()
-}
-
-// 包号参考用量固定为原始模型计量，不能被用户或分组倍率0绕过Key限额。
-func (p *postUsageBillingParams) customDedicatedMeterCost() float64 {
-	if p == nil || p.Cost == nil {
-		return 0
-	}
-	if p.APIKey.IsCustomDedicatedPrepaid() {
-		return p.Cost.TotalCost
-	}
-	return p.Cost.ActualCost
 }
 
 func prepareCustomDedicatedSettlement(p *postUsageBillingParams, log *UsageLog) error {

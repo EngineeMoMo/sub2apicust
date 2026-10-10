@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-08（Asia/Shanghai）。
+> 最后更新：2026-10-10（Asia/Shanghai）。
 
 ---
 
@@ -38,6 +38,17 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+
+- **2026-10-10 用户授权提交推送包号职责收敛**：本轮仅发布包号归属/有效期/免扣及通用限制回归相关修改，origin/main抓取后与本地基线一致；4个既有收款修复文件及先前审查记录保留在工作区、不混入功能提交。CI配置独立PostgreSQL，发布须以本轮实际SHA确认CI（含真实PG及integration）、安全和GHCR全部成功后再交付镜像更新命令，生产由用户自行更新。
+
+- **2026-10-10 到期与跨组免扣专项验证**：新增custom_dedicated_expiry_test.go，真实Gin/APIKeyAuth链配SQL mock覆盖7场景：有效专属组零余额可用；到期专属组零/正余额均403；到期关联组403；普通组到期前后零余额均INSUFFICIENT_BALANCE；普通组正余额放行但IsCustomDedicatedPrepaid=false，缓存原Key始终无免扣凭证。连同到期边界、选中账号、跨Key/组结算及缓存隔离回归共7顶层+13子场景通过，无跳过；证据output/body-limit-fix/expiry-verification-final.jsonl。不是生产/真实PG验收。到期前已准入的HTTP请求可完成并按原权益结算，不表示到期后能发起新请求；普通组继续走原生余额/订阅规则。未修改业务逻辑或部署。
+
+- **2026-10-10 包号职责收敛（用户最新要求，覆盖以下旧限额方案；未发布）**：用户明确“包号只负责账号归属、有效期和免扣，通用请求限制交给sub2api”。已删除包号独立并发/RPM/日计数、请求体解析与大小限制、生图开关、HTTP白名单、WS帧类型/JSON深度限制、成员100人上限、后台billing-policy接口及配置UI。普通Key限额恢复按原ActualCost含倍率口径计量，不再强制原始参考价；用户余额免扣、归属隔离、撤销/到期及WS逐帧/逐轮权益检查保留。历史策略/计数表不再读写；旧lease表仅保存已完成的免扣凭证，无活动占位、续期或失败取消。细节及上游接缝见CUSTOMIZATIONS、deploy/DEDICATED_ENTITLEMENT_ONLY.md。
+  - 验证：包号后端37顶层+27子项通过，5项真实PG测试因无专用DSN跳过；原生计费/WS/异步图片等407顶层+361子项通过，无跳过。前端43项、vue-tsc、改动文件ESLint、便携Go embed构建通过；证据output/body-limit-fix/{scope-go-tests,native-go-tests}.jsonl。Docker未运行，未做真实PG/线上验收。未提交、推送或部署；保留既有收款修复改动。
+
+- **2026-10-10 包号请求体修复与其他定制盘点（未发布）**：按用户要求移除HTTP/WS包号独立大小阈值及后台/API字段，历史数据库列保留但不读写；通用网关限制仍生效。前端27项与vue-tsc通过，便携Go定向service/middleware测试通过（真实PG专项未设DSN跳过；Docker未运行），便携Go embed构建通过。其他仍存在：共享并发默认2、RPM默认30（两者不能设0）、日请求默认0、默认关闭生图、HTTP入口白名单、WS只允许response.create/cancel、禁生图时嵌套深度大于64也拒绝；成员上限100、账号/标准专属组隔离、到期撤销、Key金额参考计量及租约DB依赖。仅盘点其他规则，未擅自删除。保留工作区既有收款修复，未提交推送部署。
+
+- **2026-10-10 截图413核查（仅分析）**：DEDICATED_REQUEST_BODY命中custom_dedicated_billing.go:40，为本仓包号定制；引入提交acd73d716（2026-10-01，Git作者mohaiming）。默认2 MiB，可配置1024至33554432字节；未取证生产实际策略和请求大小，不能确认现场阈值。未改业务或部署，保留既有收款修复改动。
 
 - **2026-10-08 收款限制与人工开通发布完成（最新终态）**：功能`575467a5f4d194ebd01cf771edacef9f0075d395`已推origin/main，同SHA [CI37749962687](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962687)、[安全37749962637](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962637)、[GHCR37749962677](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962677)全部completed/success，含Go unit／integration／lint及前端。实际发布镜像`ghcr.io/engineemomo/sub2apicust:sha-575467a`（linux/amd64），摘要`sha256:5539364a4f724569a4f0ef22bf12db74357fce5b6e3669327be619137d5e408e`。证据output/collection-release-20261008。包含247迁移、共享收款上限、快捷充值配置、人工开通模式及两项审查修复。用户备份后执行`./update.sh sha-575467a`，先核对旧付款链接与线下收款再启用限额；真实商户与生产交互待验，未代部署生产。本条覆盖此前待发布记录；后续文档skip-ci提交不生成新镜像。
 
@@ -378,6 +389,11 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] 包号到期/跨组免扣源码及认证链专项验证通过；真实PG及生产验收仍归入职责收敛发布待办。
+
+- [ ] 包号职责收敛：补真实PostgreSQL旧限制失效/免扣去重/归属回归；授权发布后按新SHA检查CI、安全与镜像，同版更新前后端并验截图场景、零余额、原生限流、到期撤销。范围已由用户确认，不再等待设计决定。
+
 
 - [x] 收款限制本轮功能已提交推送，实际功能SHA 575467a5f的CI／安全／GHCR全部通过，固定镜像sha-575467a；以下同轮“待提交／CI”条目为历史步骤，已完成。
 - [ ] 用户备份并更新生产到sha-575467a，核对历史收款、启用配置，再验人工开通／库存及真实商户关单付款；生产未代部署。

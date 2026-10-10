@@ -980,7 +980,7 @@ func (s *OpenAIGatewayService) proxyResponsesWebSocketV2Passthrough(
 			if msgType != coderws.MessageText && msgType != coderws.MessageBinary {
 				return payload, nil, nil
 			}
-			// [CUSTOM] 包号拒绝未适配控制帧，防session.update持久化工具绕过response.create检查。
+			// [CUSTOM] 透传帧只复查包号账号归属与有效期。
 			if hooks != nil && hooks.CustomDedicatedBeforeFrame != nil {
 				if err := hooks.CustomDedicatedBeforeFrame(payload); err != nil {
 					return payload, nil, err

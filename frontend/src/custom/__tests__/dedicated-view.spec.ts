@@ -10,7 +10,7 @@ import { dedicatedAPI, type DedicatedBinding, type DedicatedView } from '@/custo
 vi.mock('@/components/layout/AppLayout.vue', () => ({ default: defineComponent({ template: '<main><slot name="page-actions" /><slot /></main>' }) }))
 vi.mock('@/custom/dedicated/api', async importOriginal => {
   const original = await importOriginal<typeof import('@/custom/dedicated/api')>()
-  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), remove: vi.fn(), choices: vi.fn(), billingPolicy: vi.fn(), saveBillingPolicy: vi.fn() } }
+  return { ...original, dedicatedAPI: { mine: vi.fn(), list: vi.fn(), save: vi.fn(), revoke: vi.fn(), remove: vi.fn(), choices: vi.fn() } }
 })
 const now = Date.parse('2026-09-28T08:00:00Z')
 const view: DedicatedView = { id: 1, label: '我的 Claude', platform: 'anthropic', group_id: 33, expires_at: new Date(now + 3600_000).toISOString(), status: 'available', last_used_at: null, sampled_at: new Date(now - 60_000).toISOString(), checked_at: new Date(now).toISOString(), quota_state: 'available', windows: [{ key: 'five_hour', remaining_percent: 65, resets_at: new Date(now + 60_000).toISOString(), stale: false }] }
@@ -27,8 +27,6 @@ beforeEach(() => {
   vi.mocked(dedicatedAPI.save).mockReset().mockResolvedValue(binding)
   vi.mocked(dedicatedAPI.revoke).mockReset().mockResolvedValue(undefined)
   vi.mocked(dedicatedAPI.remove).mockReset().mockResolvedValue(undefined)
-  vi.mocked(dedicatedAPI.billingPolicy).mockReset().mockResolvedValue({ concurrency_limit: 2, rpm_limit: 30, daily_request_limit: 0, max_body_bytes: 2097152, allow_images: false, updated_at: null })
-  vi.mocked(dedicatedAPI.saveBillingPolicy).mockReset()
 })
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; vi.useRealTimers() })
 async function user(locale = 'zh') { wrapper = mount(DedicatedAccountsView, { global: globals(locale) }); await flushPromises(); return wrapper }
@@ -89,14 +87,13 @@ describe('用户专属账号页面', () => {
 })
 
 describe('管理端包号操作', () => {
-  it('使用限制单独编辑，不触发改绑或续期', async () => {
+  it('包号只显示归属、有效期和免扣，不再提供独立使用限制', async () => {
     const page = await admin()
-    await button(page, '使用限制').trigger('click')
-    await flushPromises()
-    expect(dedicatedAPI.billingPolicy).toHaveBeenCalledWith(1)
-    expect(page.get('form').text()).toContain('所有成员、专属组和密钥共用')
+    expect(page.text()).not.toContain('使用限制')
+    expect(page.text()).not.toContain('每分钟30次')
+    expect(page.text()).toContain('包号仅管理账号归属、有效期与免扣')
+    expect(page.findAll('button').some(item => item.text() === '修改 / 续期')).toBe(true)
     expect(dedicatedAPI.save).not.toHaveBeenCalled()
-    expect(dedicatedAPI.saveBillingPolicy).not.toHaveBeenCalled()
   })
   it('保存失败展示具体不满足项和编号，而不是统称配置异常', async () => {
     const page = await admin()

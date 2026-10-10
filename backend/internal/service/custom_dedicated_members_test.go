@@ -18,6 +18,11 @@ func TestCustomDedicatedMembers(t *testing.T) {
 		require.ErrorIs(t, validateCustomDedicatedMembers(members), ErrDedicatedInput)
 	}
 	require.NoError(t, validateCustomDedicatedMembers([]int64{11, 12}))
+	members := make([]int64, 101)
+	for index := range members {
+		members[index] = int64(index + 1)
+	}
+	require.NoError(t, validateCustomDedicatedMembers(members))
 	now := time.Now()
 	binding := customDedicatedTestBinding(now)
 	binding.UserIDs = []int64{11, 12}

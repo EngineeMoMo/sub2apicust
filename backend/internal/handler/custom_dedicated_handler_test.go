@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -82,27 +81,11 @@ func TestCustomDedicatedHandlerEditErrors(t *testing.T) {
 	}{
 		{service.ErrDedicatedStale, http.StatusConflict, "DEDICATED_ACCOUNT_STALE"},
 		{service.ErrDedicatedRestore, http.StatusBadRequest, "DEDICATED_ACCOUNT_RESTORE"},
-		{service.ErrDedicatedPolicy, http.StatusBadRequest, "DEDICATED_BILLING_POLICY"},
 	} {
 		recorder := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(recorder)
 		customDedicatedError(ctx, test.err)
 		require.Equal(t, test.status, recorder.Code)
 		require.Contains(t, recorder.Body.String(), test.reason)
-	}
-}
-
-func TestCustomDedicatedHandlerBillingPolicyRejectsInvalidPayloadAndID(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	dedicated := service.NewCustomDedicatedService(nil, nil, &service.APIKeyService{}, &service.GatewayService{}, &service.OpenAIGatewayService{})
-	handler := NewCustomDedicatedHandler(dedicated)
-	router := gin.New()
-	router.PUT("/admin/dedicated-accounts/:id/billing-policy", handler.BillingPolicy)
-	for _, tc := range []struct{ id, body string }{{"no", `{}`}, {"1", `{"concurrency_limit":0}`}, {"1", `{"concurrency_limit":"bad"}`}} {
-		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPut, "/admin/dedicated-accounts/"+tc.id+"/billing-policy", strings.NewReader(tc.body))
-		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(recorder, req)
-		require.Equal(t, http.StatusBadRequest, recorder.Code, recorder.Body.String())
 	}
 }

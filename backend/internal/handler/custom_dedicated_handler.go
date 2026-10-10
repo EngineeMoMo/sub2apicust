@@ -37,36 +37,13 @@ func customDedicatedID(c *gin.Context) (int64, bool) {
 }
 
 func customDedicatedError(c *gin.Context, err error) {
-	for _, known := range []error{service.ErrDedicatedMode, service.ErrDedicatedInput, service.ErrDedicatedConfig, service.ErrDedicatedConflict, service.ErrDedicatedNotFound, service.ErrDedicatedAccess, service.ErrDedicatedDelete, service.ErrDedicatedStale, service.ErrDedicatedRestore, service.ErrDedicatedPolicy} {
+	for _, known := range []error{service.ErrDedicatedMode, service.ErrDedicatedInput, service.ErrDedicatedConfig, service.ErrDedicatedConflict, service.ErrDedicatedNotFound, service.ErrDedicatedAccess, service.ErrDedicatedDelete, service.ErrDedicatedStale, service.ErrDedicatedRestore} {
 		if errors.Is(err, known) {
 			response.ErrorFrom(c, err)
 			return
 		}
 	}
 	response.InternalError(c, "包号操作失败，请稍后重试；若持续失败请联系管理员")
-}
-
-func (h *CustomDedicatedHandler) BillingPolicy(c *gin.Context) {
-	id, valid := customDedicatedID(c)
-	if !valid {
-		return
-	}
-	var policy service.CustomDedicatedBillingPolicy
-	var err error
-	if c.Request.Method == "PUT" {
-		if err := c.ShouldBindJSON(&policy); err != nil {
-			response.BadRequest(c, "请检查包号使用限制格式")
-			return
-		}
-		policy, err = h.service.UpdateBillingPolicy(c.Request.Context(), id, policy)
-	} else {
-		policy, err = h.service.BillingPolicy(c.Request.Context(), id)
-	}
-	if err != nil {
-		customDedicatedError(c, err)
-		return
-	}
-	response.Success(c, policy)
 }
 
 func (h *CustomDedicatedHandler) AdminList(c *gin.Context) {

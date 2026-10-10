@@ -2869,18 +2869,14 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 			MaxReasoningEffortOverLimit: maxReasoningEffortOverLimit,
 			ReasoningEffortMappings:     reasoningEffortMappings,
 			TurnStarted:                 recordTurnStart,
-			// [CUSTOM] WS透传的会话控制帧不享受未计量的包号权益。
+			// [CUSTOM] 会话帧只检查包号账号归属与有效期，帧类型沿用原网关规则。
 			CustomDedicatedBeforeFrame: func(payload []byte) error {
-				if err := apiKey.ValidateCustomDedicatedWSFrame(payload); err != nil {
-					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "包号暂不支持该会话控制帧", err)
+				if err := h.gatewayService.CheckCustomDedicatedAccount(c.Request.Context(), account); err != nil {
+					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "专属账号不可用，请联系管理员", err)
 				}
 				return nil
 			},
 			BeforeRequest: func(turn int, payload []byte, originalModel string) error {
-				// [CUSTOM] 长连接每轮原子消耗包号共享次数，拆Key／组不能扩大权益。
-				if err := h.gatewayService.AdmitCustomDedicatedWSTurn(c.Request.Context(), apiKey, payload); err != nil {
-					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "包号使用限制或权益校验失败，请稍后重试或联系管理员", err)
-				}
 				// [CUSTOM] 长连接每轮重查包号，撤销/到期后不能继续借用原账号。
 				if err := h.gatewayService.CheckCustomDedicatedAccount(c.Request.Context(), account); err != nil {
 					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "专属账号不可用，请联系管理员", nil)

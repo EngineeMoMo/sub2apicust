@@ -138,7 +138,7 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 	if payloadHash := strings.TrimSpace(c.RequestPayloadHash); payloadHash != "" {
 		raw += "|" + payloadHash
 	}
-	// [CUSTOM] 普通请求指纹保持不变；包号指纹包含稳定的权益归属（重试租约不改变幂等身份）。
+	// [CUSTOM] 普通请求指纹保持不变；包号指纹包含稳定的权益归属（重试凭证不改变幂等身份）。
 	if c.DedicatedBindingID > 0 {
 		raw += fmt.Sprintf("|dedicated:%d:%d:%0.10f", c.DedicatedBindingID, c.DedicatedGroupID, c.DedicatedReferenceCost)
 	}

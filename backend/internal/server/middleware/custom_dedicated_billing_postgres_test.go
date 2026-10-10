@@ -74,10 +74,11 @@ func TestCustomDedicatedBillingAuthPostgres(t *testing.T) {
 		return nil, service.ErrAPIKeyNotFound
 	}}
 	keys := service.NewAPIKeyService(repo, nil, nil, nil, nil, nil, cfg)
-	dedicated := service.NewCustomDedicatedService(db, nil, keys, &service.GatewayService{}, &service.OpenAIGatewayService{})
+	service.NewCustomDedicatedService(db, nil, keys, &service.GatewayService{}, &service.OpenAIGatewayService{})
 	router := gin.New()
+	router.Use(RequestBodyLimit(4 << 20))
 	router.Use(gin.HandlerFunc(NewAPIKeyAuthMiddleware(keys, nil, cfg)))
-	for _, path := range []string{"/v1/responses", "/v1/messages", "/backend-api/codex/responses", "/v1/images/generations/async"} {
+	for _, path := range []string{"/v1/responses", "/v1/messages", "/backend-api/codex/responses", "/v1/images/generations/async", "/v1/realtime", "/v1/images/edits", "/v1/new-endpoint"} {
 		router.POST(path, func(c *gin.Context) {
 			authKey, ok := GetAPIKeyFromContext(c)
 			require.True(t, ok)
@@ -86,7 +87,10 @@ func TestCustomDedicatedBillingAuthPostgres(t *testing.T) {
 				require.NotEmpty(t, authKey.CustomDedicatedUsageRequestID("upstream"))
 			}
 			body, err := io.ReadAll(c.Request.Body)
-			require.NoError(t, err)
+			if err != nil {
+				AbortWithError(c, http.StatusRequestEntityTooLarge, "REQUEST_BODY_TOO_LARGE", "gateway body limit")
+				return
+			}
 			c.Data(http.StatusOK, "application/json", body)
 		})
 	}
@@ -116,15 +120,38 @@ func TestCustomDedicatedBillingAuthPostgres(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code, w.Body.String())
 		user.Balance = 0
 	})
-	t.Run("oversized_images_and_unsupported_async_rejected", func(t *testing.T) {
-		p, err := dedicated.BillingPolicy(context.Background(), 1)
+	t.Run("large_body_ignores_legacy_dedicated_limit", func(t *testing.T) {
+		_, err := db.Exec("INSERT INTO custom_dedicated_billing_policies(binding_id,max_body_bytes) VALUES(1,1024)")
 		require.NoError(t, err)
-		p.MaxBodyBytes = 1024
-		_, err = dedicated.UpdateBillingPolicy(context.Background(), 1, p)
-		require.NoError(t, err)
-		require.Equal(t, http.StatusRequestEntityTooLarge, request("/v1/responses", key.Key, strings.Repeat("a", 1025)).Code)
-		require.Equal(t, http.StatusForbidden, request("/v1/responses", key.Key, `{"tools":[{"type":"image_generation"}]}`).Code)
-		require.Equal(t, http.StatusForbidden, request("/v1/images/generations/async", key.Key, `{}`).Code)
+		body := `{"input":"` + strings.Repeat("a", (2<<20)+1) + `"}`
+		for _, path := range []string{"/v1/responses", "/v1/messages", "/backend-api/codex/responses"} {
+			w := request(path, key.Key, body)
+			require.Equal(t, http.StatusOK, w.Code)
+			require.Equal(t, body, w.Body.String())
+		}
+	})
+	t.Run("gateway_body_limit_still_rejects", func(t *testing.T) {
+		body := `{"input":"` + strings.Repeat("a", 4<<20) + `"}`
+		w := request("/v1/responses", key.Key, body)
+		require.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
+		require.Contains(t, w.Body.String(), "REQUEST_BODY_TOO_LARGE")
+		require.NotContains(t, w.Body.String(), "DEDICATED_REQUEST_BODY")
+	})
+	t.Run("image_tools_and_endpoints_follow_gateway", func(t *testing.T) {
+		require.Equal(t, http.StatusOK, request("/v1/responses", key.Key, `{"tools":[{"type":"image_generation"}]}`).Code)
+		require.Equal(t, http.StatusOK, request("/v1/images/generations/async", key.Key, `{}`).Code)
+	})
+	t.Run("payload_parsing_belongs_to_gateway", func(t *testing.T) {
+		for _, sample := range []struct{ path, body string }{
+			{"/v1/new-endpoint", "opaque-body"},
+			{"/v1/images/edits", "--multipart-body"},
+			{"/v1/realtime", `{"type":"session.update"}`},
+			{"/v1/responses", strings.Repeat("[", 70) + "0" + strings.Repeat("]", 70)},
+		} {
+			w := request(sample.path, key.Key, sample.body)
+			require.Equal(t, http.StatusOK, w.Code)
+			require.Equal(t, sample.body, w.Body.String())
+		}
 	})
 	t.Run("expired_quota_key_and_revoked_entitlement_do_not_become_free", func(t *testing.T) {
 		expired := time.Now().Add(-time.Hour)

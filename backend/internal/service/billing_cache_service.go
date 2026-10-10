@@ -760,7 +760,7 @@ func (s *BillingCacheService) CheckBillingEligibility(ctx context.Context, user 
 	}
 
 	// user × platform quota 仅在 standard（余额）模式生效；订阅模式豁免
-	if !isSubscriptionMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号使用独立共享限额，普通平台消费限额仍按余额请求执行。
+	if !isSubscriptionMode && !apiKey.IsCustomDedicatedPrepaid() { // [CUSTOM] 包号免扣余额；平台消费限额仍只统计余额消费，通用Key/RPM限制照常执行。
 		if err := s.checkUserPlatformQuotaEligibility(ctx, user.ID, platform); err != nil {
 			return err
 		}

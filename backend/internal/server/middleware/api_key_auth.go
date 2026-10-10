@@ -295,7 +295,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			_ = apiKeyService.TouchLastUsed(c.Request.Context(), apiKey.ID)
 		}
 
-		// [CUSTOM] 所有认证网关别名统一共享准入与并发租约。
+		// [CUSTOM] 验证包号归属与有效期并保存免扣凭证，通用请求限制由原网关执行。
 		customDedicatedBillingAdmission(c, apiKeyService, apiKey)
 	}
 }

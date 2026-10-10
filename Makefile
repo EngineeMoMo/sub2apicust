@@ -11,7 +11,6 @@ FRONTEND_CRITICAL_VITEST := \
 	src/custom/__tests__/plan-stock.spec.ts \
 	src/custom/__tests__/alipay-desktop-wap.spec.ts \
 	src/custom/__tests__/xlsx-export.spec.ts \
-	src/custom/__tests__/dedicated-billing-policy.spec.ts \
 	src/custom/__tests__/dedicated-view.spec.ts \
 	src/custom/__tests__/dedicated-config.spec.ts \
 	src/components/admin/usage/__tests__/UsageTable.spec.ts \

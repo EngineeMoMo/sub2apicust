@@ -1,5 +1,19 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-10 包号仅归属、有效期与免扣（最新要求，未发布）
+
+- 补充到期/跨组认证回归custom_dedicated_expiry_test.go：7场景覆盖到期403、普通组零余额拒绝/正余额无免扣、缓存资格不污染；与现有权益及结算测试合计20项含子场景通过，不替代真实PG/生产验证。
+
+- 本节覆盖此前包号独立共享限额方案。自有admission删除并发/RPM/日计数、生图/入口/JSON/WS帧限制及续期任务；中间件不读取请求体。移除策略服务/handler/API/UI与成员100人上限，保留必要成员身份与账号隔离。历史243表保留，策略/计数不再运行时读写；lease表仅存finished_at已赋值的结算凭证，维持独立账本去重。
+- 上游接缝逐处登记：`backend/internal/server/routes/admin.go`删除两条billing-policy路由；`server/middleware/api_key_auth.go`保留[CUSTOM]免扣凭证接缝；`handler/openai_gateway_handler.go`删除逐轮计数，帧回调改为账号归属/有效期检查；`service/openai_ws_forwarder.go`、`openai_ws_forwarder_ingress.go`、`openai_ws_v2_passthrough_adapter.go`保留[CUSTOM]权益检查回调，不再按包号过滤帧类型。
+- `service/gateway_usage_billing.go`撤回包号Key原始参考价计量接缝，恢复上游ActualCost含倍率口径，免扣余额/订阅及独立账本接缝保留；`service/billing_cache_service.go`与`handler/gateway_inflight_reservation.go`更新[CUSTOM]免扣注释，通用Key/RPM/并发不豁免；`service/openai_gateway_usage.go`、`usage_billing.go`更新[CUSTOM]凭证身份注释。`Makefile`移除已删除策略表单测试，包号页面与配置测试仍在关键回归。
+- 新增`custom_dedicated_gateway_test.go`检查包号层零次读取请求体、大请求与多类载荷交原handler、通用大小上限仍生效；后端包号64项（含子项）、原生回归768项（含子项）、前端43项、类型/lint/embed通过，5项真实PG专项跳过。兼容性与部署验收见[当前规则](deploy/DEDICATED_ENTITLEMENT_ONLY.md)。
+
+## 2026-10-10 取消包号独立请求体限制（未发布）
+
+- 自有custom_dedicated_billing中间件移除MaxBytesReader包号阈值，读取仍受外层通用网关限制；网关超限返回413与REQUEST_BODY_TOO_LARGE，读取错误保留400。custom_dedicated_admission移除HTTP及WS逐帧包号大小校验，保留其余准入规则。
+- 自有策略服务、前端类型及DedicatedBillingPolicy移除max_body_bytes；迁移243历史列与约束保持原样，不再读写此列，不新增迁移。HTTP大于旧2 MiB及历史1024字节策略放行、通用网关超限、WS大帧和后台字段移除纳入回归。未改Nginx／sub2api通用大小配置，未部署。
+
 2026-10-08发布终态：收款限制与人工开通及两项审查修复已推送575467a5f，同SHA CI（含unit／integration／lint）、安全、GHCR全部成功；固定镜像sha-575467a。更新及证据见HANDOFF和deploy/UPDATE_GUIDE，下方本轮待发布记录为历史；生产由用户备份后更新。
 
 ## 2026-10-08 收款限制与联系管理员开通（未发布）

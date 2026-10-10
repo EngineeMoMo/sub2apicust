@@ -186,8 +186,8 @@ git diff --check
 ## 包号页面（2026-09-28）
 
 - 2026-10-01最新未发布计费实现覆盖原首版扣余额说明：有效包号实扣0，普通组仍计费；服务端独立准入与迁移243，完整上游接缝见CUSTOMIZATIONS最新节，不能仅更新前端文案。
-- 后台“使用限制”是独立DedicatedBillingPolicy组件与GET／PUT billing-policy接口，保留updated_at冲突防护、迟到响应隔离、role=alert及错误聚焦；不得把它并入改绑／充值请求。默认并发2、RPM30、日0、2MiB、生图关，日0明确不设上限，不标成Token或美元预算。
-- 同步保留用量表类型2标识／筛选、用户CSV与管理员Excel的计费类型；实扣0与原始参考金额分列。用户页复用管理员UsageTable，不应漏掉用户标签。前端关键回归含dedicated-billing-policy、dedicated-view、dedicated-config与UsageTable；本轮372关键项通过，真实浏览器与业务客户端验收待。
+- 2026-10-10最新要求覆盖历史共享限额：包号只负责归属、有效期和免扣。DedicatedBillingPolicy组件、GET／PUT billing-policy接口和独立限额已删除，成员100人上限也已移除；通用请求/生图权限由sub2api原配置执行。同步不要恢复旧表单、API调用或旧默认限额文案。
+- 同步保留用量表类型2标识／筛选、用户CSV与管理员Excel的计费类型；实扣0与原始参考金额分列。用户页复用管理员UsageTable，不应漏掉用户标签。前端关键回归保留dedicated-view、dedicated-config与UsageTable，已删除旧dedicated-billing-policy测试；2026-10-10包号43项、类型与相关lint通过，真实浏览器与业务客户端验收待。
 
 - 新路由：用户 /dedicated-accounts，管理 /admin/dedicated-accounts；侧栏入口、requiresAuth／requiresAdmin、WorkspaceHeading中英文接线必须共同保留。两菜单仅标准模式可见，后端也拒绝简易模式创建／使用包号。
 - 页面、选择器、API和文案位于custom；所有新增样式仅在theme.css的mofa-dedicated作用域，不覆盖上游账号管理界面。

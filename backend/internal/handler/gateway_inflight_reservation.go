@@ -74,7 +74,7 @@ func reserveInflightBalanceCtx(
 	if billing == nil || estimator == nil || apiKey == nil || apiKey.User == nil || !billing.InflightReservationEnabled() {
 		return ctx, inflightNoop, nil
 	}
-	// [CUSTOM] 已认证包号由独立共享限额准入，不能因参考计价再预占客户余额。
+	// [CUSTOM] 已认证包号免扣余额，不因参考计价预占客户余额；请求限制沿用通用网关。
 	if apiKey.IsCustomDedicatedPrepaid() {
 		return ctx, inflightNoop, nil
 	}

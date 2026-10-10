@@ -4,7 +4,6 @@ package handler
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -27,7 +26,6 @@ func customInflightPrepaidKey(t *testing.T) *service.APIKey {
 		sqlmock.NewRows([]string{"id", "user_id", "account_id", "group_id", "label", "expires_at", "revoked_at", "updated_at", "user_ids"}).
 			AddRow(1, 11, 22, 33, "包号", now.Add(time.Hour), nil, now, []byte(`[11]`)))
 	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"valid"}).AddRow(true))
-	mock.ExpectQuery("SELECT .* FROM custom_dedicated_billing_policies").WithArgs(int64(1)).WillReturnError(sql.ErrNoRows)
 	groupID := int64(33)
 	key, err := keys.PrepareCustomDedicatedBilling(context.Background(), &service.APIKey{
 		ID: 7, UserID: 11, User: &service.User{ID: 11, Balance: 0}, GroupID: &groupID,

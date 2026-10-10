@@ -65,7 +65,7 @@ func TestCustomDedicatedBillingRepositoryPostgres(t *testing.T) {
 		group := int64(33)
 		key, err := keys.PrepareCustomDedicatedBilling(ctx, &service.APIKey{ID: 7, UserID: 11, GroupID: &group, User: &service.User{ID: 11}})
 		require.NoError(t, err)
-		require.NoError(t, keys.AdmitCustomDedicatedHTTP(ctx, key, "/v1/responses", []byte(`{"model":"gpt-test"}`), ws))
+		require.NoError(t, keys.AdmitCustomDedicatedRequest(ctx, key, ws))
 		requestID := key.CustomDedicatedUsageRequestID("upstream-turn-1")
 		leaseID := strings.Split(requestID, ":")[1]
 		return &service.UsageBillingCommand{RequestID: requestID, APIKeyID: 7, UserID: 11, AccountID: 22, AccountType: service.AccountTypeOAuth, Model: "gpt-test", BillingType: service.BillingTypeDedicated, InputTokens: 100, OutputTokens: 50, APIKeyQuotaCost: 2, APIKeyRateLimitCost: 2, DedicatedBindingID: 1, DedicatedGroupID: 33, DedicatedLeaseID: leaseID, DedicatedReferenceCost: 2}

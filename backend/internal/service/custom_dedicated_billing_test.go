@@ -4,7 +4,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"math"
@@ -14,12 +13,34 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 )
 
 func customDedicatedBillingTestKey() *APIKey {
 	group := int64(33)
-	return &APIKey{ID: 7, UserID: 11, GroupID: &group, Quota: 100, RateLimit5h: 10, User: &User{ID: 11}, customDedicatedBilling: &customDedicatedBillingGrant{BindingID: 1, AccountID: 22, UserID: 11, APIKeyID: 7, GroupID: 33, LeaseID: "admitted", Policy: defaultCustomDedicatedPolicy()}}
+	return &APIKey{ID: 7, UserID: 11, GroupID: &group, Quota: 100, RateLimit5h: 10, User: &User{ID: 11}, customDedicatedBilling: &customDedicatedBillingGrant{BindingID: 1, AccountID: 22, UserID: 11, APIKeyID: 7, GroupID: 33, LeaseID: "admitted"}}
+}
+
+func TestCustomDedicatedAdmissionCreatesReceiptWithoutPolicyOrCounters(t *testing.T) {
+	for _, websocket := range []bool{false, true} {
+		database, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		key := customDedicatedBillingTestKey()
+		key.customDedicatedBilling.LeaseID = ""
+		acceptedAt := time.Now()
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT .* FROM custom_dedicated_accounts WHERE id=.*FOR UPDATE").WithArgs(int64(1)).WillReturnRows(customDedicatedTestRows(customDedicatedTestBinding(acceptedAt)))
+		mock.ExpectQuery("SELECT clock_timestamp").WillReturnRows(sqlmock.NewRows([]string{"accepted_at"}).AddRow(acceptedAt))
+		mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAccessSQL)).WithArgs(int64(22), int64(33), "[11]", int64(11)).WillReturnRows(sqlmock.NewRows([]string{"valid"}).AddRow(true))
+		mock.ExpectExec("INSERT INTO custom_dedicated_request_leases.*finished_at").WithArgs(sqlmock.AnyArg(), int64(1), int64(22), int64(11), int64(7), int64(33), acceptedAt).WillReturnResult(sqlmock.NewResult(0, 1))
+		mock.ExpectCommit()
+		svc := &CustomDedicatedService{db: database}
+		require.NoError(t, svc.AdmitBillingRequest(context.Background(), key, websocket))
+		require.Len(t, key.customDedicatedBilling.LeaseID, 48)
+		require.Equal(t, websocket, key.customDedicatedBilling.WebSocket)
+		require.NoError(t, mock.ExpectationsWereMet())
+		mock.ExpectClose()
+		require.NoError(t, database.Close())
+	}
 }
 
 func TestCustomDedicatedBillingSeparateChargeAndMeter(t *testing.T) {
@@ -30,8 +51,8 @@ func TestCustomDedicatedBillingSeparateChargeAndMeter(t *testing.T) {
 		cmd := buildUsageBillingCommand("accepted", log, p)
 		require.Zero(t, cmd.BalanceCost)
 		require.Zero(t, cmd.SubscriptionCost)
-		require.Equal(t, float64(2), cmd.APIKeyQuotaCost)
-		require.Equal(t, float64(2), cmd.APIKeyRateLimitCost)
+		require.Equal(t, actual, cmd.APIKeyQuotaCost)
+		require.Equal(t, actual, cmd.APIKeyRateLimitCost)
 		require.Equal(t, float64(2), cmd.DedicatedReferenceCost)
 		require.Equal(t, int8(2), log.BillingType)
 		require.Zero(t, log.ActualCost)
@@ -76,7 +97,6 @@ func TestCustomDedicatedPrepareNoBindingAndCacheIsolation(t *testing.T) {
 		mock.ExpectQuery("SELECT .* FROM custom_dedicated_accounts WHERE deleted_at IS NULL").WithArgs(int64(33)).WillReturnRows(rows)
 		if hasBinding {
 			mock.ExpectQuery(regexp.QuoteMeta(customDedicatedAccessSQL)).WillReturnRows(sqlmock.NewRows([]string{"valid"}).AddRow(true))
-			mock.ExpectQuery(regexp.QuoteMeta(customDedicatedPolicySQL)).WillReturnError(sql.ErrNoRows)
 		}
 		keys := &APIKeyService{customDedicated: &CustomDedicatedService{db: db}}
 		result, err := keys.PrepareCustomDedicatedBilling(context.Background(), key)
@@ -125,28 +145,6 @@ func TestCustomDedicatedExecutionIdentity(t *testing.T) {
 	require.Empty(t, key.CustomDedicatedUsageRequestID(""))
 }
 
-func TestCustomDedicatedImageToolDuplicateKeyAndNestedBypass(t *testing.T) {
-	for _, body := range []string{`{"tools":[{"type":"image_generation"}],"tools":[]}`, `{"tools":[],"tools":[{"type":"image_generation"}]}`, `{"tools":[{"type":"image_generation","type":"function"}]}`, `{"session":{"tools":[{"TYPE":"image_generation"}]}}`} {
-		require.True(t, customDedicatedContainsImageTool(gjson.Parse(body), 0), body)
-	}
-	require.False(t, customDedicatedContainsImageTool(gjson.Parse(`{"tools":[{"type":"function"}]}`), 0))
-	require.False(t, customDedicatedEndpoint("/v1/live", false, true))
-	require.False(t, customDedicatedEndpoint("/v1/images/generations", false, false))
-	require.True(t, customDedicatedEndpoint("/backend-api/codex/responses", true, false))
-}
-
-func TestCustomDedicatedWebSocketControlFramesCannotBypass(t *testing.T) {
-	key := customDedicatedBillingTestKey()
-	for _, body := range []string{`{"type":"session.update","session":{"tools":[{"type":"image_generation"}]}}`, `{"type":"input_audio_buffer.append","audio":"AA"}`, `{"type":"response.cancel","type":"response.create"}`, `{"type":"response.create","TYPE":"response.cancel"}`, `{"Type":"response.create"}`, `[]`, `{}`} {
-		require.ErrorIs(t, key.ValidateCustomDedicatedWSFrame([]byte(body)), ErrDedicatedEndpoint, body)
-	}
-	for _, body := range []string{`{"type":"response.create","model":"gpt-test"}`, `{"type":"response.cancel","response_id":"resp_1"}`} {
-		require.NoError(t, key.ValidateCustomDedicatedWSFrame([]byte(body)))
-	}
-	key.customDedicatedBilling = nil
-	require.NoError(t, key.ValidateCustomDedicatedWSFrame([]byte(`{"type":"session.update"}`)), "ordinary connections keep upstream behavior")
-}
-
 func TestCustomDedicatedRecordUsagePlatformsAndWebSocket(t *testing.T) {
 	for _, protocol := range []string{"claude", "openai", "websocket"} {
 		t.Run(protocol, func(t *testing.T) {
@@ -175,7 +173,7 @@ func TestCustomDedicatedRecordUsagePlatformsAndWebSocket(t *testing.T) {
 			require.Zero(t, logs.lastLog.ActualCost)
 			require.Greater(t, logs.lastLog.TotalCost, 0.0)
 			require.Equal(t, key.CustomDedicatedUsageRequestID("upstream-turn-1"), billing.lastCmd.RequestID)
-			require.Equal(t, QuantizeUsageBillingAmount(logs.lastLog.TotalCost), billing.lastCmd.APIKeyQuotaCost)
+			require.Equal(t, QuantizeUsageBillingAmount(logs.lastLog.TotalCost*1.1), billing.lastCmd.APIKeyQuotaCost)
 			require.Equal(t, 0, users.deductCalls)
 			require.Equal(t, 0, subs.incrementCalls)
 		})

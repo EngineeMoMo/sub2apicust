@@ -3,7 +3,6 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'v
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import DedicatedPicker from '@/custom/components/DedicatedPicker.vue'
-import DedicatedBillingPolicy from '@/custom/components/DedicatedBillingPolicy.vue'
 import { dedicatedAPI, dedicatedDisplayName, dedicatedErrorCode, type DedicatedBinding } from '@/custom/dedicated/api'
 import { dedicatedCopy } from '@/custom/dedicated/copy'
 import { dedicatedConfigMessage } from '@/custom/dedicated/config'
@@ -25,7 +24,6 @@ const reactivate = ref(false)
 const selectedRecord = computed(() => records.value.find(record => record.id === editID.value))
 const confirmID = ref<number | null>(null)
 const deleteID = ref<number | null>(null)
-const billingID = ref<number | null>(null)
 const members = ref<number[]>([0])
 const formElement = ref<HTMLFormElement>()
 const form = reactive({ platform: 'anthropic', user_id: 0, account_id: 0, group_id: 0, label: '', expires_at: '' })
@@ -137,7 +135,7 @@ onBeforeUnmount(() => { generation++ })
               <button v-if="members.length > 1" type="button" class="btn btn-secondary" :aria-label="copy.removeUser + ' ' + (index + 1)" @click="members.splice(index, 1)">{{ copy.removeUser }}</button>
             </div>
           </div>
-          <button type="button" class="btn btn-secondary" :disabled="members.length >= 100" @click="members.push(0)">{{ copy.addUser }}</button>
+          <button type="button" class="btn btn-secondary" @click="members.push(0)">{{ copy.addUser }}</button>
           <div class="mofa-dedicated-form-grid">
             <DedicatedPicker v-model="form.account_id" kind="accounts" :label="copy.account" :platform="form.platform" :selected-label="form.account_id === selectedRecord?.account_id ? selectedRecord?.account_name : undefined" />
             <DedicatedPicker v-model="form.group_id" kind="groups" :label="copy.group" :platform="form.platform" :selected-label="form.group_id === selectedRecord?.group_id ? selectedRecord?.group_name : undefined" />
@@ -150,7 +148,6 @@ onBeforeUnmount(() => { generation++ })
           <div class="mofa-dedicated-actions"><button class="btn btn-primary" type="submit">{{ saving ? copy.saving : copy.save }}</button><button class="btn btn-secondary" type="button" @click="editing = false">{{ copy.cancel }}</button></div>
         </fieldset>
       </form>
-      <DedicatedBillingPolicy v-if="billingID" :binding-id="billingID" @close="billingID = null" />
       <p v-if="busy" role="status">{{ copy.loading }}</p>
       <div v-else-if="loadError" class="mofa-dedicated-empty" role="alert"><p>{{ copy.loadError }}</p><button class="btn btn-secondary" @click="load()">{{ copy.refresh }}</button></div>
       <p v-else-if="!records.length" class="mofa-dedicated-empty">{{ copy.adminEmpty }}</p>
@@ -161,7 +158,7 @@ onBeforeUnmount(() => { generation++ })
           <tbody><tr v-for="record in records" :key="record.id">
             <th scope="row">{{ record.label }}<small>#{{ record.id }} · {{ status(record) }}</small><small class="mofa-dedicated-health">{{ copy.configHealth[record.config_status || 'unknown'] || copy.configHealth.unknown }}</small></th>
             <td><template v-if="record.users?.length"><div v-for="user in record.users" :key="user.id">{{ dedicatedDisplayName(user.name, user.id) }}</div></template><template v-else>{{ dedicatedDisplayName(record.user_name, record.user_id) }}</template></td><td>{{ dedicatedDisplayName(record.account_name, record.account_id) }} / {{ dedicatedDisplayName(record.group_name, record.group_id) }}</td><td>{{ date(record.expires_at) }}</td>
-            <td><div class="mofa-dedicated-actions"><button class="btn btn-secondary" :disabled="saving" @click="edit(record)">{{ copy.edit }}</button><button class="btn btn-secondary" :disabled="saving" @click="billingID = record.id">{{ copy.usageLimits }}</button><button v-if="!record.revoked_at" class="btn btn-secondary" :disabled="saving" @click="confirmID = record.id">{{ copy.revoke }}</button></div>
+            <td><div class="mofa-dedicated-actions"><button class="btn btn-secondary" :disabled="saving" @click="edit(record)">{{ copy.edit }}</button><button v-if="!record.revoked_at" class="btn btn-secondary" :disabled="saving" @click="confirmID = record.id">{{ copy.revoke }}</button></div>
               <div v-if="confirmID === record.id" class="mofa-dedicated-confirm"><p>{{ copy.revokeQuestion }}</p><button class="btn btn-danger" :disabled="saving" @click="revoke(record.id)">{{ copy.confirmRevoke }}</button><button class="btn btn-secondary" :disabled="saving" @click="confirmID = null">{{ copy.cancel }}</button></div>
               <button v-if="record.revoked_at" class="btn btn-secondary" :disabled="saving" @click="deleteID = record.id">{{ copy.delete }}</button>
               <div v-if="deleteID === record.id" class="mofa-dedicated-confirm"><p>{{ copy.deleteQuestion }}</p><button class="btn btn-danger" :disabled="saving" @click="remove(record.id)">{{ copy.confirmDelete }}</button><button class="btn btn-secondary" :disabled="saving" @click="deleteID = null">{{ copy.cancel }}</button></div>

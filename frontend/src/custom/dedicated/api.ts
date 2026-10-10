@@ -1,5 +1,4 @@
 import { apiClient } from '@/api/client'
-
 export interface DedicatedBinding {
   config_status?: string
   user_ids?: number[]
@@ -48,14 +47,6 @@ export interface DedicatedView {
   windows: DedicatedWindow[]
 }
 export interface DedicatedChoice { id: number; label: string }
-export interface DedicatedBillingPolicy {
-  concurrency_limit: number
-  rpm_limit: number
-  daily_request_limit: number
-  max_body_bytes: number
-  allow_images: boolean
-  updated_at: string | null
-}
 export type ChoiceKind = 'users' | 'accounts' | 'groups'
 
 export function dedicatedDisplayName(name: string | undefined, id: number): string {
@@ -63,12 +54,6 @@ export function dedicatedDisplayName(name: string | undefined, id: number): stri
 }
 
 export const dedicatedAPI = {
-  async billingPolicy(id: number): Promise<DedicatedBillingPolicy> {
-    return (await apiClient.get('/admin/dedicated-accounts/' + id + '/billing-policy')).data
-  },
-  async saveBillingPolicy(id: number, policy: DedicatedBillingPolicy): Promise<DedicatedBillingPolicy> {
-    return (await apiClient.put('/admin/dedicated-accounts/' + id + '/billing-policy', policy)).data
-  },
   async mine(page = 1): Promise<DedicatedView[]> {
     return (await apiClient.get('/dedicated-accounts', { params: { page } })).data
   },

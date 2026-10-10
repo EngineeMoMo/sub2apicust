@@ -1,5 +1,7 @@
 # 日常更新操作手册（定制版 sub2api）
 
+> 2026-10-10包号职责收敛仅源码完成，尚无本轮已核验镜像。发布后同版更新前后端，旧billing-policy接口移除、旧策略值不再生效；数据库不删表不清零，回退旧镜像会恢复旧限额。上线验收见[包号当前规则](DEDICATED_ENTITLEMENT_ONLY.md)，不沿用旧SHA的CI结论。
+
 ## 2026-10-08 收款限制与人工开通（最新可更新版本）
 
 功能`575467a5f4d194ebd01cf771edacef9f0075d395`已推送；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962687)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962637)、[镜像](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962677)全部成功。

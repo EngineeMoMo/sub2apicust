@@ -513,7 +513,7 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 				nil,
 			)
 		}
-		// [CUSTOM] 原生Ingress同样拒绝包号未适配的会话控制帧。
+		// [CUSTOM] 原生Ingress同样复查包号账号归属与有效期。
 		if hooks != nil && hooks.CustomDedicatedBeforeFrame != nil {
 			if err := hooks.CustomDedicatedBeforeFrame(payload); err != nil {
 				return nil, err
