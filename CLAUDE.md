@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+> 2026-10-10发布检查：包号功能提交80191c2afa4a16af6e8d6c3197d2ffff46835052已推送origin/main。当前安全扫描38023308260失败，govulncheck报告12项可达漏洞，涉及现有Go1.27.0与golang.org/x/net v0.58.0；日志给出的修复版本为Go1.27.2与x/net v0.60.0。本轮未修改这些依赖，不把安全失败误记为通过，也不交付上线命令。CI38023308250与GHCR38023308257仍在运行，真实PG结果尚未确认，生产未操作。证据位于output/dedicated-release-20261010；本条覆盖下方“未提交推送”历史状态。
+
 2026-10-10用户最新要求：包号只负责账号归属、有效期和免扣，通用请求限制交sub2api。源码已移除独立并发/RPM/日次数/体积/生图/入口/帧/成员人数上限及后台策略接口；保留归属隔离与免扣凭证，Key限额恢复原生计量。未提交推送部署，真实PG专项待验；以HANDOFF和deploy/DEDICATED_ENTITLEMENT_ONLY.md为准，不恢复历史包号独立限额方案。
 
 2026-10-08发布终态：收款限制与人工开通及两项审查修复已推送575467a5f，同SHA CI（含unit／integration／lint）、安全、GHCR全部成功；固定镜像sha-575467a。更新及证据见HANDOFF和deploy/UPDATE_GUIDE，下方本轮待发布记录为历史；生产由用户备份后更新。

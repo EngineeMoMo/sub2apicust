@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **发布阻塞**：2026-10-10发布检查：包号功能提交80191c2afa4a16af6e8d6c3197d2ffff46835052已推送origin/main。当前安全扫描38023308260失败，govulncheck报告12项可达漏洞，涉及现有Go1.27.0与golang.org/x/net v0.58.0；日志给出的修复版本为Go1.27.2与x/net v0.60.0。本轮未修改这些依赖，不把安全失败误记为通过，也不交付上线命令。CI38023308250与GHCR38023308257仍在运行，真实PG结果尚未确认，生产未操作。证据位于output/dedicated-release-20261010；本条覆盖下方“未提交推送”历史状态。
+
 - **2026-10-10 用户授权提交推送包号职责收敛**：本轮仅发布包号归属/有效期/免扣及通用限制回归相关修改，origin/main抓取后与本地基线一致；4个既有收款修复文件及先前审查记录保留在工作区、不混入功能提交。CI配置独立PostgreSQL，发布须以本轮实际SHA确认CI（含真实PG及integration）、安全和GHCR全部成功后再交付镜像更新命令，生产由用户自行更新。
 
 - **2026-10-10 到期与跨组免扣专项验证**：新增custom_dedicated_expiry_test.go，真实Gin/APIKeyAuth链配SQL mock覆盖7场景：有效专属组零余额可用；到期专属组零/正余额均403；到期关联组403；普通组到期前后零余额均INSUFFICIENT_BALANCE；普通组正余额放行但IsCustomDedicatedPrepaid=false，缓存原Key始终无免扣凭证。连同到期边界、选中账号、跨Key/组结算及缓存隔离回归共7顶层+13子场景通过，无跳过；证据output/body-limit-fix/expiry-verification-final.jsonl。不是生产/真实PG验收。到期前已准入的HTTP请求可完成并按原权益结算，不表示到期后能发起新请求；普通组继续走原生余额/订阅规则。未修改业务逻辑或部署。
@@ -389,6 +391,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] 本次发布安全门禁：先单独修复Go／x/net已报告漏洞，再以新功能SHA核验CI、真实PG、安全和镜像；80191c2af已推送但当前不能标为可上线。
 
 - [x] 包号到期/跨组免扣源码及认证链专项验证通过；真实PG及生产验收仍归入职责收敛发布待办。
 
