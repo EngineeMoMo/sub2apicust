@@ -101,7 +101,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.13
+          # [CUSTOM] v2.13 无法读取安全工具链导出数据，固定支持该格式的版本。
+          version: v2.14.0
           args: --timeout=30m
           working-directory: backend
 

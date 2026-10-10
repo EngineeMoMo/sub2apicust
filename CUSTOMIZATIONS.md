@@ -1,5 +1,9 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+- [CUSTOM] backend/.golangci.yml：升级x/net后16处旧HTTP/2接口产生SA1019。仅对http_upstream及其keepalive测试、server/http、openai_codex_models_service及测试五个文件的明确符号加弃用兼容规则；不关闭其他SA1019、typecheck或govulncheck。保留PING、H2C及第三方GOAWAY类型兼容行为，原生HTTP/2接口迁移另行跟进。
+
+- [CUSTOM] 2026-10-10 CI工具兼容补修：backend-ci.yml的golangci-lint固定v2.14.0；v2.13.2对Go1.27.2报export data version 5不支持。现有lint规则及安全扫描保留；仅工具版本升级。
+
 > 2026-10-10安全补修进行中：用户已授权修复发布阻塞。Go最低版本及根/部署Docker构建镜像统一1.27.2，CI、安全和release版本断言同步；x/net升级0.60.0，Go模块解析同步升级crypto/mod/sync/sys/term/text/tools。保留安全扫描，不新增忽略项。隔离快照32个顶层测试及34个子场景通过，5项PG因缺DSN跳过；工作树与发布快照govulncheck均0可达漏洞（模块中仍有2项未调用的漏洞，不宣称所有依赖全0），最终发布仍须新SHA的CI/安全/GHCR成功；生产未操作。
 
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
