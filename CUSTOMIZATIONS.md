@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+- [CUSTOM] backend/go.mod/go.sum另将x/tools从0.49.0提升0.50.0：Ent schema加载通过go/packages读取新Go导出数据，旧版本与旧lint一样不支持version 5；仅更新解析库，不手改Ent生成代码。隔离快照TestAuthIdentityFoundationSchemas已通过。
+
 - [CUSTOM] backend/.golangci.yml：升级x/net后16处旧HTTP/2接口产生SA1019。仅对http_upstream及其keepalive测试、server/http、openai_codex_models_service及测试五个文件的明确符号加弃用兼容规则；不关闭其他SA1019、typecheck或govulncheck。保留PING、H2C及第三方GOAWAY类型兼容行为，原生HTTP/2接口迁移另行跟进。
 
 - [CUSTOM] 2026-10-10 CI工具兼容补修：backend-ci.yml的golangci-lint固定v2.14.0；v2.13.2对Go1.27.2报export data version 5不支持。现有lint规则及安全扫描保留；仅工具版本升级。
