@@ -1,10 +1,9 @@
 # 包号当前职责与升级说明（2026-10-10）
 
-> 2026-10-10安全补修进行中：用户已授权修复发布阻塞。Go最低版本及根/部署Docker构建镜像统一1.27.2，CI、安全和release版本断言同步；x/net升级0.60.0，Go模块解析同步升级crypto/mod/sync/sys/term/text/tools。保留安全扫描，不新增忽略项。隔离快照32个顶层测试及34个子场景通过，5项PG因缺DSN跳过；工作树与发布快照govulncheck均0可达漏洞（模块中仍有2项未调用的漏洞，不宣称所有依赖全0），最终发布仍须新SHA的CI/安全/GHCR成功；生产未操作。
+> 2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
-> 2026-10-10发布检查：包号功能提交80191c2afa4a16af6e8d6c3197d2ffff46835052已推送origin/main。当前安全扫描38023308260失败，govulncheck报告12项可达漏洞，涉及现有Go1.27.0与golang.org/x/net v0.58.0；日志给出的修复版本为Go1.27.2与x/net v0.60.0。本轮未修改这些依赖，不把安全失败误记为通过，也不交付上线命令。CI38023308250与GHCR38023308257仍在运行，真实PG结果尚未确认，生产未操作。证据位于output/dedicated-release-20261010；本条覆盖下方“未提交推送”历史状态。
 
-本文件记录用户最新要求：**包号只负责账号归属、有效期和免扣，通用请求限制交给 sub2api。** 覆盖 DEDICATED_BILLING_PLAN.md 中历史共享限额方案。当前仅源码完成，未提交推送或部署。
+本文件记录用户最新要求：**包号只负责账号归属、有效期和免扣，通用请求限制交给 sub2api。** 覆盖 DEDICATED_BILLING_PLAN.md 中历史共享限额方案。已发布sha-026d9ab，生产由用户自行更新。
 
 ## 保留的职责
 

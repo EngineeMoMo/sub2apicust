@@ -39,13 +39,10 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **2026-10-10 Ent解析兼容补修**：候选0227951d1的安全、lint、前端和镜像成功，但全量unit在TestAuthIdentityFoundationSchemas因x/tools0.49.0不识别Go1.27.2导出格式失败；相关repository/service/middleware包已通过，integration尚未执行。已升级x/tools0.50.0且隔离schema测试通过，最终仍以随后新SHA全套门禁为准，不把候选镜像当可上线版本。
 
-- **2026-10-10安全CI补修**：dbff2b188的前后端安全扫描38024111863通过；Go lint日志证实v2.13.2无法读取Go1.27.2导出数据（version 5大于支持的4），因此升级检查器至v2.14.0，不关闭规则。最终发布须以此补修后的新SHA重新核验三条流程；中间候选不交付上线。
 
-- **本轮安全修复**：2026-10-10安全补修进行中：用户已授权修复发布阻塞。Go最低版本及根/部署Docker构建镜像统一1.27.2，CI、安全和release版本断言同步；x/net升级0.60.0，Go模块解析同步升级crypto/mod/sync/sys/term/text/tools。保留安全扫描，不新增忽略项。隔离快照32个顶层测试及34个子场景通过，5项PG因缺DSN跳过；工作树与发布快照govulncheck均0可达漏洞（模块中仍有2项未调用的漏洞，不宣称所有依赖全0），最终发布仍须新SHA的CI/安全/GHCR成功；生产未操作。
+- **最终发布状态**：2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
-- **发布阻塞**：2026-10-10发布检查：包号功能提交80191c2afa4a16af6e8d6c3197d2ffff46835052已推送origin/main。当前安全扫描38023308260失败，govulncheck报告12项可达漏洞，涉及现有Go1.27.0与golang.org/x/net v0.58.0；日志给出的修复版本为Go1.27.2与x/net v0.60.0。本轮未修改这些依赖，不把安全失败误记为通过，也不交付上线命令。CI38023308250与GHCR38023308257仍在运行，真实PG结果尚未确认，生产未操作。证据位于output/dedicated-release-20261010；本条覆盖下方“未提交推送”历史状态。
 
 - **2026-10-10 用户授权提交推送包号职责收敛**：本轮仅发布包号归属/有效期/免扣及通用限制回归相关修改，origin/main抓取后与本地基线一致；4个既有收款修复文件及先前审查记录保留在工作区、不混入功能提交。CI配置独立PostgreSQL，发布须以本轮实际SHA确认CI（含真实PG及integration）、安全和GHCR全部成功后再交付镜像更新命令，生产由用户自行更新。
 
@@ -400,11 +397,11 @@
 
 - [ ] HTTP/2上游接口迁移：x/net0.60标记旧配置/GOAWAY类型弃用，目前保留五个既有文件中明确符号的SA1019兼容规则。后续验证H2C参数、流式PING和第三方错误匹配后迁移并删除该规则；不混同安全漏洞豁免。
 
-- [ ] 本次发布安全门禁：先单独修复Go／x/net已报告漏洞，再以新功能SHA核验CI、真实PG、安全和镜像；80191c2af已推送但当前不能标为可上线。
+- [x] 本次发布安全门禁完成：026d9ab2e的CI、安全、GHCR全部成功，含独立PG与integration；固定镜像sha-026d9ab。本地隔离66项、schema回归、embed及lint通过，govulncheck零可达漏洞。
 
 - [x] 包号到期/跨组免扣源码及认证链专项验证通过；真实PG及生产验收仍归入职责收敛发布待办。
 
-- [ ] 包号职责收敛：补真实PostgreSQL旧限制失效/免扣去重/归属回归；授权发布后按新SHA检查CI、安全与镜像，同版更新前后端并验截图场景、零余额、原生限流、到期撤销。范围已由用户确认，不再等待设计决定。
+- [ ] 用户备份并更新sha-026d9ab，实测长请求、有效包号免扣、到期/撤销拒绝、普通组余额及原生限流；CI不能替代生产验收。
 
 
 - [x] 收款限制本轮功能已提交推送，实际功能SHA 575467a5f的CI／安全／GHCR全部通过，固定镜像sha-575467a；以下同轮“待提交／CI”条目为历史步骤，已完成。
