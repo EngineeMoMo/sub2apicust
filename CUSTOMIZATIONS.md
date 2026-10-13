@@ -6,12 +6,14 @@
 
 - [CUSTOM] 2026-10-10 CI工具兼容补修：backend-ci.yml的golangci-lint固定v2.14.0；v2.13.2对Go1.27.2报export data version 5不支持。现有lint规则及安全扫描保留；仅工具版本升级。
 
+> 2026-10-13最终发布：官网与登录页动效已推送f8928e20d，同SHA CI（含真实PG的unit/integration）、安全、GHCR全部成功，固定镜像`ghcr.io/engineemomo/sub2apicust:sha-f8928e2`（摘要`sha256:cd8c1667f943c0a6706742dcc3c0e9a1c203e75ba53dd28ec528da9f920e3d6a`）。这一版只有前端改动，没有迁移。本节接缝见下方“2026-10-12 官网与登录页动效”。
+
 > 2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
 
 
-## 2026-10-12 官网与登录页动效、交互和首屏加载（用户授权提交推送）
+## 2026-10-12 官网与登录页动效、交互和首屏加载（已发布sha-f8928e2）
 
 范围：公开页（/home /family /api /plans /guide /faq）和登录/注册页。没有改上游视图、`App.vue`、`AuthLayout.vue`、`style.css`、路由、依赖、锁文件或 Go 代码。
 

@@ -41,10 +41,17 @@
 
 
 
-- **最终发布状态**：2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
+- **最终发布状态**：2026-10-13最终发布：官网与登录页动效、交互、首屏加载已推送origin/main，功能提交`f8928e20dac15b341fc8d657e421b6f8ed0a8d71`（从7cd18f823快进）。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38361578948)（含真实PostgreSQL的unit/integration、golangci-lint、前端）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38361578790)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38361578902)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-f8928e2`（linux/amd64），摘要`sha256:cd8c1667f943c0a6706742dcc3c0e9a1c203e75ba53dd28ec528da9f920e3d6a`。镜像在026d9ab的基础上只增加本轮前端改动，没有后端代码和迁移；不含工作区里未提交的10-11安全修复，也不含并行“智力效率”会话的改动。证据在output/site-motion-20261012（release-evidence.json、job日志）。用户备份后执行`./update.sh sha-f8928e2`；生产未代部署。
+
+- **上一版发布状态**：2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
 
-- **2026-10-12 官网与登录页动效、交互、加载速度升级（用户授权提交推送，生产未部署）**：用户选的范围是“公开页＋登录/注册页”，加载速度只动前端和构建分包，不改 Go。新增文件和上游接缝见 CUSTOMIZATIONS 顶部新节。
+- **2026-10-12 官网与登录页动效、交互、加载速度升级（已发布sha-f8928e2，生产未部署）**：用户选的范围是“公开页＋登录/注册页”，加载速度只动前端和构建分包，不改 Go。新增文件和上游接缝见 CUSTOMIZATIONS 顶部新节。
+  - 发布（2026-10-13）：
+    - 用临时索引构造“HEAD＋本轮改动”的提交，只取本轮内容，共23个文件。
+    - 推送前，在干净工作树里用与远端一致的工具链（vite 5.4、vitest 2.1、eslint-plugin-vue 9）复验：lint 0 问题；typecheck 通过；关键回归37个文件、488项；全量372个文件、2974项；`pnpm run build` 成功，骨架和 zh 预加载都在，vendor-airwallex 独立成块且首页不预载。
+    - 推送后，同 SHA 的 CI（真实 PostgreSQL 的 unit/integration、golangci-lint、frontend、shell、release-helpers）、Security Scan、GHCR 全部成功。
+    - GHCR 日志里的 vendor-airwallex-BeRoWX1f.js、vendor-misc-COBd48M0.js 与复验构建一致。镜像和摘要见第四节首条。
   - 交互与动效：
     - 页头吸顶，滚动后变成磨砂效果；向下滚动收起、向上滚动出现，锚点跳转后章节标题不会被遮住。
     - 手机端导航收成菜单按钮，页头从 194px 降到 80px。
@@ -424,7 +431,8 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **官网动效发布核验与验收**：用户已授权提交推送，提交只含本轮文件。交付镜像标签前，须确认该 SHA 的 CI、安全扫描和 GHCR 全部成功。之后由用户备份并更新生产、确认视觉，并补测 Safari、真机触屏和系统“减少动态效果”。
+- [x] **官网动效发布核验**：f8928e20d 同 SHA 的 CI（含真实 PG 的 unit/integration、lint、前端）、安全扫描、GHCR 全部成功，固定镜像 sha-f8928e2，详见第四节首条。
+- [ ] **官网动效生产更新与验收**：用户备份后执行 `./update.sh sha-f8928e2`。确认首页、套餐、教程、登录页和手机菜单的视觉，并补测 Safari、真机触屏和系统“减少动态效果”。这一版没有迁移。生产未代部署。
 - [ ] **生产 Nginx 压缩（用户在服务器操作，最高收益）**：curl 实测生产 JS/CSS 未压缩。按 deploy/EDGE_SECURITY.md:131–143 在 http 块补 `gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;`，不要用 `*`，也不要包含 text/event-stream。用 `nginx -t` 检查后 reload，再用 `curl -sI -H 'Accept-Encoding: gzip' <站点>/assets/<任一css>` 确认响应带 `Content-Encoding: gzip`。首屏传输量预计从约 1.4MB 降到 0.4–0.5MB。这是在本地按 gzip 9 级估算的，Nginx 默认 `gzip_comp_level 1`，实际压缩后会略大一些。
 - [ ] **可选：站点 Logo 改用图片地址**：后台 site_logo 现在是 base64，每次打开页面 HTML 都要带两份，共 43.5KB，而 HTML 是 no-cache。改成可缓存的图片 URL 前，先核实后端 safeImageURL 接受的地址形式和托管位置（我只核对了前端校验接受相对路径和 http(s)）。
 - [ ] HTTP/2上游接口迁移：x/net0.60标记旧配置/GOAWAY类型弃用，目前保留五个既有文件中明确符号的SA1019兼容规则。后续验证H2C参数、流式PING和第三方错误匹配后迁移并删除该规则；不混同安全漏洞豁免。
