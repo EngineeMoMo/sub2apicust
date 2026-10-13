@@ -44,6 +44,35 @@
 - **最终发布状态**：2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
 
+- **2026-10-12 官网与登录页动效、交互、加载速度升级（用户授权提交推送，生产未部署）**：用户选的范围是“公开页＋登录/注册页”，加载速度只动前端和构建分包，不改 Go。新增文件和上游接缝见 CUSTOMIZATIONS 顶部新节。
+  - 交互与动效：
+    - 页头吸顶，滚动后变成磨砂效果；向下滚动收起、向上滚动出现，锚点跳转后章节标题不会被遮住。
+    - 手机端导航收成菜单按钮，页头从 194px 降到 80px。
+    - 首屏标题依次出现，品牌卡增加轨道与随指针移动的光斑。
+    - 展台改为滑动指示条，四个产品各有专属动画。
+    - 首页、套餐、API 页加了滚动出现；套餐页加载时显示骨架。
+    - FAQ 展开箭头旋转，支持的浏览器上高度平滑展开。
+    - 登录/注册页依次进场。
+    - 主题切换从按钮位置圆形扩散。
+    - 以上动画都受“减少动态效果”保护，motion.spec 会检查。
+  - 加载速度（生产用 curl 实测，本地 dist 对比）：
+    - 生产 HTML 有 gzip，JS/CSS 没有 `Content-Encoding`，未压缩的关键路径约 1.43MB。这是服务器 Nginx 配置问题，代码管不到，见第五节。
+    - 生产首页 HTML 47KB，其中 43.5KB 是两份 base64 站点 Logo。
+    - 构建时注入首屏骨架和早期脚本：提前设置深色，并让 140KB（gzip）的中文语言包与入口 JS 并行下载，原来要等入口 JS 执行完才开始。vite preview 中实测 zh 只请求一次。
+    - 新发现：Airwallex SDK 原本并入每页都加载的 vendor-misc，首页因此会预载两个外域脚本。已仿照上游 Stripe 规则独立成块：预览首页的外部请求变为 0，支付页仍按需导入。
+    - 体积对比（改动前 dist 对新构建）：首屏关键路径 raw −26.3KB、gzip −9.2KB。其中 vendor-misc 从 280.9KB 降到 238.6KB；CSS +16KB、HTML gzip +1.3KB 已计入。
+  - 验证：
+    - 前端全量在目录迁移前通过：372 个文件、2979 项，含新增 21 项。该日志后来被覆盖，这个数字来自会话记录。
+    - 最终代码上：Makefile 关键回归 39 个文件、504 项通过；typecheck 通过；lint 0 错误（26 条警告都在未改动的上游文件里）；vite build 成功。
+    - 浏览器（dev 代理生产公开只读接口）：1440/375 两种宽度、浅色与深色。控制台无警告。逐项核对了展台指示条位移与 SynaRoute 紫色、工坊三图回到原角度、教程锚点标题可见、磨砂页头、手机菜单 Esc 关闭后焦点回到按钮且关闭状态不可聚焦、主题扩散、套餐骨架、登录动画。
+    - 证据：output/site-motion-20261012/（size-compare.json、各项日志、screens 下的前后截图、prod-headers）。
+  - 未验证：真实网络和弱网下的首屏时间、Safari/Firefox、真机触屏、系统真正开启“减少动态效果”时的表现（只有单测覆盖）、Go 后端真实替换 nonce、生产部署。
+  - 注意：
+    - 骨架插件放在 `custom/shell/`，因为根 `.gitignore` 会忽略任何 `build/` 目录。最初放在 build/，自查时发现并已迁移。
+    - 本机被忽略的 `frontend/vite.config.js` 是 vue-tsc 的产物，内容停在 10-01，会在 `pnpm dev` 时覆盖 .ts 配置。已重新生成。CI 是干净检出，不受影响。
+    - 临时的 `.env.development.local` 和预览构建目录已删除。
+  - 提交边界：本次提交只含本轮文件。不含 10-11 安全修复，它仍在工作区，未提交；也不含并行“智力效率”会话的改动（intelligence 前后端、router.go 及 theme.css 中两行 `.mofa-intel-*`）。中途一次全量里这两个 intelligence spec 曾有 11 项失败，之后复查 custom 目录加关键回归，共 60 个文件、708 项全部通过；它们的状态以该会话交接为准。
+
 - **2026-10-10 用户授权提交推送包号职责收敛**：本轮仅发布包号归属/有效期/免扣及通用限制回归相关修改，origin/main抓取后与本地基线一致；4个既有收款修复文件及先前审查记录保留在工作区、不混入功能提交。CI配置独立PostgreSQL，发布须以本轮实际SHA确认CI（含真实PG及integration）、安全和GHCR全部成功后再交付镜像更新命令，生产由用户自行更新。
 
 - **2026-10-10 到期与跨组免扣专项验证**：新增custom_dedicated_expiry_test.go，真实Gin/APIKeyAuth链配SQL mock覆盖7场景：有效专属组零余额可用；到期专属组零/正余额均403；到期关联组403；普通组到期前后零余额均INSUFFICIENT_BALANCE；普通组正余额放行但IsCustomDedicatedPrepaid=false，缓存原Key始终无免扣凭证。连同到期边界、选中账号、跨Key/组结算及缓存隔离回归共7顶层+13子场景通过，无跳过；证据output/body-limit-fix/expiry-verification-final.jsonl。不是生产/真实PG验收。到期前已准入的HTTP请求可完成并按原权益结算，不表示到期后能发起新请求；普通组继续走原生余额/订阅规则。未修改业务逻辑或部署。
@@ -395,6 +424,9 @@
 
 ## 五、待办 / 下一步
 
+- [ ] **官网动效发布核验与验收**：用户已授权提交推送，提交只含本轮文件。交付镜像标签前，须确认该 SHA 的 CI、安全扫描和 GHCR 全部成功。之后由用户备份并更新生产、确认视觉，并补测 Safari、真机触屏和系统“减少动态效果”。
+- [ ] **生产 Nginx 压缩（用户在服务器操作，最高收益）**：curl 实测生产 JS/CSS 未压缩。按 deploy/EDGE_SECURITY.md:131–143 在 http 块补 `gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;`，不要用 `*`，也不要包含 text/event-stream。用 `nginx -t` 检查后 reload，再用 `curl -sI -H 'Accept-Encoding: gzip' <站点>/assets/<任一css>` 确认响应带 `Content-Encoding: gzip`。首屏传输量预计从约 1.4MB 降到 0.4–0.5MB。这是在本地按 gzip 9 级估算的，Nginx 默认 `gzip_comp_level 1`，实际压缩后会略大一些。
+- [ ] **可选：站点 Logo 改用图片地址**：后台 site_logo 现在是 base64，每次打开页面 HTML 都要带两份，共 43.5KB，而 HTML 是 no-cache。改成可缓存的图片 URL 前，先核实后端 safeImageURL 接受的地址形式和托管位置（我只核对了前端校验接受相对路径和 http(s)）。
 - [ ] HTTP/2上游接口迁移：x/net0.60标记旧配置/GOAWAY类型弃用，目前保留五个既有文件中明确符号的SA1019兼容规则。后续验证H2C参数、流式PING和第三方错误匹配后迁移并删除该规则；不混同安全漏洞豁免。
 
 - [x] 本次发布安全门禁完成：026d9ab2e的CI、安全、GHCR全部成功，含独立PG与integration；固定镜像sha-026d9ab。本地隔离66项、schema回归、embed及lint通过，govulncheck零可达漏洞。

@@ -6,7 +6,9 @@
       <p class="mofa-hero-description">{{ copy.introduction }}</p>
       <div v-if="$slots.actions" class="mofa-hero-actions"><slot name="actions" /></div>
     </div>
-    <div class="mofa-brand-study" aria-hidden="true">
+    <div v-pointer class="mofa-brand-study" aria-hidden="true">
+      <span class="mofa-study-orbit"><i></i></span>
+      <span class="mofa-study-glow"></span>
       <div class="mofa-study-heading"><span>{{ siteName }}</span><span>M — 01</span></div>
       <span class="mofa-core-mark" :style="{ '--mofa-logo-mask': 'url(' + markUrl + ')' }"></span>
       <div class="mofa-study-footer"><span>{{ copy.access }}</span><span>＋</span><span>{{ copy.control }}</span></div>
@@ -18,6 +20,7 @@
 <script setup lang="ts">
 import markUrl from '@/custom/assets/mofa-mark.webp'
 import { useBrandCopy } from '@/custom/brand/copy'
+import { vPointer } from '@/custom/motion/pointer'
 
 defineProps<{ siteName: string }>()
 const copy = useBrandCopy()

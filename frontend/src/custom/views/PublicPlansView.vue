@@ -5,7 +5,10 @@
       <p class="mofa-public-lead">先比较价格、有效期与权益。浏览无需登录，决定购买时再登录账户。</p>
       <p>这里展示后台当前在售套餐。标价不是最终支付报价，币种换算、手续费及实付金额以结账页为准。</p>
     </section>
-    <div v-if="loading" class="mofa-public-state" role="status">正在读取在售套餐…</div>
+    <div v-if="loading" class="mofa-plan-grid mofa-plan-loading" role="status">
+      <span class="sr-only">正在读取在售套餐…</span>
+      <div v-for="n in 3" :key="n" class="mofa-plan-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
     <div v-else-if="error" class="mofa-public-state" role="alert">
       <h2>{{ unavailable ? '订阅套餐暂未开放' : '暂时无法读取套餐' }}</h2>
       <p>{{ unavailable ? '你仍可浏览产品介绍和常见问题。' : '请稍后重试；无需为了查看套餐而登录。' }}</p>
@@ -15,7 +18,7 @@
       <p v-if="!catalog.purchase_enabled && catalog.plans.length" class="mofa-public-state" role="status">在线支付暂未开放；标为“联系管理员开通”的套餐仍可咨询管理员。</p>
       <div v-if="!catalog.plans.length" class="mofa-public-state"><h2>暂无在售套餐</h2><p>套餐上架后会在这里展示。你可以先查看常见问题，了解接入方式。</p></div>
       <div v-else class="mofa-plan-grid">
-        <article v-for="plan in catalog.plans" :key="plan.id" class="mofa-public-plan">
+        <article v-for="(plan, index) in catalog.plans" :key="plan.id" v-reveal="index % 3" class="mofa-public-plan">
           <h2>{{ plan.name }}</h2>
           <p>{{ plan.description }}</p>
           <p class="mofa-plan-price">{{ currencySymbol(plan.currency || 'USD') }}{{ plan.price }} <small>{{ plan.currency || 'USD' }}</small></p>
@@ -53,6 +56,7 @@ import GuestAction from '@/custom/components/GuestAction.vue'
 import { fetchPublicPlans, type PublicCatalog } from '@/custom/guest/api'
 import { currencySymbol } from '@/components/payment/currency'
 import { planValiditySuffix } from '@/components/payment/validity'
+import { vReveal } from '@/custom/motion/reveal'
 
 const { t } = useI18n()
 defineProps<{ embedded?: boolean }>()

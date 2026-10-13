@@ -8,7 +8,7 @@
         <router-link to="/guide" class="btn btn-secondary">查看接入教程</router-link>
       </template>
     </BrandPanel>
-    <section class="mofa-public-section" aria-labelledby="access-title">
+    <section v-reveal class="mofa-public-section" aria-labelledby="access-title">
       <h2 id="access-title">先了解服务，再决定如何接入</h2>
       <p class="mofa-public-lead">这里提供多模型 API 接入服务。你可以先比较套餐、阅读接入说明；购买、充值和管理 API Key 时再登录。</p>
       <div class="mofa-public-columns">
@@ -36,6 +36,7 @@ import { useAppStore, useAuthStore } from '@/stores'
 import BrandPanel from '@/custom/components/BrandPanel.vue'
 import PublicLayout from '@/custom/components/PublicLayout.vue'
 import GuestAction from '@/custom/components/GuestAction.vue'
+import { vReveal } from '@/custom/motion/reveal'
 const app = useAppStore()
 const auth = useAuthStore()
 </script>

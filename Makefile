@@ -1,9 +1,13 @@
 .PHONY: build build-backend build-frontend test test-backend test-frontend test-frontend-critical
 
-# [CUSTOM] 包号、电脑端支付宝 WAP、订阅时间／库存及版本权限展示必须进入前端关键回归。
+# [CUSTOM] 包号、电脑端支付宝 WAP、订阅时间／库存、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
 	src/custom/__tests__/payment-collection.spec.ts \
 	src/custom/__tests__/svg-sanitization.spec.ts \
+	src/custom/__tests__/motion.spec.ts \
+	src/custom/__tests__/public-nav.spec.ts \
+	src/custom/__tests__/app-shell.spec.ts \
+	src/views/user/__tests__/stripeLazyLoading.spec.ts \
 	src/components/common/__tests__/VersionBadge.visibility.spec.ts \
 	src/api/__tests__/settings.authSourceDefaults.spec.ts \
 	src/views/user/__tests__/UsageView.spec.ts \

@@ -11,6 +11,37 @@
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
 
 
+## 2026-10-12 官网与登录页动效、交互和首屏加载（用户授权提交推送）
+
+范围：公开页（/home /family /api /plans /guide /faq）和登录/注册页。没有改上游视图、`App.vue`、`AuthLayout.vue`、`style.css`、路由、依赖、锁文件或 Go 代码。
+
+- **新增自有文件**：
+  - `frontend/src/custom/motion/reveal.ts`：`v-reveal` 滚动出现，全站共用一个 IntersectionObserver。只有浏览器支持 IO、且用户没开减少动态效果时，才在 `<html>` 上加 `mofa-motion`，隐藏初始态只在这个类下生效。
+  - `motion/pointer.ts`：`v-pointer` 光斑与轻微位移，只在精细指针设备上启用，每帧最多计算一次，并使用该帧最后一次的指针位置。
+  - `motion/prefetch.ts`：浏览器空闲时预取相邻公开页的路由块，只下载代码，不请求数据；省流模式或 2G 网络下跳过。
+  - `custom/shell/app-shell.mjs`（附 `.d.mts`）：构建时往 `index.html` 注入两样东西。不能放在 `build/` 目录，根 `.gitignore` 会忽略任何名为 build 的目录。
+    - 首屏骨架：放在 `#app` 内，Vue 挂载时整体替换掉。
+    - 带 `__CSP_NONCE_VALUE__` 的早期脚本：与 `main.ts`/`i18n` 同口径提前设置深色，并给当前语言包加 `modulepreload`。后端整页替换 nonce（embed_on.go serveIndexHTML）；走降级路径时脚本被 CSP 拦下，只是不生效。
+  - 测试：`motion.spec.ts`、`public-nav.spec.ts`、`app-shell.spec.ts`。
+- **改动的自有文件**：
+  - `PublicLayout.vue`：页头吸顶；向下滚动收起、向上滚动出现，避免锚点章节标题被遮住。小于 1024px 时收成同一个 `<nav>` 加菜单按钮，不复制链接；支持 Esc、点外部、焦点离开后关闭。挂载后空闲预取。
+  - `BrandPanel.vue`：增加装饰轨道与光晕（`aria-hidden`）。
+  - `BrandThemeToggle.vue`：支持 View Transitions 时从按钮位置圆形扩散切换主题；不支持或减少动效时仍同步切换。
+  - `FamilyHomeView.vue`：共享滑动指示条和 `data-product`。
+  - `FamilyProductVisual.vue`：SynaRoute 连线加 `pathLength`，增加脉冲节点。
+  - `PublicPlansView.vue`：加载骨架，保留 `role="status"` 和读屏文字。
+  - `ApiLandingView.vue`：区块滚动出现。
+- **上游接缝**（均带 [CUSTOM]）：
+  - `frontend/vite.config.ts`：注册 `mofaAppShell()`。manualChunks 新增 `/@airwallex/` → `vendor-airwallex`。
+    - 原因：Airwallex 只在其支付页动态导入，但并入 vendor-misc 后，每页首屏都会执行 SDK 顶层代码并预载 `static.airwallex.com`、`checkout.airwallex.com`。生产首页可观察到这一点，原 vendor-misc 含该域名。
+    - 做法与上游 Stripe 的规则相同。
+  - `Makefile`：关键回归加入 3 个新 spec 和上游已有的 `stripeLazyLoading.spec.ts`。
+  - `theme.css`：桌面端的单按钮下划线改用滑动指示条，手机 2×2 布局仍保留原下划线。文件末尾新增“动效层”一节，所有动画都放在 `prefers-reduced-motion: no-preference` 内，由 motion.spec 检查，不使用 `!important`。
+- **同步注意**：
+  - 上游若调整 manualChunks，保留 airwallex 规则。
+  - 上游若改语言包入口路径，`localeChunks` 找不到时只是不再预加载，骨架照常显示。
+  - 上游若改公开路由，同步更新 `app-shell.mjs` 的 `PUBLIC_PATH`。它只决定骨架外观，不参与鉴权。
+
 ## 2026-10-10 包号仅归属、有效期与免扣（已发布sha-026d9ab）
 
 - 补充到期/跨组认证回归custom_dedicated_expiry_test.go：7场景覆盖到期403、普通组零余额拒绝/正余额无免扣、缓存资格不污染；与现有权益及结算测试合计20项含子场景通过，不替代真实PG/生产验证。

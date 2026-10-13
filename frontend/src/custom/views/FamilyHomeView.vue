@@ -9,19 +9,20 @@
       </template>
     </BrandPanel>
     <section id="family-products" class="mofa-family-products" aria-labelledby="family-products-title">
-      <div class="mofa-family-section-heading">
+      <div v-reveal class="mofa-family-section-heading">
         <h2 id="family-products-title">同一个家族，不同的拿手好戏。</h2>
         <p>选择一款工具，看看它能做什么。</p>
       </div>
-      <div class="mofa-family-deck">
+      <div v-reveal="1" class="mofa-family-deck" :data-product="selectedProduct" :style="{ '--tab-index': selectedIndex, '--tab-count': products.length }">
         <div class="mofa-family-launcher" role="tablist" aria-label="预览家族产品">
           <button v-for="(product, index) in products" :id="'family-tab-' + product.id" :key="product.id" :ref="element => setTab(element, index)" type="button" role="tab" :aria-selected="selectedProduct === product.id" :aria-controls="product.id" :tabindex="selectedProduct === product.id ? 0 : -1" :class="'mofa-launch-' + product.id" @click="selectedProduct = product.id" @keydown="moveTab($event, index)">
             <FamilyProductMark :product="product.id" />
             <span><strong>{{ product.name }}</strong><small>{{ launcherLabels[product.id] }}</small></span>
             <Icon name="arrowRight" size="sm" class="mofa-launch-arrow" aria-hidden="true" />
           </button>
+          <span class="mofa-launch-indicator" aria-hidden="true"></span>
         </div>
-        <div class="mofa-family-stage">
+        <div v-pointer class="mofa-family-stage">
           <article v-for="product in products" v-show="selectedProduct === product.id" :id="product.id" :key="product.id" class="mofa-family-product" :class="'mofa-family-' + product.id" role="tabpanel" :aria-labelledby="'family-tab-' + product.id" tabindex="0">
             <div class="mofa-family-product-info">
               <div class="mofa-family-product-heading"><h3>{{ product.name }}</h3><span>{{ product.state }}</span></div>
@@ -41,7 +42,7 @@
         </div>
       </div>
     </section>
-    <section class="mofa-family-session" aria-labelledby="family-session-title">
+    <section v-reveal class="mofa-family-session" aria-labelledby="family-session-title">
       <div><h2 id="family-session-title">一个控制台，随时出发。</h2><p>登录后进入魔法 API 控制台，从顶部打开家族工具。</p></div>
       <details><summary>登录与模型授权，如何协作？<Icon name="chevronDown" size="sm" aria-hidden="true" /></summary><p>配方和工坊已随本站镜像提供，无需另外托管。本站控制台与配方配置选择共用当前会话，连接模型时仍由你选择已有密钥并明确授权，不会自动创建密钥或产生模型费用。</p><p>工坊是公开创作资源，无需另注册账号。SynaRoute 使用密钥导入，不是桌面账号单点登录；退出本站后，配方内已授权连接需手动清除或刷新页面。</p><RouterLink to="/guide">查看模型接入教程 <Icon name="arrowRight" size="sm" aria-hidden="true" /></RouterLink></details>
     </section>
@@ -59,6 +60,8 @@ import FamilyProductMark from '@/custom/components/FamilyProductMark.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { familyProducts, recipeDestination, studioDestination } from '@/custom/family/products'
 import { SYNA_ROUTE_DOWNLOAD_URL, SYNA_ROUTE_WEBSITE_URL } from '@/custom/family/synarouteLinks'
+import { vReveal } from '@/custom/motion/reveal'
+import { vPointer } from '@/custom/motion/pointer'
 
 const app = useAppStore()
 const auth = useAuthStore()
@@ -68,7 +71,8 @@ const studio = studioDestination(String(import.meta.env.VITE_MAGIC_STUDIO_URL ||
 const products = computed(() => familyProducts(recipe, auth.isAdmin, studio))
 const initialProduct = window.location.hash.slice(1)
 const selectedProduct = ref(products.value.some(product => product.id === initialProduct) ? initialProduct : 'recipes')
-const launcherLabels: Record<string, string> = { api: '接入模型', recipes: '复用方法', studio: '寻找灵感', synaroute: '本地协同' }
+const selectedIndex = computed(() => Math.max(0, products.value.findIndex(product => product.id === selectedProduct.value)))
+const launcherLabels:Record<string, string> = { api: '接入模型', recipes: '复用方法', studio: '寻找灵感', synaroute: '本地协同' }
 const tabElements: (HTMLButtonElement | undefined)[] = []
 
 function setTab(element: Element | ComponentPublicInstance | null, index: number) {

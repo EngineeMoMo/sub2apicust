@@ -1,5 +1,12 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
+2026-10-12 官网动效，同步时保留：
+- `PublicLayout`：同一个 `<nav>` 加菜单按钮，吸顶、向下滚动收起，以及空闲预取。
+- `BrandPanel` 的装饰轨道；`FamilyHomeView` 的滑动指示条和 `data-product`；`PublicPlansView` 的骨架与 `role="status"`。
+- theme.css 末尾的动效层：所有动画都在 `no-preference` 内，不用 `!important`。
+- vite.config.ts 里的 `mofaAppShell()` 和 `vendor-airwallex` 规则。
+- 合并后运行 motion、public-nav、app-shell、stripeLazyLoading、family-home、guest、brand、upgrade-contract 这几个 spec，并在浏览器里检查手机菜单、教程锚点和深色模式。
+
 2026-10-08发布终态：收款限制与人工开通及两项审查修复已推送575467a5f，同SHA CI（含unit／integration／lint）、安全、GHCR全部成功；固定镜像sha-575467a。更新及证据见HANDOFF和deploy/UPDATE_GUIDE，下方本轮待发布记录为历史；生产由用户备份后更新。
 
 2026-10-08审查补修：SubscriptionCard人工续费转公开`/plans`，不能重新指向受payment_enabled限制的`/purchase`；在线续费仍保持原分组路由。plan-stock回归覆盖支付关闭时展示联系说明，未发布。

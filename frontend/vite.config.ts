@@ -6,6 +6,8 @@ import { resolve } from 'path'
 import { buildFamilyProducts } from './src/custom/family/build-products.mjs'
 // [CUSTOM] Vite 的目录入口显式映射到静态首页，避免落入主站登录路由。
 import { familyProductDevEntries } from './src/custom/family/dev-products.mjs'
+// [CUSTOM] 首屏骨架与语言包预加载，只改写构建产物 index.html，见 CUSTOMIZATIONS.md。
+import { mofaAppShell } from './src/custom/shell/app-shell.mjs'
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -92,6 +94,7 @@ export default defineConfig(({ mode }) => {
       // [CUSTOM] 原产品源码保留独立模式，生成文件仅写入 public 的专用目录。
       { name: 'mofa-family-products', async config() { await buildFamilyProducts() } },
       familyProductDevEntries(),
+      mofaAppShell(),
       vue(),
       checker({
         vueTsc: true
@@ -154,6 +157,11 @@ export default defineConfig(({ mode }) => {
             // Stripe 仅在支付流程中按需加载，避免进入首页公共依赖。
             if (id.includes('/@stripe/stripe-js/')) {
               return 'vendor-stripe'
+            }
+
+            // [CUSTOM] Airwallex 只在其支付页动态导入；并入 vendor-misc 会在每个页面首屏执行 SDK 顶层代码并连外域。
+            if (id.includes('/@airwallex/')) {
+              return 'vendor-airwallex'
             }
 
             // 其他小型第三方库合并
