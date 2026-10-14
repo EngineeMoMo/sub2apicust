@@ -595,6 +595,10 @@ func (r *AccountSelectionResult) ProfitGateActive() bool {
 
 // ClaudeUsage 表示Claude API返回的usage信息
 type ClaudeUsage struct {
+	// [CUSTOM] Claude 付费搜索的实际次数与流式去重状态。
+	WebSearchRequests        int `json:"-"`
+	webSearchCountObserved   bool
+	webSearchResultIDs       map[string]struct{}
 	InputTokens              int `json:"input_tokens"`
 	OutputTokens             int `json:"output_tokens"`
 	CacheCreationInputTokens int `json:"cache_creation_input_tokens"`

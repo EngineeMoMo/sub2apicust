@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"strings"
 	"time"
 )
@@ -290,9 +291,14 @@ func applyAccountStatsCost(
 	if usageLog != nil && usageLog.ReasoningEffort != nil {
 		reasoningEffort = *usageLog.ReasoningEffort
 	}
+	// [CUSTOM] 模型统计规则只计算模型费；工具费扣除后单独补回，避免漏算或重复。
+	toolCost := toolUsageTotalCost(usageLog.ToolUsage)
 	usageLog.AccountStatsCost = resolveAccountStatsCost(
-		ctx, cs, bs, accountID, groupID, model, tokens, requestCount, totalCost, serviceTier, pricingAt, longContextPricingEnabled, reasoningEffort,
+		ctx, cs, bs, accountID, groupID, model, tokens, requestCount, math.Max(totalCost-toolCost, 0), serviceTier, pricingAt, longContextPricingEnabled, reasoningEffort,
 	)
+	if usageLog.AccountStatsCost != nil {
+		*usageLog.AccountStatsCost += toolCost
+	}
 }
 
 // accountStatsLongContextPricingEnabled 判断账号统计成本是否计入长上下文阶梯。

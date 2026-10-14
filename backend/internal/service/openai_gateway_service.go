@@ -222,6 +222,8 @@ func (s *OpenAICodexUsageSnapshot) Normalize() *NormalizedCodexLimits {
 
 // OpenAIUsage represents OpenAI API response usage
 type OpenAIUsage struct {
+	// [CUSTOM] 原生 Claude 转发保留付费搜索次数，独立于 Codex 按次请求。
+	ClaudeWebSearchRequests  int `json:"-"`
 	InputTokens              int `json:"input_tokens"`
 	ImageInputTokens         int `json:"image_input_tokens,omitempty"`
 	ImageCacheReadTokens     int `json:"image_cache_read_tokens,omitempty"`

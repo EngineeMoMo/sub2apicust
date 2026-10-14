@@ -1124,6 +1124,10 @@ export default {
         pricePlaceholder: 'optional'
       },
       webSearchPricing: {
+        // [CUSTOM] Claude server-side paid search.
+        claudeTitle: 'Claude web search tool surcharge',
+        claudeHint: 'Added per successful upstream search, alongside token charges. Empty defaults to $0.01/call; 0 is free. User/group and peak multipliers apply.',
+        claudePreview: 'Surcharge per search at this group rate: ${price}. User-specific and peak rates follow the actual bill.',
         title: 'Codex Web Search Pricing',
         pricePerCall: 'Price per search call (USD)',
         pricePerCallHint:

@@ -410,6 +410,8 @@ func (s *GatewayService) handleResponsesBufferedStreamingResponse(
 			continue
 		}
 
+		// [CUSTOM] 转换协议前从原始响应保留付费工具用量。
+		observeClaudeToolEvent(payload, &usage)
 		var event apicompat.AnthropicStreamEvent
 		if err := json.Unmarshal([]byte(payload), &event); err != nil {
 			logger.L().Warn("forward_as_responses buffered: failed to parse event",
@@ -663,6 +665,8 @@ func (s *GatewayService) handleResponsesStreamingResponse(
 			continue
 		}
 
+		// [CUSTOM] 转换协议前从原始响应保留付费工具用量。
+		observeClaudeToolEvent(payload, &usage)
 		var event apicompat.AnthropicStreamEvent
 		if err := json.Unmarshal([]byte(payload), &event); err != nil {
 			logger.L().Warn("forward_as_responses stream: failed to parse event",

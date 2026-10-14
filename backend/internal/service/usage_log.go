@@ -102,6 +102,8 @@ func ApplyLegacyRequestFields(requestType RequestType, fallbackStream bool, fall
 }
 
 type UsageLog struct {
+	// [CUSTOM] 付费工具计量及本次费用快照。
+	ToolUsage map[string]ToolCallCost
 	ID        int64
 	UserID    int64
 	APIKeyID  int64

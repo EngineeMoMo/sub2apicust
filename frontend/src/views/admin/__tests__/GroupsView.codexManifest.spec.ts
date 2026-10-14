@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminGroup, CodexModelsManifestConfig } from "@/types";
 import GroupsView from "@/views/admin/GroupsView.vue";
+// [CUSTOM] 复用完整分组表单夹具验证 Claude 搜索附加费。
+import { adminAPI } from "@/api/admin";
 
 const {
   listGroups,
@@ -220,7 +222,12 @@ const mountView = () =>
         GroupCapacityBadge: true,
         GroupRateMultipliersModal: true,
         GroupRPMOverridesModal: true,
-        ReasoningEffortPolicyFields: true,
+        ReasoningEffortPolicyFields: defineComponent({
+          template: '<div />',
+          setup(props, { expose }) {
+            expose({ validate: () => true, resetValidation: () => undefined });
+          },
+        }),
         CodexManifestAccountsField: CodexManifestAccountsFieldStub,
         PricingEntryCard: true,
         VueDraggable: true,
@@ -248,6 +255,43 @@ describe("GroupsView Codex manifest binding", () => {
     getUsageSummary.mockResolvedValue([]);
     getCapacitySummary.mockResolvedValue([]);
     getLiveCapability.mockResolvedValue({ supported: false });
+  });
+
+  // [CUSTOM] 创建分组可使用默认价、覆盖价或显式免费。
+  it.each([0.02, 0, ''])('creates Claude search price %s', async (price) => {
+    vi.mocked(adminAPI.groups.create).mockResolvedValue(sourceGroup);
+    const wrapper = mountView();
+    await flushPromises();
+    const createButton = wrapper.findAll('button').find((button) => button.text().includes('admin.groups.createGroup'));
+    await createButton!.trigger('click');
+    await flushPromises();
+    await wrapper.get('input[placeholder="admin.groups.enterGroupName"]').setValue('Claude tools');
+    expect(wrapper.text()).toContain('admin.groups.webSearchPricing.claudeTitle');
+    await wrapper.get('[data-testid="web-search-price"]').setValue(price);
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(adminAPI.groups.create).toHaveBeenLastCalledWith(expect.objectContaining({ platform: 'anthropic', web_search_price_per_call: price === '' ? null : price }));
+    wrapper.unmount();
+  });
+
+  // [CUSTOM] 默认、显式免费和清空价格均通过实际编辑请求传递。
+  it.each([0.02, 0, ''])('saves Claude search price %s', async (price) => {
+    const group = { ...sourceGroup, platform: 'anthropic' as const, web_search_price_per_call: 0.01 };
+    listGroups.mockResolvedValue({ items: [group], total: 1, page: 1, page_size: 20, pages: 1 });
+    vi.mocked(adminAPI.groups.update).mockResolvedValue(group);
+    const wrapper = mountView();
+    await flushPromises();
+    const editButton = wrapper.findAll('button').find((button) => button.text().includes('common.edit'));
+    await editButton!.trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('admin.groups.webSearchPricing.claudeTitle');
+    await wrapper.get('[data-testid="web-search-price"]').setValue(price);
+    const saveButton = wrapper.findAll('button').find((button) => button.text().includes('common.save') || button.text().includes('common.update'));
+    expect(saveButton).toBeTruthy();
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(adminAPI.groups.update).toHaveBeenLastCalledWith(group.id, expect.objectContaining({ web_search_price_per_call: price === '' ? -1 : price }));
+    wrapper.unmount();
   });
 
   it("preserves consecutive child updates on the reactive edit config", async () => {

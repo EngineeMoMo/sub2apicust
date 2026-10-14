@@ -649,7 +649,9 @@ type UsageLog struct {
 	ImageOutputCost    float64        `json:"image_output_cost"`
 	ImageSizeSource    *string        `json:"image_size_source"`
 	ImageSizeBreakdown map[string]int `json:"image_size_breakdown"`
-	MediaType          *string        `json:"media_type"`
+	// [CUSTOM] 用户和管理员共享的工具费用明细。
+	ToolUsage map[string]service.ToolCallCost `json:"tool_usage,omitempty"`
+	MediaType *string                         `json:"media_type"`
 
 	// User-Agent
 	UserAgent *string `json:"user_agent"`

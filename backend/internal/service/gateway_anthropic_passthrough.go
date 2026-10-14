@@ -629,6 +629,8 @@ func parseSSEUsagePassthrough(data string, usage *ClaudeUsage) {
 		return
 	}
 
+	// [CUSTOM] Token 与付费工具用量同时解析。
+	observeClaudeToolEvent(data, usage)
 	parsed := gjson.Parse(data)
 	switch parsed.Get("type").String() {
 	case "message_start":
@@ -767,6 +769,8 @@ func parseClaudeUsageFromResponseBody(body []byte) *ClaudeUsage {
 		return usage
 	}
 
+	// [CUSTOM] 保留服务端工具实际用量。
+	observeClaudeToolResponse(body, usage)
 	parsed := gjson.ParseBytes(body)
 	usageNode := parsed.Get("usage")
 	if !usageNode.Exists() {

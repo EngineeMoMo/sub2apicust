@@ -669,10 +669,11 @@ func (u *ClaudeUsage) hasObservedTokens() bool {
 	if u == nil {
 		return false
 	}
+	// [CUSTOM] 已发生付费工具调用时保留中断流的可计费用量。
 	return u.InputTokens > 0 || u.OutputTokens > 0 ||
 		u.CacheCreationInputTokens > 0 || u.CacheReadInputTokens > 0 ||
 		u.CacheCreation5mTokens > 0 || u.CacheCreation1hTokens > 0 ||
-		u.ImageOutputTokens > 0
+		u.ImageOutputTokens > 0 || u.WebSearchRequests > 0
 }
 
 // partialStreamUsageResult 在流式转发中途出错时，把已观测到 usage 的部分结果包装为
@@ -1172,6 +1173,8 @@ func (s *GatewayService) parseSSEUsage(data string, usage *ClaudeUsage) {
 		return
 	}
 
+	// [CUSTOM] 服务端搜索费与 Token 用量独立累积。
+	observeClaudeToolEvent(data, usage)
 	if patch := s.extractSSEUsagePatch(event); patch != nil {
 		mergeSSEUsagePatch(usage, patch)
 	}
@@ -1418,6 +1421,9 @@ func (s *GatewayService) handleNonStreamingResponse(ctx context.Context, resp *h
 		}
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
+
+	// [CUSTOM] 非流式原生响应的实际工具用量。
+	observeClaudeToolResponse(body, &response.Usage)
 
 	// 解析嵌套的 cache_creation 对象中的 5m/1h 明细
 	cc5m := gjson.GetBytes(body, "usage.cache_creation.ephemeral_5m_input_tokens")

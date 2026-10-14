@@ -1,5 +1,51 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-14 Claude 网页搜索工具附加费
+
+用户已要求“增加相关收费”。新增 Claude 内置 web_search 的实际调用量与基础单价快照，叠加到 Token/阶梯费用；普通客户端工具和搜索启动事件不收费。复用分组 web_search_price_per_call，nil 默认0.01/次、显式0免费，Claude 工具费应用 Token 同一有效倍率（用户专属/分组及高峰）。新增 nullable JSONB 迁移256，旧账单不补扣；不自动同步 New API 配置，不承诺未知工具费/充值价值造成的全部差价已解决。配置与边界见 [deploy/CLAUDE_TOOL_BILLING.md](deploy/CLAUDE_TOOL_BILLING.md)。用户已授权提交并推送origin/main，发布待本轮新SHA的CI/安全/GHCR核验；生产未部署。本轮验证终态以 HANDOFF 最新条目为准。
+
+新增自有文件：
+
+- backend/internal/service/custom_claude_tool_billing.go / custom_claude_tool_billing_test.go：原生用量计数、SSE累计去重、成功结果回退、默认/免费单价、Token费叠加及实际扣费回归。
+- backend/internal/repository/custom_tool_usage_json.go / custom_tool_usage_json_unit_test.go / custom_claude_tool_postgres_test.go：日志JSON编解码、参数位置与真实PG迁移/各写入/余额/订阅幂等回归。
+- backend/internal/handler/dto/custom_claude_tool_usage_test.go：用户/管理员DTO快照与历史兼容。
+- backend/migrations/256_custom_claude_tool_usage.sql：usage_logs.tool_usage JSONB。
+- frontend/src/custom/components/UsageToolCosts.vue / __tests__/UsageToolCosts.spec.ts：共用费用提示中的调用量、基础单价、原始/实扣工具费。
+- deploy/CLAUDE_TOOL_BILLING.md：设置、公式、证据、覆盖路径与升级边界。
+
+上游接缝（源码已加 [CUSTOM]，Ent生成文件除外）：
+
+| 文件 | 接缝与维护要求 |
+| --- | --- |
+| backend/internal/service/gateway_service.go | ClaudeUsage 付费搜索次数与流式权威计量/去重状态；保持json:"-"，从原始上游解析。 |
+| backend/internal/service/gateway_anthropic_passthrough.go | parseSSEUsagePassthrough / parseClaudeUsageFromResponseBody 接入工具实际用量。 |
+| backend/internal/service/gateway_upstream_response.go | 通用SSE/非流式解析与中断流可计费用量识别。 |
+| backend/internal/service/gateway_forward_as_responses.go | 缓冲/流式协议转换前解析原始工具计量，避免转换器只保留Token而漏费。 |
+| backend/internal/service/openai_gateway_messages_anthropic_native.go | claudeUsageToOpenAIUsage 携带Claude付费搜索次数。 |
+| backend/internal/service/openai_gateway_service.go | OpenAIUsage独立Claude次数，不能复用Codex WebSearchCalls的替代Token按次分支。 |
+| backend/internal/service/billing_service.go | CostBreakdown.ToolUsage；工具明细金额已计入TotalCost/ActualCost。 |
+| backend/internal/service/gateway_usage_billing.go | 工具费叠加、快照日志、特殊计费模型判断、纯存储识别、扣费失败工具实扣归零。 |
+| backend/internal/service/openai_gateway_usage.go | 原生Claude搜索费叠加、快照日志与失败归零；现有Codex/Grok分支保持原语义。 |
+| backend/internal/service/account_stats_pricing.go | 模型统计先扣除工具费，重算后补回；默认nil仍使用含工具费的TotalCost，不重复计费。 |
+| backend/internal/service/usage_log.go | 领域日志新增ToolUsage map快照。 |
+| backend/ent/schema/usage_log.go | nullable tool_usage JSONB；Ent类型使用map[string]any，服务层使用强类型费用快照。 |
+| backend/internal/repository/usage_log_repo_insert.go | 所有同步/批量/最佳努力列清单、参数类型、prepared.args及静态占位符同时加入tool_usage。 |
+| backend/internal/repository/usage_log_repo_query.go | 统一查询列与scanUsageLog对应的工具JSON读取；历史NULL不制造费用。 |
+| backend/internal/handler/dto/types.go / mappers.go | 用户/管理员共用tool_usage，历史日志omitempty。 |
+| frontend/src/types/index.ts | 可选tool_usage类型，历史和其他协议兼容。 |
+| frontend/src/views/admin/GroupsView.vue | 创建/编辑Anthropic/composite分组显示Claude工具附加费单价与预览；复用既有提交/清空字段。 |
+| frontend/src/components/admin/usage/UsageTable.vue | 用户/管理员共用费用提示嵌入UsageToolCosts。 |
+| frontend/src/views/admin/UsageView.vue / frontend/src/views/user/UsageView.vue | XLSX/CSV增加工具快照JSON列，已含在总额。 |
+| frontend/src/i18n/locales/zh/admin/overview.ts / en/admin/overview.ts | Claude工具单价文案和倍率说明，保留Codex文案。 |
+| frontend/src/i18n/locales/zh/dashboard.ts / en/dashboard.ts | 工具明细与导出标签。 |
+| backend/internal/repository/usage_log_repo_request_type_test.go / usage_log_session_id_unit_test.go | SQLmock/扫描夹具同步新增列，保留请求类型/会话/推理字段断言。 |
+| frontend/src/views/admin/__tests__/GroupsView.codexManifest.spec.ts | 复用完整表单验证创建/编辑默认价、覆盖价与0免费；推理设置测试stub暴露validate。 |
+| frontend/src/views/user/__tests__/UsageView.spec.ts | CSV新增工具快照列的既有导出回归。 |
+
+既有自有文件 backend/internal/service/custom_dedicated_billing.go 增加包号免扣工具实扣归零。Ent按schema生成8文件：backend/ent/{mutation.go,usagelog.go,usagelog_create.go,usagelog_update.go,usagelog/usagelog.go,usagelog/where.go,runtime/runtime.go,migrate/schema.go}；不手改这些生成文件，升级时重新生成并验证无差异。
+
+同步自检须保留：usage真实字段优先与成功结果按ID去重、错误工具免费、Token叠加、0单价语义、双网关原生转换、SQL列/占位符匹配、有效倍率、实际余额/订阅/Key额度和日志一致；取证输出位于gitignore的output/newapi-ledger-20261014。
+
 2026-10-14全工作区发布终态：此前59项保留改动已全部推送6406511c6，既有“2026-10-11 审查问题全部修复”与“2026-10-12 智力效率改接雷达Bench v1”的接缝一并发布；248/249为新增迁移，已发布245/247不修改，上游0.2.16及网段防护保持。同SHA CI38522649457/安全38522649572/GHCR38522649396成功，固定sha-6406511及registry摘要/源码标签验真；本地3279项、类型/构建/26组更新回归，CI Go unit/integration/专用PG18/Redis8/lint及前端790项通过。源码lint0错误26警告，生产未部署；交接文档skip-ci不生成新镜像，最终证据与验收边界见HANDOFF和output/workspace-release-20261014。下方未发布条目为阶段记录。
 
 2026-10-14 上游0.2.16发布终态：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。

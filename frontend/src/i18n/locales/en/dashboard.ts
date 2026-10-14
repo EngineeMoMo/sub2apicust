@@ -351,6 +351,13 @@ export default {
     standardCost: 'Standard',
     actualCost: 'Actual',
     accountCost: 'Cost',
+    // [CUSTOM] 工具调用费用明细。
+    webSearchTool: 'Web search',
+    perToolCall: '/ call',
+    toolOriginalCost: 'Original tool cost',
+    toolActualCost: 'Billed tool cost',
+    toolIncluded: 'Tool charges are included in the request total.',
+    toolUsageExport: 'Tool usage and costs (JSON)',
     userBilled: 'User billed',
     accountBilled: 'Account billed',
     resetNow: 'Now',

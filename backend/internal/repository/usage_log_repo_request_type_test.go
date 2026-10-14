@@ -84,6 +84,7 @@ func TestUsageLogRepositoryCreateSyncRequestTypeAndLegacyFields(t *testing.T) {
 			sqlmock.AnyArg(), // image_output_size
 			sqlmock.AnyArg(), // image_size_source
 			sqlmock.AnyArg(), // image_size_breakdown
+			sqlmock.AnyArg(), // [CUSTOM] tool_usage
 			sqlmock.AnyArg(), // video_count
 			sqlmock.AnyArg(), // video_resolution
 			sqlmock.AnyArg(), // video_duration_seconds
@@ -179,6 +180,7 @@ func TestUsageLogRepositoryCreate_PersistsServiceTier(t *testing.T) {
 			sqlmock.AnyArg(), // image_output_size
 			sqlmock.AnyArg(), // image_size_source
 			sqlmock.AnyArg(), // image_size_breakdown
+			sqlmock.AnyArg(), // [CUSTOM] tool_usage
 			sqlmock.AnyArg(), // video_count
 			sqlmock.AnyArg(), // video_resolution
 			sqlmock.AnyArg(), // video_duration_seconds
@@ -942,6 +944,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{Valid: true, String: "3840x2160"},
 			sql.NullString{Valid: true, String: "output"},
 			sql.NullString{Valid: true, String: `{"4K":2}`},
+			sql.NullString{}, // [CUSTOM] tool_usage
 			0,                // video_count
 			sql.NullString{}, // video_resolution
 			sql.NullInt64{},  // video_duration_seconds
@@ -1022,6 +1025,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{}, // image_output_size
 			sql.NullString{}, // image_size_source
 			sql.NullString{}, // image_size_breakdown
+			sql.NullString{}, // [CUSTOM] tool_usage
 			0,                // video_count
 			sql.NullString{}, // video_resolution
 			sql.NullInt64{},  // video_duration_seconds
@@ -1085,6 +1089,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{}, // image_output_size
 			sql.NullString{}, // image_size_source
 			sql.NullString{}, // image_size_breakdown
+			sql.NullString{}, // [CUSTOM] tool_usage
 			0,                // video_count
 			sql.NullString{}, // video_resolution
 			sql.NullInt64{},  // video_duration_seconds
@@ -1149,6 +1154,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{}, // image_output_size
 			sql.NullString{}, // image_size_source
 			sql.NullString{}, // image_size_breakdown
+			sql.NullString{}, // [CUSTOM] tool_usage
 			0,                // video_count
 			sql.NullString{}, // video_resolution
 			sql.NullInt64{},  // video_duration_seconds

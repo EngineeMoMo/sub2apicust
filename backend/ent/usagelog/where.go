@@ -2275,6 +2275,16 @@ func ImageSizeSourceContainsFold(v string) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldContainsFold(FieldImageSizeSource, v))
 }
 
+// ToolUsageIsNil applies the IsNil predicate on the "tool_usage" field.
+func ToolUsageIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldToolUsage))
+}
+
+// ToolUsageNotNil applies the NotNil predicate on the "tool_usage" field.
+func ToolUsageNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldToolUsage))
+}
+
 // ImageSizeBreakdownIsNil applies the IsNil predicate on the "image_size_breakdown" field.
 func ImageSizeBreakdownIsNil() predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldIsNull(FieldImageSizeBreakdown))

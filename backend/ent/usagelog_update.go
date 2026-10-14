@@ -853,6 +853,18 @@ func (_u *UsageLogUpdate) ClearImageSizeSource() *UsageLogUpdate {
 	return _u
 }
 
+// SetToolUsage sets the "tool_usage" field.
+func (_u *UsageLogUpdate) SetToolUsage(v map[string]interface{}) *UsageLogUpdate {
+	_u.mutation.SetToolUsage(v)
+	return _u
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (_u *UsageLogUpdate) ClearToolUsage() *UsageLogUpdate {
+	_u.mutation.ClearToolUsage()
+	return _u
+}
+
 // SetImageSizeBreakdown sets the "image_size_breakdown" field.
 func (_u *UsageLogUpdate) SetImageSizeBreakdown(v map[string]int) *UsageLogUpdate {
 	_u.mutation.SetImageSizeBreakdown(v)
@@ -1350,6 +1362,12 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ImageSizeSourceCleared() {
 		_spec.ClearField(usagelog.FieldImageSizeSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.ToolUsage(); ok {
+		_spec.SetField(usagelog.FieldToolUsage, field.TypeJSON, value)
+	}
+	if _u.mutation.ToolUsageCleared() {
+		_spec.ClearField(usagelog.FieldToolUsage, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.ImageSizeBreakdown(); ok {
 		_spec.SetField(usagelog.FieldImageSizeBreakdown, field.TypeJSON, value)
@@ -2367,6 +2385,18 @@ func (_u *UsageLogUpdateOne) ClearImageSizeSource() *UsageLogUpdateOne {
 	return _u
 }
 
+// SetToolUsage sets the "tool_usage" field.
+func (_u *UsageLogUpdateOne) SetToolUsage(v map[string]interface{}) *UsageLogUpdateOne {
+	_u.mutation.SetToolUsage(v)
+	return _u
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (_u *UsageLogUpdateOne) ClearToolUsage() *UsageLogUpdateOne {
+	_u.mutation.ClearToolUsage()
+	return _u
+}
+
 // SetImageSizeBreakdown sets the "image_size_breakdown" field.
 func (_u *UsageLogUpdateOne) SetImageSizeBreakdown(v map[string]int) *UsageLogUpdateOne {
 	_u.mutation.SetImageSizeBreakdown(v)
@@ -2894,6 +2924,12 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if _u.mutation.ImageSizeSourceCleared() {
 		_spec.ClearField(usagelog.FieldImageSizeSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.ToolUsage(); ok {
+		_spec.SetField(usagelog.FieldToolUsage, field.TypeJSON, value)
+	}
+	if _u.mutation.ToolUsageCleared() {
+		_spec.ClearField(usagelog.FieldToolUsage, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.ImageSizeBreakdown(); ok {
 		_spec.SetField(usagelog.FieldImageSizeBreakdown, field.TypeJSON, value)

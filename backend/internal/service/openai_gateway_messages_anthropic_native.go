@@ -574,6 +574,8 @@ func claudeUsageToOpenAIUsage(u *ClaudeUsage) OpenAIUsage {
 		return OpenAIUsage{}
 	}
 	return OpenAIUsage{
+		// [CUSTOM] 付费搜索跟随原生 Claude 用量进入通用扣费。
+		ClaudeWebSearchRequests:  u.WebSearchRequests,
 		InputTokens:              u.InputTokens + u.CacheCreationInputTokens + u.CacheReadInputTokens,
 		OutputTokens:             u.OutputTokens,
 		CacheCreationInputTokens: u.CacheCreationInputTokens,

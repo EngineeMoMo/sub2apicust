@@ -1440,13 +1440,13 @@
           </div>
         </div>
 
-        <!-- Codex 网页搜索按次计费（仅 openai 平台） -->
+        <!-- [CUSTOM] Codex 按次请求与 Claude 工具附加费共用分组单价。 -->
         <div
-          v-if="createForm.platform === 'openai'"
+          v-if="createForm.platform === 'openai' || createForm.platform === 'anthropic' || createForm.platform === 'composite'"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {{ t("admin.groups.webSearchPricing.title") }}
+            {{ t(createForm.platform === 'openai' ? "admin.groups.webSearchPricing.title" : "admin.groups.webSearchPricing.claudeTitle") }}
           </h4>
           <div>
             <label class="input-label">{{
@@ -1454,6 +1454,7 @@
             }}</label>
             <input
               v-model.number="createForm.web_search_price_per_call"
+              data-testid="web-search-price"
               type="number"
               step="0.001"
               min="0"
@@ -1461,13 +1462,13 @@
               class="input"
             />
             <p class="input-hint">
-              {{ t("admin.groups.webSearchPricing.pricePerCallHint") }}
+              {{ t(createForm.platform === 'openai' ? "admin.groups.webSearchPricing.pricePerCallHint" : "admin.groups.webSearchPricing.claudeHint") }}
             </p>
             <div
               class="mt-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-600 dark:bg-dark-700 dark:text-gray-300"
             >
               {{
-                t("admin.groups.webSearchPricing.finalPricePreview", {
+                t(createForm.platform === 'openai' ? "admin.groups.webSearchPricing.finalPricePreview" : "admin.groups.webSearchPricing.claudePreview", {
                   price: createWebSearchFinalPricePreview,
                 })
               }}
@@ -3080,13 +3081,13 @@
           </div>
         </div>
 
-        <!-- Codex 网页搜索按次计费（仅 openai 平台） -->
+        <!-- [CUSTOM] Codex 按次请求与 Claude 工具附加费共用分组单价。 -->
         <div
-          v-if="editForm.platform === 'openai'"
+          v-if="editForm.platform === 'openai' || editForm.platform === 'anthropic' || editForm.platform === 'composite'"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {{ t("admin.groups.webSearchPricing.title") }}
+            {{ t(editForm.platform === 'openai' ? "admin.groups.webSearchPricing.title" : "admin.groups.webSearchPricing.claudeTitle") }}
           </h4>
           <div>
             <label class="input-label">{{
@@ -3094,6 +3095,7 @@
             }}</label>
             <input
               v-model.number="editForm.web_search_price_per_call"
+              data-testid="web-search-price"
               type="number"
               step="0.001"
               min="0"
@@ -3101,13 +3103,13 @@
               class="input"
             />
             <p class="input-hint">
-              {{ t("admin.groups.webSearchPricing.pricePerCallHint") }}
+              {{ t(editForm.platform === 'openai' ? "admin.groups.webSearchPricing.pricePerCallHint" : "admin.groups.webSearchPricing.claudeHint") }}
             </p>
             <div
               class="mt-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-600 dark:bg-dark-700 dark:text-gray-300"
             >
               {{
-                t("admin.groups.webSearchPricing.finalPricePreview", {
+                t(editForm.platform === 'openai' ? "admin.groups.webSearchPricing.finalPricePreview" : "admin.groups.webSearchPricing.claudePreview", {
                   price: editWebSearchFinalPricePreview,
                 })
               }}

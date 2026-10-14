@@ -1121,6 +1121,10 @@ export default {
         pricePlaceholder: '可选'
       },
       webSearchPricing: {
+        // [CUSTOM] Claude 服务端付费搜索。
+        claudeTitle: 'Claude 网页搜索工具附加费',
+        claudeHint: '按上游实际成功搜索次数叠加收费，每次搜索另计 Token 费用。留空采用 $0.01/次，填 0 免费；实际扣费应用用户专属或分组倍率及高峰倍率。',
+        claudePreview: '按当前分组倍率，每次搜索附加 ${price}；用户专属倍率和高峰时段以实际账单为准。',
         title: 'Codex 网页搜索计费',
         pricePerCall: '搜索单次价格（USD/次）',
         pricePerCallHint:

@@ -667,6 +667,7 @@ const exportToCSV = async () => {
       'Output Tokens',
       'Cache Read Tokens',
       'Cache Creation Tokens',
+      'Tool Usage and Costs (JSON)', // [CUSTOM] 导出实际工具收费快照。
       'Rate Multiplier',
       'Billed Cost',
       'Original Cost',
@@ -687,6 +688,7 @@ const exportToCSV = async () => {
       log.output_tokens,
       log.cache_read_tokens,
       log.cache_creation_tokens,
+      JSON.stringify(log.tool_usage ?? {}),
       log.rate_multiplier,
       log.actual_cost.toFixed(8),
       log.total_cost.toFixed(8),

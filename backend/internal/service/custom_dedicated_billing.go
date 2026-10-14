@@ -88,6 +88,7 @@ func prepareCustomDedicatedSettlement(p *postUsageBillingParams, log *UsageLog) 
 	if log != nil {
 		log.BillingType = BillingTypeDedicated
 		log.ActualCost = 0
+		clearToolUsageActualCost(log)
 		log.RateMultiplier = 0
 		log.SubscriptionID = nil
 	}

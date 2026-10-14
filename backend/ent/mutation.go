@@ -44954,6 +44954,7 @@ type UsageLogMutation struct {
 	image_input_size             *string
 	image_output_size            *string
 	image_size_source            *string
+	tool_usage                   *map[string]interface{}
 	image_size_breakdown         *map[string]int
 	video_count                  *int
 	addvideo_count               *int
@@ -47183,6 +47184,55 @@ func (m *UsageLogMutation) ResetImageSizeSource() {
 	delete(m.clearedFields, usagelog.FieldImageSizeSource)
 }
 
+// SetToolUsage sets the "tool_usage" field.
+func (m *UsageLogMutation) SetToolUsage(value map[string]interface{}) {
+	m.tool_usage = &value
+}
+
+// ToolUsage returns the value of the "tool_usage" field in the mutation.
+func (m *UsageLogMutation) ToolUsage() (r map[string]interface{}, exists bool) {
+	v := m.tool_usage
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToolUsage returns the old "tool_usage" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldToolUsage(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToolUsage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToolUsage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToolUsage: %w", err)
+	}
+	return oldValue.ToolUsage, nil
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (m *UsageLogMutation) ClearToolUsage() {
+	m.tool_usage = nil
+	m.clearedFields[usagelog.FieldToolUsage] = struct{}{}
+}
+
+// ToolUsageCleared returns if the "tool_usage" field was cleared in this mutation.
+func (m *UsageLogMutation) ToolUsageCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldToolUsage]
+	return ok
+}
+
+// ResetToolUsage resets all changes to the "tool_usage" field.
+func (m *UsageLogMutation) ResetToolUsage() {
+	m.tool_usage = nil
+	delete(m.clearedFields, usagelog.FieldToolUsage)
+}
+
 // SetImageSizeBreakdown sets the "image_size_breakdown" field.
 func (m *UsageLogMutation) SetImageSizeBreakdown(value map[string]int) {
 	m.image_size_breakdown = &value
@@ -47648,7 +47698,7 @@ func (m *UsageLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageLogMutation) Fields() []string {
-	fields := make([]string, 0, 47)
+	fields := make([]string, 0, 48)
 	if m.user != nil {
 		fields = append(fields, usagelog.FieldUserID)
 	}
@@ -47772,6 +47822,9 @@ func (m *UsageLogMutation) Fields() []string {
 	if m.image_size_source != nil {
 		fields = append(fields, usagelog.FieldImageSizeSource)
 	}
+	if m.tool_usage != nil {
+		fields = append(fields, usagelog.FieldToolUsage)
+	}
 	if m.image_size_breakdown != nil {
 		fields = append(fields, usagelog.FieldImageSizeBreakdown)
 	}
@@ -47880,6 +47933,8 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.ImageOutputSize()
 	case usagelog.FieldImageSizeSource:
 		return m.ImageSizeSource()
+	case usagelog.FieldToolUsage:
+		return m.ToolUsage()
 	case usagelog.FieldImageSizeBreakdown:
 		return m.ImageSizeBreakdown()
 	case usagelog.FieldVideoCount:
@@ -47983,6 +48038,8 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldImageOutputSize(ctx)
 	case usagelog.FieldImageSizeSource:
 		return m.OldImageSizeSource(ctx)
+	case usagelog.FieldToolUsage:
+		return m.OldToolUsage(ctx)
 	case usagelog.FieldImageSizeBreakdown:
 		return m.OldImageSizeBreakdown(ctx)
 	case usagelog.FieldVideoCount:
@@ -48290,6 +48347,13 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImageSizeSource(v)
+		return nil
+	case usagelog.FieldToolUsage:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToolUsage(v)
 		return nil
 	case usagelog.FieldImageSizeBreakdown:
 		v, ok := value.(map[string]int)
@@ -48675,6 +48739,9 @@ func (m *UsageLogMutation) ClearedFields() []string {
 	if m.FieldCleared(usagelog.FieldImageSizeSource) {
 		fields = append(fields, usagelog.FieldImageSizeSource)
 	}
+	if m.FieldCleared(usagelog.FieldToolUsage) {
+		fields = append(fields, usagelog.FieldToolUsage)
+	}
 	if m.FieldCleared(usagelog.FieldImageSizeBreakdown) {
 		fields = append(fields, usagelog.FieldImageSizeBreakdown)
 	}
@@ -48754,6 +48821,9 @@ func (m *UsageLogMutation) ClearField(name string) error {
 		return nil
 	case usagelog.FieldImageSizeSource:
 		m.ClearImageSizeSource()
+		return nil
+	case usagelog.FieldToolUsage:
+		m.ClearToolUsage()
 		return nil
 	case usagelog.FieldImageSizeBreakdown:
 		m.ClearImageSizeBreakdown()
@@ -48894,6 +48964,9 @@ func (m *UsageLogMutation) ResetField(name string) error {
 		return nil
 	case usagelog.FieldImageSizeSource:
 		m.ResetImageSizeSource()
+		return nil
+	case usagelog.FieldToolUsage:
+		m.ResetToolUsage()
 		return nil
 	case usagelog.FieldImageSizeBreakdown:
 		m.ResetImageSizeBreakdown()

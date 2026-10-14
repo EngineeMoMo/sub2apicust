@@ -1812,6 +1812,8 @@ export interface UsageLog {
   image_output_size: string | null
   image_size_source: ImageSizeSource | null
   image_size_breakdown: ImageSizeBreakdown | null
+  // [CUSTOM] 工具费用已包含在总金额，缺失表示历史或无工具请求。
+  tool_usage?: Record<string, { calls: number; unit_price: number; total_cost: number; actual_cost: number }>
   image_input_tokens: number
   image_input_cost: number
   image_output_tokens: number

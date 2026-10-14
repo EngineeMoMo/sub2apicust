@@ -357,6 +357,13 @@ export default {
     standardCost: '标准',
     actualCost: '实际',
     accountCost: '成本',
+    // [CUSTOM] 工具调用费用明细。
+    webSearchTool: '网页搜索',
+    perToolCall: '/ 次',
+    toolOriginalCost: '工具原始费用',
+    toolActualCost: '工具实扣费用',
+    toolIncluded: '以上工具费已包含在本次总费用中。',
+    toolUsageExport: '工具用量与费用 (JSON)',
     userBilled: '用户扣费',
     accountBilled: '账号计费',
     resetNow: '现在',

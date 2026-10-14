@@ -160,6 +160,10 @@ func (UsageLog) Fields() []ent.Field {
 			MaxLen(16).
 			Optional().
 			Nillable(),
+		// [CUSTOM] 工具收费快照；不依赖服务层类型，保持 Ent 生成独立。
+		field.JSON("tool_usage", map[string]any{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
 		field.JSON("image_size_breakdown", map[string]int{}).
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),

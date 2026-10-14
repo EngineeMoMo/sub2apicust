@@ -561,6 +561,12 @@ func (_c *UsageLogCreate) SetNillableImageSizeSource(v *string) *UsageLogCreate 
 	return _c
 }
 
+// SetToolUsage sets the "tool_usage" field.
+func (_c *UsageLogCreate) SetToolUsage(v map[string]interface{}) *UsageLogCreate {
+	_c.mutation.SetToolUsage(v)
+	return _c
+}
+
 // SetImageSizeBreakdown sets the "image_size_breakdown" field.
 func (_c *UsageLogCreate) SetImageSizeBreakdown(v map[string]int) *UsageLogCreate {
 	_c.mutation.SetImageSizeBreakdown(v)
@@ -1110,6 +1116,10 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImageSizeSource(); ok {
 		_spec.SetField(usagelog.FieldImageSizeSource, field.TypeString, value)
 		_node.ImageSizeSource = &value
+	}
+	if value, ok := _c.mutation.ToolUsage(); ok {
+		_spec.SetField(usagelog.FieldToolUsage, field.TypeJSON, value)
+		_node.ToolUsage = value
 	}
 	if value, ok := _c.mutation.ImageSizeBreakdown(); ok {
 		_spec.SetField(usagelog.FieldImageSizeBreakdown, field.TypeJSON, value)
@@ -1989,6 +1999,24 @@ func (u *UsageLogUpsert) UpdateImageSizeSource() *UsageLogUpsert {
 // ClearImageSizeSource clears the value of the "image_size_source" field.
 func (u *UsageLogUpsert) ClearImageSizeSource() *UsageLogUpsert {
 	u.SetNull(usagelog.FieldImageSizeSource)
+	return u
+}
+
+// SetToolUsage sets the "tool_usage" field.
+func (u *UsageLogUpsert) SetToolUsage(v map[string]interface{}) *UsageLogUpsert {
+	u.Set(usagelog.FieldToolUsage, v)
+	return u
+}
+
+// UpdateToolUsage sets the "tool_usage" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateToolUsage() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldToolUsage)
+	return u
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (u *UsageLogUpsert) ClearToolUsage() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldToolUsage)
 	return u
 }
 
@@ -2964,6 +2992,27 @@ func (u *UsageLogUpsertOne) UpdateImageSizeSource() *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) ClearImageSizeSource() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearImageSizeSource()
+	})
+}
+
+// SetToolUsage sets the "tool_usage" field.
+func (u *UsageLogUpsertOne) SetToolUsage(v map[string]interface{}) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetToolUsage(v)
+	})
+}
+
+// UpdateToolUsage sets the "tool_usage" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateToolUsage() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateToolUsage()
+	})
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (u *UsageLogUpsertOne) ClearToolUsage() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearToolUsage()
 	})
 }
 
@@ -4120,6 +4169,27 @@ func (u *UsageLogUpsertBulk) UpdateImageSizeSource() *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) ClearImageSizeSource() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearImageSizeSource()
+	})
+}
+
+// SetToolUsage sets the "tool_usage" field.
+func (u *UsageLogUpsertBulk) SetToolUsage(v map[string]interface{}) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetToolUsage(v)
+	})
+}
+
+// UpdateToolUsage sets the "tool_usage" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateToolUsage() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateToolUsage()
+	})
+}
+
+// ClearToolUsage clears the value of the "tool_usage" field.
+func (u *UsageLogUpsertBulk) ClearToolUsage() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearToolUsage()
 	})
 }
 
