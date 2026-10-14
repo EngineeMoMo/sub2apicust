@@ -10,7 +10,7 @@ const config = { enabled: false, threshold: 10, window_seconds: 7200, block_seco
 const entry: AuthIPEntry = {
   id: 8, ip: '61.120.9.25', generation: 3, blocked: true,
   blocked_at: '2026-10-13T12:32:32Z', trigger_path: '/api/v1/auth/login', trigger_count: 10,
-  window_seconds: 7200, first_event_at: '2026-10-13T11:12:39Z', last_event_at: '2026-10-13T12:32:32Z', rule_version: 2
+  window_seconds: 7200, first_event_at: '2026-10-13T11:12:39Z', last_event_at: '2026-10-13T12:32:32Z', rule_version: 2, source: 'auto', reason: ''
 }
 function render() {
   return mount(AuthIPBlacklistView, { global: { stubs: {
@@ -26,6 +26,91 @@ beforeEach(() => {
 })
 
 describe('IP 黑名单管理', () => {
+  it('手动永久封禁需确认，提交原因，刷新显示来源而不伪造失败统计', async () => {
+    const manualEntry: AuthIPEntry = { ...entry, ip: '192.0.2.40', source: 'manual', reason: '确认恶意扫描', trigger_path: '', trigger_count: 0, window_seconds: 0, first_event_at: null, last_event_at: null, rule_version: 0 }
+    api.post.mockImplementation(async () => {
+      api.get.mockResolvedValue({ data: { items: [manualEntry], total: 1, page: 1, page_size: 20, pages: 1 } })
+      return { data: manualEntry }
+    })
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    expect(wrapper.get('[data-testid="manual-mode"]').element).toHaveProperty('value', 'permanent')
+    await wrapper.get('[data-testid="manual-ip"]').setValue(' 192.0.2.40 ')
+    await wrapper.get('[data-testid="manual-reason"]').setValue(' 确认恶意扫描 ')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    expect(api.post).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('确认封禁 192.0.2.40（永久）')
+    await wrapper.get('[data-testid="confirm"]').trigger('click')
+    await flushPromises()
+    expect(api.post).toHaveBeenCalledWith('/admin/ip-blacklist/entries', { ip: '192.0.2.40', block_mode: 'permanent', block_seconds: 0, reason: '确认恶意扫描' })
+    expect(wrapper.text()).toContain('管理员手动')
+    expect(wrapper.text()).toContain('确认恶意扫描')
+    expect(wrapper.text()).not.toContain('0 次 / 0 分钟')
+    expect(wrapper.text()).not.toContain('1970')
+    expect(wrapper.find('[data-testid="manual-form"]').exists()).toBe(false)
+  })
+  it('手动限时封禁按分钟验证并以秒提交，与自动规则独立', async () => {
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    await wrapper.get('[data-testid="manual-ip"]').setValue('2001:db8::40')
+    await wrapper.get('[data-testid="manual-reason"]').setValue('高频探查')
+    await wrapper.get('[data-testid="manual-mode"]').setValue('timed')
+    await wrapper.get('[data-testid="manual-minutes"]').setValue('0')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    expect(wrapper.text()).toContain('1–1440分钟')
+    expect(wrapper.find('[data-testid="confirm"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="manual-minutes"]').setValue('45')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    expect(wrapper.text()).toContain('45 分钟')
+    await wrapper.get('[data-testid="confirm"]').trigger('click')
+    await flushPromises()
+    expect(api.post).toHaveBeenCalledWith('/admin/ip-blacklist/entries', { ip: '2001:db8::40', block_mode: 'timed', block_seconds: 2700, reason: '高频探查' })
+    expect(api.put).not.toHaveBeenCalled()
+  })
+  it('拒绝空原因与超长原因，不发送手动封禁请求', async () => {
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    await wrapper.get('[data-testid="manual-ip"]').setValue('192.0.2.40')
+    for (const reason of [' ', '恶'.repeat(501)]) {
+      await wrapper.get('[data-testid="manual-reason"]').setValue(reason)
+      await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+      expect(wrapper.text()).toContain('1–500字')
+      expect(wrapper.find('[data-testid="confirm"]').exists()).toBe(false)
+    }
+    expect(api.post).not.toHaveBeenCalled()
+  })
+  it('重复手动添加409刷新名单，保留输入并显示已有封禁提示', async () => {
+    api.post.mockRejectedValue({ status: 409, message: '该 IP 已被封禁，请先解除原封禁' })
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    await wrapper.get('[data-testid="manual-ip"]').setValue(entry.ip)
+    await wrapper.get('[data-testid="manual-reason"]').setValue('人工确认')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    await wrapper.get('[data-testid="confirm"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('该 IP 已被封禁')
+    expect(wrapper.get('[data-testid="manual-ip"]').element).toHaveProperty('value', entry.ip)
+    expect(api.get).toHaveBeenCalledTimes(3)
+    expect(wrapper.find('[data-testid="confirm"]').exists()).toBe(false)
+  })
+  it('无效IP由服务端拒绝并保留表单，空时间不转换为1970', async () => {
+    api.post.mockRejectedValue({ status: 400, message: '请输入完整有效的 IPv4 或 IPv6 地址' })
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    await wrapper.get('[data-testid="manual-ip"]').setValue('192.0.2.0/24')
+    await wrapper.get('[data-testid="manual-reason"]').setValue('扫描')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    await wrapper.get('[data-testid="confirm"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('请输入完整有效')
+    expect(wrapper.find('[data-testid="manual-form"]').exists()).toBe(true)
+    expect(formatAuthIPTime(null, 'Asia/Shanghai')).toBe('—')
+  })
   it('保存以分钟输入、以秒提交，并附带配置版本', async () => {
     const wrapper = render()
     await flushPromises()

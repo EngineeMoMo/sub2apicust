@@ -11,7 +11,7 @@ import (
 
 const authIPEntryColumns = `entry.id, host(entry.ip), entry.blocked, entry.generation,
 entry.blocked_at, entry.trigger_path, entry.trigger_count, entry.window_seconds,
-entry.first_event_at, entry.last_event_at, entry.rule_version, entry.blocked_until`
+entry.first_event_at, entry.last_event_at, entry.rule_version, entry.blocked_until, entry.source, entry.reason`
 
 type authIPBlacklistRepository struct {
 	db *sql.DB
@@ -34,12 +34,12 @@ type authIPRowScanner interface {
 
 func scanAuthIPEntry(row authIPRowScanner, prefix ...any) (*service.AuthIPBlacklistEntry, error) {
 	var id, generation, triggerCount, windowSeconds, ruleVersion sql.NullInt64
-	var ip, triggerPath sql.NullString
+	var ip, triggerPath, source, reason sql.NullString
 	var blocked sql.NullBool
 	var blockedAt, firstEventAt, lastEventAt sql.NullTime
 	var blockedUntil sql.NullTime
 	targets := append(prefix, &id, &ip, &blocked, &generation, &blockedAt, &triggerPath,
-		&triggerCount, &windowSeconds, &firstEventAt, &lastEventAt, &ruleVersion, &blockedUntil)
+		&triggerCount, &windowSeconds, &firstEventAt, &lastEventAt, &ruleVersion, &blockedUntil, &source, &reason)
 	if err := row.Scan(targets...); err != nil {
 		return nil, err
 	}
@@ -49,8 +49,16 @@ func scanAuthIPEntry(row authIPRowScanner, prefix ...any) (*service.AuthIPBlackl
 	entry := &service.AuthIPBlacklistEntry{
 		ID: id.Int64, IP: ip.String, Blocked: blocked.Bool, Generation: generation.Int64,
 		BlockedAt: blockedAt.Time.UTC(), TriggerPath: triggerPath.String, TriggerCount: int(triggerCount.Int64),
-		WindowSeconds: int(windowSeconds.Int64), FirstEventAt: firstEventAt.Time.UTC(),
-		LastEventAt: lastEventAt.Time.UTC(), RuleVersion: ruleVersion.Int64,
+		WindowSeconds: int(windowSeconds.Int64), RuleVersion: ruleVersion.Int64,
+		Source: source.String, Reason: reason.String,
+	}
+	if firstEventAt.Valid {
+		instant := firstEventAt.Time.UTC()
+		entry.FirstEventAt = &instant
+	}
+	if lastEventAt.Valid {
+		instant := lastEventAt.Time.UTC()
+		entry.LastEventAt = &instant
 	}
 	if blockedUntil.Valid {
 		instant := blockedUntil.Time.UTC()
@@ -204,7 +212,7 @@ ON CONFLICT (ip) DO UPDATE SET blocked = TRUE, generation = entry.generation + 1
 blocked_at = EXCLUDED.blocked_at, trigger_path = EXCLUDED.trigger_path,
 trigger_count = EXCLUDED.trigger_count, window_seconds = EXCLUDED.window_seconds,
 first_event_at = EXCLUDED.first_event_at, last_event_at = EXCLUDED.last_event_at,
-rule_version = EXCLUDED.rule_version, blocked_until = EXCLUDED.blocked_until, unblocked_at = NULL, updated_at = NOW()
+rule_version = EXCLUDED.rule_version, blocked_until = EXCLUDED.blocked_until, source = 'auto', reason = '', unblocked_at = NULL, updated_at = NOW()
 RETURNING `+authIPEntryColumns,
 		ip, events.Now, path, events.Count, snapshot.Config.WindowSeconds, events.First, events.Last, snapshot.Config.Version, snapshot.Config.CooldownSeconds(), snapshot.Config.BlockMode))
 	if err != nil {

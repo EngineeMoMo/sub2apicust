@@ -65,7 +65,7 @@ UPDATE custom_auth_ip_blacklist_config SET enabled = FALSE, threshold = 10, wind
 	require.True(t, decision.NewlyBlocked)
 	entry := decision.Entry
 	require.Equal(t, authIPReplayInstant(t, "20:32:32"), entry.BlockedAt)
-	require.Equal(t, authIPReplayInstant(t, "19:12:39"), entry.FirstEventAt)
+	require.Equal(t, authIPReplayInstant(t, "19:12:39"), *entry.FirstEventAt)
 	require.Equal(t, 10, entry.TriggerCount)
 	items, total, err := repo.List(ctx, "61.120.9.25", 1, 20)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ UPDATE custom_auth_ip_blacklist_config SET enabled = FALSE, threshold = 10, wind
 	require.Greater(t, released.Generation, entry.Generation)
 	_, err = guard.Unblock(ctx, entry.ID, entry.Generation)
 	require.ErrorIs(t, err, service.ErrAuthIPBlacklistConflict)
-	oldEvents := service.AuthIPWindowCount{Count: 10, Now: entry.LastEventAt, First: entry.FirstEventAt, Last: entry.LastEventAt}
+	oldEvents := service.AuthIPWindowCount{Count: 10, Now: *entry.LastEventAt, First: *entry.FirstEventAt, Last: *entry.LastEventAt}
 	stale, err := repo.Block(ctx, entry.IP, "/api/v1/auth/login", *oldSnapshot, oldEvents)
 	require.NoError(t, err)
 	require.Nil(t, stale.Entry, "旧在途请求不能重新封禁")

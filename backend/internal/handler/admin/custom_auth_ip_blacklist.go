@@ -80,3 +80,20 @@ func (handler *AuthIPBlacklistHandler) Unblock(ctx *gin.Context) {
 	ctx.Set("audit_extra", map[string]any{"blacklist_id": entry.ID, "target_ip": entry.IP, "generation": entry.Generation})
 	response.Success(ctx, entry)
 }
+
+func (handler *AuthIPBlacklistHandler) ManualBlock(ctx *gin.Context) {
+	ctx.Set("audit_action", "admin.ip_blacklist.manual_block")
+	var request service.AuthIPManualBlock
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		response.BadRequest(ctx, "手动封禁参数无效")
+		return
+	}
+	entry, err := handler.guard.ManualBlock(ctx.Request.Context(), request)
+	if response.ErrorFrom(ctx, err) {
+		return
+	}
+	ctx.Set("audit_extra", map[string]any{"blacklist_id": entry.ID, "target_ip": entry.IP,
+		"generation": entry.Generation, "source": entry.Source, "reason": entry.Reason,
+		"block_mode": request.BlockMode, "blocked_until": entry.BlockedUntil})
+	response.Success(ctx, entry)
+}

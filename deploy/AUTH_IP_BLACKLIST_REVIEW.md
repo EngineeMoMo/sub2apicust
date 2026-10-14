@@ -1,5 +1,13 @@
 # IP认证防护审查与本地验收（2026-10-13）
 
+## 2026-10-14 管理员手动封禁（本轮）
+
+已核实：Docker Go1.27.2中15项认证专项（含真实PG18/Redis8）和全量unit通过；前端14项管理交互、类型、定向ESLint及Vite构建通过。实际镜像Go embed及产品路由通过；8081独立auth_ip_smoke库32条HTTP断言通过，关闭自动开关仍手动拦截注册/登录/验证码/找回/Passkey/2FA/OAuth，重启和Redis清空后仍有效，管理员JWT管理和auth/me仍200，模型入口保持原401，手动审计3条均有管理员身份/原因/来源。永久、45分钟、到期、IPv6、非法输入、重复409和旧解封版本均实测。静态审查未发现阻塞问题；本轮功能不操作原8080数据或配置，生产未部署，新SHA CI/安全/GHCR仍须验证。
+
+增加完整IPv4/IPv6手动新增、永久/1–1440分钟临时期限、必填原因、确认和来源展示。独立于自动开关，不扩大模型/用户/管理员接口范围。迁移253保留旧auto数据并约束manual无失败统计；旧250–252未改。重复有效封禁409，不静默缩短原期限；共享IP事务锁和generation，覆盖并发添加、旧自动请求、旧解封状态、到期恢复与重新自动封禁清理旧原因的验证。
+
+验证与发布证据目录 `output/auth-ip-manual-20261014`。本轮隔离快照基于06873209c，只叠加手动封禁文件；付款/库存248/249、智力效率、投稿补修和前端依赖升级均排除。下方07bcef204发布证据只适用于原自动封禁版本，不能据此宣称手动功能已发布。生产部署及生产真实IP取证仍由用户完成。
+
 ## 2026-10-14发布验真
 
 功能`07bcef204d09349e0574b51a5b8cfdd6266288a3`已独立推送origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252759)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252800)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252762)全部成功；对应SHA／所有job conclusion和日志已保存并断言。

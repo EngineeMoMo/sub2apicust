@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-14 管理员手动封禁：新增253迁移、POST entries及自有管理页入口，支持永久/临时、必填原因和来源；重复有效封禁409，关闭自动开关也生效，共享IP锁和状态版本。只保护现有认证范围。本轮验证/发布以HANDOFF和AUTH_IP_BLACKLIST_REVIEW最新记录为准；旧07bcef204不含手动功能，其他会话改动排除，生产由用户部署。
+
 > 2026-10-14 IP防护已发布：07bcef204d09349e0574b51a5b8cfdd6266288a3已推origin/main，同SHA CI（真实PG18／Redis8、unit／integration、lint0、前端497项）、安全和GHCR全部成功。固定镜像sha-07bcef2（linux/amd64），摘要sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13，registry标签／摘要已验真。用户备份后执行`./update.sh sha-07bcef2`；迁移250/251/252、默认关闭、成功不计数，只保护认证，永久／临时可配置。模型和管理接口不受名单影响。未带其他会话安全补修／248/249／依赖升级／智力效率，生产未代部署。具体取证与待办见HANDOFF及deploy/AUTH_IP_BLACKLIST_REVIEW.md。本条优先于下方未发布历史。
 
 > 2026-10-13 23:31最新：用户允许永久封禁、联系管理员解除，或配置期限。IP防护新增252迁移和block_mode=timed/permanent；永久记录无到期时间，规则修改不改变已有期限。保留成功／验证码／业务校验／429／系统故障不计数；默认10次失败/120分钟、timed15分钟，自动拉黑关闭。8080运行7f423b3890c9、三服务healthy，原数据／281项设置／卷保持。13项后端专项／全量unit／Go embed、55项前端及真实隔离认证、重启／Redis清空／管理员解封通过。此次授权覆盖上一轮禁止新增永久模式；不恢复全请求计数。共享IP误拦率未知，未提交、未生产部署，新SHA CI/安全/GHCR仍待。证据与回退边界见HANDOFF、deploy/AUTH_IP_BLACKLIST_REVIEW.md；宿主无Go，本轮用Docker工具链，保留其他会话未提交内容。

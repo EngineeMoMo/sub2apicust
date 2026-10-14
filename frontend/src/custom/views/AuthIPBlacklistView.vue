@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { authIPBlacklistAPI, authIPError, formatAuthIPTime, type AuthIPConfig, type AuthIPEntry } from '@/custom/authIpBlacklist'
+import { authIPBlacklistAPI, authIPError, formatAuthIPTime, type AuthIPConfig, type AuthIPEntry, type AuthIPManualBlock } from '@/custom/authIpBlacklist'
 
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 const config = ref<AuthIPConfig | null>(null)
@@ -21,7 +21,53 @@ const pages = ref(1)
 const total = ref(0)
 const selected = ref<AuthIPEntry | null>(null)
 const removing = ref(false)
+const manualOpen = ref(false)
+const manualForm = reactive({ ip: '', mode: 'permanent' as AuthIPConfig['block_mode'], minutes: 15, reason: '' })
+const manualError = ref('')
+const pendingManual = ref<AuthIPManualBlock | null>(null)
+const adding = ref(false)
+const manualConfirmMessage = computed(() => {
+  const input = pendingManual.value
+  if (!input) return ''
+  const duration = input.block_mode === 'permanent' ? '永久' : `${input.block_seconds / 60} 分钟`
+  return `确认封禁 ${input.ip}（${duration}）？仅限制敏感认证请求。原因：${input.reason}`
+})
 let listRevision = 0
+
+function prepareManualBlock() {
+  if (adding.value) return
+  manualError.value = ''
+  const ip = manualForm.ip.trim()
+  const reason = manualForm.reason.trim()
+  if (!ip || !reason || Array.from(reason).length > 500 ||
+      (manualForm.mode === 'timed' && (!Number.isInteger(manualForm.minutes) || manualForm.minutes < 1 || manualForm.minutes > 1440))) {
+    manualError.value = '请填写完整 IP、1–500字的原因；临时封禁时长须为1–1440分钟的整数'
+    return
+  }
+  pendingManual.value = { ip, reason, block_mode: manualForm.mode, block_seconds: manualForm.mode === 'timed' ? manualForm.minutes * 60 : 0 }
+}
+
+async function addManualBlock() {
+  if (!pendingManual.value || adding.value) return
+  const input = pendingManual.value
+  pendingManual.value = null
+  adding.value = true
+  message.value = ''
+  try {
+    const entry = await authIPBlacklistAPI.add(input)
+    manualOpen.value = false
+    manualForm.ip = ''
+    manualForm.reason = ''
+    search.value = ''
+    appliedIP.value = ''
+    await loadEntries(1)
+    message.value = `${entry.ip} 已由管理员手动封禁，仅限制敏感认证请求。`
+  } catch (error) {
+    const detail = authIPError(error)
+    if (detail.conflict) await loadEntries()
+    manualError.value = detail.message
+  } finally { adding.value = false }
+}
 
 async function loadConfig() {
   configLoading.value = true
@@ -108,7 +154,7 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
     <div class="space-y-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">IP 黑名单</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">仅累计密码认证失败和请求格式异常，成功操作不计数。验证码校验、业务校验、已有限流和服务端故障不计数。达到次数临时封禁，到期自动恢复。</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">仅累计密码认证失败和请求格式异常，成功操作不计数。验证码校验、业务校验、已有限流和服务端故障不计数。达到次数后按所选方式封禁，也可由管理员手动新增名单。</p>
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">正常模型调用和已登录管理员的管理操作不受影响。页面时间：{{ timezone }}；统计采用服务端滑动窗口。</p>
       </div>
 
@@ -134,7 +180,23 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
       </form>
 
       <section class="card space-y-4 p-5">
-        <h2 class="text-lg font-semibold">已封禁 IP <span class="text-sm font-normal">（{{ total }}）</span></h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold">已封禁 IP <span class="text-sm font-normal">（{{ total }}）</span></h2>
+          <button type="button" class="btn btn-primary" data-testid="manual-open" :disabled="adding || removing" @click="manualOpen = !manualOpen">{{ manualOpen ? '收起手动新增' : '手动新增 IP' }}</button>
+        </div>
+        <form v-if="manualOpen" class="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-dark-600" data-testid="manual-form" @submit.prevent="prepareManualBlock">
+          <p class="text-sm text-gray-600 dark:text-gray-400">手动封禁立即生效，自动拉黑关闭时也有效。仅限制注册、登录、验证码等敏感认证接口。已有有效封禁不会被覆盖，变更期限须先移除原记录。</p>
+          <fieldset class="space-y-3" :disabled="adding">
+            <label class="block space-y-1"><span>IP 地址</span><input v-model="manualForm.ip" class="input w-full" required placeholder="完整 IPv4 或 IPv6 地址，不支持网段" data-testid="manual-ip" /></label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="space-y-1"><span>封禁方式</span><select v-model="manualForm.mode" class="input w-full" data-testid="manual-mode"><option value="permanent">永久封禁，由管理员解除</option><option value="timed">临时封禁，到期自动解除</option></select></label>
+              <label v-if="manualForm.mode === 'timed'" class="space-y-1"><span>封禁时长（分钟）</span><input v-model.number="manualForm.minutes" class="input w-full" type="number" min="1" max="1440" step="1" required data-testid="manual-minutes" /></label>
+            </div>
+            <label class="block space-y-1"><span>封禁原因</span><textarea v-model="manualForm.reason" class="input w-full" rows="2" required placeholder="填写恶意行为依据，最多500字" data-testid="manual-reason" /></label>
+            <button type="submit" class="btn btn-primary" :disabled="adding || removing" data-testid="manual-submit">{{ adding ? '添加中…' : '添加封禁' }}</button>
+          </fieldset>
+          <p v-if="manualError" role="alert" class="text-sm text-red-600">{{ manualError }}</p>
+        </form>
         <form class="flex flex-wrap gap-2" @submit.prevent="filter">
           <input v-model="search" class="input min-w-0 flex-1" aria-label="精确 IP 搜索" placeholder="输入完整 IPv4 或 IPv6 地址，留空查看全部" data-testid="search" />
           <button type="submit" class="btn btn-secondary" :disabled="listLoading || removing">搜索</button>
@@ -145,14 +207,14 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
         <p v-else-if="!listError && entries.length === 0" class="text-sm text-gray-500">暂无封禁记录</p>
         <div v-else-if="entries.length" class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead><tr class="border-b border-gray-200 dark:border-dark-600"><th class="p-3">IP</th><th class="p-3">封禁时间 / 到期时间</th><th class="p-3">触发接口</th><th class="p-3">失败次数 / 统计周期</th><th class="p-3">窗口首末请求时间</th><th class="p-3">操作</th></tr></thead>
+            <thead><tr class="border-b border-gray-200 dark:border-dark-600"><th class="p-3">IP</th><th class="p-3">封禁时间 / 到期时间</th><th class="p-3">来源 / 触发接口 / 原因</th><th class="p-3">失败次数 / 统计周期</th><th class="p-3">窗口首末请求时间</th><th class="p-3">操作</th></tr></thead>
             <tbody><tr v-for="entry in entries" :key="entry.id" class="border-b border-gray-200 dark:border-dark-600">
               <td class="whitespace-nowrap p-3 font-mono">{{ entry.ip }}</td>
               <td class="whitespace-nowrap p-3"><div>{{ formatAuthIPTime(entry.blocked_at, timezone) }}</div><div>{{ entry.blocked_until ? `到期：${formatAuthIPTime(entry.blocked_until, timezone)}` : '永久封禁：管理员移除' }}</div></td>
-              <td class="max-w-xs break-all p-3 font-mono">{{ entry.trigger_path }}</td>
-              <td class="whitespace-nowrap p-3">{{ entry.trigger_count }} 次 / {{ entry.window_seconds / 60 }} 分钟</td>
-              <td class="whitespace-nowrap p-3"><div>{{ formatAuthIPTime(entry.first_event_at, timezone) }}</div><div>{{ formatAuthIPTime(entry.last_event_at, timezone) }}</div></td>
-              <td class="p-3"><button class="btn btn-secondary" type="button" :disabled="removing || listLoading" @click="selected = entry">移除</button></td>
+              <td class="max-w-xs break-all p-3"><template v-if="entry.source === 'manual'"><div>管理员手动</div><div class="whitespace-pre-wrap">{{ entry.reason }}</div></template><template v-else><div>自动封禁</div><div class="font-mono">{{ entry.trigger_path }}</div></template></td>
+              <td class="whitespace-nowrap p-3"><template v-if="entry.source === 'manual'">—</template><template v-else>{{ entry.trigger_count }} 次 / {{ entry.window_seconds / 60 }} 分钟</template></td>
+              <td class="whitespace-nowrap p-3"><template v-if="entry.source === 'manual'">—</template><template v-else><div>{{ formatAuthIPTime(entry.first_event_at, timezone) }}</div><div>{{ formatAuthIPTime(entry.last_event_at, timezone) }}</div></template></td>
+              <td class="p-3"><button class="btn btn-secondary" type="button" :disabled="removing || adding || listLoading" @click="selected = entry">移除</button></td>
             </tr></tbody>
           </table>
         </div>
@@ -164,5 +226,6 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
       </section>
     </div>
     <ConfirmDialog :show="selected !== null" title="移除 IP 黑名单" :message="`确认解封 ${selected?.ip || ''}？解封后重新累计可识别的认证失败。`" confirm-text="确认移除" @confirm="unblock" @cancel="selected = null" />
+    <ConfirmDialog :show="pendingManual !== null" title="手动封禁 IP" :message="manualConfirmMessage" confirm-text="确认封禁" :danger="true" @confirm="addManualBlock" @cancel="pendingManual = null" />
   </AppLayout>
 </template>

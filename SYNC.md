@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-14 管理员手动封禁：同步保留自有custom_auth_ip_manual_block服务/仓储/测试、253迁移及管理页POST entries入口。旧250–252不改；manual来源、必填原因、空统计、共享IP锁/generation、重复有效封禁409须保留。只保护现有认证，自动开关不影响手动名单。新SHA验证/发布见HANDOFF，本轮不带其他会话修改，不以旧sha-07bcef2验收手动新增。
+
 > 2026-10-14 IP防护发布终态：07bcef204已推origin/main，同SHA CI（真实PG18／Redis8、unit／integration、lint、前端497项）／安全／GHCR成功；固定镜像sha-07bcef2（linux/amd64），摘要sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13已交叉核验。用户备份后`./update.sh sha-07bcef2`，保留250/251/252和登记接缝，前后端同版。默认关闭、成功不计数，永久／临时可选，只保护认证；生产真实IP和共享出口验证待用户完成。其他会话248/249及智力效率未发布。本条覆盖下方历史未发布状态，证据见HANDOFF和AUTH_IP_BLACKLIST_REVIEW。
 
 > 2026-10-13 23:31 IP防护在8080运行7f423b3890c9，尚未发布生产：成功操作不计数，默认10次可识别失败/120分钟、临时15分钟，开关关闭；用户最新授权增加可选永久封禁，须管理员移除。保留250/251/252迁移及CUSTOMIZATIONS登记的router/auth.go/AppSidebar/Makefile接缝、失败分类／mode版本／期限保留回归。API block_mode必须明确timed/permanent，前后端同版；规则切换不改变已有记录期限。同步不恢复全请求计数。发布核验新SHA CI/安全/镜像及Cloudflare→Nginx真实IP，见deploy/AUTH_IP_BLACKLIST.md和HANDOFF。其他会话248/249未带入本机；下方官网发布镜像不包含IP防护，生产由用户部署。

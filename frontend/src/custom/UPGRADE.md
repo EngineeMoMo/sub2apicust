@@ -1,5 +1,7 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
+2026-10-14 管理员手动封禁：自有AuthIPBlacklistView/TS API/spec增加“手动新增 IP”、永久/临时、必填原因、确认及manual来源/原因展示；手动统计显示—，nullable首末时间不转换为1970。POST entries与253迁移同版部署，重复有效封禁409刷新而不覆盖，自动关闭也生效；仅保护现有认证范围。验证/发布见HANDOFF，旧sha-07bcef2不含入口。
+
 2026-10-14 IP防护已随07bcef204发布，固定镜像sha-07bcef2；同SHA前端类型／38文件497项含管理9项、后端CI／安全／GHCR通过。前后端及250/251/252同版部署，旧缓存页面PUT缺block_mode返回400需刷新；默认关闭，永久与临时方式可选，成功操作不计数。此发布未包含其他会话智力效率改接或依赖升级，生产由用户更新；具体摘要和证据见HANDOFF。
 
 2026-10-13 23:31 IP防护最新修订：只累计可识别失败，成功／验证码／业务校验／限流及系统故障排除；默认10次/120分钟、临时15分钟、开关关闭。用户授权可选永久封禁，须管理员移除。保留custom/authIpBlacklist.ts、custom/views/AuthIPBlacklistView.vue、custom/routes.ts管理员路由及AppSidebar的[CUSTOM]入口。block_mode=timed/permanent下拉选择；timed显示1–1440分钟时长，permanent隐藏时长并保留已存配置供切回。API window_seconds/block_seconds为秒，PUT必须明确block_mode；列表blocked_until空值显示永久封禁／管理员移除，规则修改不改已有期限。加载失败禁止保存默认值，version/generation冲突409刷新重试，时间标注浏览器时区。回归auth-ip-blacklist.spec.ts（9项），与后端250/251/252和Begin/Failed guard同版发布，旧客户端缺mode返回400需刷新。8080运行7f423b3890c9，55项定向／类型／lint／构建通过，生产未发布；见HANDOFF及deploy/AUTH_IP_BLACKLIST_REVIEW.md，不恢复全请求计数。

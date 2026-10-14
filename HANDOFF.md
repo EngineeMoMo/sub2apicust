@@ -39,6 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-14 手动封禁本地验收**：隔离Docker Go1.27.2全量unit及15项专项（真实PG18/Redis8）、前端14项/类型/lint/Vite、实际镜像embed和产品路由通过；8081独立auth_ip_smoke库32条HTTP断言及3条人工封禁审计通过，关闭自动开关、永久/45分钟/到期、重启/Redis清空、重复409/旧版本和管理员自解封已取证。模型入口仍401、管理员/auth/me仍200，新chunk AuthIPBlacklistView-D2EJCSaP.js。原8080服务/数据/配置未操作；本轮新SHA CI/安全/GHCR待核验，证据output/auth-ip-manual-20261014。
+- **2026-10-14 管理员手动封禁（本轮）**：已补自有服务/存储、POST `/admin/ip-blacklist/entries`和后台“手动新增 IP”，支持完整IPv4/IPv6、永久/1–1440分钟临时期限、1–500字原因与确认；关闭自动开关仍有效，重复有效封禁409不覆盖期限。253迁移区分manual/auto、manual无失败统计；旧250–252未改。只保护现有敏感认证，管理员有效会话仍可自解封，模型调用不受名单影响。隔离源码基线06873209c及验证目录output/auth-ip-manual-20261014；测试及新SHA发布正在核验，不能沿用07bcef204结果。其他会话改动保留，生产未部署。
+
 - **2026-10-14 IP防护最终发布（最新有效状态）**：功能提交`07bcef204d09349e0574b51a5b8cfdd6266288a3`已推送origin/main。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252759)（unit／integration，专用PG18／Redis8，lint0 issues，前端38文件497项含IP管理9项及类型）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252800)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252762)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-07bcef2`，linux/amd64，摘要`sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13`；registry manifest／镜像revision／source标签与构建日志交叉验真，证据`output/auth-ip-release-20261014/verified-release.json`及jobs/logs。18个功能文件与10-13已测试v3哈希一致。用户备份数据库、配置和app_data后在部署目录执行`./update.sh sha-07bcef2`，启动应用250/251/252；首次自动拉黑关闭，10次可识别失败/120分钟、timed15分钟，可后台选永久或时长后开启。只保护公开认证：注册／登录／2FA／Passkey／验证码／密码找回和重置／OAuth；成功不计数，OAuth GET只查名单；模型／管理／当前用户接口、刷新Token／登出／微信支付OAuth不受此名单影响。发布未带入其他会话付款／库存248/249、投稿、依赖升级和智力效率改接。生产未代部署，真实IP链路、共享出口误拦和带记录浏览器验收仍待；10-14Docker引擎未运行，本轮远程门禁不冒充再次本地运行。
 
 - **2026-10-14 IP防护发布准备**：用户授权提交并推送本功能，生产由用户更新。已从router/auth.go核实guard只挂公开认证组：注册／登录／两步验证／Passkey／验证码／找回和重置密码／OAuth认证受保护；成功不计数，OAuth GET只检查。模型调用、管理接口、用户信息／撤销会话、Token刷新／登出及微信支付OAuth不接入。发布仅包含本功能及自有文档、CI真实存储接线，不带其他会话付款／库存248/249、投稿、依赖升级或智力效率改接。CI新增专用PG18／Redis8及AUTH_IP_TEST_*变量，避免新存储回归仅skip。工作区源码与10-13隔离v3的本功能哈希一致；10-14Docker引擎未运行，不冒充本轮重测。发布SHA与CI／安全／镜像结果待推送后记录。
@@ -440,6 +443,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **2026-10-14 管理员手动封禁发布**：核对本轮真实PG/Redis、前端交互/类型/lint、Go unit/embed和实际镜像；仅暂存本功能，沿用户提交推送授权发布并核验新SHA CI/安全/GHCR。生产备份后由用户更新，旧sha-07bcef2不含手动新增；核对生产真实IP及恶意IP证据，未自动加入截图历史IP。
 
 - [x] **2026-10-14 IP防护发布收口**：07bcef204独立提交并推送origin/main；同SHA CI（含真实PG/Redis、unit／integration／lint）、安全、GHCR全部成功，固定镜像sha-07bcef2及摘要交叉核验，更新命令和备份要求已记录；其他会话改动保留，生产未代部署。
 - [x] **IP防护可选永久／临时封禁、代码审查和本地Docker运行**：失败计数、防误拦分类、管理员解封、可配置期限及永久模式、迁移252完成；13项专项／全量unit／55项前端／实际镜像重启和Redis清空／原管理员接口及原数据保留通过，详见第四节最新条目。

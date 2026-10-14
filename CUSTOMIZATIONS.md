@@ -1,5 +1,11 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-14 管理员手动封禁
+
+- 自有新增：`backend/internal/service/custom_auth_ip_manual_block.go`、`backend/internal/repository/custom_auth_ip_manual_block.go`及对应unit/真实PostgreSQL测试，迁移`253_custom_auth_ip_manual_block.sql`。保留250–252原文，不修改上游文件接缝。
+- 扩展自有`custom_auth_ip_blacklist.go`的service/repository/admin handler/routes及测试，新增POST `/api/v1/admin/ip-blacklist/entries`。完整IP归一、永久/临时期限、1–500字原因；自动关闭也生效，已有有效封禁409，不覆盖期限。共享事务锁与generation，source及reason持久化，manual统计0/NULL，重新auto清理旧manual原因。
+- 扩展自有`frontend/src/custom/authIpBlacklist.ts`、`views/AuthIPBlacklistView.vue`及spec，管理员“手动新增 IP”入口、确认、时长、原因、来源及409刷新。只沿用注册/登录/验证码等认证保护范围；模型/管理/已认证用户接口不挂名单。审计事件`admin.ip_blacklist.manual_block`，迁移及验证边界见AUTH_IP_BLACKLIST/REVIEW与HANDOFF。
+
 ## 2026-10-13 敏感认证 IP 自动黑名单（可选永久／临时，2026-10-14已发布）
 
 - 发布07bcef204、固定镜像sha-07bcef2，同SHA CI／安全／GHCR通过；后端真实存储／unit／integration／lint0、前端38文件497项通过。此发布仅含本节功能，模型与管理接口不挂名单，成功操作不计数；默认开关关闭，用户选择封禁方式后开启。镜像摘要与取证见HANDOFF和deploy/AUTH_IP_BLACKLIST_REVIEW.md，生产由用户部署。

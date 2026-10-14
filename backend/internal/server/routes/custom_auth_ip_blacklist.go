@@ -34,5 +34,6 @@ func RegisterAuthIPBlacklistAdminRoutes(v1 *gin.RouterGroup, handler *admin.Auth
 	group.GET("/config", handler.Config)
 	group.PUT("/config", handler.UpdateConfig)
 	group.GET("/entries", handler.List)
+	group.POST("/entries", handler.ManualBlock)
 	group.POST("/entries/:id/unblock", handler.Unblock)
 }

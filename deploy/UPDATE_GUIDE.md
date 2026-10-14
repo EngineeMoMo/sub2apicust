@@ -1,5 +1,7 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-14 管理员手动封禁正在验证发布：新版本新增253迁移和后台“IP 黑名单 → 手动新增 IP”，支持永久/临时期限和原因；自动开关关闭仍检查名单，已有有效封禁不覆盖。备份后按HANDOFF本轮固定镜像更新，前后端同版；旧sha-07bcef2不含此功能。生产未代部署，真实客户端IP与管理员已知攻击IP仍需现场确认。
+
 ## 2026-10-14 敏感认证IP防护（当前可更新版）
 
 功能提交`07bcef204d09349e0574b51a5b8cfdd6266288a3`已推送origin/main。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252759)（真实PG18／Redis8、unit／integration、lint0、前端38文件497项）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252800)、[镜像](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252762)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-07bcef2`，linux/amd64，摘要`sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13`，经registry manifest、revision／source标签与构建日志核验。本条覆盖下方官网及本功能未发布历史。

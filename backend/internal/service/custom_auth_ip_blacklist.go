@@ -16,6 +16,7 @@ var (
 	ErrAuthIPCounterUnavailable = infraerrors.TooManyRequests("AUTH_IP_COUNTER_UNAVAILABLE", "认证请求暂时受限，请稍后重试")
 	ErrAuthIPBlacklistConflict  = infraerrors.Conflict("IP_BLACKLIST_CONFLICT", "状态已变化，请刷新后重试")
 	ErrAuthIPBlacklistNotFound  = infraerrors.NotFound("IP_BLACKLIST_NOT_FOUND", "黑名单记录不存在")
+	ErrAuthIPAlreadyBlocked     = infraerrors.Conflict("IP_BLACKLIST_ALREADY_BLOCKED", "该 IP 已被封禁，请刷新名单；如需变更期限，请先解除原封禁")
 )
 
 const (
@@ -41,10 +42,12 @@ type AuthIPBlacklistEntry struct {
 	TriggerPath   string     `json:"trigger_path"`
 	TriggerCount  int        `json:"trigger_count"`
 	WindowSeconds int        `json:"window_seconds"`
-	FirstEventAt  time.Time  `json:"first_event_at"`
-	LastEventAt   time.Time  `json:"last_event_at"`
+	FirstEventAt  *time.Time `json:"first_event_at"`
+	LastEventAt   *time.Time `json:"last_event_at"`
 	RuleVersion   int64      `json:"rule_version"`
 	BlockedUntil  *time.Time `json:"blocked_until"`
+	Source        string     `json:"source"`
+	Reason        string     `json:"reason"`
 }
 
 type AuthIPBlacklistSnapshot struct {
@@ -71,6 +74,7 @@ type AuthIPBlacklistRepository interface {
 	List(context.Context, string, int, int) ([]AuthIPBlacklistEntry, int64, error)
 	Block(context.Context, string, string, AuthIPBlacklistSnapshot, AuthIPWindowCount) (*AuthIPBlacklistDecision, error)
 	Unblock(context.Context, int64, int64) (*AuthIPBlacklistEntry, error)
+	ManualBlock(context.Context, AuthIPManualBlock) (*AuthIPBlacklistEntry, error)
 }
 
 type AuthIPWindowCounter interface {
@@ -225,7 +229,7 @@ func (guard *AuthIPBlacklistService) Unblock(ctx context.Context, id, generation
 }
 
 func authIPStorageError(err error) error {
-	if err == nil || errors.Is(err, ErrAuthIPBlacklistConflict) || errors.Is(err, ErrAuthIPBlacklistNotFound) {
+	if err == nil || errors.Is(err, ErrAuthIPBlacklistConflict) || errors.Is(err, ErrAuthIPBlacklistNotFound) || errors.Is(err, ErrAuthIPAlreadyBlocked) {
 		return err
 	}
 	return ErrAuthIPGuardUnavailable.WithCause(err)

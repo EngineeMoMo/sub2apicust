@@ -24,6 +24,10 @@ OAuth 登录启动和回调 GET 只检查已有封禁，不计数。刷新 Token
 
 菜单“IP 黑名单”，路径 `/admin/ip-blacklist`，复用现有管理员鉴权、面板限流、审计和合规确认。
 
+管理员可点“手动新增 IP”，填写完整 IPv4/IPv6、原因（1–500字），选择永久或临时封禁（1–1440整分钟），确认后立即生效。手动封禁独立于自动开关和统计规则；只限制当前敏感认证接口，模型调用、已认证用户接口和管理员接口保持当前范围。列表标注“管理员手动”及原因，手动记录不产生失败次数和窗口首末时间，统计项显示“—”。
+
+同 IP 已有有效封禁时新增返回 `409 IP_BLACKLIST_ALREADY_BLOCKED`，不覆盖原期限；需先解除原封禁再新增。自动封禁、手动新增、到期和解封共享同 IP 事务锁与 generation，旧在途请求和旧解封页面不能覆盖新的管理员决定。手动新增事件 `admin.ip_blacklist.manual_block` 写入现有审计，含管理员身份、IP、原因、状态版本和到期时间。
+
 - 自动拉黑开关、触发次数（1–1000整数）、统计周期（1–1440整分钟）、封禁方式。临时显示时长（1–1440整分钟），永久显示管理员解除说明，切回临时保留已有配置时长。默认10次/120分钟、timed15分钟，配置读取失败时禁止保存默认值。
 - 活跃名单分页、精确 IPv4/IPv6 搜索；IPv4 映射 IPv6 会归一为 IPv4。展示封禁时间、触发接口、次数、周期、窗口首末请求时间。
 - 移除须确认并附当前 `generation`。过期页面返回 `409 IP_BLACKLIST_CONFLICT`，刷新后重新确认，不静默覆盖最新状态。
@@ -36,11 +40,14 @@ API 前缀 `/api/v1/admin/ip-blacklist`：
 | GET `/config` | 无 | enabled / threshold / window_seconds / block_seconds / block_mode / version |
 | PUT `/config` | 完整配置，包含当前version和明确的block_mode | 新配置及递增版本 |
 | GET `/entries` | page / page_size（最多100）/ ip（完整地址或空） | items / total / page / page_size / pages |
+| POST `/entries` | ip / block_mode / block_seconds / reason；永久时长0，临时时长为60–86400整分钟秒数 | 手动封禁记录及generation；重复有效封禁409 |
 | POST `/entries/:id/unblock` | `{ "generation": 当前状态版本 }` | 已解封记录及新状态版本 |
 
 迁移250创建两张自有表`custom_auth_ip_blacklist_config`、`custom_auth_ip_blacklist`；251添加`block_seconds=900`、可空`blocked_until`并递增版本，使旧全请求计数失效；252添加`block_mode='timed'`及模式约束，再次递增版本。250/251已应用内容不修改。API必须提交`block_mode=timed/permanent`；非法或遗漏模式400，避免旧客户端静默将永久模式降为临时。旧前端需刷新，前后端同版部署。两种模式下block_seconds保留有效临时时长；永久模式不使用该时长。解封或到期保留状态行并递增版本，阻止旧请求重封；规则改变或解封不需要重启。
 
 ## 上线核验
+
+迁移253添加 `source=auto/manual` 和原因，旧记录归类为auto；手动记录 count/window 为0、首末时间为NULL，来源约束阻止伪造自动统计。保留250–252原内容，前后端同版更新。旧 `sha-07bcef2` 不含手动新增界面或接口；应用迁移253后不要直接回退旧程序处理曾手动封禁的IP，旧自动写入未清理manual来源，会受到新数据约束拒绝。
 
 用户确认拓扑为 Cloudflare → Nginx。生产真实配置尚未取证，开启前由部署者完成以下核验：
 
