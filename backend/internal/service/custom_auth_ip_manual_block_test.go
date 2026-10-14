@@ -31,7 +31,7 @@ func TestAuthIPManualBlockValidation(t *testing.T) {
 	require.Equal(t, "192.0.2.40", entry.IP)
 	require.Equal(t, "恶意扫描", repo.input.Reason)
 	for _, change := range []func(*AuthIPManualBlock){
-		func(input *AuthIPManualBlock) { input.IP = "192.0.2.0/24" },
+		func(input *AuthIPManualBlock) { input.IP = "192.0.*.4" },
 		func(input *AuthIPManualBlock) { input.IP = "fe80::1%eth0" },
 		func(input *AuthIPManualBlock) { input.Reason = " " },
 		func(input *AuthIPManualBlock) { input.Reason = strings.Repeat("恶", 501) },

@@ -52,12 +52,16 @@ func (counter *authIPWindowCounter) CountAt(ctx context.Context, ip string, gene
 	if counter.redis == nil {
 		return nil, fmt.Errorf("认证计数 Redis 未配置")
 	}
+	target, err := service.AuthIPAggregationTarget(ip, config)
+	if err != nil {
+		return nil, err
+	}
 	score := ""
 	if !entered.IsZero() {
 		score = fmt.Sprint(entered.UnixMilli())
 	}
 	result, err := authIPWindowScript.Run(ctx, counter.redis,
-		[]string{service.AuthIPCounterKey(ip, generation, config.Version)},
+		[]string{service.AuthIPCounterKey(target, generation, config.Version, config.NetworkState)},
 		int64(config.WindowSeconds)*1000, uuid.NewString(), score).Int64Slice()
 	if err != nil {
 		return nil, err

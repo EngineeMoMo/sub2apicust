@@ -2,11 +2,11 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { authIPBlacklistAPI, authIPError, formatAuthIPTime, type AuthIPConfig, type AuthIPEntry, type AuthIPManualBlock } from '@/custom/authIpBlacklist'
+import { authIPBlacklistAPI, authIPError, authIPTargetSummary, formatAuthIPTime, type AuthIPConfig, type AuthIPEntry, type AuthIPManualBlock } from '@/custom/authIpBlacklist'
 
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 const config = ref<AuthIPConfig | null>(null)
-const form = reactive({ enabled: false, threshold: 10, minutes: 120, cooldown: 15, mode: 'timed' as AuthIPConfig['block_mode'] })
+const form = reactive({ enabled: false, threshold: 10, minutes: 120, cooldown: 15, mode: 'timed' as AuthIPConfig['block_mode'], aggregation: 'network' as AuthIPConfig['aggregation_mode'], ipv4: 24, ipv6: 64 })
 const configLoading = ref(false)
 const saving = ref(false)
 const configError = ref('')
@@ -30,7 +30,7 @@ const manualConfirmMessage = computed(() => {
   const input = pendingManual.value
   if (!input) return ''
   const duration = input.block_mode === 'permanent' ? '永久' : `${input.block_seconds / 60} 分钟`
-  return `确认封禁 ${input.ip}（${duration}）？仅限制敏感认证请求。原因：${input.reason}`
+  return `确认封禁 ${authIPTargetSummary(input.ip)}（${duration}）？仅限制敏感认证请求。原因：${input.reason}`
 })
 let listRevision = 0
 
@@ -41,7 +41,7 @@ function prepareManualBlock() {
   const reason = manualForm.reason.trim()
   if (!ip || !reason || Array.from(reason).length > 500 ||
       (manualForm.mode === 'timed' && (!Number.isInteger(manualForm.minutes) || manualForm.minutes < 1 || manualForm.minutes > 1440))) {
-    manualError.value = '请填写完整 IP、1–500字的原因；临时封禁时长须为1–1440分钟的整数'
+    manualError.value = '请填写 IP 或网段、1–500字的原因；临时封禁时长须为1–1440分钟的整数'
     return
   }
   pendingManual.value = { ip, reason, block_mode: manualForm.mode, block_seconds: manualForm.mode === 'timed' ? manualForm.minutes * 60 : 0 }
@@ -76,7 +76,7 @@ async function loadConfig() {
   try {
     const loaded = await authIPBlacklistAPI.config()
     config.value = loaded
-    Object.assign(form, { enabled: loaded.enabled, threshold: loaded.threshold, minutes: loaded.window_seconds / 60, cooldown: (loaded.block_seconds || 900) / 60, mode: loaded.block_mode })
+    Object.assign(form, { enabled: loaded.enabled, threshold: loaded.threshold, minutes: loaded.window_seconds / 60, cooldown: (loaded.block_seconds || 900) / 60, mode: loaded.block_mode, aggregation: loaded.aggregation_mode, ipv4: loaded.network_ipv4_prefix, ipv6: loaded.network_ipv6_prefix })
   } catch (error) { configError.value = authIPError(error).message }
   finally { configLoading.value = false }
 }
@@ -85,15 +85,17 @@ async function save() {
   if (!config.value || saving.value || configLoading.value) return
   if (!Number.isInteger(form.threshold) || form.threshold < 1 || form.threshold > 1000 ||
       !Number.isInteger(form.minutes) || form.minutes < 1 || form.minutes > 1440 ||
+      !Number.isInteger(form.ipv4) || form.ipv4 < 1 || form.ipv4 > 32 ||
+      !Number.isInteger(form.ipv6) || form.ipv6 < 1 || form.ipv6 > 128 ||
       (form.mode === 'timed' && (!Number.isInteger(form.cooldown) || form.cooldown < 1 || form.cooldown > 1440))) {
-    configError.value = '次数须为1–1000的整数，周期和封禁时长须为1–1440分钟的整数'
+    configError.value = '次数须为1–1000，周期和封禁时长须为1–1440分钟；IPv4 前缀须为1–32，IPv6 前缀须为1–128的整数'
     return
   }
   saving.value = true
   configError.value = ''
   message.value = ''
   try {
-    config.value = await authIPBlacklistAPI.save({ enabled: form.enabled, threshold: form.threshold, window_seconds: form.minutes * 60, block_seconds: form.mode === 'timed' ? form.cooldown * 60 : config.value.block_seconds, block_mode: form.mode, version: config.value.version })
+    config.value = await authIPBlacklistAPI.save({ enabled: form.enabled, threshold: form.threshold, window_seconds: form.minutes * 60, block_seconds: form.mode === 'timed' ? form.cooldown * 60 : config.value.block_seconds, block_mode: form.mode, version: config.value.version, aggregation_mode: form.aggregation, network_ipv4_prefix: form.ipv4, network_ipv6_prefix: form.ipv6 })
     form.cooldown = config.value.block_seconds / 60
     message.value = '规则已保存，新的失败请求从新统计窗口开始计数。已有临时封禁到期恢复，永久名单须管理员移除；修改规则不会改变已有记录的期限。'
   } catch (error) {
@@ -170,7 +172,11 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
             <label class="space-y-1"><span>统计周期（分钟）</span><input v-model.number="form.minutes" class="input w-full" type="number" min="1" max="1440" step="1" required data-testid="minutes" /></label>
             <label class="space-y-1"><span>封禁方式</span><select v-model="form.mode" class="input w-full" data-testid="block-mode"><option value="timed">临时封禁，到期自动解除</option><option value="permanent">永久封禁，由管理员解除</option></select></label>
             <label v-if="form.mode === 'timed'" class="space-y-1"><span>封禁时长（分钟）</span><input v-model.number="form.cooldown" class="input w-full" type="number" min="1" max="1440" step="1" required data-testid="cooldown" /></label>
+            <label class="space-y-1"><span>自动封禁范围</span><select v-model="form.aggregation" class="input w-full" data-testid="aggregation"><option value="network">网段：不同 IP 共同累计并封禁整个网段</option><option value="ip">单 IP：每个 IP 分开累计</option></select></label>
+            <label v-if="form.aggregation === 'network'" class="space-y-1"><span>IPv4 网段前缀</span><input v-model.number="form.ipv4" class="input w-full" type="number" min="1" max="32" step="1" required data-testid="ipv4-prefix" /></label>
+            <label v-if="form.aggregation === 'network'" class="space-y-1"><span>IPv6 网段前缀</span><input v-model.number="form.ipv6" class="input w-full" type="number" min="1" max="128" step="1" required data-testid="ipv6-prefix" /></label>
           </div>
+          <p v-if="form.aggregation === 'network'" class="text-sm text-gray-600 dark:text-gray-400">同一网段所有 IP 的明确认证失败共同累计；默认 IPv4 /24（如210.230.206.*），IPv6 /64。封禁会限制网段内所有地址的敏感认证，包括共享该网段的正常用户。前缀数值越小，范围越大；可选临时封禁，到期恢复。</p>
           <p class="text-sm text-gray-600 dark:text-gray-400">每次失败向前回看 {{ form.minutes }} 分钟，不按整点清零；恰好位于窗口起点的旧请求不计入。第 {{ form.threshold }} 次失败触发<span v-if="form.mode === 'timed'"> {{ form.cooldown }} 分钟封禁，到期后重新计数。</span><span v-else>永久封禁，须联系管理员移除，才可恢复敏感认证请求。</span></p>
           <button type="submit" class="btn btn-primary" :disabled="!config || saving || configLoading" data-testid="save">{{ saving ? '保存中…' : '保存规则' }}</button>
         </fieldset>
@@ -187,7 +193,9 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
         <form v-if="manualOpen" class="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-dark-600" data-testid="manual-form" @submit.prevent="prepareManualBlock">
           <p class="text-sm text-gray-600 dark:text-gray-400">手动封禁立即生效，自动拉黑关闭时也有效。仅限制注册、登录、验证码等敏感认证接口。已有有效封禁不会被覆盖，变更期限须先移除原记录。</p>
           <fieldset class="space-y-3" :disabled="adding">
-            <label class="block space-y-1"><span>IP 地址</span><input v-model="manualForm.ip" class="input w-full" required placeholder="完整 IPv4 或 IPv6 地址，不支持网段" data-testid="manual-ip" /></label>
+            <label class="block space-y-1"><span>IP 地址 / 网段</span><input v-model="manualForm.ip" class="input w-full" required placeholder="IP、210.230.206.* 或 210.230.206.0/24" data-testid="manual-ip" /></label>
+            <p class="text-sm text-gray-600 dark:text-gray-400">通配符只支持末尾连续 *，也支持 IPv4/IPv6 CIDR。网段保存为一条规则，封禁该范围内所有 IP 的敏感认证请求；已有单 IP 规则独立保留。</p>
+            <p v-if="manualForm.ip.includes('*') || manualForm.ip.includes('/')" class="text-sm" data-testid="target-preview">{{ authIPTargetSummary(manualForm.ip) }}</p>
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="space-y-1"><span>封禁方式</span><select v-model="manualForm.mode" class="input w-full" data-testid="manual-mode"><option value="permanent">永久封禁，由管理员解除</option><option value="timed">临时封禁，到期自动解除</option></select></label>
               <label v-if="manualForm.mode === 'timed'" class="space-y-1"><span>封禁时长（分钟）</span><input v-model.number="manualForm.minutes" class="input w-full" type="number" min="1" max="1440" step="1" required data-testid="manual-minutes" /></label>
@@ -198,7 +206,7 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
           <p v-if="manualError" role="alert" class="text-sm text-red-600">{{ manualError }}</p>
         </form>
         <form class="flex flex-wrap gap-2" @submit.prevent="filter">
-          <input v-model="search" class="input min-w-0 flex-1" aria-label="精确 IP 搜索" placeholder="输入完整 IPv4 或 IPv6 地址，留空查看全部" data-testid="search" />
+          <input v-model="search" class="input min-w-0 flex-1" aria-label="IP 或网段搜索" placeholder="输入 IP、通配符或 CIDR，查看覆盖或重叠规则；留空查看全部" data-testid="search" />
           <button type="submit" class="btn btn-secondary" :disabled="listLoading || removing">搜索</button>
           <button type="button" class="btn btn-secondary" :disabled="listLoading || removing" @click="loadEntries()">刷新</button>
         </form>
@@ -207,11 +215,11 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
         <p v-else-if="!listError && entries.length === 0" class="text-sm text-gray-500">暂无封禁记录</p>
         <div v-else-if="entries.length" class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead><tr class="border-b border-gray-200 dark:border-dark-600"><th class="p-3">IP</th><th class="p-3">封禁时间 / 到期时间</th><th class="p-3">来源 / 触发接口 / 原因</th><th class="p-3">失败次数 / 统计周期</th><th class="p-3">窗口首末请求时间</th><th class="p-3">操作</th></tr></thead>
+            <thead><tr class="border-b border-gray-200 dark:border-dark-600"><th class="p-3">IP / 网段</th><th class="p-3">封禁时间 / 到期时间</th><th class="p-3">来源 / 触发接口 / 原因</th><th class="p-3">失败次数 / 统计周期</th><th class="p-3">窗口首末请求时间</th><th class="p-3">操作</th></tr></thead>
             <tbody><tr v-for="entry in entries" :key="entry.id" class="border-b border-gray-200 dark:border-dark-600">
               <td class="whitespace-nowrap p-3 font-mono">{{ entry.ip }}</td>
               <td class="whitespace-nowrap p-3"><div>{{ formatAuthIPTime(entry.blocked_at, timezone) }}</div><div>{{ entry.blocked_until ? `到期：${formatAuthIPTime(entry.blocked_until, timezone)}` : '永久封禁：管理员移除' }}</div></td>
-              <td class="max-w-xs break-all p-3"><template v-if="entry.source === 'manual'"><div>管理员手动</div><div class="whitespace-pre-wrap">{{ entry.reason }}</div></template><template v-else><div>自动封禁</div><div class="font-mono">{{ entry.trigger_path }}</div></template></td>
+              <td class="max-w-xs break-all p-3"><template v-if="entry.source === 'manual'"><div>{{ entry.ip.includes('/') ? '管理员手动 · 网段' : '管理员手动' }}</div><div class="whitespace-pre-wrap">{{ entry.reason }}</div></template><template v-else><div>自动封禁</div><div class="font-mono">{{ entry.trigger_path }}</div></template></td>
               <td class="whitespace-nowrap p-3"><template v-if="entry.source === 'manual'">—</template><template v-else>{{ entry.trigger_count }} 次 / {{ entry.window_seconds / 60 }} 分钟</template></td>
               <td class="whitespace-nowrap p-3"><template v-if="entry.source === 'manual'">—</template><template v-else><div>{{ formatAuthIPTime(entry.first_event_at, timezone) }}</div><div>{{ formatAuthIPTime(entry.last_event_at, timezone) }}</div></template></td>
               <td class="p-3"><button class="btn btn-secondary" type="button" :disabled="removing || adding || listLoading" @click="selected = entry">移除</button></td>
@@ -225,7 +233,7 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
         </div>
       </section>
     </div>
-    <ConfirmDialog :show="selected !== null" title="移除 IP 黑名单" :message="`确认解封 ${selected?.ip || ''}？解封后重新累计可识别的认证失败。`" confirm-text="确认移除" @confirm="unblock" @cancel="selected = null" />
+    <ConfirmDialog :show="selected !== null" title="移除 IP 黑名单" :message="`确认解除 ${selected?.ip || ''} 这条规则？其他覆盖规则仍有效；解除后受影响 IP 从新窗口累计可识别的认证失败。`" confirm-text="确认移除" @confirm="unblock" @cancel="selected = null" />
     <ConfirmDialog :show="pendingManual !== null" title="手动封禁 IP" :message="manualConfirmMessage" confirm-text="确认封禁" :danger="true" @confirm="addManualBlock" @cancel="pendingManual = null" />
   </AppLayout>
 </template>

@@ -32,12 +32,17 @@ func (handler *AuthIPBlacklistHandler) UpdateConfig(ctx *gin.Context) {
 		response.BadRequest(ctx, "规则参数无效")
 		return
 	}
+	if config.AggregationMode == "" || config.NetworkIPv4Prefix < 1 || config.NetworkIPv6Prefix < 1 {
+		response.BadRequest(ctx, "请刷新页面并提交自动封禁范围及 IPv4、IPv6 网段前缀")
+		return
+	}
 	updated, err := handler.guard.UpdateConfig(ctx.Request.Context(), config)
 	if response.ErrorFrom(ctx, err) {
 		return
 	}
 	ctx.Set("audit_extra", map[string]any{"enabled": updated.Enabled, "threshold": updated.Threshold,
-		"window_seconds": updated.WindowSeconds, "block_seconds": updated.BlockSeconds, "block_mode": updated.BlockMode, "config_version": updated.Version})
+		"window_seconds": updated.WindowSeconds, "block_seconds": updated.BlockSeconds, "block_mode": updated.BlockMode, "config_version": updated.Version,
+		"aggregation_mode": updated.AggregationMode, "network_ipv4_prefix": updated.NetworkIPv4Prefix, "network_ipv6_prefix": updated.NetworkIPv6Prefix})
 	response.Success(ctx, updated)
 }
 

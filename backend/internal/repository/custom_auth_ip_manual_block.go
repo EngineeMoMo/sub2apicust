@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
@@ -17,17 +15,18 @@ func (repo *authIPBlacklistRepository) ManualBlock(ctx context.Context, input se
 		return nil, err
 	}
 	defer func() { _ = tx.Rollback() }()
+	if err = lockAuthIPPolicy(ctx, tx, true); err != nil {
+		return nil, err
+	}
 	if err = lockAuthIP(ctx, tx, input.IP); err != nil {
 		return nil, err
 	}
-	var id int64
-	err = tx.QueryRowContext(ctx, `SELECT id FROM custom_auth_ip_blacklist
-WHERE ip = $1::inet AND blocked AND (blocked_until IS NULL OR blocked_until > clock_timestamp())`, input.IP).Scan(&id)
-	if err == nil {
-		return nil, service.ErrAuthIPAlreadyBlocked
-	}
-	if !errors.Is(err, sql.ErrNoRows) {
+	active, err := activeAuthIPEntry(ctx, tx, input.IP)
+	if err != nil {
 		return nil, err
+	}
+	if active != nil {
+		return nil, service.ErrAuthIPAlreadyBlocked
 	}
 	entry, err := scanAuthIPEntry(tx.QueryRowContext(ctx, `INSERT INTO custom_auth_ip_blacklist AS entry
 (ip, blocked, generation, blocked_at, trigger_path, trigger_count, window_seconds, first_event_at, last_event_at, rule_version, blocked_until, source, reason)

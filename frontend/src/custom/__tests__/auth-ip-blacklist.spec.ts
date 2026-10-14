@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import AuthIPBlacklistView from '@/custom/views/AuthIPBlacklistView.vue'
-import { authIPBlacklistAPI, formatAuthIPTime, type AuthIPEntry } from '@/custom/authIpBlacklist'
+import { authIPBlacklistAPI, authIPTargetSummary, formatAuthIPTime, type AuthIPEntry } from '@/custom/authIpBlacklist'
 import { customRoutes } from '@/custom/routes'
 
 const api = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), post: vi.fn() }))
 vi.mock('@/api/client', () => ({ apiClient: api }))
-const config = { enabled: false, threshold: 10, window_seconds: 7200, block_seconds: 900, block_mode: 'timed', version: 1 }
+const config = { enabled: false, threshold: 10, window_seconds: 7200, block_seconds: 900, block_mode: 'timed', version: 1, aggregation_mode: 'network', network_ipv4_prefix: 24, network_ipv6_prefix: 64 }
 const entry: AuthIPEntry = {
   id: 8, ip: '61.120.9.25', generation: 3, blocked: true,
   blocked_at: '2026-10-13T12:32:32Z', trigger_path: '/api/v1/auth/login', trigger_count: 10,
@@ -26,6 +26,39 @@ beforeEach(() => {
 })
 
 describe('IP 黑名单管理', () => {
+  it('网段范围保存及非法前缀阻止提交', async () => {
+    const wrapper = render()
+    await flushPromises()
+    expect(wrapper.get('[data-testid="aggregation"]').element).toHaveProperty('value', 'network')
+    expect(wrapper.text()).toContain('正常用户')
+    await wrapper.get('[data-testid="ipv4-prefix"]').setValue(0)
+    await wrapper.get('form').trigger('submit')
+    expect(api.put).not.toHaveBeenCalled()
+    await wrapper.get('[data-testid="ipv4-prefix"]').setValue(25)
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(api.put).toHaveBeenCalledWith('/admin/ip-blacklist/config', { ...config, network_ipv4_prefix: 25 })
+    await wrapper.get('[data-testid="aggregation"]').setValue('ip')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(api.put).toHaveBeenLastCalledWith('/admin/ip-blacklist/config', { ...config, version: 2, aggregation_mode: 'ip', network_ipv4_prefix: 25 })
+  })
+
+  it('手动通配符确认显示实际网段和地址范围', async () => {
+    const wrapper = render()
+    await flushPromises()
+    await wrapper.get('[data-testid="manual-open"]').trigger('click')
+    await wrapper.get('[data-testid="manual-ip"]').setValue('210.230.206.*')
+    await wrapper.get('[data-testid="manual-reason"]').setValue('同网段恶意探查')
+    await wrapper.get('[data-testid="manual-form"]').trigger('submit')
+    expect(wrapper.text()).toContain('210.230.206.0/24')
+    expect(wrapper.text()).toContain('256 个 IP')
+    await wrapper.get('[data-testid="confirm"]').trigger('click')
+    await flushPromises()
+    expect(api.post).toHaveBeenCalledWith('/admin/ip-blacklist/entries', { ip: '210.230.206.*', block_mode: 'permanent', block_seconds: 0, reason: '同网段恶意探查' })
+    expect(authIPTargetSummary('210.230.*')).toBe('210.230.*')
+    expect(authIPTargetSummary('210.230.206.0/24/25')).toBe('210.230.206.0/24/25')
+  })
   it('手动永久封禁需确认，提交原因，刷新显示来源而不伪造失败统计', async () => {
     const manualEntry: AuthIPEntry = { ...entry, ip: '192.0.2.40', source: 'manual', reason: '确认恶意扫描', trigger_path: '', trigger_count: 0, window_seconds: 0, first_event_at: null, last_event_at: null, rule_version: 0 }
     api.post.mockImplementation(async () => {
@@ -119,7 +152,7 @@ describe('IP 黑名单管理', () => {
     await wrapper.get('[data-testid="enabled"]').setValue(true)
     await wrapper.findAll('form')[0].trigger('submit')
     await flushPromises()
-    expect(api.put).toHaveBeenCalledWith('/admin/ip-blacklist/config', { enabled: true, threshold: 10, window_seconds: 10800, block_seconds: 900, block_mode: 'timed', version: 1 })
+    expect(api.put).toHaveBeenCalledWith('/admin/ip-blacklist/config', { ...config, enabled: true, window_seconds: 10800 })
     expect(wrapper.get('[data-testid="cooldown"]').element).toHaveProperty('value', '15')
     expect(wrapper.text()).toContain('成功操作不计数')
     expect(wrapper.text()).toContain('已有临时封禁到期恢复')

@@ -39,6 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-14 网段防护本轮**：手动支持210.230.206.*及IPv4/IPv6 CIDR；自动按网段共享明确失败计数，默认IPv4 /24、IPv6 /64，可配置单IP/网段、前缀、临时/永久及时长。成功不计数，名单仍只保护认证；共享网段正常用户也受限。新增254保留旧开关和名单、规则version递增；250–253不改。本轮自审未发现阻塞问题；Docker真实PG18/Redis8、18项后端专项含7组网段回归、全量unit/Go embed、前端16项/类型/lint/Vite和8081的44条HTTP断言通过。正式提交/本轮CI/GHCR仍待，不能沿用旧发布结论。证据output/auth-ip-network-20261014。
+- **2026-10-14 网段防护8080**：原应用更新到sub2apicust:auth-ip-network-local-20261014/b33cb472be2a，容器0fa7d82eda3d，三服务healthy；原PG/Redis/recipes容器及挂载保持，recipes仍停止。用户3/Key0/组3/套餐1/订单0/设置281与摘要686429b8e197b1d3d609158ba01f822c保持，名单0；254生效、enabled=false/timed900、version3→4、network/24/64。真实管理员登录/config/entries、新输入400、模型入口401和新chunk BznUWgMC核验。迁移前备份665933字节、pg_restore目录1282行、SHA256ff83db7ad955edffcc47e6cffc904c1eafa5a115d26a36592e6d085916e141af，旧before-auth-ip-network-20261014镜像保留。本机延续原智力效率源码；正式发布快照排除其他会话改动，生产未代部署。
+
 - **2026-10-14 手动封禁发布终态**：功能065eee935a5eea3fb023c5faf469b988feb0fa73已推origin/main；同SHA CI38497226115（unit/integration，专用PG18/Redis8，lint0，前端38文件502项含IP管理14项）、安全38497226138、GHCR38497226114全部成功。镜像`ghcr.io/engineemomo/sub2apicust:sha-065eee9`，linux/amd64，摘要`sha256:8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38`，registry/revision/source/构建日志及23文件快照哈希交叉验真。用户备份后在部署目录执行`./update.sh sha-065eee9`；支持后台IP黑名单“手动新增 IP”、完整IP/原因、永久/临时，默认手动永久；自动开关关闭仍生效，只保护认证，重复有效封禁409。253迁移已在本机8080生效，原250–252不改，生产未代部署。
 - **2026-10-14 手动封禁8080收口**：原应用已替换为镜像e9fd3b9c7ea2、容器112691d6fc2b，三服务healthy；实际镜像ID/运行容器一致，10条HTTP及真实管理员登录/新POST参数400/新版chunk AuthIPBlacklistView-CoRkhMZ9.js通过。原PG1f5c08bee7e1、Redis c531bb587a18及原挂载保留，用户3/Key0/组3/套餐1/订单0/设置281/名单0和防护配置enabled=false,timed900,version3升级前后完全一致（仅比较上述业务计数及防护配置，不宣称全部数据库字节不变）。基于原v3快照只叠加手动功能，保留之前本地智力效率源码；正式镜像不含其他会话改动。备份output/auth-ip-manual-20261014/database-before-manual.dump，664356字节，SHA2563998822DEF6124768CF5D35AD5ADEA42CF3A219FA3B45C66B3FF9B05384A69A0，pg_restore目录1282行检查通过；旧镜像before-auth-ip-manual-20261014保留。独立8081测试容器/网络/匿名卷已清理。证据verified-release.json、local-verified.json、smoke.json及本SHAjobs/logs；下方隔离阶段“未操作8080/待CI”已成为历史状态。
 
@@ -446,6 +449,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **2026-10-14 网段防护发布**：仅暂存本轮自有代码与文档，推origin/main后核验同SHA CI/安全/GHCR及固定镜像摘要；生产由用户备份后部署并核验Cloudflare→Nginx真实IP，选择范围/期限后开启。当前本机自动仍关闭，未自动录入截图网段，不承诺共享网段零误拦。
 
 - [ ] **2026-10-14 手动黑名单生产验收**：用户备份后`./update.sh sha-065eee9`，刷新后台IP黑名单使用“手动新增 IP”；核对生产真实客户端IP、代理头清洗/源站限制、已知恶意IP证据及共享出口影响。本机已测永久/临时、重启/Redis清空、到期/解封/旧版本；生产是否已更新未知，未自动回灌截图IP。253后不直接用旧程序处理曾手动封禁的IP，见AUTH_IP_BLACKLIST回退边界。
 

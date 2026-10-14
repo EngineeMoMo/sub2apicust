@@ -16,21 +16,27 @@ var (
 	ErrAuthIPCounterUnavailable = infraerrors.TooManyRequests("AUTH_IP_COUNTER_UNAVAILABLE", "认证请求暂时受限，请稍后重试")
 	ErrAuthIPBlacklistConflict  = infraerrors.Conflict("IP_BLACKLIST_CONFLICT", "状态已变化，请刷新后重试")
 	ErrAuthIPBlacklistNotFound  = infraerrors.NotFound("IP_BLACKLIST_NOT_FOUND", "黑名单记录不存在")
-	ErrAuthIPAlreadyBlocked     = infraerrors.Conflict("IP_BLACKLIST_ALREADY_BLOCKED", "该 IP 已被封禁，请刷新名单；如需变更期限，请先解除原封禁")
+	ErrAuthIPAlreadyBlocked     = infraerrors.Conflict("IP_BLACKLIST_ALREADY_BLOCKED", "该 IP 或网段已有有效封禁，请刷新名单；如需变更期限，请先解除已有规则")
 )
 
 const (
 	AuthIPBlockModeTimed     = "timed"
 	AuthIPBlockModePermanent = "permanent"
+	AuthIPAggregationSingle  = "ip"
+	AuthIPAggregationNetwork = "network"
 )
 
 type AuthIPBlacklistConfig struct {
-	Enabled       bool   `json:"enabled"`
-	Threshold     int    `json:"threshold"`
-	WindowSeconds int    `json:"window_seconds"`
-	Version       int64  `json:"version"`
-	BlockSeconds  int    `json:"block_seconds"`
-	BlockMode     string `json:"block_mode"`
+	Enabled           bool   `json:"enabled"`
+	Threshold         int    `json:"threshold"`
+	WindowSeconds     int    `json:"window_seconds"`
+	Version           int64  `json:"version"`
+	BlockSeconds      int    `json:"block_seconds"`
+	BlockMode         string `json:"block_mode"`
+	NetworkState      string `json:"-"`
+	AggregationMode   string `json:"aggregation_mode"`
+	NetworkIPv4Prefix int    `json:"network_ipv4_prefix"`
+	NetworkIPv6Prefix int    `json:"network_ipv6_prefix"`
 }
 
 type AuthIPBlacklistEntry struct {
@@ -118,6 +124,12 @@ func NormalizeAuthIP(raw string) (string, error) {
 }
 
 func ValidateAuthIPBlacklistConfig(config AuthIPBlacklistConfig) error {
+	if config.AggregationMode != "" && config.AggregationMode != AuthIPAggregationSingle && config.AggregationMode != AuthIPAggregationNetwork {
+		return infraerrors.BadRequest("IP_BLACKLIST_INVALID_CONFIG", "请选择单 IP 或网段累计")
+	}
+	if config.NetworkIPv4Prefix < 0 || config.NetworkIPv4Prefix > 32 || config.NetworkIPv6Prefix < 0 || config.NetworkIPv6Prefix > 128 {
+		return infraerrors.BadRequest("IP_BLACKLIST_INVALID_CONFIG", "IPv4 前缀须为1–32，IPv6 前缀须为1–128")
+	}
 	if config.BlockMode != AuthIPBlockModeTimed && config.BlockMode != AuthIPBlockModePermanent {
 		return infraerrors.BadRequest("IP_BLACKLIST_INVALID_CONFIG", "请选择临时封禁或永久封禁，并提交封禁方式")
 	}
@@ -188,6 +200,7 @@ func (guard *AuthIPBlacklistService) Config(ctx context.Context) (*AuthIPBlackli
 
 func (guard *AuthIPBlacklistService) UpdateConfig(ctx context.Context, config AuthIPBlacklistConfig) (*AuthIPBlacklistConfig, error) {
 	config.BlockSeconds = config.CooldownSeconds()
+	config = config.WithAggregationDefaults()
 	if err := ValidateAuthIPBlacklistConfig(config); err != nil {
 		return nil, err
 	}
@@ -205,7 +218,7 @@ func (guard *AuthIPBlacklistService) List(ctx context.Context, rawIP string, pag
 	canonicalIP := ""
 	if rawIP != "" {
 		var err error
-		canonicalIP, err = NormalizeAuthIP(rawIP)
+		canonicalIP, err = NormalizeAuthIPTarget(rawIP)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -235,8 +248,12 @@ func authIPStorageError(err error) error {
 	return ErrAuthIPGuardUnavailable.WithCause(err)
 }
 
-func AuthIPCounterKey(ip string, generation, ruleVersion int64) string {
-	return fmt.Sprintf("custom_auth_ip_window:%s:%d:%d", ip, generation, ruleVersion)
+func AuthIPCounterKey(ip string, generation, ruleVersion int64, networkState ...string) string {
+	key := fmt.Sprintf("custom_auth_ip_window:%s:%d:%d", ip, generation, ruleVersion)
+	if len(networkState) > 0 && networkState[0] != "" {
+		key += ":" + networkState[0]
+	}
+	return key
 }
 
 func (guard *AuthIPBlacklistService) Begin(ctx context.Context, rawIP, path string, observe bool) (*AuthIPObservation, *AuthIPBlacklistDecision, error) {

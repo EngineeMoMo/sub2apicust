@@ -1,5 +1,7 @@
 # 敏感认证 IP 黑名单
 
+2026-10-14 网段防护本轮：手动支持完整IP、末尾连续通配符和CIDR；自动默认按网段累计明确认证失败并封禁整段，可选单IP及前缀。254迁移保留自动开关和旧名单、递增version，默认IPv4 /24、IPv6 /64。本机8080已备份更新并通过真实HTTP验收；正式本轮SHA/CI/GHCR及生产边界见HANDOFF最新状态，以下旧发布标签不含网段功能。
+
 2026-10-14 手动封禁发布终态：管理员手动新增已随065eee935/sha-065eee9发布，同SHA CI（真实PG/Redis、unit/integration/lint0、前端502项含IP管理14项）、安全/GHCR成功。备份后`./update.sh sha-065eee9`，刷新后台“IP 黑名单 → 手动新增 IP”，填写完整IP、原因并选择永久或临时。253同版部署，重复有效封禁409不覆盖，自动关闭也生效；只限制当前敏感认证。8080已备份更新，生产未代部署；镜像摘要/标签验真及本机验证见HANDOFF和AUTH_IP_BLACKLIST_REVIEW，旧07bcef204版本不含手动新增。
 
 2026-10-14已发布：功能07bcef204d09349e0574b51a5b8cfdd6266288a3、固定镜像sha-07bcef2（linux/amd64），同SHA CI（真实PG／Redis、unit／integration、lint、前端497项）／安全／GHCR全部成功，镜像摘要与revision标签交叉验真。备份后在部署目录执行`./update.sh sha-07bcef2`，生产由用户更新。详细证据见AUTH_IP_BLACKLIST_REVIEW及HANDOFF；下方10-13验证为本地历史。
@@ -8,7 +10,7 @@
 
 ## 规则与时间
 
-- 默认同一IP最近120分钟累计10次可识别的认证失败，第10次返回`403`、`reason=IP_BLOCKED`。封禁方式可选`timed`（临时，1–1440分钟，到期解除）或`permanent`（永久，须管理员移除）；默认timed15分钟。次数、统计周期、方式及时长均可在后台调整。
+- 默认同一网段最近120分钟累计10次可识别的认证失败，第10次返回`403`、`reason=IP_BLOCKED`并封禁整个网段；IPv4默认/24（如210.230.206.*），IPv6默认/64。可改为每个IP分开累计，或调整IPv4前缀1–32、IPv6前缀1–128；前缀越小范围越大。封禁方式可选`timed`（临时，1–1440分钟，到期解除）或`permanent`（永久，须管理员移除）；默认timed15分钟。次数、统计周期、范围、方式及时长均可在后台调整。
 - 成功请求不计数，包括正常登录、注册、发验证码、两步验证的正常中间步骤、Passkey 和 OAuth 操作。计入明确的 `401 INVALID_CREDENTIALS`、`401 PASSKEY_VERIFICATION_FAILED`，以及无业务 reason 的 `400 Invalid request` / `Invalid passkey response`。未知错误保守排除，不把所有 400/401 都当攻击。切换受保护接口不会清零。
 - 人机验证／验证码校验失败、TOTP 错误、邮件或表单业务校验、令牌过期／失效、429 已有限流、500/503 服务端故障不计数；原有单接口限流继续保留。成功操作不触发本名单，但仍受原有分钟限流约束。
 - 每次统计 `(当前时刻－window_seconds, 当前时刻]`；恰好落在起点的事件排除，横跨整点仍累计，未来分值不计入。
@@ -26,12 +28,12 @@ OAuth 登录启动和回调 GET 只检查已有封禁，不计数。刷新 Token
 
 菜单“IP 黑名单”，路径 `/admin/ip-blacklist`，复用现有管理员鉴权、面板限流、审计和合规确认。
 
-管理员可点“手动新增 IP”，填写完整 IPv4/IPv6、原因（1–500字），选择永久或临时封禁（1–1440整分钟），确认后立即生效。手动封禁独立于自动开关和统计规则；只限制当前敏感认证接口，模型调用、已认证用户接口和管理员接口保持当前范围。列表标注“管理员手动”及原因，手动记录不产生失败次数和窗口首末时间，统计项显示“—”。
+管理员可点“手动新增 IP”，填写完整IPv4/IPv6、末尾连续通配符（210.230.206.*、210.230.*.*、210.*.*.*）或IPv4/IPv6 CIDR，必填原因（1–500字），选择永久或临时封禁（1–1440整分钟），确认后立即生效。通配符按CIDR存储，例如210.230.206.*变为210.230.206.0/24；页面确认显示IPv4实际范围与地址数。拒绝全网/0、全星号、中间星号、无效地址。手动封禁独立于自动开关和统计规则；只限制当前敏感认证接口，模型调用、已认证用户接口和管理员接口保持当前范围。列表标注来源及原因，手动记录不产生失败次数和窗口首末时间，统计项显示“—”。
 
-同 IP 已有有效封禁时新增返回 `409 IP_BLACKLIST_ALREADY_BLOCKED`，不覆盖原期限；需先解除原封禁再新增。自动封禁、手动新增、到期和解封共享同 IP 事务锁与 generation，旧在途请求和旧解封页面不能覆盖新的管理员决定。手动新增事件 `admin.ip_blacklist.manual_block` 写入现有审计，含管理员身份、IP、原因、状态版本和到期时间。
+目标已有有效封禁或被更宽网段完全覆盖时新增返回 `409 IP_BLACKLIST_ALREADY_BLOCKED`，不覆盖原期限；需先解除原规则再新增。已有窄规则时允许新增更宽范围并保留窄规则；解除一条规则后其他有效覆盖仍拦截。自动封禁、手动新增、到期和解封共享目标事务锁、策略共享/独占锁、generation及相关重叠规则摘要，旧在途请求和旧页面不能覆盖新的管理员决定。手动新增事件 `admin.ip_blacklist.manual_block` 写入现有审计，含管理员身份、规范IP/网段、原因、状态版本和到期时间。
 
 - 自动拉黑开关、触发次数（1–1000整数）、统计周期（1–1440整分钟）、封禁方式。临时显示时长（1–1440整分钟），永久显示管理员解除说明，切回临时保留已有配置时长。默认10次/120分钟、timed15分钟，配置读取失败时禁止保存默认值。
-- 活跃名单分页、精确 IPv4/IPv6 搜索；IPv4 映射 IPv6 会归一为 IPv4。展示封禁时间、触发接口、次数、周期、窗口首末请求时间。
+- 活跃名单分页；完整IP搜索返回覆盖它的规则，通配符/CIDR搜索返回重叠规则。IPv4映射IPv6归一为IPv4，网段按网络起点归一，/32和/128显示单IP。展示封禁时间、触发接口、次数、周期、窗口首末请求时间。
 - 移除须确认并附当前 `generation`。过期页面返回 `409 IP_BLACKLIST_CONFLICT`，刷新后重新确认，不静默覆盖最新状态。
 - 规则修改须附 `version`，冲突同样 409。自动封禁、规则修改、解封走现有审计服务，事件名为 `auth.ip_blacklist.block`、`admin.ip_blacklist.config.update`、`admin.ip_blacklist.unblock`。认证 POST 的后续拒绝记 `auth.ip_blacklist.reject`。
 
@@ -39,15 +41,17 @@ API 前缀 `/api/v1/admin/ip-blacklist`：
 
 | 方法和路径 | 参数 | 返回 |
 | --- | --- | --- |
-| GET `/config` | 无 | enabled / threshold / window_seconds / block_seconds / block_mode / version |
-| PUT `/config` | 完整配置，包含当前version和明确的block_mode | 新配置及递增版本 |
-| GET `/entries` | page / page_size（最多100）/ ip（完整地址或空） | items / total / page / page_size / pages |
+| GET `/config` | 无 | enabled / threshold / window_seconds / block_seconds / block_mode / aggregation_mode / network_ipv4_prefix / network_ipv6_prefix / version |
+| PUT `/config` | 完整配置，包含当前version、明确的block_mode和aggregation_mode（ip/network）及两个前缀 | 新配置及递增版本；旧页面缺少范围/前缀400须刷新 |
+| GET `/entries` | page / page_size（最多100）/ ip（完整IP、通配符、CIDR或空） | items / total / page / page_size / pages |
 | POST `/entries` | ip / block_mode / block_seconds / reason；永久时长0，临时时长为60–86400整分钟秒数 | 手动封禁记录及generation；重复有效封禁409 |
 | POST `/entries/:id/unblock` | `{ "generation": 当前状态版本 }` | 已解封记录及新状态版本 |
 
 迁移250创建两张自有表`custom_auth_ip_blacklist_config`、`custom_auth_ip_blacklist`；251添加`block_seconds=900`、可空`blocked_until`并递增版本，使旧全请求计数失效；252添加`block_mode='timed'`及模式约束，再次递增版本。250/251已应用内容不修改。API必须提交`block_mode=timed/permanent`；非法或遗漏模式400，避免旧客户端静默将永久模式降为临时。旧前端需刷新，前后端同版部署。两种模式下block_seconds保留有效临时时长；永久模式不使用该时长。解封或到期保留状态行并递增版本，阻止旧请求重封；规则改变或解封不需要重启。
 
 ## 上线核验
+
+254允许INET规范网段并新增GiST包含索引与网段规则字段，默认network/24/64；保留旧开关和名单、version递增使旧计数失效。旧250–253不改，不从历史审计回灌封禁。网段内不同IP共用滑动窗口，成功不计数；切换范围、管理员变更相关覆盖规则、解封及到期后开启新计数。首次仍默认关闭；已开启的部署升级会保留开关并切换网段默认值，应核验范围后使用。
 
 迁移253添加 `source=auto/manual` 和原因，旧记录归类为auto；手动记录 count/window 为0、首末时间为NULL，来源约束阻止伪造自动统计。保留250–252原内容，前后端同版更新。旧 `sha-07bcef2` 不含手动新增界面或接口；应用迁移253后不要直接回退旧程序处理曾手动封禁的IP，旧自动写入未清理manual来源，会受到新数据约束拒绝。
 
@@ -57,8 +61,8 @@ API 前缀 `/api/v1/admin/ip-blacklist`：
 2. 按 [边缘安全说明](EDGE_SECURITY.md) 核对 `server.trusted_proxies`、`security.client_ip_from_forwarded_headers` 兼容开关、转发头白名单和会话绑定 IP 来源。不要信任任意客户端传入的 X-Forwarded-For / CF-Connecting-IP。
 3. Nginx 仅从验证过的 Cloudflare 链路接受客户端 IP，覆盖传向应用的转发头；源站仅允许所需代理来源，应用端口不对公网开放。开启 Nginx real_ip 后须核对传入应用的整条转发链，不将公网或 Cloudflare 网段无条件配置为“所有请求可信”。
 4. 用两个真实出口各发一次受控敏感请求，对照应用审计 IP、边缘记录和实际出口，确认不是共同 CDN / Nginx 地址，且伪造头无法改变统计身份。测试 IP 必须可由已有管理员会话解封。
-5. 保持默认关闭，通过审计观察流量再选择模式并开启。默认10次可识别失败/2小时、临时15分钟；可选择永久／管理员解除。正常成功操作和验证码错误不累计，共享出口仍共同累计可识别失败，不能承诺零误拦或把失败等同确证恶意。永久模式下误拦须人工解除；生产合理阈值和误拦率未知，可后台调整。
-6. 检查同 IP 混合接口到阈值拒绝、管理员解封即生效、模型调用不受影响，以及本轮审计记录。生产由用户部署，不自动拉黑截图历史 IP。
+5. 保持默认关闭，通过审计观察流量再选择范围/期限并开启。默认同网段10次可识别失败/2小时、临时15分钟；可选择永久／管理员解除。正常成功操作和验证码错误不累计，但封禁会限制网段内所有地址的敏感认证，包括共享网段的正常用户。不能承诺零误拦或把同网段全部IP等同恶意；合理前缀、阈值和误拦率未知，可后台调整。
+6. 检查同网段不同IP及混合接口共同到阈值拒绝，相邻网段正常；管理员解封即生效、模型调用不受影响，核对本轮审计。生产由用户部署，不自动拉黑截图历史IP或网段。
 
 回退到不含防护的旧应用镜像会失去本功能的拦截；数据库名单仍保留，但旧代码不会执行检查。不要为回退删除表或重置状态版本。
 
@@ -74,6 +78,6 @@ API 前缀 `/api/v1/admin/ip-blacklist`：
 
 2026-10-13 23:31本地检查通过：Docker Go1.27.2的13项专项、真实PG18/Redis8、全量unit、运行镜像embed构建；前端5文件55项、类型、定向ESLint和Vite构建通过。实际运行镜像在8081专用库验证永久封禁跨应用重启和Redis清空、管理员解除、两种模式切换保留旧期限、临时45分钟及受控到期。8080更新到7f423b3890c9、三服务healthy；原数据、设置和卷保持，迁移252应用、规则version=3，开关关闭、名单0条。证据`output/auth-ip-local-20261013`中的mode-*及测试/构建日志。2026-10-14独立发布07bcef204及sha-07bcef2，远端同SHA CI／安全／GHCR／lint通过，证据`output/auth-ip-release-20261014`，生产未代部署；本地候选不作为已发布镜像。
 
-真实存储测试只连接隔离测试服务：`AUTH_IP_TEST_POSTGRES_DSN`（专用数据库，测试会清空自有黑名单状态）、`AUTH_IP_TEST_REDIS_ADDR`（专用 Redis，测试清空 DB 3）。不要指向生产或已有业务数据库。定向命令为 `go test -tags=unit ./internal/service ./internal/repository ./internal/server/middleware ./internal/server/routes -run '^TestAuthIP' -count=1 -v`。
+真实存储测试只连接隔离测试服务：`AUTH_IP_TEST_POSTGRES_DSN`（专用数据库，测试会清空自有黑名单状态）、`AUTH_IP_TEST_REDIS_ADDR`（专用Redis，测试清空DB0/3）。不要指向生产或已有业务数据库。定向命令为 `go test -tags=unit ./internal/service ./internal/repository ./internal/server/middleware ./internal/server/routes -run '^TestAuthIP' -count=1 -v`。
 
 同步上游需保留四个接缝：router 注册新模块并传防护、auth.go 审计后执行可选防护、AppSidebar 管理员菜单、Makefile 关键前端回归中的 auth-ip-blacklist.spec.ts。自有路由及页面位于 custom 叠加层；接缝及测试清单见 CUSTOMIZATIONS。新增迁移编号若上游或其他会话发生占用，发布前重新协调，不修改已经应用过的迁移内容。

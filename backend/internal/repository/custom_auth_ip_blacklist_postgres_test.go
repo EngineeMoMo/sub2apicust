@@ -39,6 +39,7 @@ UPDATE custom_auth_ip_blacklist_config SET enabled = FALSE, threshold = 10, wind
 	require.Equal(t, 7200, config.WindowSeconds)
 	require.Equal(t, service.AuthIPBlockModeTimed, config.BlockMode)
 	config.Enabled = true
+	config.AggregationMode = service.AuthIPAggregationSingle
 	config, err = repo.UpdateConfig(ctx, *config)
 	require.NoError(t, err)
 	_, err = repo.UpdateConfig(ctx, service.AuthIPBlacklistConfig{Enabled: true, Threshold: 10, WindowSeconds: 7200, Version: 1, BlockMode: service.AuthIPBlockModeTimed})

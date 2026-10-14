@@ -27,7 +27,7 @@ func TestAuthIPManualBlockRealPostgres(t *testing.T) {
 	require.NoError(t, ApplyMigrations(ctx, db))
 	require.NoError(t, ApplyMigrations(ctx, db))
 	_, err = db.ExecContext(ctx, `TRUNCATE custom_auth_ip_blacklist RESTART IDENTITY;
-UPDATE custom_auth_ip_blacklist_config SET enabled = FALSE, threshold = 10, window_seconds = 7200, block_seconds = 900, block_mode = 'timed', version = 1 WHERE id = 1`)
+UPDATE custom_auth_ip_blacklist_config SET enabled = FALSE, threshold = 10, window_seconds = 7200, block_seconds = 900, block_mode = 'timed', version = 1, aggregation_mode = 'ip' WHERE id = 1`)
 	require.NoError(t, err)
 	repo := NewAuthIPBlacklistRepository(db)
 	guard := service.NewAuthIPBlacklistService(repo, nil)

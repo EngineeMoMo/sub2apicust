@@ -1,5 +1,12 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-14 网段防护
+
+- 新增自有 `backend/internal/service/custom_auth_ip_target.go`、`repository/custom_auth_ip_network.go`及归一/真实PG测试；254迁移允许规范INET网段，增加GiST包含索引及aggregation_mode、network_ipv4_prefix、network_ipv6_prefix。250–253原文不改，升级保留开关及旧名单、配置version递增，默认网段累计IPv4 /24、IPv6 /64。
+- 扩展自有service/repository/counter/admin handler及管理页：手动完整IP、末尾连续星号或CIDR；网段内不同IP共享Redis窗口、generation和规则version，明确失败达阈值封整段；成功不计数。可配置单IP/网段、前缀、临时/永久及时长。请求入口仍只接受真实单IP，认证保护范围不扩大。
+- 数据库包含匹配检查所有有效覆盖规则；搜索IP或网段返回重叠记录。策略共享/独占事务锁与相关规则状态摘要防止旧在途请求重封；管理员变更及范围切换重置相关统计，解除一条不删除其他覆盖规则。HTTP PUT遗漏新范围或前缀400，旧版本409；人工及自动网段沿用现有审计。
+- 本轮只改自有文件，没有新增上游接缝。Docker真实存储专项/全量unit、Go embed、前端16项/类型/lint/构建及独立8081的44条HTTP断言通过；8080已备份更新且数据/设置/原卷保持，详情见HANDOFF与AUTH_IP_BLACKLIST_REVIEW。正式发布须核验本轮SHA，不能沿用065eee935的结果。
+
 2026-10-14 手动封禁发布终态：本节手动新增功能随065eee935发布，固定sha-065eee9；同SHA CI（unit/integration/真实PG18/Redis8/lint0/前端38文件502项含IP管理14项）、安全/GHCR通过，镜像revision/摘要与日志交叉验真。8080已备份后更新至e9fd3b9c7ea2并通过实际管理员登录及新接口校验，业务计数/配置/原卷保留；生产未部署，其他会话改动未混入。详细证据见HANDOFF和output/auth-ip-manual-20261014，下方手动新增自有文件及253迁移须同步保留。
 
 ## 2026-10-14 管理员手动封禁

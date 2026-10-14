@@ -1,5 +1,17 @@
 # IP认证防护审查与本地验收（2026-10-13）
 
+## 2026-10-14 网段防护本轮
+
+已核实：仅新增/扩展自有代码和254迁移，手动通配符/CIDR规范化，自动按配置网段共享Redis计数并持久封整段。自审覆盖真实单IP与封禁目标分离、INET包含/重叠和规范边界、配置version/目标generation/重叠规则状态摘要、策略事务锁顺序、管理员鉴权/审计与前端确认，未发现阻塞问题。旧在途失败不能覆盖解封或范围变更；其他覆盖规则仍独立有效。只保护已有敏感认证，成功不计数；无法从同网段推定全部IP均恶意，生产误拦率未知。
+
+- Docker Go1.27.2：18项后端专项含真实PG18/Redis8及7组网络回归、全量unit、Go embed和嵌入产品边界通过。截图10时间点以不同IP回放，在20:32:32第10次封61.120.9.0/24；实际分类仍要求明确失败，截图400不能证明全部计入。新测试覆盖不同IP/邻网段、成功不计数、24并发只封一次、重启/Redis清空、IPv6、到期、单IP切换及旧请求竞争。
+- 前端16项管理页回归、类型/定向ESLint/Vite通过，通配符确认展示CIDR/256地址范围、范围/前缀保存和非法值拦截。
+- 独立8081/auth_ip_smoke的44条真实HTTP断言通过：6次成功登录名单0，两个IP密码失败加第三IP注册格式异常封/24，网段其他IP登录/验证码403，相邻网段200；模型入口401、已登录管理员me/管理/解封200，旧解封409。重启/Redis DB1清空仍封；关闭自动后手动通配符仍生效，重复覆盖409，无效中间星号400，临时到期后首次失败重新累计。8条相关审计含规范网段和范围配置；转发头模拟仅用于隔离测试，已对照真实审计client_ip验证。
+- 8080新镜像b33cb472be2a、容器0fa7d82eda3d，三服务healthy；原业务计数/281设置摘要/卷及PG/Redis/recipes身份保持，version3→4和network/24/64为迁移预期；自动仍false、名单0。真实管理员登录/新接口/新chunk BznUWgMC通过。备份665933字节、pg_restore目录1282行、SHA256ff83db7ad955edffcc47e6cffc904c1eafa5a115d26a36592e6d085916e141af；旧镜像保留。
+
+证据output/auth-ip-network-20261014：backend-check-final.log、frontend-check.log、build-release/local.log、smoke.json、local-before/after/verified.json和数据库备份。首次启动隔离应用失败为测试TOTP参数非HEX，已修正；HTTP脚本错用不存在的send-email-code路由已改为send-verify-code后重跑通过；后端初次测试绕过service直接传星号给repo导致失败，改用guard.List后专项/全量通过。正式本轮SHA/CI/安全/GHCR须另行核验，生产未代部署。
+
+
 2026-10-14 手动封禁发布终态：功能065eee935a5eea3fb023c5faf469b988feb0fa73已推origin/main；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226115)（unit/integration/PG18/Redis8/lint0/前端38文件502项含IP管理14项）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226138)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226114)全部成功。固定镜像sha-065eee9（linux/amd64），摘要sha256:8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38，registry/镜像revision/source/构建日志及23文件快照哈希交叉验证通过，verified-release.json记录终态。8080随后已备份更新至e9fd3b9c7ea2/112691d6fc2b，三服务健康，10条HTTP及真实管理员登录/new POST400/新chunk CoRkhMZ9通过；原PG/Redis/挂载、业务计数/防护配置相同，保留原本地智力效率源码，正式镜像排除其他会话改动。8081独立测试容器/网络/匿名卷已清理，local-verified.json/smoke.json及本SHAlogs留存；生产未部署，以下隔离阶段“未操作8080/待新SHA”表述为历史，不据此推断当前状态。
 
 ## 2026-10-14 管理员手动封禁（本轮）

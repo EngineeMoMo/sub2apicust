@@ -7,6 +7,9 @@ export interface AuthIPConfig {
   version: number
   block_seconds: number
   block_mode: 'timed' | 'permanent'
+  aggregation_mode: 'ip' | 'network'
+  network_ipv4_prefix: number
+  network_ipv6_prefix: number
 }
 
 export interface AuthIPEntry {
@@ -63,6 +66,27 @@ export const authIPBlacklistAPI = {
 export function authIPError(error: unknown): { conflict: boolean; message: string } {
   const detail = error as { status?: number; message?: string } | null
   return { conflict: detail?.status === 409, message: detail?.message || '请求失败，请稍后重试' }
+}
+
+export function authIPTargetSummary(value: string): string {
+  const raw = value.trim()
+  if (raw.split('/').length > 2) return raw
+  const [address, mask] = raw.split('/')
+  const parts = address.split('.')
+  let bits = mask === undefined ? 32 : Number(mask)
+  const firstWildcard = parts.indexOf('*')
+  if (firstWildcard > 0 && mask === undefined && parts.length === 4 && parts.slice(firstWildcard).every(part => part === '*')) {
+    bits = firstWildcard * 8
+    parts.splice(firstWildcard, parts.length - firstWildcard, ...Array(4 - firstWildcard).fill('0'))
+  }
+  if (parts.length !== 4 || !parts.every(part => /^(0|[1-9]\d{0,2})$/.test(part) && Number(part) <= 255) ||
+      !Number.isInteger(bits) || bits < 1 || bits >= 32 || (mask !== undefined && !/^\d+$/.test(mask))) {
+    return raw.includes(':') && raw.includes('/') ? `${raw}（覆盖该 IPv6 网段内的所有地址）` : raw
+  }
+  const count = 2 ** (32 - bits)
+  const start = Math.floor(parts.reduce((total, part) => total * 256 + Number(part), 0) / count) * count
+  const format = (addressNumber: number) => [24, 16, 8, 0].map(offset => Math.floor(addressNumber / 2 ** offset) % 256).join('.')
+  return `${format(start)}/${bits}，覆盖 ${format(start)}–${format(start + count - 1)}（${count} 个 IP）`
 }
 
 export function formatAuthIPTime(value: string | null, timezone: string): string {

@@ -16,7 +16,7 @@ type AuthIPManualBlock struct {
 }
 
 func (guard *AuthIPBlacklistService) ManualBlock(ctx context.Context, input AuthIPManualBlock) (*AuthIPBlacklistEntry, error) {
-	ip, err := NormalizeAuthIP(strings.TrimSpace(input.IP))
+	ip, err := NormalizeAuthIPTarget(input.IP)
 	if err != nil {
 		return nil, err
 	}
