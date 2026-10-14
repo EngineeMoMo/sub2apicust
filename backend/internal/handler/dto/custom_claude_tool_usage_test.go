@@ -15,7 +15,10 @@ func TestCustomClaudeToolDTO(t *testing.T) {
 		require.NoError(t, err)
 		var decoded map[string]any
 		require.NoError(t, json.Unmarshal(body, &decoded))
-		tool := decoded["tool_usage"].(map[string]any)["web_search"].(map[string]any)
+		tools, ok := decoded["tool_usage"].(map[string]any)
+		require.True(t, ok)
+		tool, ok := tools["web_search"].(map[string]any)
+		require.True(t, ok)
 		require.Equal(t, float64(1), tool["calls"])
 		require.Equal(t, 0.0015, tool["actual_cost"])
 	}
