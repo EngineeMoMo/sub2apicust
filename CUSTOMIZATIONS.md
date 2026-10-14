@@ -1,6 +1,10 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-14 网段防护发布终态：功能bbee35dbcc30525bae354dc1d270f90b5591fab7已推origin/main；同SHA CI38508986548（unit/integration、专用PG18/Redis8、lint0、前端38文件504项含IP管理16项）、安全38508986630、GHCR38508986565全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-bbee35d（linux/amd64），摘要sha256:0dd2c3067bf73f3b5308ee72b7e27d22014ff71aa618fb7c02404bfda7ac9e22；28文件源码哈希、registry/revision/source及构建日志交叉验真。支持手动通配符/CIDR及自动同网段不同IP共享明确失败计数，默认/24和/64，单IP/前缀/期限可配置。8080于2026-10-14 11:56完成备份更新及三服务healthy验收、原数据/卷保持，254/255生效、自动仍false、permanent/version5、名单0；本机保留原智力效率，正式发布排除其他会话改动。独立测试环境已清理，生产由用户备份后`./update.sh sha-bbee35d`；同网段正常用户也可能受限，生产真实IP和误拦率仍待验证。证据output/auth-ip-network-20261014/verified-release.json、local-verified.json及HANDOFF。 新加入默认永久封禁，只有管理员可调整规则/期限及解封；已有临时名单保留原到期时间。复查旧自动单IP名单解封的网段计数边界，修复前真实PG回归失败、修复后8组网段回归及全量unit通过；最终45条真实HTTP断言通过。最终8080镜像sha256:b311d7372950873015c08c68567d36719ad37457693a7a1915b5ca4839b2a3c1、容器bd9fd0be85449daeb20028f49a3e29495d4337891e1ca9e18f6cf627f2e6d3e6、chunk assets/AuthIPBlacklistView-DwaftuX8.js；255前备份667706字节、目录1283行、SHA256cec4821389c3cf8bec26426184695a0e6922066f8be26d6c3dfd273c621e6ffb与before-auth-ip-permanent-20261014镜像保留。最新日志backend-permanent-final/frontend-permanent-final/build-permanent-release/build-permanent-local.log；旧aade433及下方timed/version4/44条为阶段记录，最终更新使用sha-bbee35d。 2026-10-14 13:08接续会话只读检查确认Docker引擎未运行，当前8080健康未复测；CI/GHCR及远端HEAD已重新核验，不沿用旧发布结果。
+
 ## 2026-10-14 网段防护
+
+- **永久默认及兼容修复**：新增自有 `backend/migrations/255_custom_auth_ip_permanent_default.sql`，设置默认permanent并递增规则version；已有临时名单到期不改，已应用250–254原文不改。自有 `repository/custom_auth_ip_network.go` 的状态摘要覆盖所有相关旧自动单IP记录，解除/到期重置网段计数；真实PG回归修复前失败、修复后8组通过。自有管理页默认永久，普通用户PUT规则及POST解封均403，仅管理员能调整/解封。相关源码、28文件发布快照及最终测试证据见HANDOFF最新终态。
 
 - 新增自有 `backend/internal/service/custom_auth_ip_target.go`、`repository/custom_auth_ip_network.go`及归一/真实PG测试；254迁移允许规范INET网段，增加GiST包含索引及aggregation_mode、network_ipv4_prefix、network_ipv6_prefix。250–253原文不改，升级保留开关及旧名单、配置version递增，默认网段累计IPv4 /24、IPv6 /64。
 - 扩展自有service/repository/counter/admin handler及管理页：手动完整IP、末尾连续星号或CIDR；网段内不同IP共享Redis窗口、generation和规则version，明确失败达阈值封整段；成功不计数。可配置单IP/网段、前缀、临时/永久及时长。请求入口仍只接受真实单IP，认证保护范围不扩大。
