@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+> 2026-10-14 IP防护发布终态：07bcef204已推origin/main，同SHA CI（真实PG18／Redis8、unit／integration、lint、前端497项）／安全／GHCR成功；固定镜像sha-07bcef2（linux/amd64），摘要sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13已交叉核验。用户备份后`./update.sh sha-07bcef2`，保留250/251/252和登记接缝，前后端同版。默认关闭、成功不计数，永久／临时可选，只保护认证；生产真实IP和共享出口验证待用户完成。其他会话248/249及智力效率未发布。本条覆盖下方历史未发布状态，证据见HANDOFF和AUTH_IP_BLACKLIST_REVIEW。
+
 > 2026-10-13 23:31 IP防护在8080运行7f423b3890c9，尚未发布生产：成功操作不计数，默认10次可识别失败/120分钟、临时15分钟，开关关闭；用户最新授权增加可选永久封禁，须管理员移除。保留250/251/252迁移及CUSTOMIZATIONS登记的router/auth.go/AppSidebar/Makefile接缝、失败分类／mode版本／期限保留回归。API block_mode必须明确timed/permanent，前后端同版；规则切换不改变已有记录期限。同步不恢复全请求计数。发布核验新SHA CI/安全/镜像及Cloudflare→Nginx真实IP，见deploy/AUTH_IP_BLACKLIST.md和HANDOFF。其他会话248/249未带入本机；下方官网发布镜像不包含IP防护，生产由用户部署。
 
 > 2026-10-13最终发布：官网与登录页动效已推送f8928e20d，同SHA CI（含真实PG的unit/integration）、安全、GHCR全部成功，固定镜像`ghcr.io/engineemomo/sub2apicust:sha-f8928e2`（摘要`sha256:cd8c1667f943c0a6706742dcc3c0e9a1c203e75ba53dd28ec528da9f920e3d6a`）。这一版只有前端改动，没有迁移。用户备份后执行`./update.sh sha-f8928e2`，生产未代部署。本条覆盖下方10-10的更新命令。

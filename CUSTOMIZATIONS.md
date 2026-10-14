@@ -1,7 +1,8 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-13 敏感认证 IP 自动黑名单（可选永久／临时，本机已部署，尚未发布）
+## 2026-10-13 敏感认证 IP 自动黑名单（可选永久／临时，2026-10-14已发布）
 
+- 发布07bcef204、固定镜像sha-07bcef2，同SHA CI／安全／GHCR通过；后端真实存储／unit／integration／lint0、前端38文件497项通过。此发布仅含本节功能，模型与管理接口不挂名单，成功操作不计数；默认开关关闭，用户选择封禁方式后开启。镜像摘要与取证见HANDOFF和deploy/AUTH_IP_BLACKLIST_REVIEW.md，生产由用户部署。
 - 2026-10-14新增上游接缝[CUSTOM]：`.github/workflows/backend-ci.yml`的test job添加独立auth-ip-postgres18／auth-ip-redis8服务，Unit tests传AUTH_IP_TEST_POSTGRES_DSN／AUTH_IP_TEST_REDIS_ADDR，真实存储回归进入每次CI；与已有包号测试库隔离。发布只提交本节功能，保留其他会话改动；具体SHA与镜像见HANDOFF发布状态。
 - 用户最新要求允许永久封禁或配置期限，仍只累计明确的认证失败和请求格式异常，成功、验证码／TOTP、业务校验、令牌失效、429和系统故障排除。默认10次失败／120分钟、临时封禁15分钟，首次enabled=false；永久须管理员移除。滑动窗口用Redis TIME入场时间、UTC毫秒、唯一事件及Lua原子操作，窗口起点排除；规则／管理员解封／自动到期版本隔离旧计数和在途封禁。
 - 251迁移添加block_seconds默认900、blocked_until可空；252迁移添加block_mode默认timed、CHECK(timed/permanent)及version递增。已应用250/251不修改。service严格校验模式，PUT遗漏模式返回400避免旧客户端静默降级；repository按permanent写NULL到期，否则按数据库时间加期限；已有记录不追溯改期。admin审计加入block_mode，前端新增模式下拉框，timed输入1–1440分钟、permanent提示管理员移除，切回timed保留配置时长。自有middleware保留失败响应缓冲及256KiB上限。13项后端／全量unit／运行镜像embed、55项前端及真实重启／Redis清空／模式切换／解封通过；8080镜像7f423b3890c9，状态和边界见HANDOFF与deploy/AUTH_IP_BLACKLIST_REVIEW.md。

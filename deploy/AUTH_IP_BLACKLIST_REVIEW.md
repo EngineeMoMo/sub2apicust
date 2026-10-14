@@ -1,5 +1,16 @@
 # IP认证防护审查与本地验收（2026-10-13）
 
+## 2026-10-14发布验真
+
+功能`07bcef204d09349e0574b51a5b8cfdd6266288a3`已独立推送origin/main，[CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252759)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252800)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252762)全部成功；对应SHA／所有job conclusion和日志已保存并断言。
+
+- CI unit／integration通过；Unit tests传专用AUTH_IP_TEST_POSTGRES_DSN（日志凭据自动脱敏）／AUTH_IP_TEST_REDIS_ADDR，专用PG18／Redis8健康，真实存储测试不会因DSN缺失skip；包号测试仍使用另一服务。
+- golangci-lint2.14.0报告0 issues，Go1.27.2；前端类型及38文件497项（含IP管理9项）通过。govulncheck零可达漏洞，另有2项未调用模块漏洞，前端审计按已登记例外通过，不宣称所有依赖零漏洞。
+- 发布镜像`ghcr.io/engineemomo/sub2apicust:sha-07bcef2`，linux/amd64；摘要`sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13`。buildx imagetools registry输出、镜像revision=完整功能SHA／source=本仓与构建日志containerimage.digest一致；未启动本机Docker引擎或部署生产。镜像版本0.2.13-custom.07bcef204。
+- 发布快照只含本功能、文档和CI真实存储接线；18个功能源文件与10-13已测试v3哈希一致。router只暂存认证防护接缝，Makefile只加入IP spec；未发布其他付款／库存248/249、投稿、依赖升级或智力效率，工作区内容保留。
+
+证据`output/auth-ip-release-20261014`的verified-release.json、同SHA runs／jobs、最终test／lint／frontend／安全／build日志、image-inspect.txt／image-config.json及manifest。用户备份数据库、部署配置和app_data后执行`./update.sh sha-07bcef2`；默认自动拉黑关闭，生产真实IP／共享出口失败分布和带数据交互待验。下方10-13为本地历史取证。
+
 ## 已核实
 
 用户最新要求允许永久封禁／找管理员解除，或配置封禁期限。保留明确失败计数，成功登录／注册／正常多步骤不计数；验证码／TOTP、业务校验、令牌失效、429和系统故障排除。新增block_mode=timed/permanent，默认10次失败／120分钟、timed15分钟；临时到期恢复，永久须管理员移除。规则切换不改变已有记录期限，开关仍关闭。此授权覆盖上一轮只新增临时封禁的决定。规则、API和分类边界见[功能说明](AUTH_IP_BLACKLIST.md)。
@@ -27,4 +38,4 @@
 
 失败分类减少正常重复操作、多步骤认证和验证码错误造成的误拦，不等于共享IP零误拦。多人在同一出口输错密码仍共同累计；永久模式下误拦须管理员解除。生产合理阈值和误拦率未知，开启前按审计与真实流量验证。启动日志的独立定价更新源连接0.0.0.0失败未在本轮修复，不宣称远程定价刷新成功。
 
-生产Cloudflare→Nginx真实IP、转发头清洗／源站限制未取证。截图400缺少响应reason／正文，新规则不能承诺10条全部符合计数条件。原管理员页面带真实记录的浏览器交互仍待用户验收；HTTP接口与前端单测不等同完整人工验收。宿主无Go，本轮使用Docker工具链；未提交推送、未生产部署，没有本功能新SHA CI/安全/GHCR或本轮golangci-lint结果。
+生产Cloudflare→Nginx真实IP、转发头清洗／源站限制未取证。截图400缺少响应reason／正文，新规则不能承诺10条全部符合计数条件。原管理员页面带真实记录的浏览器交互仍待用户验收；HTTP接口与前端单测不等同完整人工验收。宿主无Go，10-13使用Docker工具链；10-14发布和CI／安全／GHCR／lint已通过，生产未代部署。

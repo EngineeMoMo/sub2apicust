@@ -1,5 +1,7 @@
 # 敏感认证 IP 黑名单
 
+2026-10-14已发布：功能07bcef204d09349e0574b51a5b8cfdd6266288a3、固定镜像sha-07bcef2（linux/amd64），同SHA CI（真实PG／Redis、unit／integration、lint、前端497项）／安全／GHCR全部成功，镜像摘要与revision标签交叉验真。备份后在部署目录执行`./update.sh sha-07bcef2`，生产由用户更新。详细证据见AUTH_IP_BLACKLIST_REVIEW及HANDOFF；下方10-13验证为本地历史。
+
 本功能源码在2026-10-13实施。用户先要求保护正常使用，后允许“封禁找管理员解除，或封禁时间可配置”。当前只统计可识别的认证失败，后台可选择临时或永久封禁；成功操作不计数。默认临时15分钟、自动拉黑关闭。发布和生产验证状态以HANDOFF最新记录为准，旧CI结果不代表包含本功能。
 
 ## 规则与时间
@@ -61,7 +63,7 @@ API 前缀 `/api/v1/admin/ip-blacklist`：
 
 前端定向验证：`pnpm test:run src/custom/__tests__/auth-ip-blacklist.spec.ts`、`pnpm typecheck`、`pnpm build`。后端：`go test -tags=unit ./...`、`go build -tags embed ./cmd/server`；本机没有宿主 Go，本轮使用隔离 Docker Go 1.27.2 工具链。
 
-2026-10-13 23:31本轮检查通过：Docker Go1.27.2的13项专项、真实PG18/Redis8、全量unit、运行镜像embed构建；前端5文件55项、类型、定向ESLint和Vite构建通过。实际运行镜像在8081专用库验证永久封禁跨应用重启和Redis清空、管理员解除、两种模式切换保留旧期限、临时45分钟及受控到期。8080已更新到7f423b3890c9、三服务healthy；原数据、设置和卷保持，迁移252应用、规则version=3，开关关闭、名单0条。证据`output/auth-ip-local-20261013`中的mode-*及本轮测试/构建日志，详见AUTH_IP_BLACKLIST_REVIEW。生产未操作、未提交发布，新SHA CI/安全/GHCR和golangci-lint仍待；不将本机候选作为已发布生产镜像。
+2026-10-13 23:31本地检查通过：Docker Go1.27.2的13项专项、真实PG18/Redis8、全量unit、运行镜像embed构建；前端5文件55项、类型、定向ESLint和Vite构建通过。实际运行镜像在8081专用库验证永久封禁跨应用重启和Redis清空、管理员解除、两种模式切换保留旧期限、临时45分钟及受控到期。8080更新到7f423b3890c9、三服务healthy；原数据、设置和卷保持，迁移252应用、规则version=3，开关关闭、名单0条。证据`output/auth-ip-local-20261013`中的mode-*及测试/构建日志。2026-10-14独立发布07bcef204及sha-07bcef2，远端同SHA CI／安全／GHCR／lint通过，证据`output/auth-ip-release-20261014`，生产未代部署；本地候选不作为已发布镜像。
 
 真实存储测试只连接隔离测试服务：`AUTH_IP_TEST_POSTGRES_DSN`（专用数据库，测试会清空自有黑名单状态）、`AUTH_IP_TEST_REDIS_ADDR`（专用 Redis，测试清空 DB 3）。不要指向生产或已有业务数据库。定向命令为 `go test -tags=unit ./internal/service ./internal/repository ./internal/server/middleware ./internal/server/routes -run '^TestAuthIP' -count=1 -v`。
 
