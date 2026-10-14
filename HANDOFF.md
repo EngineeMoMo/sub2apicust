@@ -39,7 +39,7 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **2026-10-14 全工作区提交授权与验证**：用户明确要求“整个工作区提交”，覆盖此前保留的59项改动：收款预占释放与用户封顶、248/249迁移、库存待付保护、工坊配额/清理/匿名限流、智力效率雷达Bench数据接入、前端工具链和更新脚本。已在上游0.2.16同步后的当前工作区重新运行前端全量409文件/3279项、类型检查、生产构建及26组假Docker更新回归，全部通过；源码lint为0错误/26警告。本机未重新编译Go，后端unit/integration、真实PG/Redis、lint、安全与GHCR须验证本次新提交，不沿用fe6323ca6结果。当前处于提交/推送前，最终SHA和发布结果待补；生产未部署，本机8080未更新。证据output/workspace-release-20261014。
+- **2026-10-14 全工作区发布终态**：用户明确要求“整个工作区提交”，此前保留的59项改动已全部提交推送origin/main，功能SHA为6406511c687e59b2afd37cf24da3db0d6011bea5；包含收款预占释放与用户封顶、248/249迁移、库存待付保护、工坊配额/清理/匿名限流、智力效率雷达Bench、前端工具链与更新脚本，并保留上游0.2.16及认证网段防护。同SHA CI38522649457（Go unit/integration、专用PG18/Redis8、Go lint0问题、Node20前端49文件790项及26组更新回归）、安全38522649572、GHCR38522649396全部成功。本地前端409文件3279项、类型/构建和26组更新回归通过，源码lint0错误26警告；宿主未重新编译Go，embed由本轮GHCR验证。正式镜像ghcr.io/engineemomo/sub2apicust:sha-6406511（linux/amd64），摘要sha256:9608581fa3c7e8c9b36e368e7815f58376c9c3ee9d2c48f449e0412f6b2244bb，registry/revision/source/构建日志与源码树6050fc24b4c47e4e8434c53fc75f7a8403ca163c已交叉核验。前端生产依赖审计0告警；Go0可达漏洞，仍有2项未调用模块漏洞，不宣称全部依赖零漏洞。源码提交后工作区干净，最终交接另以纯文档skip-ci提交；生产未部署、本机8080未更新本镜像，新版真实付款/素材/生产数据仍待用户验收。证据output/workspace-release-20261014/verified-release.json、preflight.json、远端回执与各job日志。本条覆盖下方“59项未提交/未发布”的历史阶段记录。
 
 - **2026-10-14 上游0.2.16发布终态**：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。
 - **2026-10-14 上游同步本地收口**：原59文件共1258867字节逐字节备份在output/upstream-sync-20261014/before-main及manifest；恢复后48文件文本完全一致，11文件合入上游/交接变更，package.json除Vue3.5.43外原依赖升级完整保留。Git快照0a1d3f61b09be55d2c7a0c3ce8cab738189d9ade保留，不drop；未提交内容恢复为未暂存，本轮提交排除它们。原8080、PG、Redis及recipes容器保持停止、未删除，原应用镜像仍b311d7372950；正式sha-fe6323c镜像已拉取但只在4189验收。独立工作树已申请归档，测试/发布证据全部留在D:/ccfile/sub2apicust/output/upstream-sync-20261014。
@@ -542,7 +542,8 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **2026-10-14 全工作区提交发布**：用户已明确授权全部59项工作区改动提交并推送origin/main；本地验证完成，待新功能SHA的CI/安全/GHCR及远端HEAD核验后记录终态。忽略配置、凭据、备份与构建输出不入库，生产由用户部署。
+- [x] **2026-10-14 全工作区提交发布**：全部59项已提交推送6406511c6，同SHA CI/安全/GHCR全绿，正式镜像摘要及源码标签验真完成；交接以纯文档skip-ci提交，不生成新镜像。忽略配置、凭据、备份与构建输出不入库，证据见第四节最新记录。
+- [ ] **全工作区版本生产验收**：本节最新统一更新目标为`./update.sh sha-6406511`，包含上游0.2.16、IP网段防护及原59项改动，替代下方历史候选镜像。用户先备份数据库/配置/app_data（含studio-submissions），前后端同版更新；核验248/249/250至255迁移、收款待确认与人工释放、限量套餐待付限制、投稿撤回/退回/清理、登录后的智力效率和真实IP。支付宝小额实付及过期入口、真实模型/计费/共享网段误拦率仍待，生产由用户部署；本机8080未更新。
 
 - [x] **2026-10-14 上游0.2.16同步发布**：fe6323ca6已推origin/main，同SHA CI/安全/GHCR全绿，registry/revision/源码树/二进制及实际运行镜像ID已验真，固定sha-fe6323c。前端774项、Ent无差异/Go embed/专项、源码61条及正式镜像25条HTTP通过；原main已快进，59个其他会话改动已备份恢复且未混入发布，独立测试资源清理。
 - [ ] **2026-10-14 上游0.2.16生产验收**：用户备份数据库/配置/app_data后执行`./update.sh sha-fe6323c`；核验13平台配额、渠道监控/模型目录、Gemini缓存等新增上游功能与原包号/支付/家族入口。核验实际客户端IP后选择网段/前缀/期限并开启自动；生产未代部署，真实模型/费用及共享出口误拦率仍待授权环境验证。本机8080尚未更新0.2.16，原容器当前停止。
@@ -564,10 +565,10 @@
 
 - [x] **官网动效发布核验**：f8928e20d 同 SHA 的 CI（含真实 PG 的 unit/integration、lint、前端）、安全扫描、GHCR 全部成功，固定镜像 sha-f8928e2，详见第四节首条。
 - [ ] **官网动效生产更新与验收**：用户备份后执行 `./update.sh sha-f8928e2`。确认首页、套餐、教程、登录页和手机菜单的视觉，并补测 Safari、真机触屏和系统“减少动态效果”。这一版没有迁移。生产未代部署。
-- [ ] **智力效率雷达Bench验收与发布**：
+- [ ] **智力效率雷达Bench生产验收**：
   - 本机 8080 已部署，用户 2026-10-13 已确认看到数据（后端首个请求 200，用时 10.9 秒）。以后如果再显示“数据源暂时不可用”，先在容器内测出网。回退方式：用标签 `sub2apicust:before-intelligence-20261013-090718` 重新打回 `local-theme` 并 `up --no-deps --no-build`。本轮没有迁移，不需要恢复数据库。
   - 用户2026-10-14已明确授权整个工作区提交，包含本功能；用户视觉确认及生产矩阵、对比、“数据不足”等标注和说明文字验收仍待。
-  - 新 SHA 需确认 CI（含 golangci-lint）、安全扫描和 GHCR。
+  - 已随6406511c6发布，同SHA CI（含golangci-lint）、安全扫描和GHCR全绿，统一固定镜像sha-6406511；生产视觉与真实数据验收仍待。
   - 前后端必须同版发布。更新后在生产登录打开 `/intelligence`，首次读取最多约 45 秒。
   - 如果显示“数据源暂时不可用”，先在服务器上用 `curl -sI https://codex-reset-radar.pages.dev/data/radar-bench-binding.json` 确认能否出网，必要时配置 `update.proxy_url`。
 - [ ] **生产 Nginx 压缩（用户在服务器操作，最高收益）**：curl 实测生产 JS/CSS 未压缩。在站点的 server 块加入 `gzip on; gzip_vary on; gzip_comp_level 5; gzip_min_length 1024; gzip_types text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml;`。
@@ -588,7 +589,7 @@
 
 - [x] **2026-10-11 审查问题修复源码**：用户要求“全部修复”。已完成收款预占（按用户封顶、到期复查、人工释放）、工坊存储与匿名限流、库存待付、update.sh、前端工具链及审计例外；验证结果见第四节最新记录。
 - [x] **真实 PostgreSQL 回归**：已在用户同意后启动 Docker，用隔离容器（postgres:18-alpine）运行，12个 PG 专项和79个子项全部通过，0 跳过，结果见第四节。完整 integration 本机缺 testcontainers 模块缓存（GOPROXY=off），没有运行，以提交后 CI 为准。
-- [ ] **提交前确认 CI**：前端改为 vite 6、vitest 4、typescript-eslint 8、eslint-plugin-vue 10，CI 使用 Node 20，本机是 Node 22.9。update.sh 已在 gawk 和 busybox awk 下通过，mawk 下的结果仍以 CI 为准。
+- [x] **本轮CI确认**：6406511c6的Node20类型/关键前端49文件790项、Go unit/integration/专用PG18/Redis8、lint、安全及GHCR均成功；macOS更新脚本26组回归通过。vite6/vitest4/typescript-eslint8/eslint-plugin-vue10及冻结锁文件安装已通过CI，本机Node22.9全量3279项另验；mawk单独专项未实测。
 - [ ] **支付宝真机**：启用限额后，手机 WAP 新增 time_expire（格式与电脑扫码相同）。须小额实付确认能正常付款、过期后无法付款，且预占在期限后约10分钟释放；电脑网站支付和易支付按等待期释放。生产启用前先在后台查看“待确认占用”。
 - [ ] **剩余低危**：tailwind 3 带来的 braces（上游无修复）和 postcss-selector-parser 6.x 中危只在开发构建中，去除需要升级 tailwind 4。多账号仍可合计占用收款预占和限量库存，这是预占制度本身的限制；可开启取消限流、缩短订单超时。
 - [ ] **鉴权热路径DB依赖（P2）**：评估给包号判定加短TTL缓存并在变更时失效，或只在分组确实是包号组时查询；需要压测和故障注入验证。
