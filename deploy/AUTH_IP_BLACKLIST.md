@@ -1,5 +1,7 @@
 # 敏感认证 IP 黑名单
 
+2026-10-14 手动封禁发布终态：管理员手动新增已随065eee935/sha-065eee9发布，同SHA CI（真实PG/Redis、unit/integration/lint0、前端502项含IP管理14项）、安全/GHCR成功。备份后`./update.sh sha-065eee9`，刷新后台“IP 黑名单 → 手动新增 IP”，填写完整IP、原因并选择永久或临时。253同版部署，重复有效封禁409不覆盖，自动关闭也生效；只限制当前敏感认证。8080已备份更新，生产未代部署；镜像摘要/标签验真及本机验证见HANDOFF和AUTH_IP_BLACKLIST_REVIEW，旧07bcef204版本不含手动新增。
+
 2026-10-14已发布：功能07bcef204d09349e0574b51a5b8cfdd6266288a3、固定镜像sha-07bcef2（linux/amd64），同SHA CI（真实PG／Redis、unit／integration、lint、前端497项）／安全／GHCR全部成功，镜像摘要与revision标签交叉验真。备份后在部署目录执行`./update.sh sha-07bcef2`，生产由用户更新。详细证据见AUTH_IP_BLACKLIST_REVIEW及HANDOFF；下方10-13验证为本地历史。
 
 本功能源码在2026-10-13实施。用户先要求保护正常使用，后允许“封禁找管理员解除，或封禁时间可配置”。当前只统计可识别的认证失败，后台可选择临时或永久封禁；成功操作不计数。默认临时15分钟、自动拉黑关闭。发布和生产验证状态以HANDOFF最新记录为准，旧CI结果不代表包含本功能。

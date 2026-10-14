@@ -1,5 +1,7 @@
 # 本机 Docker 构建网络故障与防复发清单
 
+2026-10-14 手动封禁发布终态：本轮代理预检200，隔离测试后原8080已备份更新，应用容器112691d6fc2b与镜像sub2apicust:auth-ip-manual-local-20261014/e9fd3b9c7ea2一致；原PG1f5c08bee7e1、Redis c531bb587a18/挂载保留，三服务healthy，recipes仍停止。用户3/Key0/组3/套餐1/订单0/设置281/名单0、enabled=false/timed900/version3升级前后相同；真实管理员登录、新POST参数400及新版chunk CoRkhMZ9已核验，未向原名单加入测试IP。备份664356字节/pg_restore目录1282行/SHA2563998822DEF6124768CF5D35AD5ADEA42CF3A219FA3B45C66B3FF9B05384A69A0，旧before-auth-ip-manual-20261014镜像保留。独立8081测试容器/网络/匿名卷已清理。正式发布065eee935/sha-065eee9仅含手动功能，CI/安全/GHCR成功；本机保留原智力效率源码，与正式镜像区别见HANDOFF，生产未部署。证据output/auth-ip-manual-20261014/local-verified.json及verified-release.json，本条覆盖下方隔离阶段“8080未改”记录。
+
 2026-10-14 管理员手动封禁：Docker引擎原未运行，本轮启动后代理7897授权预检200。隔离基线06873209c，仅叠加本功能，未带248/249、依赖升级或其他会话源码。Go全量unit/15专项、前端14项/类型/lint/构建、实际镜像embed通过；8081专用auth_ip_smoke库32条HTTP断言和3条人工封禁审计通过。镜像sub2apicust:auth-ip-manual-20261014，入口手动新增IP对应chunk AuthIPBlacklistView-D2EJCSaP.js。原8080容器/数据/配置未改，本条不证明原8080正在运行或已更新；证据output/auth-ip-manual-20261014，生产未部署。
 
 **2026-10-14发布补充**：IP防护07bcef204已独立推送，同SHA CI／安全／GHCR通过；远端固定镜像sha-07bcef2与registry摘要已验真，更新方法见UPDATE_GUIDE和HANDOFF。未提交或发布其他会话智力效率／248/249／依赖升级。今天Docker引擎未运行，本轮没有重复启动本地应用；下方10-13镜像7f423b3890c9和数据证据仍为最近本地实测，不能把远端发布当作本地再次部署。生产由用户更新。

@@ -1,5 +1,7 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-14 手动封禁发布终态：新增管理员手动IP封禁、永久/临时、原因和来源；功能065eee935a5eea3fb023c5faf469b988feb0fa73已推，同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226115)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226138)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226114)成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-065eee9`（linux/amd64），摘要`sha256:8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38`；registry/源码revision/构建日志已验真。备份PostgreSQL、部署配置和app_data，保留旧镜像，然后在实际部署目录运行`./update.sh sha-065eee9`；刷新后台“IP 黑名单 → 手动新增 IP”，升级含253迁移，前后端同版。重复有效封禁409不覆盖，自动开关关闭仍拦截名单，只针对敏感认证。8080已备份更新且三服务健康；生产未代部署，旧sha-07bcef2不含手动入口，以下待发布段已属历史。
+
 2026-10-14 管理员手动封禁正在验证发布：新版本新增253迁移和后台“IP 黑名单 → 手动新增 IP”，支持永久/临时期限和原因；自动开关关闭仍检查名单，已有有效封禁不覆盖。备份后按HANDOFF本轮固定镜像更新，前后端同版；旧sha-07bcef2不含此功能。生产未代部署，真实客户端IP与管理员已知攻击IP仍需现场确认。
 
 ## 2026-10-14 敏感认证IP防护（当前可更新版）

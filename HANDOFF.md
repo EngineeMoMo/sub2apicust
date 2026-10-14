@@ -39,6 +39,9 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-14 手动封禁发布终态**：功能065eee935a5eea3fb023c5faf469b988feb0fa73已推origin/main；同SHA CI38497226115（unit/integration，专用PG18/Redis8，lint0，前端38文件502项含IP管理14项）、安全38497226138、GHCR38497226114全部成功。镜像`ghcr.io/engineemomo/sub2apicust:sha-065eee9`，linux/amd64，摘要`sha256:8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38`，registry/revision/source/构建日志及23文件快照哈希交叉验真。用户备份后在部署目录执行`./update.sh sha-065eee9`；支持后台IP黑名单“手动新增 IP”、完整IP/原因、永久/临时，默认手动永久；自动开关关闭仍生效，只保护认证，重复有效封禁409。253迁移已在本机8080生效，原250–252不改，生产未代部署。
+- **2026-10-14 手动封禁8080收口**：原应用已替换为镜像e9fd3b9c7ea2、容器112691d6fc2b，三服务healthy；实际镜像ID/运行容器一致，10条HTTP及真实管理员登录/新POST参数400/新版chunk AuthIPBlacklistView-CoRkhMZ9.js通过。原PG1f5c08bee7e1、Redis c531bb587a18及原挂载保留，用户3/Key0/组3/套餐1/订单0/设置281/名单0和防护配置enabled=false,timed900,version3升级前后完全一致（仅比较上述业务计数及防护配置，不宣称全部数据库字节不变）。基于原v3快照只叠加手动功能，保留之前本地智力效率源码；正式镜像不含其他会话改动。备份output/auth-ip-manual-20261014/database-before-manual.dump，664356字节，SHA2563998822DEF6124768CF5D35AD5ADEA42CF3A219FA3B45C66B3FF9B05384A69A0，pg_restore目录1282行检查通过；旧镜像before-auth-ip-manual-20261014保留。独立8081测试容器/网络/匿名卷已清理。证据verified-release.json、local-verified.json、smoke.json及本SHAjobs/logs；下方隔离阶段“未操作8080/待CI”已成为历史状态。
+
 - **2026-10-14 手动封禁本地验收**：隔离Docker Go1.27.2全量unit及15项专项（真实PG18/Redis8）、前端14项/类型/lint/Vite、实际镜像embed和产品路由通过；8081独立auth_ip_smoke库32条HTTP断言及3条人工封禁审计通过，关闭自动开关、永久/45分钟/到期、重启/Redis清空、重复409/旧版本和管理员自解封已取证。模型入口仍401、管理员/auth/me仍200，新chunk AuthIPBlacklistView-D2EJCSaP.js。原8080服务/数据/配置未操作；本轮新SHA CI/安全/GHCR待核验，证据output/auth-ip-manual-20261014。
 - **2026-10-14 管理员手动封禁（本轮）**：已补自有服务/存储、POST `/admin/ip-blacklist/entries`和后台“手动新增 IP”，支持完整IPv4/IPv6、永久/1–1440分钟临时期限、1–500字原因与确认；关闭自动开关仍有效，重复有效封禁409不覆盖期限。253迁移区分manual/auto、manual无失败统计；旧250–252未改。只保护现有敏感认证，管理员有效会话仍可自解封，模型调用不受名单影响。隔离源码基线06873209c及验证目录output/auth-ip-manual-20261014；测试及新SHA发布正在核验，不能沿用07bcef204结果。其他会话改动保留，生产未部署。
 
@@ -444,7 +447,9 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **2026-10-14 管理员手动封禁发布**：核对本轮真实PG/Redis、前端交互/类型/lint、Go unit/embed和实际镜像；仅暂存本功能，沿用户提交推送授权发布并核验新SHA CI/安全/GHCR。生产备份后由用户更新，旧sha-07bcef2不含手动新增；核对生产真实IP及恶意IP证据，未自动加入截图历史IP。
+- [ ] **2026-10-14 手动黑名单生产验收**：用户备份后`./update.sh sha-065eee9`，刷新后台IP黑名单使用“手动新增 IP”；核对生产真实客户端IP、代理头清洗/源站限制、已知恶意IP证据及共享出口影响。本机已测永久/临时、重启/Redis清空、到期/解封/旧版本；生产是否已更新未知，未自动回灌截图IP。253后不直接用旧程序处理曾手动封禁的IP，见AUTH_IP_BLACKLIST回退边界。
+
+- [x] **2026-10-14 管理员手动封禁发布**：065eee935独立提交推送，新SHA CI/安全/GHCR成功且registry/标签/摘要交叉验真，固定镜像sha-065eee9；本机8080备份后更新，三服务健康，原业务计数/防护配置及PG/Redis/挂载保留。证据output/auth-ip-manual-20261014，其他会话未提交改动保留。
 
 - [x] **2026-10-14 IP防护发布收口**：07bcef204独立提交并推送origin/main；同SHA CI（含真实PG/Redis、unit／integration／lint）、安全、GHCR全部成功，固定镜像sha-07bcef2及摘要交叉核验，更新命令和备份要求已记录；其他会话改动保留，生产未代部署。
 - [x] **IP防护可选永久／临时封禁、代码审查和本地Docker运行**：失败计数、防误拦分类、管理员解封、可配置期限及永久模式、迁移252完成；13项专项／全量unit／55项前端／实际镜像重启和Redis清空／原管理员接口及原数据保留通过，详见第四节最新条目。

@@ -1,5 +1,7 @@
 # IP认证防护审查与本地验收（2026-10-13）
 
+2026-10-14 手动封禁发布终态：功能065eee935a5eea3fb023c5faf469b988feb0fa73已推origin/main；同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226115)（unit/integration/PG18/Redis8/lint0/前端38文件502项含IP管理14项）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226138)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38497226114)全部成功。固定镜像sha-065eee9（linux/amd64），摘要sha256:8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38，registry/镜像revision/source/构建日志及23文件快照哈希交叉验证通过，verified-release.json记录终态。8080随后已备份更新至e9fd3b9c7ea2/112691d6fc2b，三服务健康，10条HTTP及真实管理员登录/new POST400/新chunk CoRkhMZ9通过；原PG/Redis/挂载、业务计数/防护配置相同，保留原本地智力效率源码，正式镜像排除其他会话改动。8081独立测试容器/网络/匿名卷已清理，local-verified.json/smoke.json及本SHAlogs留存；生产未部署，以下隔离阶段“未操作8080/待新SHA”表述为历史，不据此推断当前状态。
+
 ## 2026-10-14 管理员手动封禁（本轮）
 
 已核实：Docker Go1.27.2中15项认证专项（含真实PG18/Redis8）和全量unit通过；前端14项管理交互、类型、定向ESLint及Vite构建通过。实际镜像Go embed及产品路由通过；8081独立auth_ip_smoke库32条HTTP断言通过，关闭自动开关仍手动拦截注册/登录/验证码/找回/Passkey/2FA/OAuth，重启和Redis清空后仍有效，管理员JWT管理和auth/me仍200，模型入口保持原401，手动审计3条均有管理员身份/原因/来源。永久、45分钟、到期、IPv6、非法输入、重复409和旧解封版本均实测。静态审查未发现阻塞问题；本轮功能不操作原8080数据或配置，生产未部署，新SHA CI/安全/GHCR仍须验证。

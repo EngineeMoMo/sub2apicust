@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-14 手动封禁发布终态：本节手动新增功能随065eee935发布，固定sha-065eee9；同SHA CI（unit/integration/真实PG18/Redis8/lint0/前端38文件502项含IP管理14项）、安全/GHCR通过，镜像revision/摘要与日志交叉验真。8080已备份后更新至e9fd3b9c7ea2并通过实际管理员登录及新接口校验，业务计数/配置/原卷保留；生产未部署，其他会话改动未混入。详细证据见HANDOFF和output/auth-ip-manual-20261014，下方手动新增自有文件及253迁移须同步保留。
+
 ## 2026-10-14 管理员手动封禁
 
 - 自有新增：`backend/internal/service/custom_auth_ip_manual_block.go`、`backend/internal/repository/custom_auth_ip_manual_block.go`及对应unit/真实PostgreSQL测试，迁移`253_custom_auth_ip_manual_block.sql`。保留250–252原文，不修改上游文件接缝。

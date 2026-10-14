@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-14 手动封禁发布终态：065eee935已推origin/main，同SHA CI（unit/integration/PG18/Redis8/lint0/前端502项含IP管理14项）、安全/GHCR成功；固定镜像sha-065eee9，摘要8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38。8080已备份更新至e9fd3b9c7ea2，三服务healthy，原业务计数/防护配置/挂载保留；253生效。永久/临时手动添加、原因、来源、重复409和管理员解封已实测，只保护认证。独立测试已清理，其他会话源码保留且未发布；生产由用户备份后`./update.sh sha-065eee9`，证据及待办见HANDOFF最新终态。
+
 2026-10-14 管理员手动封禁：新增253迁移、POST entries及自有管理页入口，支持永久/临时、必填原因和来源；重复有效封禁409，关闭自动开关也生效，共享IP锁和状态版本。只保护现有认证范围。本轮验证/发布以HANDOFF和AUTH_IP_BLACKLIST_REVIEW最新记录为准；旧07bcef204不含手动功能，其他会话改动排除，生产由用户部署。
 
 > 2026-10-14 IP防护已发布：07bcef204d09349e0574b51a5b8cfdd6266288a3已推origin/main，同SHA CI（真实PG18／Redis8、unit／integration、lint0、前端497项）、安全和GHCR全部成功。固定镜像sha-07bcef2（linux/amd64），摘要sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13，registry标签／摘要已验真。用户备份后执行`./update.sh sha-07bcef2`；迁移250/251/252、默认关闭、成功不计数，只保护认证，永久／临时可配置。模型和管理接口不受名单影响。未带其他会话安全补修／248/249／依赖升级／智力效率，生产未代部署。具体取证与待办见HANDOFF及deploy/AUTH_IP_BLACKLIST_REVIEW.md。本条优先于下方未发布历史。

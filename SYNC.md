@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-14 手动封禁发布终态：065eee935独立推送，同SHA CI/安全/GHCR全部成功，固定sha-065eee9（linux/amd64），摘要8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38。保留自有manual服务/仓储/测试及253迁移、前端入口/原因/来源和nullable统计；旧250–252不改，只保护认证，重复有效封禁409，自动开关不影响名单。8080已备份更新且三服务健康，原业务计数/规则/PG/Redis/挂载保留；正式镜像排除其他会话源码，生产由用户`./update.sh sha-065eee9`，取证HANDOFF及AUTH_IP_BLACKLIST_REVIEW。
+
 2026-10-14 管理员手动封禁：同步保留自有custom_auth_ip_manual_block服务/仓储/测试、253迁移及管理页POST entries入口。旧250–252不改；manual来源、必填原因、空统计、共享IP锁/generation、重复有效封禁409须保留。只保护现有认证，自动开关不影响手动名单。新SHA验证/发布见HANDOFF，本轮不带其他会话修改，不以旧sha-07bcef2验收手动新增。
 
 > 2026-10-14 IP防护发布终态：07bcef204已推origin/main，同SHA CI（真实PG18／Redis8、unit／integration、lint、前端497项）／安全／GHCR成功；固定镜像sha-07bcef2（linux/amd64），摘要sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13已交叉核验。用户备份后`./update.sh sha-07bcef2`，保留250/251/252和登记接缝，前后端同版。默认关闭、成功不计数，永久／临时可选，只保护认证；生产真实IP和共享出口验证待用户完成。其他会话248/249及智力效率未发布。本条覆盖下方历史未发布状态，证据见HANDOFF和AUTH_IP_BLACKLIST_REVIEW。
