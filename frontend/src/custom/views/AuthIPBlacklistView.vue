@@ -6,7 +6,7 @@ import { authIPBlacklistAPI, authIPError, authIPTargetSummary, formatAuthIPTime,
 
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 const config = ref<AuthIPConfig | null>(null)
-const form = reactive({ enabled: false, threshold: 10, minutes: 120, cooldown: 15, mode: 'timed' as AuthIPConfig['block_mode'], aggregation: 'network' as AuthIPConfig['aggregation_mode'], ipv4: 24, ipv6: 64 })
+const form = reactive({ enabled: false, threshold: 10, minutes: 120, cooldown: 15, mode: 'permanent' as AuthIPConfig['block_mode'], aggregation: 'network' as AuthIPConfig['aggregation_mode'], ipv4: 24, ipv6: 64 })
 const configLoading = ref(false)
 const saving = ref(false)
 const configError = ref('')
@@ -164,7 +164,7 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
 
       <form class="card space-y-4 p-5" @submit.prevent="save">
         <h2 class="text-lg font-semibold">自动拉黑规则</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400">首次部署默认关闭。开启前核验真实客户端 IP；关闭自动拉黑不会解除已有封禁。</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">首次部署默认关闭，新加入名单默认永久封禁，须管理员解除。管理员可调整为临时封禁并设置期限。开启前核验真实客户端 IP；关闭自动拉黑不会解除已有封禁。</p>
         <fieldset :disabled="!config || configLoading || saving" class="space-y-4">
           <label class="flex items-center gap-2"><input v-model="form.enabled" type="checkbox" data-testid="enabled" />开启自动拉黑</label>
           <div class="grid gap-4 sm:grid-cols-3">

@@ -23,8 +23,7 @@ func authIPNetworkState(ctx context.Context, tx *sql.Tx, ip string) (string, err
 	var state string
 	err := tx.QueryRowContext(ctx, `SELECT COALESCE(string_agg(id::text || ':' || generation::text || ':' ||
 CASE WHEN blocked AND (blocked_until IS NULL OR blocked_until > statement_timestamp()) THEN '1' ELSE '0' END, ',' ORDER BY id), '')
-FROM custom_auth_ip_blacklist WHERE ip && $1::inet AND ip != $1::inet
-AND (source = 'manual' OR masklen(ip) < CASE family(ip) WHEN 4 THEN 32 ELSE 128 END)`, ip).Scan(&state)
+FROM custom_auth_ip_blacklist WHERE ip && $1::inet AND ip != $1::inet`, ip).Scan(&state)
 	if err != nil || state == "" {
 		return "", err
 	}

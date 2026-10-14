@@ -29,6 +29,10 @@ func TestAuthIPNetworkRealPostgres(t *testing.T) {
 	ctx := context.Background()
 	require.NoError(t, ApplyMigrations(ctx, db))
 	require.NoError(t, ApplyMigrations(ctx, db))
+	var defaultMode string
+	require.NoError(t, db.QueryRowContext(ctx, `SELECT column_default FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'custom_auth_ip_blacklist_config' AND column_name = 'block_mode'`).Scan(&defaultMode))
+	require.Contains(t, defaultMode, "permanent")
 	address := os.Getenv("AUTH_IP_TEST_REDIS_ADDR")
 	require.NotEmpty(t, address, "network regression requires isolated real Redis")
 	client := redis.NewClient(&redis.Options{Addr: address})
@@ -166,6 +170,30 @@ network_ipv6_prefix = 64, version = version + 1 WHERE id = 1`, threshold)
 		require.ErrorIs(t, err, service.ErrAuthIPBlocked)
 		_, _, err = guard.Begin(ctx, "198.51.100.18", "/api/v1/auth/login", true)
 		require.NoError(t, err)
+	})
+
+	t.Run("升级前自动单IP名单解封重置新的网段计数", func(t *testing.T) {
+		reset(1)
+		config, err := repo.Config(ctx)
+		require.NoError(t, err)
+		config.AggregationMode = "ip"
+		config, err = guard.UpdateConfig(ctx, *config)
+		require.NoError(t, err)
+		host, err := fail("192.0.2.5", "/api/v1/auth/login")
+		require.ErrorIs(t, err, service.ErrAuthIPBlocked)
+		require.Equal(t, "192.0.2.5", host.Entry.IP)
+		config.AggregationMode = "network"
+		config.Threshold = 3
+		_, err = guard.UpdateConfig(ctx, *config)
+		require.NoError(t, err)
+		_, err = fail("192.0.2.6", "/api/v1/auth/login")
+		require.NoError(t, err)
+		_, err = fail("192.0.2.7", "/api/v1/auth/login")
+		require.NoError(t, err)
+		_, err = guard.Unblock(ctx, host.Entry.ID, host.Entry.Generation)
+		require.NoError(t, err)
+		_, err = fail("192.0.2.5", "/api/v1/auth/login")
+		require.NoError(t, err, "旧单IP名单解封后网段须从第一次失败重新累计")
 	})
 
 	t.Run("IPv6网段和临时到期重置", func(t *testing.T) {

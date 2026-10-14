@@ -100,6 +100,8 @@ func TestAuthIPBlacklistAdminRoutesRequireRealAdminSession(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 403, request(http.MethodGet, "/api/v1/admin/ip-blacklist/config", token, "").Code)
 	require.Equal(t, 403, request(http.MethodPost, "/api/v1/admin/ip-blacklist/entries", token, `{}`).Code)
+	require.Equal(t, 403, request(http.MethodPut, "/api/v1/admin/ip-blacklist/config", token, `{}`).Code)
+	require.Equal(t, 403, request(http.MethodPost, "/api/v1/admin/ip-blacklist/entries/1/unblock", token, `{"generation":3}`).Code)
 	user.Role = service.RoleAdmin
 	token, err = auth.GenerateToken(context.Background(), user)
 	require.NoError(t, err)
