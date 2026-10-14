@@ -28,6 +28,29 @@ jobs:
     runs-on: ubuntu-latest
     # [CUSTOM] 包号真实事务／并发回归使用独立空库，缺少DSN不能只靠skip冒充通过。
     services:
+      # [CUSTOM] 认证 IP 黑名单事务／永久状态与滑动窗口回归使用专用存储。
+      auth-ip-postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: auth_ip_test
+          POSTGRES_PASSWORD: auth_ip_ci_only
+          POSTGRES_DB: auth_ip_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U auth_ip_test -d auth_ip_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      auth-ip-redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       dedicated-postgres:
         image: postgres:18-alpine
         env:
@@ -59,6 +82,8 @@ jobs:
         working-directory: backend
         env:
           DEDICATED_TEST_POSTGRES_DSN: postgres://dedicated_test:dedicated_ci_only@127.0.0.1:5432/dedicated_test?sslmode=disable
+          AUTH_IP_TEST_POSTGRES_DSN: postgres://auth_ip_test:auth_ip_ci_only@127.0.0.1:5433/auth_ip_test?sslmode=disable
+          AUTH_IP_TEST_REDIS_ADDR: 127.0.0.1:6379
         run: make test-unit
       - name: Integration tests
         working-directory: backend

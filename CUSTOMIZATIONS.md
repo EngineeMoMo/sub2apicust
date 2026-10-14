@@ -1,5 +1,16 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-13 敏感认证 IP 自动黑名单（可选永久／临时，本机已部署，尚未发布）
+
+- 2026-10-14新增上游接缝[CUSTOM]：`.github/workflows/backend-ci.yml`的test job添加独立auth-ip-postgres18／auth-ip-redis8服务，Unit tests传AUTH_IP_TEST_POSTGRES_DSN／AUTH_IP_TEST_REDIS_ADDR，真实存储回归进入每次CI；与已有包号测试库隔离。发布只提交本节功能，保留其他会话改动；具体SHA与镜像见HANDOFF发布状态。
+- 用户最新要求允许永久封禁或配置期限，仍只累计明确的认证失败和请求格式异常，成功、验证码／TOTP、业务校验、令牌失效、429和系统故障排除。默认10次失败／120分钟、临时封禁15分钟，首次enabled=false；永久须管理员移除。滑动窗口用Redis TIME入场时间、UTC毫秒、唯一事件及Lua原子操作，窗口起点排除；规则／管理员解封／自动到期版本隔离旧计数和在途封禁。
+- 251迁移添加block_seconds默认900、blocked_until可空；252迁移添加block_mode默认timed、CHECK(timed/permanent)及version递增。已应用250/251不修改。service严格校验模式，PUT遗漏模式返回400避免旧客户端静默降级；repository按permanent写NULL到期，否则按数据库时间加期限；已有记录不追溯改期。admin审计加入block_mode，前端新增模式下拉框，timed输入1–1440分钟、permanent提示管理员移除，切回timed保留配置时长。自有middleware保留失败响应缓冲及256KiB上限。13项后端／全量unit／运行镜像embed、55项前端及真实重启／Redis清空／模式切换／解封通过；8080镜像7f423b3890c9，状态和边界见HANDOFF与deploy/AUTH_IP_BLACKLIST_REVIEW.md。
+- 新增自有后端：迁移 `250_custom_auth_ip_blacklist.sql`，service/custom_auth_ip_blacklist，repository/custom_auth_ip_blacklist 与 custom_auth_ip_counter，middleware/custom_auth_ip_blacklist，handler/custom_auth_ip_blacklist 数据库访问器，handler/admin/custom_auth_ip_blacklist，routes/custom_auth_ip_blacklist；相应 service、repository、middleware、routes 单测及真实存储回归。
+- 新增自有前端：`custom/authIpBlacklist.ts`、`custom/views/AuthIPBlacklistView.vue`、`custom/__tests__/auth-ip-blacklist.spec.ts`；`custom/routes.ts` 登记管理员路由。
+- 上游接缝逐处登记（均有 [CUSTOM]）：`backend/internal/server/router.go` 构造管理路由与 guard 并传给认证注册；`backend/internal/server/routes/auth.go` 新增可选中间件参数，在审计之后、原接口限流之前运行；`frontend/src/components/layout/AppSidebar.vue` 增加管理员 IP 黑名单菜单；`Makefile` 关键前端回归纳入 auth-ip-blacklist.spec.ts。不改变模型请求路由和主题。
+- 持久规则/名单在 PostgreSQL；关闭开关仍检查已有封禁，Redis 清空不提前解封；DB 故障503、计数故障429；符合失败分类的 OAuth POST 累计，start/callback GET只检查，refresh/logout/优惠邀请码检查及微信支付OAuth排除。配置及解封乐观版本冲突409，复用管理员鉴权与审计；临时名单到期按数据库时间恢复。
+- 规则说明、截图时间、上线真实 IP / Cloudflare → Nginx 核验和隔离测试方法见 `deploy/AUTH_IP_BLACKLIST.md`。生产未部署、尚无本功能新 SHA 的 CI / GHCR；验证终态及证据以 HANDOFF 最新条目为准，不沿用官网发布 CI。
+
 - [CUSTOM] backend/go.mod/go.sum另将x/tools从0.49.0提升0.50.0：Ent schema加载通过go/packages读取新Go导出数据，旧版本与旧lint一样不支持version 5；仅更新解析库，不手改Ent生成代码。隔离快照TestAuthIdentityFoundationSchemas已通过。
 
 - [CUSTOM] backend/.golangci.yml：升级x/net后16处旧HTTP/2接口产生SA1019。仅对http_upstream及其keepalive测试、server/http、openai_codex_models_service及测试五个文件的明确符号加弃用兼容规则；不关闭其他SA1019、typecheck或govulncheck。保留PING、H2C及第三方GOAWAY类型兼容行为，原生HTTP/2接口迁移另行跟进。

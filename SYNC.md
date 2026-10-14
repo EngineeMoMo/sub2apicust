@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+> 2026-10-13 23:31 IP防护在8080运行7f423b3890c9，尚未发布生产：成功操作不计数，默认10次可识别失败/120分钟、临时15分钟，开关关闭；用户最新授权增加可选永久封禁，须管理员移除。保留250/251/252迁移及CUSTOMIZATIONS登记的router/auth.go/AppSidebar/Makefile接缝、失败分类／mode版本／期限保留回归。API block_mode必须明确timed/permanent，前后端同版；规则切换不改变已有记录期限。同步不恢复全请求计数。发布核验新SHA CI/安全/镜像及Cloudflare→Nginx真实IP，见deploy/AUTH_IP_BLACKLIST.md和HANDOFF。其他会话248/249未带入本机；下方官网发布镜像不包含IP防护，生产由用户部署。
+
 > 2026-10-13最终发布：官网与登录页动效已推送f8928e20d，同SHA CI（含真实PG的unit/integration）、安全、GHCR全部成功，固定镜像`ghcr.io/engineemomo/sub2apicust:sha-f8928e2`（摘要`sha256:cd8c1667f943c0a6706742dcc3c0e9a1c203e75ba53dd28ec528da9f920e3d6a`）。这一版只有前端改动，没有迁移。用户备份后执行`./update.sh sha-f8928e2`，生产未代部署。本条覆盖下方10-10的更新命令。
 
 > 2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。

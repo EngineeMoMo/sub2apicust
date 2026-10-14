@@ -859,7 +859,9 @@ const adminNavItems = computed((): NavItem[] => {
       ],
     },
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
-    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true }
+    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true },
+    // [CUSTOM] 敏感认证 IP 黑名单管理入口，独立定制页面。
+    { path: '/admin/ip-blacklist', label: locale.value.startsWith('zh') ? 'IP 黑名单' : 'IP blacklist', icon: ShieldIcon }
   ]
 
   const visible = applyFeatureFlags(baseItems)

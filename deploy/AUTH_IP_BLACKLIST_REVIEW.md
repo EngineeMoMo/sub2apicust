@@ -1,0 +1,30 @@
+# IP认证防护审查与本地验收（2026-10-13）
+
+## 已核实
+
+用户最新要求允许永久封禁／找管理员解除，或配置封禁期限。保留明确失败计数，成功登录／注册／正常多步骤不计数；验证码／TOTP、业务校验、令牌失效、429和系统故障排除。新增block_mode=timed/permanent，默认10次失败／120分钟、timed15分钟；临时到期恢复，永久须管理员移除。规则切换不改变已有记录期限，开关仍关闭。此授权覆盖上一轮只新增临时封禁的决定。规则、API和分类边界见[功能说明](AUTH_IP_BLACKLIST.md)。
+
+审查涵盖认证路由范围、响应分类与缓冲、Redis原子窗口／入场时间／唯一事件、数据库规则与状态版本竞争、管理员权限／审计、模式校验／期限保存、前端表单／409／时区及迁移。未发现阻塞性问题。PUT遗漏模式400以避免旧客户端静默降级；旧version不能覆盖模式、旧generation不能重封。已有模型接口和管理会话不接入名单，永久记录不自动解除。
+
+- Docker Go1.27.2：13项专项、真实PostgreSQL18／Redis8和全量`go test -tags=unit ./...`通过；运行镜像Go embed及嵌入产品路由回归通过。
+- 连续32次成功请求不计数；明确失败分类、响应替换、256KiB以上成功响应透传、入场时间／窗口边界、80路并发、管理员解封／到期恢复／旧请求版本竞争均通过回归。
+- 实际镜像前端依赖：5文件55项通过（IP管理9项），类型检查／定向ESLint／Vite构建通过；永久输入及重新加载、切回临时保留时长有回归。
+- 专用guard_smoke库8081实际镜像：阈值3，9次成功登录均200、名单0条；第3次失败403永久封禁、blocked_until=NULL。实际应用重启和临时Redis FLUSHALL后仍拒绝；持JWT的管理员解除200、旧状态409。切换临时45分钟不解除原永久记录；解封后第3次失败生成约2700秒期限，切回永久不延长旧临时期限。只在测试库将到期移到过去，下一次正确登录200。真实审计2条自动封禁、1条成功解除、2条永久模式规则更新；测试账户合规确认未改变原账户。
+- 原8080真实管理员登录及config/entries200，管理接口匿名401，模型入口仍401；新chunk为AuthIPBlacklistView-DotqpFXJ.js，入口index-Cgh4f6-U.js，HTTP校验新版两种方式文案通过。
+- 仅替换应用容器589ddc6d3ae7；镜像与标签sub2apicust:auth-ip-mode-20261013一致：sha256:7f423b3890c9a070657c0097adf7b486499ed042cc8e3a350a2266caf1b2bad5。三服务healthy，原PG/Redis/recipes容器及全部原挂载保持，recipes停止。
+- 250/251/252迁移生效，总迁移301，248/249未带入；用户3／密钥0／分组3／套餐1／订单0，281项设置完整摘要保持。名单0条，enabled=false、threshold=10、window_seconds=7200、block_seconds=900、block_mode=timed、version=3。
+- 构建快照为HEAD a6cdbd870加本功能及原有智力效率，不带其他会话未提交业务／依赖改动。3只测试容器、其匿名卷及专用网络已清理。
+
+证据目录：output/auth-ip-local-20261013。backend-mode-tests.log、frontend-mode-tests.log、build-mode.log、mode-isolated-smoke.json、mode-audit.json、mode-http-smoke.json、mode-before/after.json及cleanup-mode.txt对应上述结论。构建源docker-src-v3及manifest记录31个叠加文件，使用已发布HEAD的前端依赖，未部署其他会话的Vite/Vitest升级；此前cooldown证据保留作为历史。
+
+部署前两份pg_dump均通过pg_restore目录核验：database.dump 655269字节，SHA256 BF50B77C63EC935F7565D55AFE28FEF9B6B06135344AF6F1D2B568FCFD9A958F；database-before-cooldown.dump 661963字节，SHA256 464A3F7A1A3AA3EECC920006BDD172A58230E6C0D3E60B264DE40A3A2431CBBD。初始旧镜像sub2apicust:before-auth-ip-20261013-221424不含本防护。251前的阶段旧镜像sub2apicust:before-auth-ip-cooldown-20261013-225403是旧永久封禁实现，不能把它当作支持临时名单到期的回退版本。回退先核实现场，不自动恢复数据库或删除卷。
+
+## 252迁移前备份
+
+252前新备份database-before-mode.dump为662966字节，SHA256 DFF741233A5D9FA6C649479F45594C27682EF014A25BE0DBD08B9B5E303A22CA，pg_restore目录检查通过。保留33e2ba735e66为sub2apicust:before-auth-ip-mode-20261013；此旧版可读取永久名单但无法设置模式，回退后修改规则可能继续生成临时封禁，需先核对现场。迁移不回退、不删数据卷。
+
+## 推断与未知
+
+失败分类减少正常重复操作、多步骤认证和验证码错误造成的误拦，不等于共享IP零误拦。多人在同一出口输错密码仍共同累计；永久模式下误拦须管理员解除。生产合理阈值和误拦率未知，开启前按审计与真实流量验证。启动日志的独立定价更新源连接0.0.0.0失败未在本轮修复，不宣称远程定价刷新成功。
+
+生产Cloudflare→Nginx真实IP、转发头清洗／源站限制未取证。截图400缺少响应reason／正文，新规则不能承诺10条全部符合计数条件。原管理员页面带真实记录的浏览器交互仍待用户验收；HTTP接口与前端单测不等同完整人工验收。宿主无Go，本轮使用Docker工具链；未提交推送、未生产部署，没有本功能新SHA CI/安全/GHCR或本轮golangci-lint结果。

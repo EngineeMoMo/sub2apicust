@@ -1,5 +1,7 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
+2026-10-13 23:31 IP防护最新修订：只累计可识别失败，成功／验证码／业务校验／限流及系统故障排除；默认10次/120分钟、临时15分钟、开关关闭。用户授权可选永久封禁，须管理员移除。保留custom/authIpBlacklist.ts、custom/views/AuthIPBlacklistView.vue、custom/routes.ts管理员路由及AppSidebar的[CUSTOM]入口。block_mode=timed/permanent下拉选择；timed显示1–1440分钟时长，permanent隐藏时长并保留已存配置供切回。API window_seconds/block_seconds为秒，PUT必须明确block_mode；列表blocked_until空值显示永久封禁／管理员移除，规则修改不改已有期限。加载失败禁止保存默认值，version/generation冲突409刷新重试，时间标注浏览器时区。回归auth-ip-blacklist.spec.ts（9项），与后端250/251/252和Begin/Failed guard同版发布，旧客户端缺mode返回400需刷新。8080运行7f423b3890c9，55项定向／类型／lint／构建通过，生产未发布；见HANDOFF及deploy/AUTH_IP_BLACKLIST_REVIEW.md，不恢复全请求计数。
+
 2026-10-12 官网动效，同步时保留：
 - `PublicLayout`：同一个 `<nav>` 加菜单按钮，吸顶、向下滚动收起，以及空闲预取。
 - `BrandPanel` 的装饰轨道；`FamilyHomeView` 的滑动指示条和 `data-product`；`PublicPlansView` 的骨架与 `role="status"`。

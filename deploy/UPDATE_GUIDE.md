@@ -1,5 +1,7 @@
 # 日常更新操作手册（定制版 sub2api）
 
+> 2026-10-13 23:31 IP防护已部署本机8080（7f423b3890c9），尚未发布生产镜像。新增250/251/252迁移；成功操作不计数，仅明确失败累计，默认10次/120分钟、临时15分钟，开关关闭。可选择永久封禁／管理员解除，或临时时长1–1440分钟；规则切换不修改已有名单期限。前后端须同版，PUT必须提交block_mode；旧页面返回400需刷新。备份后按[认证IP防护说明](AUTH_IP_BLACKLIST.md)核验真实IP、转发头及源站限制，观察共享出口失败分布后选择模式并开启。新SHA CI/安全/GHCR待验，下方官网SHA不含本功能；本地证据与回退边界见HANDOFF和[审查记录](AUTH_IP_BLACKLIST_REVIEW.md)，生产由用户部署。
+
 > 2026-10-10最终发布：包号职责收敛及安全补修已推送origin/main，功能提交`026d9ab2e78e244858e9a57fafe3297e193434ac`。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165503)、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165599)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38025165523)全部成功，含Go unit（独立PostgreSQL）、integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-026d9ab`（linux/amd64），摘要`sha256:93d974774096864fcf60a67050586c01fbf7bab27f6f6eb7f349e0e6aa96adeb`。Go1.27.2、x/net0.60.0与x/tools0.50.0已生效，govulncheck零可达漏洞（模块中2项未调用漏洞，不宣称全部依赖零漏洞）；golangci-lint2.14.0通过，旧HTTP/2接口仅有五文件/明确符号限定的弃用兼容规则，迁移另列待办。证据output/security-release-20261010与output/dedicated-release-20261010。用户备份后执行`./update.sh sha-026d9ab`；生产未代部署，真实请求/到期/跨组计费待用户验收。本条覆盖下方历史未发布或失败候选记录，后续纯文档提交不产生新镜像。
 
 

@@ -6,6 +6,12 @@ import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/admin/ip-blacklist',
+    name: 'AuthIPBlacklist',
+    component: () => import('@/custom/views/AuthIPBlacklistView.vue'),
+    meta: { title: 'IP 黑名单', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/tools/studio/submit',
     name: 'StudioSubmissions',
     component: () => import('@/custom/views/StudioSubmissionsView.vue'),
