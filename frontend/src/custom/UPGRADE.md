@@ -1,6 +1,6 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
-2026-10-14 Claude工具附加费新增：Anthropic/composite分组设置基础搜索单价，按实际成功调用叠加到Token费；用户与管理员共用费用明细，XLSX/CSV导出保留工具快照。新增256迁移及后端原生JSON/SSE/协议转换接缝，前后端须同版。普通客户端工具不收费，旧账单不补扣；用户已授权提交推送，发布待本轮新SHA核验，生产未部署；配置/覆盖边界见[CLAUDE_TOOL_BILLING](../../../deploy/CLAUDE_TOOL_BILLING.md)，全部接缝与验证终态见CUSTOMIZATIONS/HANDOFF。
+2026-10-14 Claude工具附加费新增：Anthropic/composite分组设置基础搜索单价，按实际成功调用叠加到Token费；用户与管理员共用费用明细，XLSX/CSV导出保留工具快照。新增256迁移及后端原生JSON/SSE/协议转换接缝，前后端须同版。普通客户端工具不收费，旧账单不补扣；最终功能d3a2c346352e7eca5aacc197785fd366f90f83b6已推送origin/main，同SHA CI/安全/GHCR全部成功，固定ghcr.io/engineemomo/sub2apicust:sha-d3a2c34及摘要/revision/source已验真；生产及本机8080未部署，交接skip-ci不生成新镜像；配置/覆盖边界见[CLAUDE_TOOL_BILLING](../../../deploy/CLAUDE_TOOL_BILLING.md)，全部接缝与验证终态见CUSTOMIZATIONS/HANDOFF。
 
 2026-10-14全工作区发布终态：59项保留改动已推送6406511c6，智力效率雷达Bench、收款待确认/人工释放、工坊清理与配额及工具链接缝一并发布，保留上游0.2.16和认证IP防护。同SHA CI/安全/GHCR全部成功，正式固定sha-6406511及registry摘要/源码标签验真；本地409文件3279项、类型/构建，Node20 CI关键49文件790项通过，源码lint0错误26警告。前后端同版，248/249须备份后升级；生产及本机8080未部署此镜像，视觉/真实业务待验收。交接skip-ci不生成新镜像，证据与待办见HANDOFF最新状态，覆盖下方59项未发布记录。
 

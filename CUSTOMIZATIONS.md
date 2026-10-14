@@ -2,7 +2,7 @@
 
 ## 2026-10-14 Claude 网页搜索工具附加费
 
-用户已要求“增加相关收费”。新增 Claude 内置 web_search 的实际调用量与基础单价快照，叠加到 Token/阶梯费用；普通客户端工具和搜索启动事件不收费。复用分组 web_search_price_per_call，nil 默认0.01/次、显式0免费，Claude 工具费应用 Token 同一有效倍率（用户专属/分组及高峰）。新增 nullable JSONB 迁移256，旧账单不补扣；不自动同步 New API 配置，不承诺未知工具费/充值价值造成的全部差价已解决。配置与边界见 [deploy/CLAUDE_TOOL_BILLING.md](deploy/CLAUDE_TOOL_BILLING.md)。用户已授权提交并推送origin/main，发布待本轮新SHA的CI/安全/GHCR核验；生产未部署。本轮验证终态以 HANDOFF 最新条目为准。
+用户已要求“增加相关收费”。新增 Claude 内置 web_search 的实际调用量与基础单价快照，叠加到 Token/阶梯费用；普通客户端工具和搜索启动事件不收费。复用分组 web_search_price_per_call，nil 默认0.01/次、显式0免费，Claude 工具费应用 Token 同一有效倍率（用户专属/分组及高峰）。新增 nullable JSONB 迁移256，旧账单不补扣；不自动同步 New API 配置，不承诺未知工具费/充值价值造成的全部差价已解决。配置与边界见 [deploy/CLAUDE_TOOL_BILLING.md](deploy/CLAUDE_TOOL_BILLING.md)。最终功能d3a2c346352e7eca5aacc197785fd366f90f83b6已推送origin/main，同SHA CI/安全/GHCR全部成功；固定ghcr.io/engineemomo/sub2apicust:sha-d3a2c34及sha256:5baca94dfd6ad73ea03117406400253c083ff9886addca0e4b80528bb6149ba5经registry/源码标签/构建日志核验。生产及本机8080未部署；首个候选的errcheck仅修复DTO测试类型检查，正式终态与待办见HANDOFF。
 
 新增自有文件：
 
