@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-14 上游同步本轮**：用户要求更新开源fork，目标upstream/main=9c2cca9e6（正式v0.2.16=c3cb8588ce6a5aef4dc29fa4f71ac91f3c0bdf3d，主线随后仅版本号/赞助信息更新）；相对711bfc744新增235条上游提交。merge-tree演算后在独立工作树合并，14处文本冲突逐项解决，保留Go1.27.2、x/image0.45.0、SheetJS0.20.3、DOMPurify3.4.16及认证IP/包号CI存储；采用Vue3.5.43和上游完整13平台配额测试。210个自有源码/迁移文件哈希保持，原6平台fixture已由上游动态清单取代。前端47文件774项、lint/类型/生产构建；Docker内Ent生成无差异、Go embed、PG18/Redis8专项及4189隔离61条真实HTTP验收通过。原8080应用未替换、其他会话未提交改动保留，生产未部署；本轮功能SHA/CI/安全/GHCR终态及固定镜像以HANDOFF最新记录为准，不能沿用sha-bbee35d的门禁证明0.2.16。证据output/upstream-sync-20261014。
+
 - **2026-10-14 网段防护发布终态**：功能bbee35dbcc30525bae354dc1d270f90b5591fab7已推origin/main；同SHA CI38508986548（unit/integration、专用PG18/Redis8、lint0、前端38文件504项含IP管理16项）、安全38508986630、GHCR38508986565全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-bbee35d（linux/amd64），摘要sha256:0dd2c3067bf73f3b5308ee72b7e27d22014ff71aa618fb7c02404bfda7ac9e22；28文件源码哈希、registry/revision/source及构建日志交叉验真。支持手动通配符/CIDR及自动同网段不同IP共享明确失败计数，默认/24和/64，单IP/前缀/期限可配置。8080于2026-10-14 11:56完成备份更新及三服务healthy验收、原数据/卷保持，254/255生效、自动仍false、permanent/version5、名单0；本机保留原智力效率，正式发布排除其他会话改动。独立测试环境已清理，生产由用户备份后`./update.sh sha-bbee35d`；同网段正常用户也可能受限，生产真实IP和误拦率仍待验证。证据output/auth-ip-network-20261014/verified-release.json、local-verified.json及HANDOFF。 新加入默认永久封禁，只有管理员可调整规则/期限及解封；已有临时名单保留原到期时间。复查旧自动单IP名单解封的网段计数边界，修复前真实PG回归失败、修复后8组网段回归及全量unit通过；最终45条真实HTTP断言通过。最终8080镜像sha256:b311d7372950873015c08c68567d36719ad37457693a7a1915b5ca4839b2a3c1、容器bd9fd0be85449daeb20028f49a3e29495d4337891e1ca9e18f6cf627f2e6d3e6、chunk assets/AuthIPBlacklistView-DwaftuX8.js；255前备份667706字节、目录1283行、SHA256cec4821389c3cf8bec26426184695a0e6922066f8be26d6c3dfd273c621e6ffb与before-auth-ip-permanent-20261014镜像保留。最新日志backend-permanent-final/frontend-permanent-final/build-permanent-release/build-permanent-local.log；旧aade433及下方timed/version4/44条为阶段记录，最终更新使用sha-bbee35d。 2026-10-14 13:08接续会话只读检查确认Docker引擎未运行，当前8080健康未复测；CI/GHCR及远端HEAD已重新核验，不沿用旧发布结果。
 
 - **2026-10-14 网段防护本轮**：手动支持210.230.206.*及IPv4/IPv6 CIDR；自动按网段共享明确失败计数，默认IPv4 /24、IPv6 /64，可配置单IP/网段、前缀、临时/永久及时长。成功不计数，名单仍只保护认证；共享网段正常用户也受限。新增254保留旧开关和名单、规则version递增；250–253不改。本轮自审未发现阻塞问题；Docker真实PG18/Redis8、18项后端专项含7组网段回归、全量unit/Go embed、前端16项/类型/lint/Vite和8081的44条HTTP断言通过。正式提交/本轮CI/GHCR仍待，不能沿用旧发布结论。证据output/auth-ip-network-20261014。
@@ -451,6 +453,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **2026-10-14 上游0.2.16同步发布**：本轮合并与隔离验证通过后推origin/main，核对同SHA CI/安全/GHCR、revision及摘要；保留原工作区其他会话未提交内容。生产由用户备份后按本轮最终固定sha镜像更新，旧sha-bbee35d继续对应0.2.13加网段防护。
 
 - [x] **2026-10-14 网段防护发布**：功能bbee35dbcc30525bae354dc1d270f90b5591fab7/sha-bbee35d及同SHA CI/安全/GHCR/镜像摘要验真完成，默认永久、仅管理员调整/解封；11:56本机8080三服务healthy及独立45条HTTP断言通过，测试环境已清理。13:08本轮只读复查Docker未运行，当前8080状态未复测；生产未代部署。
 - [ ] **2026-10-14 网段防护生产验收**：用户备份数据库/配置/app_data后`./update.sh sha-bbee35d`；核验Cloudflare→Nginx真实IP，刷新IP黑名单页并选择范围/前缀/期限，再开启自动。共享网段正常用户可能受限，误拦率待真实流量确认；不自动加入截图历史网段。

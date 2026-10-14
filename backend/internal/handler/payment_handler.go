@@ -86,7 +86,7 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 			// [CUSTOM] 包含售罄套餐，客户端展示不可购买状态。
 			SalesMode: p.SalesMode, StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
 			ID: int64(p.ID), GroupID: p.GroupID,
-			GroupPlatform: gi.Platform, GroupName: gi.Name,
+			GroupPlatform: gi.Platform, GroupName: gi.I18n.LocalizeName(c.GetHeader("Accept-Language"), gi.Name),
 			RateMultiplier: gi.RateMultiplier, PeakRateEnabled: gi.PeakRateEnabled,
 			PeakStart: gi.PeakStart, PeakEnd: gi.PeakEnd, PeakRateMultiplier: gi.PeakRateMultiplier,
 			Name: p.Name, Description: p.Description, Price: p.Price, OriginalPrice: p.OriginalPrice,
@@ -136,7 +136,7 @@ func (h *PaymentHandler) GetCheckoutInfo(c *gin.Context) {
 			// [CUSTOM] 包含售罄套餐，客户端展示不可购买状态。
 			SalesMode: p.SalesMode, StockLimit: p.StockLimit, StockUsed: p.StockUsed, StockRemaining: service.CustomPlanStockRemaining(p),
 			ID: int64(p.ID), GroupID: p.GroupID,
-			GroupPlatform: gi.Platform, GroupName: gi.Name,
+			GroupPlatform: gi.Platform, GroupName: gi.I18n.LocalizeName(c.GetHeader("Accept-Language"), gi.Name),
 			RateMultiplier:  gi.RateMultiplier,
 			PeakRateEnabled: gi.PeakRateEnabled, PeakStart: gi.PeakStart,
 			PeakEnd: gi.PeakEnd, PeakRateMultiplier: gi.PeakRateMultiplier,
