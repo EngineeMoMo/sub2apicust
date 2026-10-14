@@ -8,6 +8,7 @@
 
 2026-10-14 网段防护本轮：代理授权预检200后给实际build设置代理；引擎原停止，本轮启动原三服务、保留停止的recipes。独立测试通过后仅替换8080应用，镜像b33cb472be2a、容器0fa7d82eda3d，PG/Redis/原卷和业务计数/设置摘要保持；迁移254预期使version3→4、增加network/24/64，开关仍false。数据库备份665933字节/目录1282行/SHA256ff83db7ad955edffcc47e6cffc904c1eafa5a115d26a36592e6d085916e141af及旧镜像保留。真实HTTP/新chunk BznUWgMC证据见output/auth-ip-network-20261014/local-verified.json；正式版本和生产边界见HANDOFF，不把旧CI当本轮结果。
 
+
 2026-10-14 手动封禁发布终态：本轮代理预检200，隔离测试后原8080已备份更新，应用容器112691d6fc2b与镜像sub2apicust:auth-ip-manual-local-20261014/e9fd3b9c7ea2一致；原PG1f5c08bee7e1、Redis c531bb587a18/挂载保留，三服务healthy，recipes仍停止。用户3/Key0/组3/套餐1/订单0/设置281/名单0、enabled=false/timed900/version3升级前后相同；真实管理员登录、新POST参数400及新版chunk CoRkhMZ9已核验，未向原名单加入测试IP。备份664356字节/pg_restore目录1282行/SHA2563998822DEF6124768CF5D35AD5ADEA42CF3A219FA3B45C66B3FF9B05384A69A0，旧before-auth-ip-manual-20261014镜像保留。独立8081测试容器/网络/匿名卷已清理。正式发布065eee935/sha-065eee9仅含手动功能，CI/安全/GHCR成功；本机保留原智力效率源码，与正式镜像区别见HANDOFF，生产未部署。证据output/auth-ip-manual-20261014/local-verified.json及verified-release.json，本条覆盖下方隔离阶段“8080未改”记录。
 
 2026-10-14 管理员手动封禁：Docker引擎原未运行，本轮启动后代理7897授权预检200。隔离基线06873209c，仅叠加本功能，未带248/249、依赖升级或其他会话源码。Go全量unit/15专项、前端14项/类型/lint/构建、实际镜像embed通过；8081专用auth_ip_smoke库32条HTTP断言和3条人工封禁审计通过。镜像sub2apicust:auth-ip-manual-20261014，入口手动新增IP对应chunk AuthIPBlacklistView-D2EJCSaP.js。原8080容器/数据/配置未改，本条不证明原8080正在运行或已更新；证据output/auth-ip-manual-20261014，生产未部署。
@@ -92,6 +93,11 @@ try {
 - 本次成功部署镜像前缀9c8c1dfb87bc，属于历史证据，不应当作下一次升级的固定目标。
 
 ## 7. 本轮智力效率发布记录
+
+- **2026-10-13 智力效率雷达Bench本机部署**：
+  - 构建源用 `git archive HEAD` 加本轮文件，放在 `output/intelligence-radar-bench-20261012/docker-src`，再用一个只改 build context 的 compose 文件合并原 override。这样不把工作树里其他会话的未提交改动（248/249 迁移等）带进镜像。
+  - 结果：代理预检 200，build 退出 0；运行镜像与构建镜像一致（`5647debb2e93`），旧镜像标签 `sub2apicust:before-intelligence-20261013-090718`，数据库备份 646652 字节，pg_restore 校验通过。
+  - 新发现：容器出网完全依赖 Docker Desktop 的手动代理（7897）。代理端口在监听但上游不通时，主机直连仍正常，容器却访问不了任何外网（HTTPS 被重置，HTTP 返回 502）。判断“容器能否出网”要在容器内测，不能用主机 curl 代替。
 
 - **2026-10-08 收款限制与审查补修本地部署**：用户授权更新。代理200后首次构建成功，旧镜像保留`sub2apicust:before-collection-20261008`，数据库备份616870字节且pg_restore目录验证通过。仅重建应用，原数据库／Redis容器及全部挂载一致；新镜像`2a844d6e77237dd55986627d8fbb9609af29ab4ce2022b3437d0980234246bc0`与运行镜像一致，三服务healthy，health及页面入口200。库存／sales_mode／收款账本存在，用户3／套餐1／订单0保持。证据output/local-collection-20261008；8080已供测试，recipes保持停止，未修改付款设置或测试实付，生产未改。
 

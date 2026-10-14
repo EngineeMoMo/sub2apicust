@@ -49,12 +49,16 @@ func TestCustomPlanStockPostgres(t *testing.T) {
 		return n
 	}
 	exec(`CREATE TABLE subscription_plans(id BIGINT PRIMARY KEY, for_sale BOOLEAN NOT NULL DEFAULT TRUE);
- CREATE TABLE payment_orders(id BIGSERIAL PRIMARY KEY, plan_id BIGINT, order_type TEXT NOT NULL DEFAULT 'subscription', status TEXT NOT NULL DEFAULT 'PENDING', paid_at TIMESTAMPTZ);
+ CREATE TABLE payment_orders(id BIGSERIAL PRIMARY KEY, user_id BIGINT, plan_id BIGINT, order_type TEXT NOT NULL DEFAULT 'subscription', status TEXT NOT NULL DEFAULT 'PENDING', paid_at TIMESTAMPTZ);
  INSERT INTO subscription_plans(id) VALUES (1),(2),(3),(4);
  INSERT INTO payment_orders(plan_id,status,paid_at) VALUES (1,'COMPLETED',now()),(1,'PENDING',NULL),(1,'CANCELLED',NULL);`)
 	migration, err := os.ReadFile(filepath.Join("..", "..", "migrations", "245_custom_subscription_plan_stock.sql"))
 	require.NoError(t, err)
 	exec(string(migration))
+	// [CUSTOM] 249 整体替换同名触发函数；既有场景在最终函数上验证（未填 user_id 的旧场景不触发单笔待付限制）。
+	guard, err := os.ReadFile(filepath.Join("..", "..", "migrations", "249_custom_plan_stock_pending_guard.sql"))
+	require.NoError(t, err)
+	exec(string(guard))
 	require.Equal(t, 2, used(1))
 	var limit int
 	require.NoError(t, db.QueryRow("SELECT stock_limit FROM subscription_plans WHERE id=1").Scan(&limit))

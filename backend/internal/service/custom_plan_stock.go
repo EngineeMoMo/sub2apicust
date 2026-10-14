@@ -27,6 +27,10 @@ func customPlanStockError(err error) error {
 	if err != nil && strings.Contains(err.Error(), "CUSTOM_PLAN_OUT_OF_STOCK") {
 		return customPlanOutOfStock()
 	}
+	// 249：限量套餐每个用户同时只能有一笔待付订单，避免多笔待付把库存长时间占住。
+	if err != nil && strings.Contains(err.Error(), "CUSTOM_PLAN_PENDING_EXISTS") {
+		return infraerrors.Conflict("PLAN_PENDING_ORDER_EXISTS", "你已有该限量套餐的待付订单，请先完成付款或取消后再下单")
+	}
 	return err
 }
 

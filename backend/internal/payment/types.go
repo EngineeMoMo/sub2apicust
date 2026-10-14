@@ -116,8 +116,10 @@ type CreatePaymentRequest struct {
 	AlipayMobilePrecreate bool
 	// [CUSTOM] 服务端配置决定的电脑端 WAP 模式，不由客户端指定。
 	AlipayDesktopWapQRCode bool
-	ExpiresAt              time.Time
-	InstanceSubMethods     string // Comma-separated sub-methods from instance supported_types (for Stripe)
+	// [CUSTOM] 启用收款限额时，手机 WAP 也写入订单绝对期限，便于到期后证明付款入口失效并释放预占。
+	AlipayMobileWapExpiry bool
+	ExpiresAt             time.Time
+	InstanceSubMethods    string // Comma-separated sub-methods from instance supported_types (for Stripe)
 }
 
 // CreatePaymentResultType describes the shape of the create-payment result.

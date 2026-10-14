@@ -48,9 +48,10 @@ func TestCustomCollectionPostgres(t *testing.T) {
 	exec := func(query string, args ...any) { t.Helper(); _, e := db.Exec(query, args...); require.NoError(t, e) }
 	exec(`CREATE TABLE settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
  CREATE TABLE subscription_plans(id BIGINT PRIMARY KEY,for_sale BOOLEAN NOT NULL DEFAULT TRUE);
- CREATE TABLE payment_orders(id BIGSERIAL PRIMARY KEY,plan_id BIGINT,order_type TEXT DEFAULT 'balance',status TEXT DEFAULT 'PENDING',paid_at TIMESTAMPTZ,pay_amount NUMERIC(20,2),provider_snapshot JSONB);
+ CREATE TABLE payment_orders(id BIGSERIAL PRIMARY KEY,user_id BIGINT,plan_id BIGINT,order_type TEXT DEFAULT 'balance',status TEXT DEFAULT 'PENDING',paid_at TIMESTAMPTZ,pay_amount NUMERIC(20,2),provider_snapshot JSONB,expires_at TIMESTAMPTZ DEFAULT now()+interval '30 minutes');
  INSERT INTO subscription_plans(id) VALUES(1);`)
-	for _, name := range []string{"245_custom_subscription_plan_stock.sql", "247_custom_payment_collection.sql"} {
+	// 248/249 整体替换同名触发函数；既有场景必须在最终函数上验证（未填 user_id 的旧场景不触发按用户封顶）。
+	for _, name := range []string{"245_custom_subscription_plan_stock.sql", "247_custom_payment_collection.sql", "248_custom_payment_collection_user_hold.sql", "249_custom_plan_stock_pending_guard.sql"} {
 		b, e := os.ReadFile(filepath.Join("..", "..", "migrations", name))
 		require.NoError(t, e)
 		exec(string(b))
@@ -76,6 +77,10 @@ func TestCustomCollectionPostgres(t *testing.T) {
 		require.Equal(t, 980.0, usage.Paid)
 		require.Equal(t, 20.0, usage.Held)
 		require.Zero(t, usage.Remaining)
+		// 待确认列表带订单期限与人工释放时间（期限＋默认24小时等待＋10分钟余量）。
+		require.Len(t, usage.Pending, 1)
+		require.False(t, usage.Pending[0].ExpiresAt.IsZero())
+		require.Equal(t, 24*time.Hour+10*time.Minute, usage.Pending[0].ManualReleaseAfter.Sub(usage.Pending[0].ExpiresAt))
 	})
 	t.Run("并发充值与订阅共用1000元", func(t *testing.T) {
 		reset()
@@ -146,6 +151,18 @@ func TestCustomCollectionPostgres(t *testing.T) {
 		require.ErrorContains(t, e, "CUSTOM_COLLECTION_DAILY_LIMIT")
 		exec("UPDATE custom_payment_collection_ledger SET paid_at=now()-interval '2 days'")
 		exec("INSERT INTO payment_orders(pay_amount) VALUES(50)")
+	})
+	t.Run("待确认列表查询失败返回错误而非崩溃", func(t *testing.T) {
+		reset()
+		exec("INSERT INTO payment_orders(pay_amount) VALUES(10)")
+		exec("ALTER TABLE payment_orders RENAME COLUMN expires_at TO expires_at_hidden")
+		defer exec("ALTER TABLE payment_orders RENAME COLUMN expires_at_hidden TO expires_at")
+		client := dbent.NewClient(dbent.Driver(entsql.OpenDB(dialect.Postgres, db)))
+		svc := service.NewPaymentConfigService(client, nil, nil)
+		require.NotPanics(t, func() {
+			_, e := svc.CustomCollectionUsage(context.Background(), &service.CustomCollectionPolicy{Timezone: "Asia/Shanghai", DailyMax: 1000})
+			require.Error(t, e)
+		})
 	})
 	t.Run("订单事务回滚不留下预占", func(t *testing.T) {
 		reset()

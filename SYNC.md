@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-14用户授权整个工作区提交：此前59项保留改动与已同步上游0.2.16汇合发布，包含248/249收款/库存保护、工坊清理限流、智力效率与前端依赖升级。本轮新SHA的CI/安全/GHCR须重新核验，固定镜像和最终状态以HANDOFF最新条目为准；生产由用户备份后同版更新，当前未代部署。本机前端3279项、类型/构建及26组更新回归通过，源码lint0错误26警告，Go由本轮CI验证。
+
 2026-10-14 上游0.2.16发布终态：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。
 
 2026-10-14 同步上游0.2.16：用户要求更新开源fork，目标upstream/main=9c2cca9e6（正式v0.2.16=c3cb8588ce6a5aef4dc29fa4f71ac91f3c0bdf3d，主线随后仅版本号/赞助信息更新）；相对711bfc744新增235条上游提交。merge-tree演算后在独立工作树合并，14处文本冲突逐项解决，保留Go1.27.2、x/image0.45.0、SheetJS0.20.3、DOMPurify3.4.16及认证IP/包号CI存储；采用Vue3.5.43和上游完整13平台配额测试。210个自有源码/迁移文件哈希保持，原6平台fixture已由上游动态清单取代。前端47文件774项、lint/类型/生产构建；Docker内Ent生成无差异、Go embed、PG18/Redis8专项及4189隔离61条真实HTTP验收通过。原8080应用未替换、其他会话未提交改动保留，生产未部署；本轮功能SHA/CI/安全/GHCR终态及固定镜像以HANDOFF最新记录为准，不能沿用sha-bbee35d的门禁证明0.2.16。证据output/upstream-sync-20261014。
@@ -7,6 +9,7 @@
 2026-10-14 网段防护发布终态：功能bbee35dbcc30525bae354dc1d270f90b5591fab7已推origin/main；同SHA CI38508986548（unit/integration、专用PG18/Redis8、lint0、前端38文件504项含IP管理16项）、安全38508986630、GHCR38508986565全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-bbee35d（linux/amd64），摘要sha256:0dd2c3067bf73f3b5308ee72b7e27d22014ff71aa618fb7c02404bfda7ac9e22；28文件源码哈希、registry/revision/source及构建日志交叉验真。支持手动通配符/CIDR及自动同网段不同IP共享明确失败计数，默认/24和/64，单IP/前缀/期限可配置。8080于2026-10-14 11:56完成备份更新及三服务healthy验收、原数据/卷保持，254/255生效、自动仍false、permanent/version5、名单0；本机保留原智力效率，正式发布排除其他会话改动。独立测试环境已清理，生产由用户备份后`./update.sh sha-bbee35d`；同网段正常用户也可能受限，生产真实IP和误拦率仍待验证。证据output/auth-ip-network-20261014/verified-release.json、local-verified.json及HANDOFF。 新加入默认永久封禁，只有管理员可调整规则/期限及解封；已有临时名单保留原到期时间。复查旧自动单IP名单解封的网段计数边界，修复前真实PG回归失败、修复后8组网段回归及全量unit通过；最终45条真实HTTP断言通过。最终8080镜像sha256:b311d7372950873015c08c68567d36719ad37457693a7a1915b5ca4839b2a3c1、容器bd9fd0be85449daeb20028f49a3e29495d4337891e1ca9e18f6cf627f2e6d3e6、chunk assets/AuthIPBlacklistView-DwaftuX8.js；255前备份667706字节、目录1283行、SHA256cec4821389c3cf8bec26426184695a0e6922066f8be26d6c3dfd273c621e6ffb与before-auth-ip-permanent-20261014镜像保留。最新日志backend-permanent-final/frontend-permanent-final/build-permanent-release/build-permanent-local.log；旧aade433及下方timed/version4/44条为阶段记录，最终更新使用sha-bbee35d。 2026-10-14 13:08接续会话只读检查确认Docker引擎未运行，当前8080健康未复测；CI/GHCR及远端HEAD已重新核验，不沿用旧发布结果。
 
 2026-10-14 网段防护本轮：同步须保留新增254迁移、custom_auth_ip_target/network及真实存储回归，自有管理页的自动范围/前缀和手动通配符/CIDR。250–253不改；254保留开关和旧名单、version递增，默认network、IPv4 /24/IPv6 /64，新请求累计失败，不回灌历史。前后端须同版，旧页面PUT缺新参数400应刷新；既有认证、菜单、Makefile/CI接缝不扩大。原卷与备份保留，正式SHA及发布验真见HANDOFF；本机8080已验证，生产由用户部署。
+
 
 2026-10-14 手动封禁发布终态：065eee935独立推送，同SHA CI/安全/GHCR全部成功，固定sha-065eee9（linux/amd64），摘要8da3604012c2a2c121dd47a7fa22542c785b5c77c60335177498a40058807d38。保留自有manual服务/仓储/测试及253迁移、前端入口/原因/来源和nullable统计；旧250–252不改，只保护认证，重复有效封禁409，自动开关不影响名单。8080已备份更新且三服务健康，原业务计数/规则/PG/Redis/挂载保留；正式镜像排除其他会话源码，生产由用户`./update.sh sha-065eee9`，取证HANDOFF及AUTH_IP_BLACKLIST_REVIEW。
 
@@ -25,6 +28,12 @@
 > - vite.config.ts 的 manualChunks 要保留 `/@airwallex/` → `vendor-airwallex`，否则支付 SDK 会回到每页首屏加载；插件数组保留 `mofaAppShell()`。
 > - 上游若改语言包入口或公开路由，核对 `custom/shell/app-shell.mjs`。
 > - 本机改了 vite.config.ts 后，先用 `npx vue-tsc -b tsconfig.node.json` 重新生成被忽略的 vite.config.js，再运行 `pnpm dev`。
+
+> 2026-10-11 漏洞修复（未发布）同步注意：
+> - 迁移 248/249 整体替换 247/245 的同名触发函数，不能修改已发布的 247/245。若上游也改了这两个触发函数，以 248/249 为最终版本再合并。
+> - 前端已升级到 vite 6、vitest 4、typescript-eslint 8、eslint-plugin-vue 10，并加入 `pnpm.overrides`；上游仍是 vite 5 和 vitest 2。合并 `frontend/package.json` 时保留本 fork 的版本和 overrides，然后执行 `pnpm install` 重新生成锁文件，不要手工解决锁文件冲突。
+> - 上游接缝：`.eslintrc.cjs`（`plugin:vue/essential` 和三条规则）、`.eslintignore`、`UsageView.spec.ts` 的 Blob mock 写法。新增的上游测试如果用 `vi.fn` 加箭头函数模拟构造函数，在 vitest 4 下会失败，需要改成 function。
+> - 详见 CUSTOMIZATIONS 顶部新节。
 
 > 2026-10-10未发布包号职责收敛：保留归属/有效期/免扣，独立限额与billing-policy接口已移除。同步时不要恢复历史策略入口，保留免扣凭证与原生网关限制；接缝见CUSTOMIZATIONS和deploy/DEDICATED_ENTITLEMENT_ONLY.md。
 

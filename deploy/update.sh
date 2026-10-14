@@ -42,12 +42,13 @@ PREVIOUS_IMAGE_ID=""
 CURRENT_IMAGE_ID=""
 ROLLBACK_IMAGE_ID=""
 CLEANUP_READY=false
+override_next=""
 
 if ! mkdir .sub2api-update.lock 2>/dev/null; then
   echo "✗ 更新锁已存在，请确认没有其他更新进程；中断遗留的锁需确认后移除。" >&2
   exit 1
 fi
-trap 'rmdir .sub2api-update.lock 2>/dev/null || true' EXIT
+trap 'rmdir .sub2api-update.lock 2>/dev/null || true; [[ -z "$override_next" ]] || rm -f "$override_next"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
@@ -159,11 +160,55 @@ if [[ -n "$TAG" ]]; then
   if [[ ! -f docker-compose.override.yml ]]; then
     echo "✗ 指定标签需要 docker-compose.override.yml 里有 image: 行" >&2; exit 1
   fi
-  # 只改 image 的标签部分（最后一个冒号后的内容），并留一份备份便于回退
+  # [CUSTOM] 标签只允许 Docker 合法字符，避免拼进替换内容时改坏 override。
+  if [[ ! "$TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+    echo "✗ 镜像标签格式无效：${TAG}（示例：sha-1c0a69c、latest）" >&2; exit 1
+  fi
+  # [CUSTOM] 只改 sub2api 服务下、且指向本项目镜像仓库的那一行 image:；
+  # postgres/redis 等其他服务及注释行不动。找不到或找到多处都不改文件。
+  override_next=$(mktemp docker-compose.override.yml.next.XXXXXX)
+  replace_status=0
+  awk -v repo="$IMAGE_REPOSITORY" -v tag="$TAG" -v q="'" '
+    function indent(s) { match(s, /^[ \t]*/); return RLENGTH }
+    {
+      line = $0; trimmed = line; sub(/^[ \t]+/, "", trimmed)
+      if (trimmed == "" || substr(trimmed, 1, 1) == "#") { print line; next }
+      level = indent(line)
+      if (in_service && level <= service_level) in_service = 0
+      if (trimmed ~ /^sub2api:[ \t]*(#.*)?$/) { in_service = 1; service_level = level; print line; next }
+      if (in_service && trimmed ~ /^image:/) {
+        value = trimmed; sub(/^image:[ \t]*/, "", value)
+        quote = ""
+        if (substr(value, 1, 1) == "\"" || substr(value, 1, 1) == q) { quote = substr(value, 1, 1); value = substr(value, 2) }
+        if (index(value, repo ":") != 1) { failed = 3; exit 3 }
+        rest = substr(value, length(repo) + 2)
+        end = length(rest) + 1
+        for (i = 1; i <= length(rest); i++) {
+          c = substr(rest, i, 1)
+          if (c == " " || c == "\t" || c == "\"" || c == q || c == "#") { end = i; break }
+        }
+        prefix = substr(line, 1, length(line) - length(trimmed))
+        print prefix "image: " quote repo ":" tag substr(rest, end)
+        found++
+        next
+      }
+      print line
+    }
+    END {
+      if (failed) exit failed
+      if (found == 0) exit 2
+      if (found > 1) exit 4
+    }' docker-compose.override.yml > "$override_next" || replace_status=$?
+  case "$replace_status" in
+    0) ;;
+    2) rm -f "$override_next"; echo "✗ override 的 sub2api 服务下没有 image: 行，未修改文件" >&2; exit 1 ;;
+    3) rm -f "$override_next"; echo "✗ override 的 sub2api 镜像不是 ${IMAGE_REPOSITORY}，未修改文件；本地构建等情况请手动改标签" >&2; exit 1 ;;
+    *) rm -f "$override_next"; echo "✗ override 的 sub2api 服务下有多处 image: 或文件无法解析，未修改文件" >&2; exit 1 ;;
+  esac
+  # 备份原文件便于回退；cp 写回保留原文件权限。BSD/GNU sed -i 不兼容，统一不用。
   cp docker-compose.override.yml "docker-compose.override.yml.bak.$(date +%s)"
-  # [CUSTOM] BSD/GNU sed 的 -i 参数不兼容；先完成替换，再写回并保留原文件权限。
-  updated_compose=$(sed -E "s|(image:[[:space:]]*[^[:space:]]+):[^[:space:]]+|\1:${TAG}|" docker-compose.override.yml)
-  printf '%s\n' "$updated_compose" > docker-compose.override.yml
+  cp "$override_next" docker-compose.override.yml
+  rm -f "$override_next"
   echo "→ 镜像标签已切到 :${TAG}"
 fi
 

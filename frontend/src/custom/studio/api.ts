@@ -18,6 +18,10 @@ export interface StudioSubmission {
   reason: string
   created_at: string
 }
+// 待审核、已公开、已下架保留素材；退回只保留记录和原因，素材已删除。
+export function studioHasMedia(status: string): boolean {
+  return ['pending', 'published', 'unpublished'].includes(status)
+}
 export function validateStudioFile(file: File | undefined, media: 'image' | 'video'): string {
   if (!file) return '请先选择作品文件。'
   const allowed = media === 'image' ? ['image/png', 'image/jpeg', 'image/webp'] : ['video/mp4']
@@ -38,6 +42,11 @@ export const studioAPI = {
   },
   async withdraw(id: string) {
     return (await apiClient.post<StudioSubmission>('/studio/submissions/' + id + '/withdraw')).data
+  },
+  // 管理员删除投稿的记录和素材，用于清理存储；不可恢复。
+  async remove(id: string) {
+    if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('无效投稿编号。')
+    return (await apiClient.delete<{ id: string; deleted: boolean }>('/admin/studio/submissions/' + id)).data
   },
   async review(entry: StudioSubmission, action: 'approve' | 'reject' | 'unpublish', reason: string, confirmed: boolean) {
     return (await apiClient.post<StudioSubmission>('/admin/studio/submissions/' + entry.id + '/review', {

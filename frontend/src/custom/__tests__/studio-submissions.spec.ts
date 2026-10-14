@@ -7,13 +7,13 @@ import { validateStudioFile } from '@/custom/studio/api'
 
 const harness = vi.hoisted(() => ({
   auth: { isAdmin: false, user: { id: 1 } }, route: { path: '/tools/studio/submit' },
-  list: vi.fn(), submit: vi.fn(), preview: vi.fn(), review: vi.fn(), withdraw: vi.fn()
+  list: vi.fn(), submit: vi.fn(), preview: vi.fn(), review: vi.fn(), withdraw: vi.fn(), remove: vi.fn()
 }))
 vi.mock('@/stores/auth', () => ({ useAuthStore: () => harness.auth }))
 vi.mock('vue-router', () => ({ useRoute: () => harness.route }))
 vi.mock('@/custom/studio/api', async importOriginal => ({
   ...await importOriginal<typeof import('@/custom/studio/api')>(),
-  studioAPI: { list: harness.list, submit: harness.submit, preview: harness.preview, review: harness.review, withdraw: harness.withdraw }
+  studioAPI: { list: harness.list, submit: harness.submit, preview: harness.preview, review: harness.review, withdraw: harness.withdraw, remove: harness.remove }
 }))
 let wrapper: VueWrapper | undefined
 const entry = { id: 'a'.repeat(32), title: '原创测试作品', author: '署名', category: '奇幻风景', style: '水彩', media: 'image', prompt_kind: 'actual', prompt: '投稿人实际使用的完整提示词', model: '自己的模型', notes: '', status: 'pending', reason: '', created_at: '2026-10-01' }
@@ -22,6 +22,7 @@ beforeEach(() => {
   harness.list.mockReset().mockResolvedValue([]); harness.submit.mockReset().mockResolvedValue(entry)
   harness.preview.mockReset().mockResolvedValue(new Blob(['image'], { type: 'image/png' }))
   harness.review.mockReset().mockResolvedValue({ ...entry, status: 'published' }); harness.withdraw.mockReset().mockResolvedValue({ ...entry, status: 'withdrawn' })
+  harness.remove.mockReset().mockResolvedValue({ id: entry.id, deleted: true })
   Object.defineProperty(URL, 'createObjectURL', { value: vi.fn(() => 'blob:test-local'), configurable: true })
   Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true })
 })
@@ -68,7 +69,7 @@ describe('工坊投稿与审核组件（模拟账号/API，不是生产验收）
     expect(harness.submit).not.toHaveBeenCalled()
   })
   it('旧视频可私有查看与撤回，但不能恢复新投稿入口', async () => {
-    harness.list.mockResolvedValue([{ ...entry, media: 'video', status: 'rejected' }])
+    harness.list.mockResolvedValue([{ ...entry, media: 'video', status: 'unpublished' }])
     harness.preview.mockResolvedValue(new Blob(['video'], { type: 'video/mp4' }))
     page(); await button('我的投稿').trigger('click'); await flushPromises()
     await wrapper!.get('.mofa-studio-submission-row').trigger('click'); await flushPromises()
@@ -77,8 +78,33 @@ describe('工坊投稿与审核组件（模拟账号/API，不是生产验收）
     expect(wrapper!.text()).toContain('视频投稿待开放')
     expect(wrapper!.find('form').exists()).toBe(false)
     expect(harness.submit).not.toHaveBeenCalled()
-    await button('撤回作品').trigger('click'); await button('确认撤回').trigger('click'); await flushPromises()
+    await button('撤回作品').trigger('click')
+    expect(wrapper!.text()).toContain('无法恢复')
+    await button('确认撤回').trigger('click'); await flushPromises()
     expect(harness.withdraw).toHaveBeenCalledOnce()
+    expect(wrapper!.text()).toContain('记录和素材已删除')
+    expect(wrapper!.find('video').exists()).toBe(false)
+  })
+  it('退回的投稿不再请求已删除的素材，仍显示原因与重新投稿', async () => {
+    harness.list.mockResolvedValue([{ ...entry, status: 'rejected', reason: '请补充素材授权' }])
+    page(); await button('我的投稿').trigger('click'); await flushPromises()
+    await wrapper!.get('.mofa-studio-submission-row').trigger('click'); await flushPromises()
+    expect(harness.preview).not.toHaveBeenCalled()
+    expect(wrapper!.text()).toContain('素材已删除')
+    expect(wrapper!.text()).toContain('请补充素材授权')
+    expect(button('修改后重新投稿').exists()).toBe(true)
+  })
+  it('管理员删除投稿须二次确认，删除后刷新队列', async () => {
+    harness.auth.isAdmin = true; harness.route.path = '/admin/studio/submissions'; harness.list.mockResolvedValue([entry])
+    page(); await flushPromises(); await wrapper!.get('.mofa-studio-submission-row').trigger('click'); await flushPromises()
+    await button('删除投稿').trigger('click')
+    expect(harness.remove).not.toHaveBeenCalled()
+    expect(wrapper!.text()).toContain('无法恢复')
+    harness.list.mockResolvedValue([])
+    await button('确认删除').trigger('click'); await flushPromises()
+    expect(harness.remove).toHaveBeenCalledWith(entry.id)
+    expect(wrapper!.text()).toContain('投稿已删除')
+    expect(harness.list).toHaveBeenCalledTimes(2)
   })
   it('确认两项授权后提交multipart，成功提示待审核而非自动公开', async () => {
     page(); await chooseFile()

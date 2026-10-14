@@ -373,7 +373,8 @@ describe('user UsageView', () => {
     let exportedBlob: Blob | null = null
     let csvContent = ''
     const OriginalBlob = globalThis.Blob
-    vi.stubGlobal('Blob', vi.fn((parts: BlobPart[], options?: BlobPropertyBag) => {
+    // [CUSTOM] vitest 4 要求被 new 调用的 mock 使用 function/class 实现，见 CUSTOMIZATIONS.md。
+    vi.stubGlobal('Blob', vi.fn(function (parts: BlobPart[], options?: BlobPropertyBag) {
       csvContent = parts.map((part) => String(part)).join('')
       return new OriginalBlob(parts, options)
     }))
@@ -428,7 +429,8 @@ describe('user UsageView', () => {
 
     let csvContent = ''
     const OriginalBlob = globalThis.Blob
-    vi.stubGlobal('Blob', vi.fn((parts: BlobPart[], options?: BlobPropertyBag) => {
+    // [CUSTOM] vitest 4 要求被 new 调用的 mock 使用 function/class 实现，见 CUSTOMIZATIONS.md。
+    vi.stubGlobal('Blob', vi.fn(function (parts: BlobPart[], options?: BlobPropertyBag) {
       csvContent = parts.map((part) => String(part)).join('')
       return new OriginalBlob(parts, options)
     }))
@@ -543,7 +545,8 @@ describe('user UsageView', () => {
 
     let csvContent = ''
     const OriginalBlob = globalThis.Blob
-    vi.stubGlobal('Blob', vi.fn((parts: BlobPart[], options?: BlobPropertyBag) => {
+    // [CUSTOM] vitest 4 要求被 new 调用的 mock 使用 function/class 实现，见 CUSTOMIZATIONS.md。
+    vi.stubGlobal('Blob', vi.fn(function (parts: BlobPart[], options?: BlobPropertyBag) {
       csvContent = parts.map((part) => String(part)).join('')
       return new OriginalBlob(parts, options)
     }))

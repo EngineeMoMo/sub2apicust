@@ -52,6 +52,7 @@
           <template v-if="selected">
             <h2>{{ selected.title }}</h2><p>{{ selected.author }} · {{ selected.category }} · {{ selected.style }} · {{ statusLabels[selected.status] }}</p>
             <p v-if="previewLoading" role="status">正在读取私有素材…</p>
+            <p v-if="!studioHasMedia(selected.status)" class="mofa-studio-fine">退回后素材已删除，只保留提示词和审核说明。修改后请重新上传作品。</p>
             <div v-if="previewURL" class="mofa-studio-media"><img v-if="selected.media === 'image'" :src="previewURL" :alt="selected.title" @load="previewReady = true"><video v-else :src="previewURL" controls playsinline preload="metadata" @loadedmetadata="previewReady = true" /></div>
             <h3>{{ selected.prompt_kind === 'actual' ? '投稿人提供的原始提示词' : '反推 / 整理参考模板（非原始记录）' }}</h3>
             <pre class="mofa-studio-prompt">{{ selected.prompt }}</pre><p>模型 / 工具：{{ selected.model }}</p><p v-if="selected.notes">{{ selected.notes }}</p><p v-if="selected.reason">审核说明：{{ selected.reason }}</p>
@@ -62,13 +63,15 @@
                 <button v-if="['pending', 'unpublished'].includes(selected.status)" class="btn btn-primary" :disabled="busy || !previewReady || !reviewConfirmed" @click="review('approve')">审核通过并公开</button>
                 <button v-if="selected.status === 'pending'" class="btn btn-secondary" :disabled="busy || reason.length < 3" @click="review('reject')">退回修改</button>
                 <button v-if="selected.status === 'published'" class="btn btn-secondary" :disabled="busy || reason.length < 3" @click="review('unpublish')">下架作品</button>
+                <button v-if="!deleteConfirm" class="btn btn-secondary" :disabled="busy" @click="deleteConfirm = true">删除投稿</button>
               </div>
+              <div v-if="deleteConfirm" class="mofa-studio-feedback"><p>删除会同时移除记录和素材，释放存储，无法恢复。确定删除吗？</p><button class="btn btn-secondary" :disabled="busy" @click="deleteConfirm = false">取消</button><button class="btn btn-primary" :disabled="busy" @click="removeEntry">确认删除</button></div>
             </template>
-            <template v-else-if="selected.status !== 'withdrawn'">
+            <template v-else>
               <button v-if="selected.status === 'rejected' || selected.status === 'unpublished'" class="btn btn-secondary" :disabled="busy" @click="reuseEntry">修改后重新投稿</button>
-              <p v-if="selected.status === 'rejected' || selected.status === 'unpublished'" class="mofa-studio-fine">重新投稿需要再次上传作品并确认授权；旧记录保留，新版本重新审核，不会直接公开。</p>
+              <p v-if="selected.status === 'rejected' || selected.status === 'unpublished'" class="mofa-studio-fine">重新投稿需要再次上传作品并确认授权；新版本重新审核，不会直接公开。不再需要的旧记录可以撤回删除，腾出投稿名额。</p>
               <button v-if="!withdrawConfirm" class="btn btn-secondary" :disabled="busy" @click="withdrawConfirm = true">撤回作品</button>
-              <div v-else class="mofa-studio-feedback"><p>撤回后作品不再公开，记录仍保留。确定撤回吗？</p><button class="btn btn-secondary" :disabled="busy" @click="withdrawConfirm = false">取消</button><button class="btn btn-primary" :disabled="busy" @click="withdraw">确认撤回</button></div>
+              <div v-else class="mofa-studio-feedback"><p>撤回会删除这份投稿的记录和素材，作品不再公开，无法恢复。确定撤回吗？</p><button class="btn btn-secondary" :disabled="busy" @click="withdrawConfirm = false">取消</button><button class="btn btn-primary" :disabled="busy" @click="withdraw">确认撤回</button></div>
             </template>
           </template>
           <p v-else>选择一份投稿，查看完整作品、提示词与审核记录。</p>
@@ -83,12 +86,12 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
-import { studioAPI, studioCategories, studioStyles, statusLabels, validateStudioFile, type StudioSubmission } from '@/custom/studio/api'
+import { studioAPI, studioCategories, studioHasMedia, studioStyles, statusLabels, validateStudioFile, type StudioSubmission } from '@/custom/studio/api'
 
 const route = useRoute(), auth = useAuthStore()
 const reviewing = computed(() => route.path.startsWith('/admin/'))
 const mode = ref('submit'), busy = ref(false), loading = ref(false), problem = ref(''), notice = ref('')
-const rights = ref(false), consent = ref(false), reviewConfirmed = ref(false), withdrawConfirm = ref(false), reason = ref('')
+const rights = ref(false), consent = ref(false), reviewConfirmed = ref(false), withdrawConfirm = ref(false), deleteConfirm = ref(false), reason = ref('')
 const file = ref<File>(), fileURL = ref(''), fileInput = ref<HTMLInputElement>()
 const entries = ref<StudioSubmission[]>([]), selected = ref<StudioSubmission>()
 const previewURL = ref(''), previewLoading = ref(false), previewReady = ref(false)
@@ -133,7 +136,8 @@ function reuseEntry() {
   rights.value = consent.value = false; problem.value = ''; notice.value = '已填入旧投稿内容。修改后重新上传素材，提交新一轮审核。'; mode.value = 'submit'
 }
 async function openEntry(entry: StudioSubmission) {
-  clearPreview(); selected.value = entry; reason.value = ''; reviewConfirmed.value = false; withdrawConfirm.value = false
+  clearPreview(); selected.value = entry; reason.value = ''; reviewConfirmed.value = false; withdrawConfirm.value = false; deleteConfirm.value = false
+  if (!studioHasMedia(entry.status)) return // 退回的素材已删除，不再请求
   const operation = new AbortController(); previewRequest = operation; previewLoading.value = true
   try { const blob = await studioAPI.preview(entry.id, reviewing.value, operation.signal); if (!operation.signal.aborted) previewURL.value = URL.createObjectURL(blob) }
   catch (error) { if (!operation.signal.aborted) failure(error) }
@@ -167,7 +171,8 @@ async function review(action: 'approve' | 'reject' | 'unpublish') {
     const updated = await studioAPI.review(selected.value, action, reason.value, reviewConfirmed.value)
     if (epoch !== accountEpoch) return
     selected.value = updated; reviewConfirmed.value = false
-    notice.value = action === 'approve' ? '已通过审核并公开展示。' : action === 'reject' ? '已退回，并保留修改原因。' : '作品已下架，公开入口不再提供素材。'
+    notice.value = action === 'approve' ? '已通过审核并公开展示。' : action === 'reject' ? '已退回并保留修改原因，素材已删除。' : '作品已下架，公开入口不再提供素材。'
+    if (action === 'reject') clearPreview()
     await loadList()
   } catch (error) { if (epoch === accountEpoch) failure(error) }
   finally { if (epoch === accountEpoch) busy.value = false }
@@ -176,7 +181,15 @@ async function withdraw() {
   if (!selected.value || busy.value || !withdrawConfirm.value) return
   busy.value = true; problem.value = ''
   const epoch = accountEpoch
-  try { const updated = await studioAPI.withdraw(selected.value.id); if (epoch !== accountEpoch) return; selected.value = updated; withdrawConfirm.value = false; notice.value = '作品已撤回。'; await loadList() }
+  try { await studioAPI.withdraw(selected.value.id); if (epoch !== accountEpoch) return; clearPreview(); selected.value = undefined; withdrawConfirm.value = false; notice.value = '作品已撤回，记录和素材已删除。'; await loadList() }
+  catch (error) { if (epoch === accountEpoch) failure(error) }
+  finally { if (epoch === accountEpoch) busy.value = false }
+}
+async function removeEntry() {
+  if (!auth.isAdmin || !selected.value || busy.value || !deleteConfirm.value) return
+  busy.value = true; problem.value = ''
+  const epoch = accountEpoch
+  try { await studioAPI.remove(selected.value.id); if (epoch !== accountEpoch) return; clearPreview(); selected.value = undefined; deleteConfirm.value = false; notice.value = '投稿已删除，记录和素材不再占用存储。'; await loadList() }
   catch (error) { if (epoch === accountEpoch) failure(error) }
   finally { if (epoch === accountEpoch) busy.value = false }
 }
@@ -184,7 +197,7 @@ watch(() => route.path, () => { clearPreview(); selected.value = undefined; mode
 watch(() => auth.user?.id, () => {
   accountEpoch++; clearFile(); clearPreview(); listRequest?.abort(); entries.value = []; selected.value = undefined
   Object.assign(form, { media: 'image', title: '', author: '', category: '', style: '', model: '', prompt_kind: 'actual', prompt: '', notes: '' })
-  rights.value = consent.value = reviewConfirmed.value = withdrawConfirm.value = false
+  rights.value = consent.value = reviewConfirmed.value = withdrawConfirm.value = deleteConfirm.value = false
   busy.value = loading.value = false; problem.value = notice.value = reason.value = ''; mode.value = 'submit'
 })
 onMounted(() => { if (reviewing.value) void loadList() })

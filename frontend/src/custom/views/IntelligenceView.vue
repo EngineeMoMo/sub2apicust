@@ -14,15 +14,16 @@
         <dl class="mofa-intel-stats">
           <div><dt>{{ copy.models }}</dt><dd>{{ snapshot ? modelCount : '—' }}</dd></div>
           <div><dt>{{ copy.points }}</dt><dd>{{ snapshot?.points.length ?? '—' }}</dd></div>
-          <div><dt>{{ copy.samples }}</dt><dd>{{ snapshot ? smallCount : '—' }}</dd></div>
+          <div><dt>{{ copy.samples }}</dt><dd>{{ snapshot ? weakCount : '—' }}</dd></div>
         </dl>
       </section>
       <div class="mofa-intel-freshness" aria-live="polite">
-        <span>{{ copy.updated }}：<time :datetime="snapshot?.sourceUpdatedAt">{{ date(snapshot?.sourceUpdatedAt) }}</time></span>
+        <span>{{ copy.updated }}：<time :datetime="snapshot?.checkedAt">{{ date(snapshot?.checkedAt) }}</time></span>
         <span>{{ copy.fetched }}：{{ date(fetchedAt) }}</span>
       </div>
       <p v-if="failed" class="mofa-intel-alert" role="alert">{{ snapshot ? copy.retained : copy.error }}</p>
-      <p v-if="stale" class="mofa-intel-alert" role="status">{{ copy.stale }}</p>
+      <p v-else-if="snapshot?.refreshFailed" class="mofa-intel-alert" role="status">{{ copy.sourceFailed }}</p>
+      <p v-if="snapshot && unreadCount" class="mofa-intel-alert" role="status">{{ copy.partial }} · {{ unreadCount }} / {{ snapshot.points.length }}</p>
       <div v-if="!snapshot" class="mofa-intel-empty" role="status">
         <IntelligenceIcon class="mofa-intel-emblem" /><p>{{ loading ? copy.loading : copy.error }}</p>
         <button v-if="!loading" class="btn btn-secondary" type="button" @click="refresh">{{ copy.refresh }}</button>
@@ -30,7 +31,6 @@
       <template v-else>
         <div class="mofa-intel-toolbar">
           <label class="mofa-intel-search"><span class="sr-only">{{ copy.search }}</span><Icon name="search" size="sm" aria-hidden="true" /><input v-model="search" type="search" :placeholder="copy.search" /></label>
-          <label class="mofa-intel-select"><span class="sr-only">{{ copy.harness }}</span><select v-model="harness"><option value="">{{ copy.all }}</option><option v-for="item in harnesses" :key="item" :value="item">{{ item }}</option></select></label>
           <label class="mofa-intel-check"><input v-model="robust" type="checkbox" />{{ copy.robust }}</label>
           <div class="mofa-intel-switch" role="group" :aria-label="copy.title">
             <button type="button" :aria-pressed="view === 'matrix'" @click="view = 'matrix'">{{ copy.matrix }}</button>
@@ -53,21 +53,19 @@
           <div v-if="!filtered.length" class="mofa-intel-empty"><p>{{ copy.empty }}</p><button class="btn btn-secondary" type="button" @click="reset">{{ copy.reset }}</button></div>
           <div v-else-if="view === 'matrix'" class="mofa-intel-table-wrap" tabindex="0" role="region" :aria-label="copy.matrix">
             <table class="mofa-intel-matrix">
-              <caption class="sr-only">{{ copy.score }} · {{ copy.passed }}</caption>
+              <caption class="sr-only">{{ copy.matrixHint }}</caption>
               <thead><tr><th scope="col">{{ copy.model }}</th><th v-for="effort in efforts" :key="effort" scope="col">{{ effortName(effort) }}<small>{{ effort }}</small></th></tr></thead>
               <tbody><tr v-for="row in rows" :key="row.key">
-                <th scope="row"><div class="mofa-intel-model"><span class="mofa-intel-model-icon"><ModelIcon :model="row.model" size="24px" aria-hidden="true" /></span><span>{{ row.model }}<small>{{ row.harness }}</small></span></div></th>
+                <th scope="row"><div class="mofa-intel-model"><span class="mofa-intel-model-icon"><ModelIcon :model="row.model" size="24px" aria-hidden="true" /></span><span>{{ modelLabel(row.model) }}<small>{{ row.model }}</small></span></div></th>
                 <td v-for="effort in efforts" :key="effort">
-                  <template v-if="row.cells[effort]">
-                    <div class="mofa-intel-score" :class="{ 'is-small-sample': lowSample(row.cells[effort]) }">
-                      <strong>{{ number(row.cells[effort].iq) }}</strong>
-                      <span v-if="row.cells[effort].iq !== null" class="mofa-intel-bar" aria-hidden="true"><span :style="{ width: `${(row.cells[effort].iq ?? 0) / scoreMax * 100}%` }" /></span>
-                      <small :aria-label="copy.passed">{{ number(row.cells[effort].passed) }} / {{ number(row.cells[effort].valid_tasks) }}</small>
-                      <small class="mofa-intel-price">{{ copy.cost }}：{{ row.cells[effort].average_price_usd === null ? '—' : '$' + number(row.cells[effort].average_price_usd, 4) }}</small>
-                      <small v-if="row.cells[effort].price_aggregation">{{ copy.aggregation }}：{{ row.cells[effort].price_aggregation }}</small>
-                      <span v-if="lowSample(row.cells[effort])" class="mofa-intel-sample">{{ row.cells[effort].valid_tasks === null ? copy.unknown : copy.low }}</span>
-                    </div>
-                  </template>
+                  <div v-if="row.cells[effort]" class="mofa-intel-score" :class="{ 'is-small-sample': weak(row.cells[effort]) }">
+                    <strong><span class="sr-only">{{ copy.score }} </span>{{ formatScore(row.cells[effort].score) }}</strong>
+                    <span v-if="row.cells[effort].score !== null" class="mofa-intel-bar" aria-hidden="true"><span :style="{ width: `${(row.cells[effort].score ?? 0) / snapshot.scoreMax * 100}%` }" /></span>
+                    <small><span class="mofa-intel-pair">{{ copy.coverageShort }} {{ coverageText(row.cells[effort]) }}</span> · <span class="mofa-intel-pair">{{ copy.runsShort }} {{ row.cells[effort].graded_runs ?? '—' }}</span></small>
+                    <small class="mofa-intel-price"><span class="sr-only">{{ copy.cost }} </span>{{ formatPrice(row.cells[effort].average_price_usd) }}</small>
+                    <small class="mofa-intel-time"><span class="sr-only">{{ copy.time }} </span>{{ formatMinutes(row.cells[effort].average_minutes, copy.minutes) }}</small>
+                    <span v-for="flag in pointFlags(row.cells[effort], copy)" :key="flag" class="mofa-intel-sample">{{ flag }}</span>
+                  </div>
                   <span v-else class="mofa-intel-missing" :aria-label="copy.missing">—</span>
                 </td>
               </tr></tbody>
@@ -85,13 +83,13 @@
               <label class="mofa-intel-select">
                 <span>{{ copy.compareSort }}</span>
                 <select v-model="compareMetric">
-                  <option value="iq">{{ copy.iqOrder }}</option>
+                  <option value="score">{{ copy.scoreOrder }}</option>
                   <option value="average_minutes">{{ copy.timeOrder }}</option>
                   <option value="average_price_usd">{{ copy.costOrder }}</option>
                 </select>
               </label>
             </div>
-            <IntelligenceComparison v-if="comparisonPoints.length" :points="comparisonPoints" />
+            <IntelligenceComparison v-if="comparisonPoints.length" :points="comparisonPoints" :required-tasks="snapshot.requiredTasks" :score-max="snapshot.scoreMax" />
             <div v-else class="mofa-intel-empty">
               <p>{{ copy.empty }}</p>
               <button class="btn btn-secondary" type="button" @click="compareEffort = ''">{{ copy.allEfforts }}</button>
@@ -113,42 +111,49 @@ import ModelIcon from '@/components/common/ModelIcon.vue'
 import IntelligenceIcon from '@/custom/components/IntelligenceIcon.vue'
 import IntelligenceComparison from '@/custom/components/IntelligenceComparison.vue'
 import { intelligenceCopy } from '@/custom/intelligence/copy'
-import { EFFORTS, lowSample, matrixRows, sortMatrixRows, sortEfficiencyPoints, type MatrixSort, type EfficiencyMetric } from '@/custom/intelligence/data'
+import {
+  EFFORTS, formatMinutes, formatPrice, formatScore, lowCoverage, matrixRows, modelLabel, pointFlags, sortEfficiencyPoints, sortMatrixRows,
+  type EfficiencyMetric, type IntelligencePoint, type MatrixSort
+} from '@/custom/intelligence/data'
 import { useIntelligence } from '@/custom/intelligence/useIntelligence'
 
 const { locale } = useI18n()
 const copy = computed(() => intelligenceCopy[locale.value.startsWith('zh') ? 'zh' : 'en'])
-const { snapshot, loading, failed, fetchedAt, now, refresh } = useIntelligence()
+const { snapshot, loading, failed, fetchedAt, refresh } = useIntelligence()
 const search = ref('')
-const harness = ref('')
 const robust = ref(false)
 const view = ref<'matrix' | 'chart'>('matrix')
 const matrixSort = ref<MatrixSort>('source')
 const compareEffort = ref('high')
-const compareMetric = ref<EfficiencyMetric>('iq')
+const compareMetric = ref<EfficiencyMetric>('score')
 const modelCount = computed(() => new Set(snapshot.value?.points.map(point => point.model)).size)
-const smallCount = computed(() => snapshot.value?.points.filter(lowSample).length ?? 0)
-const harnesses = computed(() => [...new Set(snapshot.value?.points.map(point => point.harness))])
+const weakCount = computed(() => snapshot.value?.points.filter(lowCoverage).length ?? 0)
+const unreadCount = computed(() => snapshot.value?.points.filter(point => point.state !== 'ok').length ?? 0)
 const efforts = computed(() => [...EFFORTS, ...new Set(snapshot.value?.points.map(point => point.effort).filter(effort => !EFFORTS.includes(effort)))])
-const filtered = computed(() => (snapshot.value?.points ?? []).filter(point =>
-  point.model.toLowerCase().includes(search.value.trim().toLowerCase()) &&
-  (!harness.value || point.harness === harness.value) && (!robust.value || !lowSample(point))
-))
+const filtered = computed(() => {
+  const query = search.value.trim().toLowerCase()
+  return (snapshot.value?.points ?? []).filter(point =>
+    (point.model.toLowerCase().includes(query) || modelLabel(point.model).toLowerCase().includes(query)) &&
+    (!robust.value || (point.state !== 'unavailable' && !lowCoverage(point)))
+  )
+})
 const rows = computed(() => sortMatrixRows(matrixRows(filtered.value), matrixSort.value))
-const scoreMax = computed(() => Math.max(1, ...filtered.value.map(point => point.iq ?? 0)))
 const comparisonPoints = computed(() => sortEfficiencyPoints(
   filtered.value.filter(point => !compareEffort.value || point.effort === compareEffort.value), compareMetric.value
 ))
-const stale = computed(() => snapshot.value && now.value - Date.parse(snapshot.value.sourceUpdatedAt) > 24 * 60 * 60 * 1000)
 function effortName(effort: string) {
   const names: Record<string, string> = { ultra: copy.value.ultra, max: copy.value.max, xhigh: copy.value.xhigh, high: copy.value.high, medium: copy.value.medium, low: copy.value.lowEffort }
   return Object.prototype.hasOwnProperty.call(names, effort) ? names[effort] : effort
 }
-function number(value: number | null, maximumFractionDigits = 2) {
-  return value === null ? '—' : value.toLocaleString(locale.value, { maximumFractionDigits })
+// 读取失败或覆盖不足：分数条转为弱化色，避免少数题目的高分看起来像可靠排名。
+function weak(point: IntelligencePoint) {
+  return point.state === 'unavailable' || lowCoverage(point)
+}
+function coverageText(point: IntelligencePoint) {
+  return point.coverage === null ? '—' : `${point.coverage}/${snapshot.value?.requiredTasks}`
 }
 function date(value: string | number | null | undefined) {
   return value == null ? '—' : new Date(value).toLocaleString(locale.value, { hour12: false })
 }
-function reset() { search.value = ''; harness.value = ''; robust.value = false }
+function reset() { search.value = ''; robust.value = false }
 </script>

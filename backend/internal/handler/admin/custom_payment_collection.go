@@ -19,6 +19,28 @@ func (h *PaymentHandler) CloseCollection(c *gin.Context) {
 	response.Success(c, gin.H{"message": "渠道关单已确认，收款预占已释放"})
 }
 
+// ReleaseCollection 人工释放无法由渠道复查的收款预占：须写原因、确认，且过等待期；全程写审计。
+func (h *PaymentHandler) ReleaseCollection(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "订单编号无效")
+		return
+	}
+	var req struct {
+		Reason    string `json:"reason"`
+		Confirmed bool   `json:"confirmed"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "释放参数无效")
+		return
+	}
+	if err := h.paymentService.CustomForceReleaseCollection(c.Request.Context(), id, getAdminIDFromContext(c), req.Reason, req.Confirmed); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"message": "已人工释放收款占用，并记录审计"})
+}
+
 // [CUSTOM] 仅管理员路由注册。
 func (h *PaymentHandler) GetCollection(c *gin.Context) {
 	cfg, err := h.configService.GetPaymentConfig(c.Request.Context())

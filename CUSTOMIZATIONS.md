@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-14全工作区收口：用户授权此前59项保留改动全部提交，既有“2026-10-11 审查问题全部修复”与“2026-10-12 智力效率改接雷达Bench v1”的接缝一并纳入；248/249为新增迁移，已发布245/247不修改。上游0.2.16及网段防护保持。当前409文件3279项前端、类型/构建、26组更新脚本回归通过，lint0错误26警告；本轮发布与验收边界见HANDOFF最新状态，不将旧镜像当本轮验证。
+
 2026-10-14 上游0.2.16发布终态：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。
 
 2026-10-14 同步上游0.2.16：用户要求更新开源fork，目标upstream/main=9c2cca9e6（正式v0.2.16=c3cb8588ce6a5aef4dc29fa4f71ac91f3c0bdf3d，主线随后仅版本号/赞助信息更新）；相对711bfc744新增235条上游提交。merge-tree演算后在独立工作树合并，14处文本冲突逐项解决，保留Go1.27.2、x/image0.45.0、SheetJS0.20.3、DOMPurify3.4.16及认证IP/包号CI存储；采用Vue3.5.43和上游完整13平台配额测试。210个自有源码/迁移文件哈希保持，原6平台fixture已由上游动态清单取代。前端47文件774项、lint/类型/生产构建；Docker内Ent生成无差异、Go embed、PG18/Redis8专项及4189隔离61条真实HTTP验收通过。原8080应用未替换、其他会话未提交改动保留，生产未部署；本轮功能SHA/CI/安全/GHCR终态及固定镜像以HANDOFF最新记录为准，不能沿用sha-bbee35d的门禁证明0.2.16。证据output/upstream-sync-20261014。
@@ -16,6 +18,7 @@
 - 扩展自有service/repository/counter/admin handler及管理页：手动完整IP、末尾连续星号或CIDR；网段内不同IP共享Redis窗口、generation和规则version，明确失败达阈值封整段；成功不计数。可配置单IP/网段、前缀、临时/永久及时长。请求入口仍只接受真实单IP，认证保护范围不扩大。
 - 数据库包含匹配检查所有有效覆盖规则；搜索IP或网段返回重叠记录。策略共享/独占事务锁与相关规则状态摘要防止旧在途请求重封；管理员变更及范围切换重置相关统计，解除一条不删除其他覆盖规则。HTTP PUT遗漏新范围或前缀400，旧版本409；人工及自动网段沿用现有审计。
 - 本轮只改自有文件，没有新增上游接缝。Docker真实存储专项/全量unit、Go embed、前端16项/类型/lint/构建及独立8081的44条HTTP断言通过；8080已备份更新且数据/设置/原卷保持，详情见HANDOFF与AUTH_IP_BLACKLIST_REVIEW。正式发布须核验本轮SHA，不能沿用065eee935的结果。
+
 
 2026-10-14 手动封禁发布终态：本节手动新增功能随065eee935发布，固定sha-065eee9；同SHA CI（unit/integration/真实PG18/Redis8/lint0/前端38文件502项含IP管理14项）、安全/GHCR通过，镜像revision/摘要与日志交叉验真。8080已备份后更新至e9fd3b9c7ea2并通过实际管理员登录及新接口校验，业务计数/配置/原卷保留；生产未部署，其他会话改动未混入。详细证据见HANDOFF和output/auth-ip-manual-20261014，下方手动新增自有文件及253迁移须同步保留。
 
@@ -49,6 +52,29 @@
 
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
 
+## 2026-10-12 智力效率改接雷达Bench v1（未发布）
+
+用户指定数据源 https://codex-reset-radar.pages.dev/#codex-community（与 codexradar.com 同站）。本节优先于下方「智力效率页面（2026-09-27）」中关于数据源、轮询和字段的描述。
+
+- **为什么改为后端代读**：旧 `intelligence-efficiency.json` 已被源站标为“旧基准”，源时间停在 2026-10-01 23:00（+08），文件涨到 9.7MB。新的“雷达分 · 雷达Bench v1”汇总接口没有 CORS 头；非默认档位不带显式选择标记会返回 428。所以浏览器无法直接读取。
+- **新增自有文件**：
+  - `backend/internal/handler/custom_intelligence_handler.go`：先读 `/data/radar-bench-binding.json`，再逐个读取 `/api/radar-bench-score?…&view=summary`。目前是 34 个模型／档位，并发 3，参数顺序和 `X-Radar-Bench-Selection` 与源站页面相同。
+    - 遇到 429／502／503 后，本轮停止剩余请求，并遵守 Retry-After（限制在 1–30 分钟）。
+    - 只接受已核对过的契约：汇总 schema、计分版本（满分 150）、计分规则、费用口径、题库摘要，以及模型／档位与请求一致、覆盖／状态／分数一致、判分题次在覆盖题数的 1–3 倍之间。不符合时显示“格式变化”，不猜测新字段。
+    - 费用和耗时 = 已知样本合计 ÷ 已知样本数，与源站页面算法相同。统计异常只让费用和耗时缺失，不影响分数。
+    - 进程内缓存 10 分钟，同一时间只跑一轮。首次最多等 45 秒；已有旧数据时最多等 20 秒，超时先返回旧数据。
+    - 部分档位失败时，沿用同一题库上次成功的值（标 retained）；整轮失败时保留旧快照并标 `refresh_failed`。只有有人打开页面才读取，没有常驻定时采集。
+    - 接口 `GET /api/v1/intelligence`：需要 JWT，经过 BackendModeUserGuard 和面板全局限流。对源站只发固定路径的匿名 GET，不带本站 Cookie、Token 或用户信息，不跟随跳转。复用 `update.proxy_url` 和 `security.proxy_fallback.allow_direct_on_error`，与定价、更新检查一致，代理初始化失败默认不直连。响应上限：汇总 256KB，绑定 1MB。
+  - `custom_intelligence_handler_test.go`（`//go:build unit`）：13 个顶层用例、24 个子项。
+- **改动的自有文件**：
+  - `custom/intelligence/{data,useIntelligence,copy}.ts`：改为读取本站接口（`apiClient`，超时 60 秒，轮询 10 分钟），不再直连第三方。删除 harness、IQ、passed 字段。
+  - `views/IntelligenceView.vue`：矩阵按模型成行，每格显示雷达分、覆盖 x/64、判分题次、平均费用、平均耗时。格内标注：数据不足（覆盖少于 40 题，与源站一致）、无有效判分、本轮未更新、读取失败、统计来源异常。
+  - `components/IntelligenceComparison.vue`：对比改为雷达分、耗时、费用，雷达分条按满分 150 绘制。
+  - 说明区三段：费用口径、雷达分算法、数据不足阈值。
+  - 测试：`intelligence.spec.ts`、`intelligence-view.spec.ts`，共 33 项。
+  - `theme.css` 只动三条 `.mofa-intel-*`：价格和耗时共用字号、新增不换行的 `.mofa-intel-pair`、`.mofa-intel-sample` 右边距。没有新增颜色。
+- **上游接缝**：`backend/internal/server/router.go` 在 RegisterStudioRoutes 之后新增一行 `[CUSTOM] handler.RegisterIntelligenceRoutes(...)`。合并上游时保留这一行；前后端必须同版发布，旧后端没有 `/api/v1/intelligence`。
+- **同步注意**：源站升级 schema、计分版本或计分规则时，页面会显示“数据源暂时不可用或格式发生变化”。这时先重新核对源站 `radar-bench.mjs` 和 `radar-bench-display.mjs` 的字段含义，再更新常量，不要直接放宽校验。
 
 ## 2026-10-12 官网与登录页动效、交互和首屏加载（已发布sha-f8928e2）
 
@@ -81,6 +107,42 @@
   - 上游若改语言包入口路径，`localeChunks` 找不到时只是不再预加载，骨架照常显示。
   - 上游若改公开路由，同步更新 `app-shell.mjs` 的 `PUBLIC_PATH`。它只决定骨架外观，不参与鉴权。
 
+## 2026-10-11 漏洞审查修复（未发布）
+
+本节覆盖下方 247 节“确认渠道关单才释放”的旧说法：现在已结束、未付款订单在最晚可付款时间过后由渠道复查释放。
+- **收款预占**：新增迁移 `248_custom_payment_collection_user_hold.sql`，整体替换 247 的同名触发函数，并新增账本列 `release_checked_at`。同一用户未付且未释放的预占合计不能超过 `user_hold_max`；旧配置缺这个字段时，按单笔上限的3倍计，且不超过每日上限。不得修改已发布的 247。
+  - 自有 `custom_payment_collection_release.go` 先确定“最晚可付款时间”。能证明期限的情况：带 time_expire 的官方 WAP 签名地址，或建单失败且从未交出付款入口。不能证明时，用订单期限加 `unproven_release_hours`（默认24）。过了这个时间再加10分钟余量，向渠道复查：支付宝只认交易不存在或已关闭且未打款；其他渠道要求查询成功且未付款，确认后才释放。渠道确认已付款时同步付款，绝不释放。复查失败按30分钟退避。
+  - 新增人工释放 `CustomForceReleaseCollection`：须写原因并确认，须过等待期，渠道查到已付款时拒绝，并写 `COLLECTION_HOLD_FORCE_RELEASED` 审计。
+  - 自有 `custom_payment_collection.go` 增加策略字段、归一化与校验、`CUSTOM_COLLECTION_USER_HOLD_LIMIT` 映射，以及待确认订单的期限和可人工释放时间。原有关单释放成功后补写审计。
+  - 自有 `handler/admin/custom_payment_collection.go` 新增 `ReleaseCollection`。
+- **上游接缝**（均带 [CUSTOM] 注释）：
+  - `backend/internal/payment/types.go`：新增 `AlipayMobileWapExpiry`。
+  - `payment/provider/alipay.go`：手机 WAP 在服务端开启该标志时写入东八区分钟 time_expire，缺期限即拒绝建单。
+  - `service/payment_order.go`：启用收款限额且手机走官方 WAP（未开当面付深链）时，订单期限对齐分钟并下发 ExpiresAt；未启用限额时手机参数不变。
+  - `service/payment_order_expiry_service.go`：每轮调用复查。
+  - `server/routes/payment.go`：新增 `POST /admin/payment/collection/:id/release`，挂在原管理员鉴权、审计与合规组；公开套餐目录加 `PublicIP()` 限流。
+- **待真机验证**：手机 WAP 的 time_expire 与电脑扫码使用同一 SDK 字段和格式，但还没有用真实支付宝 App 小额实付验证。
+- **前端**：`custom/paymentCollection.ts` 与 `components/PaymentCollectionSettings.vue` 新增两个设置项、订单期限显示，以及带原因和确认的人工释放；`payment-collection.spec.ts` 已覆盖。
+- **库存**：新增迁移 `249_custom_plan_stock_pending_guard.sql`，整体替换 245 的同名触发函数：限量套餐每个用户同时最多一笔待付订单，不限量（-1）不受影响。自有 `custom_plan_stock.go` 把它映射为 409 `PLAN_PENDING_ORDER_EXISTS`。真实 PG 回归在 `service/custom_payment_collection_postgres_test.go`。
+- **工坊**（自有 `custom_studio_handler.go`）：
+  - 撤回会删除记录和素材；退回删除素材，只留记录和原因。存储与全站数量只统计待审核、已公开、已下架。新增管理员 `DELETE /admin/studio/submissions/:id`。
+  - 读正文前先查额度；同一用户同时只处理一份上传，全站最多4份；上传边读边写临时文件，不再整份读入内存。
+  - 后端拒绝 `media=video`（`studioVideoSubmissionsEnabled=false`，与前端待开放一致）。429 提示区分个人上限与全站存储。
+  - 公开画廊和媒体改用新增的 `server/middleware/custom_public_ip_rate_limit.go`（`PublicIPScoped`，按公网 IP 与 scope 分桶），原 `Global()` 对匿名请求不起作用。
+  - 前端 `custom/studio/api.ts`、`views/StudioSubmissionsView.vue` 同步：退回不再请求素材，撤回提示不可恢复，管理员二次确认删除。Makefile 关键回归加入工坊两个 spec。
+- **update.sh**：带标签运行时只改 sub2api 服务下、指向本项目镜像仓库的 `image:` 行，校验标签格式；找不到、找到多处或是其他仓库时都不修改文件，临时文件在退出时清理。`deploy/tests/update-test.sh` 新增4个场景：多服务、外部镜像、非法标签、缺 image。
+- **前端工具链**（`frontend/package.json` 与重新生成的 `pnpm-lock.yaml`）：
+  - 版本：vite 6.4.4、vitest 和 @vitest/coverage-v8 4.1.11、typescript-eslint 8.71.1、eslint-plugin-vue 10.11.1，新增 vue-eslint-parser 10.4.1。`pnpm.overrides` 用同主版本精确版本修补传递依赖（rollup、minimatch、brace-expansion、ajv、flatted、js-yaml、picomatch、ws、browserslist、baseline-browser-mapping、postcss-selector-parser 6.x）。
+  - 上游仍是 vite 5 和 vitest 2；同步时按上表合并，重新生成锁文件，不要手改。
+  - 上游接缝：`.eslintrc.cjs` 改用 `plugin:vue/essential`，并关闭 typescript-eslint 8 从 ban-types 拆出的三条规则；`.eslintignore` 忽略生成的 `public/recipes`、`public/studio`；`views/user/__tests__/UsageView.spec.ts` 中3处 Blob mock 改为 function 实现（vitest 4 要求）。
+  - 剩余 dev 依赖：braces（上游无修复）、postcss-selector-parser 6.x 中危，均来自 tailwind 3。
+- **`.github/audit-exceptions.yml`**：生产审计为0，清空已过期的例外。
+- **真实 PG 回归**：
+  - 自有 `repository/custom_payment_collection_test.go` 与 `custom_plan_stock_postgres_test.go` 加载 248/249，夹具补 user_id，在最终函数上验证既有场景。
+  - 新增 `repository/custom_collection_release_schema_postgres_test.go`（完整迁移链真实表）与 `service/custom_payment_collection_postgres_test.go`。CI 的 `DEDICATED_TEST_POSTGRES_DSN` 会实际执行这些测试，不能用跳过冒充通过。
+  - 同时修复 `CustomCollectionUsage` 第二次查询失败时 defer 关闭 nil rows 的崩溃。
+
+
 ## 2026-10-10 包号仅归属、有效期与免扣（已发布sha-026d9ab）
 
 - 补充到期/跨组认证回归custom_dedicated_expiry_test.go：7场景覆盖到期403、普通组零余额拒绝/正余额无免扣、缓存资格不污染；与现有权益及结算测试合计20项含子场景通过，不替代真实PG/生产验证。
@@ -107,7 +169,7 @@
 - `backend/internal/handler/{payment_handler.go,admin/payment_handler.go}`套餐投影和checkout collection；自有`custom_public_plans.go`只公开sales_mode与联系纯文本；`backend/internal/server/routes/payment.go`的collection统计／人工登记／查询关闭仅注册在现有管理员鉴权、审计与合规中间件组。普通用户不返回实收和剩余账户总额。
 - 新增 `frontend/src/custom/{paymentCollection.ts,components/PaymentCollectionSettings.vue,components/PlanContactPanel.vue,__tests__/payment-collection.spec.ts}`。`views/admin/SettingsView.vue`支付页独立保存组件；`views/admin/orders/{PlanEditDialog,AdminPaymentPlansView}.vue`开通方式编辑／展示；`api/admin/payment.ts`与`types/payment.ts`契约。样式只改`custom/theme.css`。
 - `components/payment/{SubscriptionPlanCard,AmountInput}.vue`联系按钮、自定义开关和支付币种符号；`views/user/PaymentView.vue`含费用上限过滤、确认拦截、深链接及联系面板；自有`custom/{guest/api.ts,views/PublicPlansView.vue,components/SubscriptionCard.vue}`同步游客和续费。`PaymentView.spec.ts`、公开套餐投影测试同步新契约，Makefile纳入收款关键回归。
-- 单笔上限控制最终实付；日上限按配置时区统计全部用户，当前是一个共享人民币账户池，启用后其他币种新在线支付关闭。库存仍由245／246维护，咨询不占、实际管理员分配扣减。说明、边界和验证见 `deploy/PAYMENT_COLLECTION_LIMITS.md`；本轮未提交推送部署。
+- 单笔上限控制最终实付；日上限按配置时区统计全部用户，当前是一个共享人民币账户池，启用后其他币种新在线支付关闭。库存仍由245／246维护，咨询不占、实际管理员分配扣减。说明、边界和验证见 `deploy/PAYMENT_COLLECTION_LIMITS.md`；本轮未提交推送部署。（2026-10-11：预占释放规则已由 248 与复查任务取代，见本文件顶部新节。）
 
 
 2026-10-08发布终态：本页库存／帮助改动及生图权限说明已包含于功能70e66cf7305e0cb4610671b5120e3612f3478fb6，CI／安全／GHCR同SHA全部成功，镜像sha-70e66cf。以下“未发布”标题为实现期记录；最终证据及生产待验项以HANDOFF为准。
@@ -619,6 +681,7 @@
 > 格式：`路径` — 用途 — 引入日期
 
 ### 智力效率页面（2026-09-27）
+- **2026-10-12 起数据源、刷新方式与字段已改，以顶部「2026-10-12 智力效率改接雷达Bench v1」为准**；本节其余内容为历史记录。
 - 最新说明区精简：按用户指定仅保留IQ可比性与低样本／缺失数据两段，移除说明标题、来源归属、费用字段及直连提示；英文同步。数据获取及刷新逻辑不变。
 - **修正版部署证据**：本机8080已运行`cfa0a12c8bf6`，三服务healthy，HTTP实际加载`IntelligenceView-C0f1Aymd.js`，新对比／排序控件、去外链／去频率元素和充值width规则已核验；76项回归与前端构建／Go embed编译通过。280项设置摘要及分组2／套餐0等条数不变；数据库备份583628字节，旧镜像保留，详见HANDOFF与output/brand/intelligence-ux-deploy-record.json。未跑Go单测，真实浏览器验收仍待。
 - **本轮可读性修正（优先于下方初版描述）**：移除「查看源站」按钮、JSON外链和所有刷新间隔文案，保留纯文本来源归属、源更新时间、手动刷新及原30分钟轮询。矩阵默认仍为数据源首次出现顺序；新增模型名称／指定档位分数降序，缺失最后、同分保留源序，不计算跨档位综合分。

@@ -175,6 +175,50 @@ run_update || fail 'legacy compose update failed'
 assert_rollback a; assert_removed c; assert_safe
 grep -q '^docker-compose' "$CASE_DIR/commands" || fail 'legacy compose was not used'
 
+# [CUSTOM] 指定标签只改 sub2api 服务下本项目镜像那一行，其他服务、引号、注释保留。
+new_case tag_multi_service
+cat > "$CASE_DIR/docker-compose.override.yml" <<EOF
+services:
+  sub2api:
+    # image: $REPOSITORY:sha-0000000
+    image: "$REPOSITORY:sha-aaaaaaa"   # 当前版本
+    environment:
+      DISABLE_ONLINE_UPDATE: "true"
+  postgres:
+    image: postgres:18-alpine
+  redis:
+    image: 'redis:8-alpine'
+EOF
+run_update sha-bbbbbbb || fail 'multi-service tag switch failed'
+grep -Fq "    image: \"$REPOSITORY:sha-bbbbbbb\"   # 当前版本" "$CASE_DIR/docker-compose.override.yml" || fail 'sub2api image tag was not switched in place'
+grep -Fq "    image: postgres:18-alpine" "$CASE_DIR/docker-compose.override.yml" || fail 'postgres image was changed'
+grep -Fq "    image: 'redis:8-alpine'" "$CASE_DIR/docker-compose.override.yml" || fail 'redis image was changed'
+grep -Fq "    # image: $REPOSITORY:sha-0000000" "$CASE_DIR/docker-compose.override.yml" || fail 'comment line was changed'
+ls "$CASE_DIR"/docker-compose.override.yml.bak.* > /dev/null 2>&1 || fail 'override backup was not kept'
+if ls "$CASE_DIR"/docker-compose.override.yml.next.* > /dev/null 2>&1; then fail 'temporary override was left behind'; fi
+assert_safe
+
+new_case tag_foreign_image
+printf 'services:\n  sub2api:\n    image: sub2api-custom:local\n' > "$CASE_DIR/docker-compose.override.yml"
+cp "$CASE_DIR/docker-compose.override.yml" "$CASE_DIR/override.before"
+if run_update sha-bbbbbbb; then fail 'tag switch on a foreign image was allowed'; fi
+cmp -s "$CASE_DIR/override.before" "$CASE_DIR/docker-compose.override.yml" || fail 'foreign override was modified'
+grep -q '不是' "$CASE_DIR/output" || fail 'foreign image refusal was not explained'
+assert_no_removals; assert_safe
+
+new_case tag_invalid
+cp "$CASE_DIR/docker-compose.override.yml" "$CASE_DIR/override.before"
+if run_update 'bad;tag|x'; then fail 'invalid tag was accepted'; fi
+cmp -s "$CASE_DIR/override.before" "$CASE_DIR/docker-compose.override.yml" || fail 'override was modified by an invalid tag'
+if ls "$CASE_DIR"/docker-compose.override.yml.bak.* > /dev/null 2>&1; then fail 'invalid tag created a backup'; fi
+assert_no_removals; assert_safe
+
+new_case tag_missing_image
+printf 'services:\n  postgres:\n    image: postgres:18-alpine\n' > "$CASE_DIR/docker-compose.override.yml"
+if run_update sha-bbbbbbb; then fail 'tag switch without a sub2api image was allowed'; fi
+grep -Fq "image: postgres:18-alpine" "$CASE_DIR/docker-compose.override.yml" || fail 'unrelated image was changed'
+assert_no_removals; assert_safe
+
 new_case concurrent_update
 mkdir "$CASE_DIR/.sub2api-update.lock"
 if run_update; then fail 'concurrent update was allowed'; fi

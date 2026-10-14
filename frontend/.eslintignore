@@ -8,6 +8,9 @@ node_modules/
 # 忽略构建输出
 dist/
 ../backend/internal/web/dist/
+# [CUSTOM] 家族产品由构建脚本生成（已 gitignore），源码在 product-samples，见 CUSTOMIZATIONS.md。
+public/recipes/
+public/studio/
 
 # 忽略缓存
 .cache/

@@ -72,8 +72,8 @@ func RegisterPaymentRoutes(
 	{
 		// [CUSTOM] 扫码令牌授权，手机免登录；按公开 IP 限流，无支付写入。
 		public.GET("/alipay/wap/:id", paymentHandler.AlipayDesktopWapGuard, panelRateLimiter.PublicIP(), paymentHandler.AlipayDesktopWapRedirect)
-		// [CUSTOM] 游客套餐目录仅返回展示字段，不开放结账或账户接口。
-		public.GET("/plans", paymentHandler.GetPublicPlans(settingService))
+		// [CUSTOM] 游客套餐目录仅返回展示字段，不开放结账或账户接口；匿名访问按公网 IP 限流。
+		public.GET("/plans", panelRateLimiter.PublicIP(), paymentHandler.GetPublicPlans(settingService))
 		public.POST("/orders/verify",
 			publicRateLimiter.Limit("payment-public-order-verify", publicOrderVerifyRateLimit, publicOrderVerifyRateLimitWindow),
 			paymentHandler.VerifyOrderPublic)
@@ -106,6 +106,8 @@ func RegisterPaymentRoutes(
 		adminGroup.GET("/collection", adminPaymentHandler.GetCollection)
 		adminGroup.POST("/collection/manual", adminPaymentHandler.RecordCollection)
 		adminGroup.POST("/collection/:id/close", adminPaymentHandler.CloseCollection)
+		// [CUSTOM] 渠道无法复查时的人工释放，须原因、确认与等待期，写审计。
+		adminGroup.POST("/collection/:id/release", adminPaymentHandler.ReleaseCollection)
 		adminGroup.GET("/config", adminPaymentHandler.GetConfig)
 		adminGroup.PUT("/config", adminPaymentHandler.UpdateConfig)
 

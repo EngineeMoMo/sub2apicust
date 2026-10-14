@@ -209,6 +209,10 @@ func (s *PaymentService) createOrderInTx(ctx context.Context, req CreateOrderReq
 		providerSnapshot[customAlipayDesktopWapSnapshotKey] = true
 		providerSnapshot["payment_mode"] = "qrcode"
 	}
+	// [CUSTOM] 手机 WAP 写入 time_expire 时同样对齐分钟，使渠道期限不晚于本站期限。
+	if customShouldUseAlipayMobileWapExpiry(req, cfg, sel) {
+		exp = exp.Truncate(time.Minute)
+	}
 	selectedInstanceID := ""
 	selectedProviderKey := ""
 	if sel != nil {
@@ -492,7 +496,9 @@ func (s *PaymentService) invokeProvider(ctx context.Context, order *dbent.Paymen
 	providerReq.AlipayMobilePrecreate = shouldUseAlipayMobilePrecreate(req, cfg, sel)
 	// [CUSTOM] 服务端决定桌面 WAP，手机请求仍走原路由。
 	providerReq.AlipayDesktopWapQRCode = shouldUseAlipayDesktopWapQRCode(req, cfg, sel)
-	if providerReq.AlipayDesktopWapQRCode {
+	// [CUSTOM] 启用收款限额时手机 WAP 也带绝对期限，到期后可证明付款入口失效。
+	providerReq.AlipayMobileWapExpiry = customShouldUseAlipayMobileWapExpiry(req, cfg, sel)
+	if providerReq.AlipayDesktopWapQRCode || providerReq.AlipayMobileWapExpiry {
 		providerReq.ExpiresAt = order.ExpiresAt
 	}
 	finishProviderCall := servertiming.ObserveDependency(ctx, "payment")

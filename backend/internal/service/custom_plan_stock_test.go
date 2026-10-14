@@ -4,10 +4,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/stretchr/testify/require"
+	"net/http"
 	"testing"
+
+	dbent "github.com/Wei-Shaw/sub2api/ent"
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCustomPlanStockValidation(t *testing.T) {
@@ -24,6 +28,9 @@ func TestCustomPlanStockValidation(t *testing.T) {
 	require.ErrorContains(t, customPlanStockError(err), "售罄")
 	other := fmt.Errorf("connection failed")
 	require.Same(t, other, customPlanStockError(other))
+	pending := customPlanStockError(errors.New("create order: pq: CUSTOM_PLAN_PENDING_EXISTS"))
+	require.ErrorContains(t, pending, "待付订单")
+	require.Equal(t, http.StatusConflict, infraerrors.Code(pending))
 	require.NoError(t, customPlanStockError(nil))
 }
 

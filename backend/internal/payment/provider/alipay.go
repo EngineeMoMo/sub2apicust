@@ -151,10 +151,11 @@ func (a *Alipay) createWapTrade(client *alipay.Client, req payment.CreatePayment
 	param.TotalAmount = req.Amount
 	param.Subject = req.Subject
 	param.ProductCode = alipayProductCodeWapPay
-	// [CUSTOM] WAP 的分钟精度截止时间与本地订单保持一致，不改变手机参数。
-	if !req.IsMobile && req.AlipayDesktopWapQRCode {
+	// [CUSTOM] WAP 的分钟精度截止时间与本地订单保持一致。电脑扫码始终写入；
+	// 手机仅在启用收款限额时写入（服务端决定），以便到期后证明付款入口失效、释放收款预占。
+	if (!req.IsMobile && req.AlipayDesktopWapQRCode) || (req.IsMobile && req.AlipayMobileWapExpiry) {
 		if req.ExpiresAt.IsZero() {
-			return nil, fmt.Errorf("alipay desktop wap: missing expiry")
+			return nil, fmt.Errorf("alipay wap: missing expiry")
 		}
 		param.TimeExpire = req.ExpiresAt.In(time.FixedZone("CST", 8*60*60)).Format("2006-01-02 15:04")
 	}

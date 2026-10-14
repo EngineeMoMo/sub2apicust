@@ -8,6 +8,7 @@
 
 2026-10-14 网段防护本轮：自有AuthIPBlacklistView/authIpBlacklist及spec新增自动范围ip/network、IPv4/IPv6前缀、通配符/CIDR输入与覆盖范围确认。接口PUT必须提交aggregation_mode及两个前缀，旧缓存页面需刷新；永久/临时及原认证范围保留，成功不计数。同段不同IP共同累计失败并封整段，页面明确共享网段正常用户也受限；解除单条不解除其他覆盖规则。16项管理页回归、类型/lint/Vite及8080新chunk BznUWgMC已验证，正式发布状态见HANDOFF，不修改theme或混入其他会话依赖升级。
 
+
 2026-10-14 手动封禁发布终态：065eee935/sha-065eee9已发布，同SHA前端类型/38文件502项含IP管理14项、后端CI/安全/GHCR通过。AuthIPBlacklistView的手动新增、永久/临时、原因、确认、manual来源与空统计、重复409保留，253同版部署，旧250–252不改。8080备份更新、真实管理员登录及chunk AuthIPBlacklistView-CoRkhMZ9.js已HTTP核验；原配置关闭自动拉黑，手动名单独立生效，只限制敏感认证。未发布其他会话智力效率/依赖升级；生产由用户更新，证据及本机区别见HANDOFF。
 
 2026-10-14 管理员手动封禁：自有AuthIPBlacklistView/TS API/spec增加“手动新增 IP”、永久/临时、必填原因、确认及manual来源/原因展示；手动统计显示—，nullable首末时间不转换为1970。POST entries与253迁移同版部署，重复有效封禁409刷新而不覆盖，自动关闭也生效；仅保护现有认证范围。验证/发布见HANDOFF，旧sha-07bcef2不含入口。
@@ -101,7 +102,7 @@
 - 保留AppSidebar的 `/help/faq` CUSTOM接缝；登录后官网两处 `/preview` 入口隐藏，公开FAQ不受影响，控制台帮助保留侧栏。
 - AdminDedicatedAccountsView要显示全部成员名称及账号／组名；编辑不锁定账号／分组；仅撤销后允许确认删除。用户页只显示本人可见信息。
 - 后端admin DELETE路由继续走认证／合规／审计；242迁移与custom成员校验、旧隔离标记一起发布，不拆开。按 `deploy/DEDICATED_TROUBLESHOOTING.md` 做备份及回退评估，不直接跑旧单用户版本。
-- 智力效率费用是数据源平均任务成本，不能标成本站售价或Token报价；缺失不是免费，IQ缺失无分数条。
+- 智力效率费用是数据源平均任务成本，不能标成本站售价或Token报价；缺失不是免费，分数缺失无分数条（2026-10-12 起分数为雷达分，见下方新节）。
 - 本轮139定向前端＋3国际化、类型／lint／build、Docker定向Go／embed与临时PostgreSQL测试通过；未全量Go或远端CI，未更新8080及生产，管理页真实浏览器视觉验收仍待。
 
 本文件只描述维护操作，不授权提交、推送或部署。定制降低冲突面，但不保证未来零冲突。
@@ -177,6 +178,16 @@ git diff --check
 - 样式只在 theme.css；`AppSidebar.vue` 菜单以及 `router/index.ts` 公开模式检查／限定教程锚点滚动共三处 `[CUSTOM]` 逻辑已登记根 CUSTOMIZATIONS.md。不要将目录锚点改为被原置顶逻辑覆盖的跳转；测试应覆盖浏览器返回位置优先。
 - 教程scope与FAQ的guideTarget保持公开／控制台／预览各自入口；官网点密钥入口使用GuestAction，取消可继续阅读。安装和第三方配置以页面链接的官方版本为准，静态示例不读取真实密钥。
 - 本轮80项定向、3项国际化、typecheck／ESLint／build通过；浏览器公开与预览验收证据见HANDOFF，当前只在4175预览，8080与生产未更新。
+
+## 智力效率改接雷达Bench v1（2026-10-12）
+
+本节优先于下方 2026-09-27 节中的数据源、30 分钟轮询、IQ、harness、低样本 30 等描述。
+
+- 浏览器不再直连第三方，只读本站 `GET /api/v1/intelligence`。后端 `custom_intelligence_handler.go` 代读 codex-reset-radar.pages.dev 的雷达Bench公开汇总，并缓存 10 分钟；前端每 10 分钟轮询一次，超时 60 秒。CSP 的 connect-src 不需要放行源站。
+- 合并上游时保留 `backend/internal/server/router.go` 的 `[CUSTOM] RegisterIntelligenceRoutes` 一行。前后端同版发布：只更新前端会因接口不存在而显示“数据源暂时不可用”。
+- 服务器必须能访问 codex-reset-radar.pages.dev。需要代理时配置 `update.proxy_url`，与更新检查共用。
+- 字段与精度和源站页面一致：分数 1 位、费用 2 位、耗时 1 位；覆盖少于 40 题标“数据不足”。缺失显示 —，不当作 0 分或免费；0 分是有效成绩。
+- 回归：`go test -tags=unit -run TestIntelligence ./internal/handler/`；前端 `pnpm exec vitest run src/custom/__tests__/intelligence.spec.ts src/custom/__tests__/intelligence-view.spec.ts`，然后 build。
 
 ## 智力效率与订阅核对（2026-09-27）
 

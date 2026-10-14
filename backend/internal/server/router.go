@@ -136,4 +136,6 @@ func registerRoutes(
 	handler.RegisterPageRoutes(v1, cfg.Pricing.DataDir, gin.HandlerFunc(jwtAuth), gin.HandlerFunc(adminAuth), settingService)
 	// [CUSTOM] 工坊投稿私有存储，原用户认证／管理员审核与审计保护，发布后才公开。
 	handler.RegisterStudioRoutes(v1, cfg.Pricing.DataDir, gin.HandlerFunc(jwtAuth), gin.HandlerFunc(adminAuth), gin.HandlerFunc(auditLog), settingService, panelRateLimiter)
+	// [CUSTOM] 智力效率：服务端代读 Codex Radar 雷达Bench公开汇总（源站无 CORS），登录可读，复用更新检查代理配置。
+	handler.RegisterIntelligenceRoutes(v1, cfg.Update.ProxyURL, cfg.Security.ProxyFallback.AllowDirectOnError, gin.HandlerFunc(jwtAuth), settingService, panelRateLimiter)
 }

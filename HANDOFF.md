@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-14 全工作区提交授权与验证**：用户明确要求“整个工作区提交”，覆盖此前保留的59项改动：收款预占释放与用户封顶、248/249迁移、库存待付保护、工坊配额/清理/匿名限流、智力效率雷达Bench数据接入、前端工具链和更新脚本。已在上游0.2.16同步后的当前工作区重新运行前端全量409文件/3279项、类型检查、生产构建及26组假Docker更新回归，全部通过；源码lint为0错误/26警告。本机未重新编译Go，后端unit/integration、真实PG/Redis、lint、安全与GHCR须验证本次新提交，不沿用fe6323ca6结果。当前处于提交/推送前，最终SHA和发布结果待补；生产未部署，本机8080未更新。证据output/workspace-release-20261014。
+
 - **2026-10-14 上游0.2.16发布终态**：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。
 - **2026-10-14 上游同步本地收口**：原59文件共1258867字节逐字节备份在output/upstream-sync-20261014/before-main及manifest；恢复后48文件文本完全一致，11文件合入上游/交接变更，package.json除Vue3.5.43外原依赖升级完整保留。Git快照0a1d3f61b09be55d2c7a0c3ce8cab738189d9ade保留，不drop；未提交内容恢复为未暂存，本轮提交排除它们。原8080、PG、Redis及recipes容器保持停止、未删除，原应用镜像仍b311d7372950；正式sha-fe6323c镜像已拉取但只在4189验收。独立工作树已申请归档，测试/发布证据全部留在D:/ccfile/sub2apicust/output/upstream-sync-20261014。
 
@@ -53,6 +55,7 @@
 - **2026-10-14 手动封禁8080收口**：原应用已替换为镜像e9fd3b9c7ea2、容器112691d6fc2b，三服务healthy；实际镜像ID/运行容器一致，10条HTTP及真实管理员登录/新POST参数400/新版chunk AuthIPBlacklistView-CoRkhMZ9.js通过。原PG1f5c08bee7e1、Redis c531bb587a18及原挂载保留，用户3/Key0/组3/套餐1/订单0/设置281/名单0和防护配置enabled=false,timed900,version3升级前后完全一致（仅比较上述业务计数及防护配置，不宣称全部数据库字节不变）。基于原v3快照只叠加手动功能，保留之前本地智力效率源码；正式镜像不含其他会话改动。备份output/auth-ip-manual-20261014/database-before-manual.dump，664356字节，SHA2563998822DEF6124768CF5D35AD5ADEA42CF3A219FA3B45C66B3FF9B05384A69A0，pg_restore目录1282行检查通过；旧镜像before-auth-ip-manual-20261014保留。独立8081测试容器/网络/匿名卷已清理。证据verified-release.json、local-verified.json、smoke.json及本SHAjobs/logs；下方隔离阶段“未操作8080/待CI”已成为历史状态。
 
 - **2026-10-14 手动封禁本地验收**：隔离Docker Go1.27.2全量unit及15项专项（真实PG18/Redis8）、前端14项/类型/lint/Vite、实际镜像embed和产品路由通过；8081独立auth_ip_smoke库32条HTTP断言及3条人工封禁审计通过，关闭自动开关、永久/45分钟/到期、重启/Redis清空、重复409/旧版本和管理员自解封已取证。模型入口仍401、管理员/auth/me仍200，新chunk AuthIPBlacklistView-D2EJCSaP.js。原8080服务/数据/配置未操作；本轮新SHA CI/安全/GHCR待核验，证据output/auth-ip-manual-20261014。
+
 - **2026-10-14 管理员手动封禁（本轮）**：已补自有服务/存储、POST `/admin/ip-blacklist/entries`和后台“手动新增 IP”，支持完整IPv4/IPv6、永久/1–1440分钟临时期限、1–500字原因与确认；关闭自动开关仍有效，重复有效封禁409不覆盖期限。253迁移区分manual/auto、manual无失败统计；旧250–252未改。只保护现有敏感认证，管理员有效会话仍可自解封，模型调用不受名单影响。隔离源码基线06873209c及验证目录output/auth-ip-manual-20261014；测试及新SHA发布正在核验，不能沿用07bcef204结果。其他会话改动保留，生产未部署。
 
 - **2026-10-14 IP防护最终发布（最新有效状态）**：功能提交`07bcef204d09349e0574b51a5b8cfdd6266288a3`已推送origin/main。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252759)（unit／integration，专用PG18／Redis8，lint0 issues，前端38文件497项含IP管理9项及类型）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252800)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38493252762)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-07bcef2`，linux/amd64，摘要`sha256:81bcf46cd8e1008f058c296f09d32af059d0e7fadefa66cf355b522885d5bc13`；registry manifest／镜像revision／source标签与构建日志交叉验真，证据`output/auth-ip-release-20261014/verified-release.json`及jobs/logs。18个功能文件与10-13已测试v3哈希一致。用户备份数据库、配置和app_data后在部署目录执行`./update.sh sha-07bcef2`，启动应用250/251/252；首次自动拉黑关闭，10次可识别失败/120分钟、timed15分钟，可后台选永久或时长后开启。只保护公开认证：注册／登录／2FA／Passkey／验证码／密码找回和重置／OAuth；成功不计数，OAuth GET只查名单；模型／管理／当前用户接口、刷新Token／登出／微信支付OAuth不受此名单影响。发布未带入其他会话付款／库存248/249、投稿、依赖升级和智力效率改接。生产未代部署，真实IP链路、共享出口误拦和带记录浏览器验收仍待；10-14Docker引擎未运行，本轮远程门禁不冒充再次本地运行。
@@ -64,6 +67,14 @@
 - **8080实际终态**：只替换应用容器`589ddc6d3ae7`，三服务healthy，运行镜像与`sub2apicust:auth-ip-mode-20261013`一致，inspect Id `sha256:7f423b3890c9a070657c0097adf7b486499ed042cc8e3a350a2266caf1b2bad5`，版本commit `local-auth-ip-mode-a6cdbd870`。真实原管理员登录及config/entries200，管理接口匿名401；入口`index-Cgh4f6-U.js`和页面`AuthIPBlacklistView-DotqpFXJ.js`已由HTTP验真。迁移250/251/252共存、总迁移301，248/249未带入；用户3／密钥0／分组3／套餐1／订单0／281项设置摘要及全部原卷保持，PG/Redis/recipes容器ID不变，recipes停止。构建源为HEAD a6cdbd870＋本功能＋已运行智力效率的docker-src-v3隔离快照，未带入其他未提交付款／库存／投稿／依赖升级。证据`output/auth-ip-local-20261013`的mode-*及backend-mode-tests.log、frontend-mode-tests.log、build-mode.log，见`deploy/AUTH_IP_BLACKLIST_REVIEW.md`。
 - **备份与边界**：第一次部署前dump655269字节、SHA256 `BF50B77C63EC935F7565D55AFE28FEF9B6B06135344AF6F1D2B568FCFD9A958F`，旧镜像`sub2apicust:before-auth-ip-20261013-221424`；251前再次dump661963字节、SHA256 `464A3F7A1A3AA3EECC920006BDD172A58230E6C0D3E60B264DE40A3A2431CBBD`，两份均通过pg_restore目录校验。后一阶段旧镜像为最初永久封禁版本，已有临时名单后不能把它当作支持到期的安全回退版本。生产未部署、未提交推送、没有本功能新SHA CI/安全/GHCR或本轮golangci-lint；Cloudflare→Nginx真实IP及生产误拦率仍未知。仅HTTP实测原管理员，新页面带真实记录的浏览器交互仍待用户验收。截图400缺少reason/正文，新分类不能承诺截图10条全部计入。
 - **252前新增回退证据**：database-before-mode.dump为662966字节，SHA256 `DFF741233A5D9FA6C649479F45594C27682EF014A25BE0DBD08B9B5E303A22CA`，pg_restore目录检查通过；旧镜像`sub2apicust:before-auth-ip-mode-20261013`为33e2ba735e66，支持临时到期及读取永久名单，但不能设置永久模式，旧前端PUT不含block_mode，新接口会400要求刷新同版页面。不得回退或删除252迁移。启动日志另有原定价更新源连接0.0.0.0失败；本轮未调整该独立网络问题，不宣称远程定价更新通过。
+
+以下三条为首次全请求／永久封禁实现的历史证据，当前实现和本地运行状态以上述修订为准。
+
+- **2026-10-13 敏感认证 IP 黑名单实施完成（源码，未发布）**：用户要求按截图慢速探查实施，默认周期改为120分钟。新增迁移250、Redis TIME滑动窗口、PostgreSQL持久名单、配置/状态版本、管理员接口与“IP黑名单”菜单。默认自动拉黑关闭，10次/120分钟，第10次立即403永久封禁；成功失败、跨敏感接口共同累计，管理员已登录会话及模型调用不接入名单。解封后从新窗口计数，旧请求不能重封。实施和上线说明`deploy/AUTH_IP_BLACKLIST.md`；接缝逐处登记CUSTOMIZATIONS。
+- **本轮核验终态**：Docker Go1.27.2实际通过9项后端专项（真实PostgreSQL完整迁移链两次应用、真实Redis80路并发、截图第10次20:32:32、120分钟边界/同毫秒/时钟回拨、规则/解封竞争、服务重建和Redis清空、真实管理员JWT鉴权及封禁/配置/解封审计）、`go test -tags=unit ./...`、`go build -tags embed`。前端7项专项、40文件511项关键回归、typecheck、定向ESLint、生产构建通过，新spec已加入Makefile供CI执行。验证镜像`sub2apicust:auth-ip-verify`的inspect Id为`sha256:cb3b18ae84dd6089dad15d7625dca580a31d2cf570359040756aa9dd2a33f8db`，二进制SHA256`330dce73771db2658471eb6c61665ffd3181fe0cffaec38697c818de68b5070c`，仅本机工具验证镜像，不是发布镜像。证据`output/auth-ip-blacklist-20261013/VALIDATION.md`及backend-verify.log/frontend-critical.log。初次全量3项阿里云验证码测试超时，测试进程去掉HTTP代理后全量通过；前端关键回归有既存jsdom网络报错和Windows worker退出警告，最终退出0、全部测试通过。两只自建测试容器及自有匿名卷已清理，8080原三服务保持healthy。
+- **发布边界/未知**：没有改生产、没有替换8080、未提交推送，新SHA CI/安全/GHCR及golangci-lint未核验。构建验证包含当前工作区源码，发布须先协调其他会话与248/249迁移，不能直接把工具镜像拿去生产。用户确认Cloudflare→Nginx，实际IP链路、头清洗和源站限制以及误拦率未知；默认开关关闭，开启前由用户按上线说明核验，历史审计不回灌永久名单。
+
+- **2026-10-13 认证请求异常咨询（仅核查与建议）**：用户截图显示19:56:43–19:58:13，64.176.228.143先有3次login 401、2次send-verify-code 200，之后register 400及forgot-password 500；另有两个IP的login 400。截图没有成功登录记录，不证明全时段无入侵，也不能仅凭IP确认攻击者。20:29（Asia/Shanghai）匿名GET本站settings/public实取：registration_enabled/email_verify_enabled=true；turnstile_enabled/tencent_captcha_enabled/aliyun_captcha_enabled/totp_enabled/passkey_enabled/invitation_code_enabled/password_reset_enabled=false，脱敏证据`output/auth-abuse-20261013/public-auth-settings.json`。公开设置不是生产完整配置，生产镜像、代理拓扑和错误详情仍未知。本地auth.go确认按IP且各接口独立限流：login20/min，register/send-verify-code/forgot-password各5/min；截图未达到阈值，不据此判定限流失效。auth_service.go:345和email_queue_service.go:103确认验证码200仅代表入队，不保证邮件送达；auth_handler.go:617存在frontend_url缺失直接500的路径，但未证明本次500属于它。建议先启用现有服务端人机验证和管理员个人TOTP，再考虑认证接口共享IP限流、账号失败退避、入队前邮箱冷却/总发信预算及可追溯告警；源站访问和转发IP信任先取证。没有修改业务代码、生产配置，没有发起登录/发信探测或部署/提交推送；外部官方文档检索未取得可引用结果，本轮判断基于截图、本站公开接口和本地源码。
 
 
 
@@ -106,6 +117,71 @@
     - 临时的 `.env.development.local` 和预览构建目录已删除。
   - 提交边界：本次提交只含本轮文件。不含 10-11 安全修复，它仍在工作区，未提交；也不含并行“智力效率”会话的改动（intelligence 前后端、router.go 及 theme.css 中两行 `.mofa-intel-*`）。中途一次全量里这两个 intelligence spec 曾有 11 项失败，之后复查 custom 目录加关键回归，共 60 个文件、708 项全部通过；它们的状态以该会话交接为准。
 
+- **2026-10-12 智力效率改接雷达Bench v1（源码完成，未提交/推送/部署）**：用户给出 https://codex-reset-radar.pages.dev/#codex-community 和截图，要求更新数据。接缝、契约和缓存规则见 CUSTOMIZATIONS 顶部「2026-10-12 智力效率改接雷达Bench v1」。
+  - 已核实的原因（curl/Node 实取）：
+    - 旧 JSON 被源站标为“旧基准”，源时间停在 2026-10-01 23:00（+08），文件 9.7MB。
+    - 新汇总接口 GET 响应没有 `Access-Control-Allow-Origin`；非默认档位不带 `X-Radar-Bench-Selection` 时返回 428。
+    - 所以改为后端代读并缓存，前端只读本站 `GET /api/v1/intelligence`。
+  - 数据核对：
+    - 实取 34 个汇总，Go 解析结果与“按源站页面公式计算”的值逐项比对，0 处不一致。
+    - 与用户截图相比，28 格完全一致；另外 6 格是源站在两次读取之间有新判分，数值已变化，证明是实时数据。
+    - 实时一轮（Go 客户端直连源站）34/34 成功，用时 7.75 秒。
+  - 验证：
+    - Go：定向 13 个顶层、24 个子项通过，连续 20 次无偶发失败；handler、server、middleware、routes 四个包的全部 unit 通过；embed 构建、vet、gofmt 通过。golangci-lint 本机没有，以 CI 为准。
+    - 前端：intelligence 两个 spec 共 33 项；关键回归 36 个文件、372 项；vue-tsc、定向 ESLint、生产构建通过。上面一条记录里“2 个 intelligence spec 共 11 项失败”是本会话改写进行到一半时的状态，现已全部通过。
+    - 浏览器：用真实页面组件、实取数据、页内模拟接口的临时夹具检查。954 与 1440 浅色、1440 深色边界状态、375 手机：页面不横向溢出，手机端矩阵在自身容器内滚动、首列吸附，“覆盖／判分”组内不断行。检查后夹具已删除。
+  - 证据：`output/intelligence-radar-bench-20261012/`（raw 原始响应、go-captured/go-live、compare.mjs、derive.mjs、make-fixture.mjs）。
+  - 未验证：
+    - 8080 和生产的真实登录调用（本机 8080 未运行）、golangci-lint 与新 SHA 的 CI。
+    - 生产服务器能否访问 pages.dev，是否需要配置 `update.proxy_url`。
+    - 源站以后是否收紧“显式选择”限制。后端使用源站页面同样的标记；一轮成功后 10 分钟内不再读取，失败后按 Retry-After 或 1 分钟起退避，而且只在有人打开页面时读取。
+  - **2026-10-13 本机 8080 已部署供用户验证**（用户授权）：
+    - 构建源是已发布的 HEAD `7cd18f823` 加本轮 10 个文件和 theme.css 三条规则（`output/intelligence-radar-bench-20261012/docker-src`）。不含其他会话的未提交改动，所以 248/249 迁移没有带入，数据库仍停在 247。
+    - 先备份数据库：646652 字节，pg_restore 目录 1270 项，SHA256 `95c559e3…02d6b`；旧镜像打标签 `sub2apicust:before-intelligence-20261013-090718`。
+    - 结果：build 退出 0；运行镜像与构建镜像一致（`5647debb2e93`）；postgres/redis 容器 ID 不变，recipes 保持停止。health 200，未登录访问 `/api/v1/intelligence` 返回 401。前端入口引用 `IntelligenceView-CEVNcjIO.js`，包里不再有旧 JSON 地址。各表计数和迁移不变，只有两个启动时自动同步的客户端版本键变化。
+    - 应用容器创建于 10:06（+08）。13:48 执行 `up` 时它已在运行且是新镜像，没有重建。我没有找到 10:06 是谁启动的。
+    - **阻塞：容器访问不了外网**。Docker Desktop 设置为手动代理 `http://127.0.0.1:7897`（Clash）。该端口在监听，但经它的请求全部 5 秒超时，包括 auth.docker.io 和 baidu；主机直连 pages.dev 和 baidu 都是 200。容器内 HTTPS 访问任何站点都被重置，HTTP 返回 502。所以本机页面曾会显示“数据源暂时不可用”。这是本机代理状态问题，不是代码问题；09:07 构建时同一代理还是通的。**14:07 已解除**：用户在 Clash 换了节点后，主机经 7897 访问 pages.dev 和 baidu 都返回 200；容器内读取绑定文件（24054 字节）和带选择标记读取 astra/high 汇总都成功。到 14:07 为止，后端还没有收到登录后的 `/api/v1/intelligence` 请求，缓存为空。**14:12 用户确认已在 8080 看到智力效率数据**。后端日志：登录后的首个请求返回 200，用时 10.9 秒（首次读取源站，冷缓存）；没有 `intelligence source` 失败或 panic 告警。构建用的 docker-src 副本（203MB）已删除，需要时可用 `prepare-docker-src.sh` 重新生成。
+    - 记录：`output/intelligence-radar-bench-20261012/local-deploy.json`、`local-before.json`、`docker-build.log`。
+  - 提交时分开：本轮文件是：
+    - 新增 `backend/internal/handler/custom_intelligence_handler{,_test}.go`；
+    - `router.go` 两行；
+    - `frontend/src/custom/intelligence/{data,useIntelligence,copy}.ts`、`views/IntelligenceView.vue`、`components/IntelligenceComparison.vue`、`__tests__/intelligence{,-view}.spec.ts`；
+    - theme.css 中三条 `.mofa-intel-*`（price/time 字号、`.mofa-intel-pair`、`.mofa-intel-sample` 右边距）；
+    - CUSTOMIZATIONS、custom/UPGRADE 和本文件的对应新节。
+    - theme.css 和文档里同时有官网动效会话的改动，要按块暂存。
+
+- **2026-10-11 审查问题全部修复（源码完成，未提交/推送/部署）**：用户要求“全部修复”。接缝和规则见 CUSTOMIZATIONS 顶部新节与 deploy/PAYMENT_COLLECTION_LIMITS.md。
+  - 收款预占：迁移248按用户封顶；已结束的订单在最晚可付款时间后由渠道复查释放，管理员也可写原因并经审计人工释放。启用限额后，手机 WAP 也带 time_expire。
+  - 工坊：撤回删除记录和素材，退回删除素材；读正文前查额度；并发上传设上限；改为流式写盘；后端拒绝视频投稿；新增管理员删除；公开画廊按 IP 限流。
+  - 其他：公开套餐目录限流；迁移249让限量套餐每人同时只能有一笔待付；update.sh 只改 sub2api 的 image；前端工具链升级到 vite6、vitest4、typescript-eslint8、eslint-plugin-vue10；清空过期的审计例外。
+  - 验证：后端定向与包级 unit 共 10221 个顶层和 9471 个子项通过。唯一失败 TestOllamaProbeCallback_StaleLongDoesNotOverrideNewShort 是上游既有问题，在干净 HEAD 的临时 worktree 中 10/10 同样失败，与本轮无关。另有 15 项跳过，包括新增的 248/249 真实 PG 测试，原因是 Docker 未运行。gofmt、go vet、golangci-lint 2.14.0 均 0 问题；embed 构建和 TestFamily 通过；govulncheck 修复后仍是 0 个可达漏洞。前端 369 个文件、2958 项全部通过，Makefile 关键回归 35 个文件、479 项通过，vue-tsc、lint（0 错误）、生产构建通过。update-test 共 26 个场景通过。
+  - 依赖：pnpm audit 生产依赖 0；全量从 55 条降到 2 条，剩下的都来自 tailwind 3：braces 上游无修复，postcss-selector-parser 6.x 为中危。
+  - 复验：修复后用相同攻击步骤复验，用户1上传并撤回18份后磁盘剩0个文件，用户2投稿返回201（修复前是429）。
+  - 旧数据：修复前已撤回或退回的投稿不再计入额度，但它们的素材文件仍留在磁盘上。作者可以在“我的投稿”里撤回删除，管理员可以在审核页删除。本轮没有自动清理，也没有改动线上数据。
+  - 未验证：Linux CI（Node20、mawk）、完整 integration、支付宝真机、生产配置。证据在 output/security-review-20261011/（*-fixed.log、frontend-full-final.log、backend-unit.jsonl、pnpm-audit-all-step3.json 等）。改动前的 package.json 和锁文件备份在 deps-backup/。
+  - 真实 PG（用户同意后启动 Docker；隔离容器 postgres:18-alpine，绑定 127.0.0.1:15432。55432 在 Windows 保留端口段内，绑定失败）：
+    - PG 专项：12个顶层和79个子项全部通过，0 跳过。包括新增的 248/249 触发器、真实时间戳下的复查粗筛、同一用户并发10笔只成功3笔、限量套餐并发5笔只保留1笔待付，以及既有包号、收款、库存、订阅 PG 回归。
+    - 既有收款与库存夹具改为在 248/249 最终函数上验证，并补 user_id 列。
+    - 新增 `custom_collection_release_schema_postgres_test.go`：用完整迁移链建新库并重跑一次，在真实表上验证复查、待确认列表、人工释放审计和按用户封顶。
+    - 设置 DSN 重跑改动包 unit：10232个顶层和9550个子项通过；跳过从15降到5，剩下的都是外部依赖占位；唯一失败仍是上游既有的 Ollama 用例。
+  - 真实 PG 暴露的缺陷：247 时期的 `CustomCollectionUsage` 第二次查询失败时，会把第一个 defer 捕获的 rows 覆盖成 nil，导致崩溃（SQLite 夹具没有触发）。已改用独立变量，并补“查询失败返回错误而非崩溃”回归。
+  - 收尾：测试容器和它产生的2个匿名卷已删除。10-06 的旧匿名卷保留；4个业务容器保持原来的停止状态。Docker Desktop 仍在运行，需要时由用户自行退出。
+  - 10-12 补跑复核：
+    - 09:18 的 lint 早于 nil-rows 修复（09:38）和新增 PG 测试（10:26），因此在最终代码上补跑 gofmt、go vet（含 -tags=unit）和 golangci-lint 2.14.0，结果均为 0 问题。日志：static-recheck-20261012.log。
+    - 设置 DSN 的 unit 在 10:31 运行，晚于最后一次代码改动。新增的 TestCustomCollectionReleaseRealSchemaPostgres 不在 09:40 那批 PG 专项（12/79）里，是在这次 10:31 的运行中通过的（2.87 秒，真实执行，未跳过）。
+    - update-test 的 26 个场景在 GNU Awk 下通过（update-test-20261012.log），在一次性 postgres:18-alpine 容器里用 busybox awk 也通过（update-test-busybox-20261012.log）。该容器断网、以只读方式挂载 deploy，运行后已自动删除。
+    - 本机没有实测 mawk。
+
+- **2026-10-11 最新代码漏洞审查（仅审查，未改业务）**：范围是HEAD=7cd18f823（=origin/main，已fetch核对），加上工作区既有的5个未提交收款文件。审查期间用过两个临时探针，均已删除；`git status`仍只有原来那5个文件。证据在output/security-review-20261011/（探针源码、日志、pnpm audit JSON、govulncheck）。按用户要求没有启用子代理。
+  - 【已核实·P1，仍未修】普通用户可以主动占满收款预占。`is_mobile`由客户端声明（payment_handler.go:266、295–296）；只有电脑WAP会写time_expire（alipay.go:155–159）。用户在手机WAP下单后不打开付款页、直接取消，关单返回交易不存在，额度不会释放。默认每人最多3笔待付（payment_config_service.go:51），取消限流默认关闭（同文件:291），所以可以反复下单再取消；20笔¥50就占满默认¥1000。后果只在启用限额后出现，但账本平时也会累计这些占用（247:39–46）。工作区未提交的复查释放已经编译、vet、gofmt通过，探针结论如下：电脑WAP（已取消）和支付宝建单失败且无付款地址这两种情况可以释放；手机WAP、电脑网站支付不在范围内，易支付既没有CancelPayment也没有复查器，同样不释放。新增函数还没有任何测试。真实支付宝对“未打开的WAP订单”关单会返回什么，没有在商户或沙箱取证。
+  - 【已核实·P2】单个用户可以占满工坊存储。撤回只改状态，不删文件（custom_studio_handler.go:424）；额度统计包含所有状态的记录（:236、:244）；没有删除接口。探针中，用户1上传并撤回18份，共536870912字节，正好是全站上限，媒体文件18/18都还在磁盘上；用户2随后上传一张32px PNG，返回429。提示文案写的是“每人最多…”，会误导用户。另外，额度检查发生在完整读取30MB正文之后，也没有并发上限，内存峰值风险未压测。
+  - 【已核实·P2】工坊公开画廊和公开媒体接口对匿名访问实际不限流。它们挂的是`limiter.Global()`（:76），这个限流器按用户计数，没有登录主体时直接放行（panel_rate_limit.go:75–78），现有测试也把这一点作为预期行为。上游的匿名接口用的是`PublicIP()`（auth.go:244、model_plaza.go:24）。`/payment/public/plans`同样没有限流器，每次请求要查询多次DB（低危）。生产反代是否另有限流，我不知道。
+  - 【已核实·低】有限库存可以被待付订单临时占住：PENDING计入库存（245迁移），每人最多3笔，30分钟超时。update.sh带标签运行时，sed会改写override里所有`image:`行（用副本验证过）。按DEPLOY_CUSTOM的生产override只有一行image，不受影响；本机8080的override有3行，postgres和redis的标签会被改坏。
+  - 【已核实·依赖】pnpm audit --prod：所有严重度都是0。全量audit（含dev）共55条：critical 3、high 33、moderate 18、low 1，全部来自vite5／vitest2（tinypool）／rollup／eslint链等构建或测试工具，不进生产镜像，CI也不扫。govulncheck（DB 2026-10-08）：可达漏洞0，另有2个漏洞在依赖模块里但代码未调用。audit-exceptions里lodash／axios的例外已过期，nanoid的10-13到期；但检查脚本只在漏洞仍被扫出时才处理例外（check_pnpm_audit_exceptions.py:186–233），当前生产审计为0，所以不影响CI。
+  - 【已核实·未发现问题】支付宝通知会拒绝重复参数、缺项和商户不符，删除cert_sn，按分精确比对金额；扫码令牌32字节，比较用常量时间，只跳转到openapi.alipay.com。包号的免扣凭证只挂在单次请求的Key副本上，结算时按实际账号核对lease；调度入口都有defer检查，WS逐帧逐轮复查。工坊有ID正则、nosniff和CSP sandbox，私有媒体只有本人或管理员能访问。fork没有新增v-html；postMessage会校验origin、source和nonce；JWT不读Cookie；在改动文件和已跟踪文件里做高特征密钥扫描，零命中。工作区代码build、vet、gofmt通过，定向190项unit通过，另有4项真实PG测试因缺DSN跳过。
+  - 工具链：宿主默认GOPATH里有go1.27.2 toolchain模块和x/net 0.60.0，可以离线编译和测试（见记忆portable-go-toolchain）；output里的便携1.27.0已经不满足go.mod。
+  - 未覆盖：真实PG和Docker、生产配置（限额是否启用、反代限流）、真实支付宝或易支付关单、上游最新变更、浏览器实测和压测。
+
 - **2026-10-10 用户授权提交推送包号职责收敛**：本轮仅发布包号归属/有效期/免扣及通用限制回归相关修改，origin/main抓取后与本地基线一致；4个既有收款修复文件及先前审查记录保留在工作区、不混入功能提交。CI配置独立PostgreSQL，发布须以本轮实际SHA确认CI（含真实PG及integration）、安全和GHCR全部成功后再交付镜像更新命令，生产由用户自行更新。
 
 - **2026-10-10 到期与跨组免扣专项验证**：新增custom_dedicated_expiry_test.go，真实Gin/APIKeyAuth链配SQL mock覆盖7场景：有效专属组零余额可用；到期专属组零/正余额均403；到期关联组403；普通组到期前后零余额均INSUFFICIENT_BALANCE；普通组正余额放行但IsCustomDedicatedPrepaid=false，缓存原Key始终无免扣凭证。连同到期边界、选中账号、跨Key/组结算及缓存隔离回归共7顶层+13子场景通过，无跳过；证据output/body-limit-fix/expiry-verification-final.jsonl。不是生产/真实PG验收。到期前已准入的HTTP请求可完成并按原权益结算，不表示到期后能发起新请求；普通组继续走原生余额/订阅规则。未修改业务逻辑或部署。
@@ -116,6 +192,15 @@
 - **2026-10-10 包号请求体修复与其他定制盘点（未发布）**：按用户要求移除HTTP/WS包号独立大小阈值及后台/API字段，历史数据库列保留但不读写；通用网关限制仍生效。前端27项与vue-tsc通过，便携Go定向service/middleware测试通过（真实PG专项未设DSN跳过；Docker未运行），便携Go embed构建通过。其他仍存在：共享并发默认2、RPM默认30（两者不能设0）、日请求默认0、默认关闭生图、HTTP入口白名单、WS只允许response.create/cancel、禁生图时嵌套深度大于64也拒绝；成员上限100、账号/标准专属组隔离、到期撤销、Key金额参考计量及租约DB依赖。仅盘点其他规则，未擅自删除。保留工作区既有收款修复，未提交推送部署。
 
 - **2026-10-10 截图413核查（仅分析）**：DEDICATED_REQUEST_BODY命中custom_dedicated_billing.go:40，为本仓包号定制；引入提交acd73d716（2026-10-01，Git作者mohaiming）。默认2 MiB，可配置1024至33554432字节；未取证生产实际策略和请求大小，不能确认现场阈值。未改业务或部署，保留既有收款修复改动。
+
+- **2026-10-09 设计／逻辑漏洞／页面美观专项审查（仅审查，未改业务）**：范围HEAD=16334e80c（=origin/main）。只读审查加一个临时探针测试，探针已删除，`git status --porcelain`为空。证据在output/design-review-20261009/（probe-collection-hold.log及探针源码副本）。按用户要求不启用子代理；首轮5个子代理因网关529失败，没有留下工作树或分支。
+  - 【已核实·P1】收款预占可能永久占满全站日额度。只有`checkPaidWithOptions`里`CancelPayment`返回nil时才会置released（payment_order_lifecycle.go:204–213，全仓唯一调用点）。247触发器统计未付且未释放的占用时没有日期边界（247_custom_payment_collection.sql:39–43）。EasyPay没有实现CancelPayment。支付宝未创建交易时关单返回“交易不存在”，本仓custom_alipay_collection_test.go:23就是按这个语义编写的。网关失败产生的FAILED订单之后没有任何流程处理。ExpireTimedOutOrders只扫描PENDING订单。待付上限只统计PENDING（payment_order.go:285），用户可以用支付页“取消订单”（PaymentStatusPanel.vue:464）反复下单再取消。探针用仓库SQLite夹具复现了5种场景：支付宝未扫码后取消、过期、网关失败，以及不支持关单的渠道取消、过期。每种场景20笔¥50订单后，占用都是¥1000，管理员“查询并关闭”仍返回COLLECTION_CLOSE_UNCONFIRMED。“新订单会被拒”来自触发器的静态阅读，真实PG未运行。真实支付宝对未扫码订单关单返回什么，还没有在商户或沙箱取证。
+  - 【已核实·P2】API Key鉴权热路径每个请求多出2–3次未缓存的DB查询：CustomDedicatedContext→Check、PrepareCustomDedicatedBilling，以及调度时的guardSelection。服务始终注入（wire_gen.go:329、custom_dedicated_accounts.go:85–88），所以所有带分组的Key都受影响。任一查询出错就返回403 DEDICATED_ACCOUNT_UNAVAILABLE（api_key_auth.go:168–179），普通用户也一样。延迟影响未压测。
+  - 【已核实·P2】CI前端只跑Makefile关键清单里的34项；custom/__tests__共32个文件，其中23个不在清单内。真实PG测试缺DSN时会Skip；CI配置了DSN，但没有“必须实际执行”的守卫。
+  - 【已核实·页面】支付宝按钮#00AEEF配白字，按WCAG相对亮度公式手算对比度约2.5:1（style.css:136，上游代码）。工作区加载层#f5f8f8没有深色样式（theme.css:1605）。工坊段使用硬编码hex颜色。多个custom页面直接写中文、没有走i18n，但页头仍有语言切换。PlanContactPanel与管理员说明重复，还向用户暴露了“库存”这个内部术语。充值页的提示放在“快捷金额”标签前面，快捷金额也没有币种符号。截图来自10-08模拟夹具，不是生产页面。
+  - 【已核实·正面】后端68个被改的上游文件都有[CUSTOM]标记，也都已在CUSTOMIZATIONS登记。Ent生成文件没有手改痕迹。迁移执行器按完整文件名记录并校验checksum；同号前缀是上游惯例（共47组），241同号不会出错。已跟踪文件里没有真实密钥。PNG母图已被.dockerignore排除，不会进入镜像。
+  - 【已核实·文档】CLAUDE.md:64和本文件三-3的“本机无Go”已过期。CUSTOMIZATIONS里21个“未发布”标题，多数实际已经发布。第五节有已完成但未勾选的项，例如update.sh已在4bc5abbb5提交。
+  - 未覆盖：真实PG、商户和生产数据，全量前端浏览器实测，上游最新变更（未fetch），以及库存／订阅全部路径的逐行审计。
 
 - **2026-10-08 收款限制与人工开通发布完成（最新终态）**：功能`575467a5f4d194ebd01cf771edacef9f0075d395`已推origin/main，同SHA [CI37749962687](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962687)、[安全37749962637](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962637)、[GHCR37749962677](https://github.com/EngineeMoMo/sub2apicust/actions/runs/37749962677)全部completed/success，含Go unit／integration／lint及前端。实际发布镜像`ghcr.io/engineemomo/sub2apicust:sha-575467a`（linux/amd64），摘要`sha256:5539364a4f724569a4f0ef22bf12db74357fce5b6e3669327be619137d5e408e`。证据output/collection-release-20261008。包含247迁移、共享收款上限、快捷充值配置、人工开通模式及两项审查修复。用户备份后执行`./update.sh sha-575467a`，先核对旧付款链接与线下收款再启用限额；真实商户与生产交互待验，未代部署生产。本条覆盖此前待发布记录；后续文档skip-ci提交不生成新镜像。
 
@@ -457,15 +542,16 @@
 
 ## 五、待办 / 下一步
 
+- [ ] **2026-10-14 全工作区提交发布**：用户已明确授权全部59项工作区改动提交并推送origin/main；本地验证完成，待新功能SHA的CI/安全/GHCR及远端HEAD核验后记录终态。忽略配置、凭据、备份与构建输出不入库，生产由用户部署。
+
 - [x] **2026-10-14 上游0.2.16同步发布**：fe6323ca6已推origin/main，同SHA CI/安全/GHCR全绿，registry/revision/源码树/二进制及实际运行镜像ID已验真，固定sha-fe6323c。前端774项、Ent无差异/Go embed/专项、源码61条及正式镜像25条HTTP通过；原main已快进，59个其他会话改动已备份恢复且未混入发布，独立测试资源清理。
 - [ ] **2026-10-14 上游0.2.16生产验收**：用户备份数据库/配置/app_data后执行`./update.sh sha-fe6323c`；核验13平台配额、渠道监控/模型目录、Gemini缓存等新增上游功能与原包号/支付/家族入口。核验实际客户端IP后选择网段/前缀/期限并开启自动；生产未代部署，真实模型/费用及共享出口误拦率仍待授权环境验证。本机8080尚未更新0.2.16，原容器当前停止。
 
 - [x] **2026-10-14 网段防护发布**：功能bbee35dbcc30525bae354dc1d270f90b5591fab7/sha-bbee35d及同SHA CI/安全/GHCR/镜像摘要验真完成，默认永久、仅管理员调整/解封；11:56本机8080三服务healthy及独立45条HTTP断言通过，测试环境已清理。13:08本轮只读复查Docker未运行，当前8080状态未复测；生产未代部署。
 - [ ] **2026-10-14 网段防护生产验收**：已由上游0.2.16同步镜像包含，统一使用本节最新sha-fe6323c；用户备份数据库/配置/app_data后`./update.sh sha-fe6323c`；核验Cloudflare→Nginx真实IP，刷新IP黑名单页并选择范围/前缀/期限，再开启自动。共享网段正常用户可能受限，误拦率待真实流量确认；不自动加入截图历史网段。
 
-- [ ] **2026-10-14 手动黑名单生产验收**：用户备份后`./update.sh sha-065eee9`，刷新后台IP黑名单使用“手动新增 IP”；核对生产真实客户端IP、代理头清洗/源站限制、已知恶意IP证据及共享出口影响。本机已测永久/临时、重启/Redis清空、到期/解封/旧版本；生产是否已更新未知，未自动回灌截图IP。253后不直接用旧程序处理曾手动封禁的IP，见AUTH_IP_BLACKLIST回退边界。
-
 - [x] **2026-10-14 管理员手动封禁发布**：065eee935独立提交推送，新SHA CI/安全/GHCR成功且registry/标签/摘要交叉验真，固定镜像sha-065eee9；本机8080备份后更新，三服务健康，原业务计数/防护配置及PG/Redis/挂载保留。证据output/auth-ip-manual-20261014，其他会话未提交改动保留。
+- [ ] **2026-10-14 手动黑名单生产验收**：用户备份后`./update.sh sha-065eee9`，刷新后台IP黑名单使用“手动新增 IP”；核对生产真实客户端IP、代理头清洗/源站限制、已知恶意IP证据及共享出口影响。本机已测永久/临时、重启/Redis清空、到期/解封/旧版本；生产是否已更新未知，未自动回灌截图IP。253后不直接用旧程序处理曾手动封禁的IP，见AUTH_IP_BLACKLIST回退边界。
 
 - [x] **2026-10-14 IP防护发布收口**：07bcef204独立提交并推送origin/main；同SHA CI（含真实PG/Redis、unit／integration／lint）、安全、GHCR全部成功，固定镜像sha-07bcef2及摘要交叉核验，更新命令和备份要求已记录；其他会话改动保留，生产未代部署。
 - [x] **IP防护可选永久／临时封禁、代码审查和本地Docker运行**：失败计数、防误拦分类、管理员解封、可配置期限及永久模式、迁移252完成；13项专项／全量unit／55项前端／实际镜像重启和Redis清空／原管理员接口及原数据保留通过，详见第四节最新条目。
@@ -474,9 +560,23 @@
 - [x] **IP 黑名单实现与本机验证**：管理员菜单、版本解封、120分钟滑动计数及迁移250完成；9项后端专项、真实PG/Redis、全量unit、嵌入构建、前端511项关键回归通过，证据见第四节。
 - [ ] **IP 黑名单生产部署/开启**：本功能已独立发布sha-07bcef2，248/249及其他会话内容未带入。用户备份后同版更新，核对250/251/252和管理员菜单。默认关闭，核验Cloudflare→Nginx真实IP、转发头清洗及源站限制，观察共享出口失败后选择永久或临时并开启。历史审计不回灌名单；验证码人机验证、邮件预算、forgot-password 500取证及真实记录浏览器交互仍待。
 
+- [ ] **2026-10-13认证防护与500取证**：确认用户希望落地的防护范围后，先启用现有人机验证并实测登录/发验证码/注册流程，管理员须同时开启系统TOTP和个人绑定；有恶意持续请求时可对截图IP临时封禁并设到期，但先核对真实客户端IP。按生产请求量设计认证共享IP限流、账号维度失败退避（避免永久锁号）、入队前原子邮箱冷却和全局邮件预算；边缘规则仅覆盖指定认证入口，真实IP信任与源站封闭须核对代理拓扑再调整。取得截图forgot-password 500及send-verify-code 200的脱敏详情/request_id与对应应用/队列日志，查更宽时间窗的成功登录和管理员变更。公开password_reset_enabled=false不解释500；不直接开启密码重置或凭截图断言已入侵。本轮仅建议，未获新安全功能实施/生产变更指令。
+
 - [x] **官网动效发布核验**：f8928e20d 同 SHA 的 CI（含真实 PG 的 unit/integration、lint、前端）、安全扫描、GHCR 全部成功，固定镜像 sha-f8928e2，详见第四节首条。
 - [ ] **官网动效生产更新与验收**：用户备份后执行 `./update.sh sha-f8928e2`。确认首页、套餐、教程、登录页和手机菜单的视觉，并补测 Safari、真机触屏和系统“减少动态效果”。这一版没有迁移。生产未代部署。
-- [ ] **生产 Nginx 压缩（用户在服务器操作，最高收益）**：curl 实测生产 JS/CSS 未压缩。按 deploy/EDGE_SECURITY.md:131–143 在 http 块补 `gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;`，不要用 `*`，也不要包含 text/event-stream。用 `nginx -t` 检查后 reload，再用 `curl -sI -H 'Accept-Encoding: gzip' <站点>/assets/<任一css>` 确认响应带 `Content-Encoding: gzip`。首屏传输量预计从约 1.4MB 降到 0.4–0.5MB。这是在本地按 gzip 9 级估算的，Nginx 默认 `gzip_comp_level 1`，实际压缩后会略大一些。
+- [ ] **智力效率雷达Bench验收与发布**：
+  - 本机 8080 已部署，用户 2026-10-13 已确认看到数据（后端首个请求 200，用时 10.9 秒）。以后如果再显示“数据源暂时不可用”，先在容器内测出网。回退方式：用标签 `sub2apicust:before-intelligence-20261013-090718` 重新打回 `local-theme` 并 `up --no-deps --no-build`。本轮没有迁移，不需要恢复数据库。
+  - 用户2026-10-14已明确授权整个工作区提交，包含本功能；用户视觉确认及生产矩阵、对比、“数据不足”等标注和说明文字验收仍待。
+  - 新 SHA 需确认 CI（含 golangci-lint）、安全扫描和 GHCR。
+  - 前后端必须同版发布。更新后在生产登录打开 `/intelligence`，首次读取最多约 45 秒。
+  - 如果显示“数据源暂时不可用”，先在服务器上用 `curl -sI https://codex-reset-radar.pages.dev/data/radar-bench-binding.json` 确认能否出网，必要时配置 `update.proxy_url`。
+- [ ] **生产 Nginx 压缩（用户在服务器操作，最高收益）**：curl 实测生产 JS/CSS 未压缩。在站点的 server 块加入 `gzip on; gzip_vary on; gzip_comp_level 5; gzip_min_length 1024; gzip_types text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml;`。
+  - 必须包含 `text/javascript`：Go 后端发 JS 用的是 `text/javascript; charset=utf-8`。deploy/EDGE_SECURITY.md:138（上游文档）只列了 application/javascript，照抄的话 JS 仍不压缩。本行覆盖此前的列表。
+  - 不要列 text/html（HTML 本来就压缩，写了 nginx -t 会报 duplicate 告警），不要用 `*`，也不要包含 text/event-stream。
+  - 粘贴前先用 `nginx -T | grep -n gzip` 查同一 server 块里有没有已有的 gzip 行，同一块写两遍会报 emerg、配置无法加载。
+  - 用 `nginx -t` 检查后 reload，再用 GET 请求页面实际引用的 css/js，确认响应带 `Content-Encoding: gzip`。
+  - 本地 nginx 1.28.3 容器已复现并验证：只写 gzip on 时仅压缩 HTML，与生产现象一致；用文档列表时 JS 不压缩；用上面的列表时 HTML/CSS/JS 都压缩、SSE 不压缩。证据在 output/nginx-gzip-test/。
+  - 5 级压缩下 CSS 从 377KB 降到 54KB，vendor-misc JS 从 239KB 降到 83KB。
 - [ ] **可选：站点 Logo 改用图片地址**：后台 site_logo 现在是 base64，每次打开页面 HTML 都要带两份，共 43.5KB，而 HTML 是 no-cache。改成可缓存的图片 URL 前，先核实后端 safeImageURL 接受的地址形式和托管位置（我只核对了前端校验接受相对路径和 http(s)）。
 - [ ] HTTP/2上游接口迁移：x/net0.60标记旧配置/GOAWAY类型弃用，目前保留五个既有文件中明确符号的SA1019兼容规则。后续验证H2C参数、流式PING和第三方错误匹配后迁移并删除该规则；不混同安全漏洞豁免。
 
@@ -486,6 +586,14 @@
 
 - [ ] 用户备份并更新sha-026d9ab，实测长请求、有效包号免扣、到期/撤销拒绝、普通组余额及原生限流；CI不能替代生产验收。
 
+- [x] **2026-10-11 审查问题修复源码**：用户要求“全部修复”。已完成收款预占（按用户封顶、到期复查、人工释放）、工坊存储与匿名限流、库存待付、update.sh、前端工具链及审计例外；验证结果见第四节最新记录。
+- [x] **真实 PostgreSQL 回归**：已在用户同意后启动 Docker，用隔离容器（postgres:18-alpine）运行，12个 PG 专项和79个子项全部通过，0 跳过，结果见第四节。完整 integration 本机缺 testcontainers 模块缓存（GOPROXY=off），没有运行，以提交后 CI 为准。
+- [ ] **提交前确认 CI**：前端改为 vite 6、vitest 4、typescript-eslint 8、eslint-plugin-vue 10，CI 使用 Node 20，本机是 Node 22.9。update.sh 已在 gawk 和 busybox awk 下通过，mawk 下的结果仍以 CI 为准。
+- [ ] **支付宝真机**：启用限额后，手机 WAP 新增 time_expire（格式与电脑扫码相同）。须小额实付确认能正常付款、过期后无法付款，且预占在期限后约10分钟释放；电脑网站支付和易支付按等待期释放。生产启用前先在后台查看“待确认占用”。
+- [ ] **剩余低危**：tailwind 3 带来的 braces（上游无修复）和 postcss-selector-parser 6.x 中危只在开发构建中，去除需要升级 tailwind 4。多账号仍可合计占用收款预占和限量库存，这是预占制度本身的限制；可开启取消限流、缩短订单超时。
+- [ ] **鉴权热路径DB依赖（P2）**：评估给包号判定加短TTL缓存并在变更时失效，或只在分组确实是包号组时查询；需要压测和故障注入验证。
+- [ ] **页面低成本修复**：在theme.css覆盖.btn-alipay对比度，给加载层补深色，把工坊硬编码颜色改成令牌；调整充值页提示顺序并补币种；改PlanContactPanel文案；决定隐藏EN，或给custom页补i18n。
+- [ ] **文档精简**：CLAUDE.md只保留规则和指向HANDOFF的指针；本文件第四节只保留当前状态，历史另行归档；更正“本机无Go”；勾掉已完成的待办。
 
 - [x] 收款限制本轮功能已提交推送，实际功能SHA 575467a5f的CI／安全／GHCR全部通过，固定镜像sha-575467a；以下同轮“待提交／CI”条目为历史步骤，已完成。
 - [ ] 用户备份并更新生产到sha-575467a，核对历史收款、启用配置，再验人工开通／库存及真实商户关单付款；生产未代部署。

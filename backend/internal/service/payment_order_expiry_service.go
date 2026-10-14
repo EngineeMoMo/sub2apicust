@@ -106,6 +106,17 @@ func (s *PaymentOrderExpiryService) runOnce() {
 		slog.Info("[PaymentOrderExpiry] reconciled paid orders", "count", recovered)
 	}
 
+	// [CUSTOM] 收款预占到期复查：过订单期限加余量、渠道确认未付才释放，见 CUSTOMIZATIONS.md。
+	// 三段各用 expiryCheckTimeout，合计仍小于 paymentOrderExpiryLeaderLockTTL。
+	releaseCtx, releaseCancel := context.WithTimeout(context.Background(), expiryCheckTimeout)
+	releasedHolds, releaseErr := s.paymentSvc.CustomReleaseUnpayableCollectionHolds(releaseCtx)
+	releaseCancel()
+	if releaseErr != nil {
+		slog.Warn("[PaymentOrderExpiry] failed to release unpayable collection holds", "error", releaseErr)
+	} else if releasedHolds > 0 {
+		slog.Info("[PaymentOrderExpiry] released unpayable collection holds", "count", releasedHolds)
+	}
+
 	expireCtx, cancel := context.WithTimeout(context.Background(), expiryCheckTimeout)
 	defer cancel()
 	expired, err := s.paymentSvc.ExpireTimedOutOrders(expireCtx)

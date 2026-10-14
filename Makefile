@@ -1,9 +1,11 @@
 .PHONY: build build-backend build-frontend test test-backend test-frontend test-frontend-critical
 
-# [CUSTOM] IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
+# [CUSTOM] IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存、工坊投稿、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
 	src/custom/__tests__/auth-ip-blacklist.spec.ts \
 	src/custom/__tests__/payment-collection.spec.ts \
+	src/custom/__tests__/studio-submissions.spec.ts \
+	src/custom/__tests__/studio-api.spec.ts \
 	src/custom/__tests__/svg-sanitization.spec.ts \
 	src/custom/__tests__/motion.spec.ts \
 	src/custom/__tests__/public-nav.spec.ts \

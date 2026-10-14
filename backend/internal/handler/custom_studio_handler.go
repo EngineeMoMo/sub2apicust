@@ -30,6 +30,19 @@ import (
 
 const studioFileLimit = 30 << 20
 
+// 投稿额度：只统计仍保留素材的投稿（待审核、已公开、已下架）。退回只留记录、删除素材；撤回删除记录和素材。
+const (
+	studioImageLimit       = 12 << 20
+	studioStorageLimit     = 512 << 20
+	studioRecordLimit      = 1000
+	studioOwnedLimit       = 20 // 每人保留素材的投稿＋退回记录
+	studioPendingLimit     = 5
+	studioUploadConcurrent = 4 // 同时处理的上传，限制临时文件和内存峰值
+)
+
+// 视频成片与前端一致暂未开放，后端同样拒绝，不能靠隐藏选项绕过。
+const studioVideoSubmissionsEnabled = false
+
 var studioIDPattern = regexp.MustCompile("^[a-f0-9]{32}$")
 var studioCategories = strings.Fields("年轻人像 时尚肖像 Cosplay 动漫二次元 科技机甲 动物自然 奇幻风景 电商产品 场景插画 海报社媒 空间设计")
 var studioStyles = strings.Fields("写实摄影 电影感 二次元 3D手作 概念设计 平面海报 水彩 水墨 像素 美漫 剪纸 复古未来")
@@ -66,16 +79,22 @@ type StudioEntry struct {
 	ReviewerID int64     `json:"reviewer_id"`
 }
 type StudioHandler struct {
-	root string
-	mu   sync.RWMutex
+	root       string
+	allowVideo bool
+	mu         sync.RWMutex
+
+	uploadOnce sync.Once
+	uploads    chan struct{}
+	uploadMu   sync.Mutex
+	uploading  map[int64]bool
 }
 
 func RegisterStudioRoutes(v1 *gin.RouterGroup, dataDir string, jwtAuth, adminAuth, auditLog gin.HandlerFunc, settingService *service.SettingService, limiter *middleware.PanelRateLimiter) {
-	handler := &StudioHandler{root: filepath.Join(dataDir, "studio-submissions")}
+	handler := &StudioHandler{root: filepath.Join(dataDir, "studio-submissions"), allowVideo: studioVideoSubmissionsEnabled}
+	// 匿名可访问：按用户计数的 Global 没有登录主体时直接放行，这里必须按公网 IP 限流。
 	public := v1.Group("/studio/gallery")
-	public.Use(limiter.Global())
-	public.GET("", handler.PublicList)
-	public.GET("/:id/media", handler.PublicMedia)
+	public.GET("", limiter.PublicIPScoped("studio-gallery"), handler.PublicList)
+	public.GET("/:id/media", limiter.PublicIPScoped("studio-media"), handler.PublicMedia)
 	user := v1.Group("/studio/submissions")
 	user.Use(jwtAuth, middleware.BackendModeUserGuard(settingService), limiter.Global(), auditLog)
 	user.GET("", handler.Mine)
@@ -87,6 +106,70 @@ func RegisterStudioRoutes(v1 *gin.RouterGroup, dataDir string, jwtAuth, adminAut
 	admin.GET("", handler.ReviewList)
 	admin.GET("/:id/media", handler.PrivateMedia)
 	admin.POST("/:id/review", handler.Review)
+	admin.DELETE("/:id", handler.AdminDelete)
+}
+
+// 同一用户同时只处理一份上传，全站同时最多 studioUploadConcurrent 份；返回释放函数。
+func (handler *StudioHandler) acquireUpload(userID int64) (func(), bool) {
+	handler.uploadOnce.Do(func() {
+		handler.uploads = make(chan struct{}, studioUploadConcurrent)
+		handler.uploading = map[int64]bool{}
+	})
+	handler.uploadMu.Lock()
+	if handler.uploading[userID] {
+		handler.uploadMu.Unlock()
+		return nil, false
+	}
+	select {
+	case handler.uploads <- struct{}{}:
+	default:
+		handler.uploadMu.Unlock()
+		return nil, false
+	}
+	handler.uploading[userID] = true
+	handler.uploadMu.Unlock()
+	return func() {
+		handler.uploadMu.Lock()
+		delete(handler.uploading, userID)
+		handler.uploadMu.Unlock()
+		<-handler.uploads
+	}, true
+}
+
+// 待审核、已公开、已下架仍保留素材，占用存储；退回和撤回不保留素材。
+func studioKeepsMedia(status string) bool {
+	return status == "pending" || status == "published" || status == "unpublished"
+}
+
+// studioQuota 检查额度并返回具体原因；addSize 为本次上传大小，预检时传 1。
+func studioQuota(entries []StudioEntry, userID, addSize int64) string {
+	var size int64
+	records, owned, pending := 0, 0, 0
+	for _, existing := range entries {
+		if studioKeepsMedia(existing.Status) {
+			size += existing.Size
+			records++
+		}
+		if existing.OwnerID == userID && existing.Status != "withdrawn" {
+			owned++
+			if existing.Status == "pending" {
+				pending++
+			}
+		}
+	}
+	switch {
+	case pending >= studioPendingLimit:
+		return "你已有5份投稿在等待审核，请等审核完成后再提交"
+	case owned >= studioOwnedLimit:
+		return "你已有20份投稿或退回记录，请先撤回不需要的投稿再提交"
+	case records >= studioRecordLimit || size+addSize > studioStorageLimit:
+		return "全站投稿存储已满，请稍后再试或联系管理员清理"
+	}
+	return ""
+}
+
+func (handler *StudioHandler) removeMedia(id string) {
+	studioCleanup("media file", func() error { return os.Remove(filepath.Join(handler.root, id+".media")) })
 }
 func studioContains(values []string, value string) bool {
 	for _, candidate := range values {
@@ -174,6 +257,24 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 		response.Unauthorized(ctx, "请先登录再投稿")
 		return
 	}
+	release, ok := handler.acquireUpload(subject.UserID)
+	if !ok {
+		response.Error(ctx, http.StatusTooManyRequests, "上传通道繁忙或你已有上传在进行中，请稍后再试")
+		return
+	}
+	defer release()
+	// 读取正文前先查额度：额度已满时不接收30MB正文，也不写临时文件。
+	handler.mu.RLock()
+	existing, err := handler.entries()
+	handler.mu.RUnlock()
+	if err != nil {
+		response.InternalError(ctx, "投稿存储不可用，请稍后重试")
+		return
+	}
+	if reason := studioQuota(existing, subject.UserID, 1); reason != "" {
+		response.Error(ctx, http.StatusTooManyRequests, reason)
+		return
+	}
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, studioFileLimit+(64<<10))
 	if err := ctx.Request.ParseMultipartForm(1 << 20); err != nil {
 		if ctx.Request.MultipartForm != nil {
@@ -196,33 +297,81 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 		response.BadRequest(ctx, "请完整填写题材、风格、提示词与模型，并确认素材权利和审核后公开授权")
 		return
 	}
+	if entry.Media == "video" && !handler.allowVideo {
+		response.BadRequest(ctx, "视频投稿暂未开放，请先分享图片作品")
+		return
+	}
 	file, _, err := ctx.Request.FormFile("file")
 	if err != nil {
 		response.BadRequest(ctx, "请选择图片或视频文件")
 		return
 	}
 	defer studioCleanup("upload file", file.Close)
-	content, err := io.ReadAll(io.LimitReader(file, studioFileLimit+1))
-	if err != nil || len(content) > studioFileLimit {
-		response.Error(ctx, http.StatusRequestEntityTooLarge, "视频文件不能超过30MB")
+	head := make([]byte, 512)
+	n, err := io.ReadFull(file, head)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+		response.BadRequest(ctx, "无法读取上传文件")
 		return
 	}
-	entry.MIME = http.DetectContentType(content)
+	entry.MIME = http.DetectContentType(head[:n])
+	limit := int64(studioFileLimit)
 	if entry.Media == "image" {
-		if len(content) > 12<<20 || !studioContains([]string{"image/png", "image/jpeg", "image/webp"}, entry.MIME) {
+		limit = studioImageLimit
+		if !studioContains([]string{"image/png", "image/jpeg", "image/webp"}, entry.MIME) {
 			response.BadRequest(ctx, "图片仅支持PNG、JPEG、WebP，最多12MB")
-			return
-		}
-		config, _, err := image.DecodeConfig(bytes.NewReader(content))
-		if err != nil || config.Width < 32 || config.Height < 32 || int64(config.Width)*int64(config.Height) > 24000000 {
-			response.BadRequest(ctx, "图片无法解析或尺寸不符：至少32像素，最多2400万像素")
 			return
 		}
 	} else if entry.MIME != "video/mp4" {
 		response.BadRequest(ctx, "视频仅支持MP4，请先确认可完整播放")
 		return
 	}
-	entry.Size = int64(len(content))
+	if err := os.MkdirAll(handler.root, 0700); err != nil {
+		response.InternalError(ctx, "投稿目录不可写")
+		return
+	}
+	// 边读边写临时文件，不把整份素材放进内存；校验全部通过后再改名为正式素材。
+	temp, err := os.CreateTemp(handler.root, ".upload-")
+	if err != nil {
+		response.InternalError(ctx, "保存素材失败")
+		return
+	}
+	tempName, tempClosed := temp.Name(), false
+	defer func() {
+		if !tempClosed {
+			studioCleanup("upload temp file", temp.Close)
+		}
+		studioCleanup("upload temp file", func() error { return os.Remove(tempName) })
+	}()
+	written, err := io.Copy(temp, io.LimitReader(io.MultiReader(bytes.NewReader(head[:n]), file), limit+1))
+	if err != nil {
+		response.Error(ctx, http.StatusRequestEntityTooLarge, "文件或表单过大，视频最多30MB、图片最多12MB")
+		return
+	}
+	if written > limit {
+		response.Error(ctx, http.StatusRequestEntityTooLarge, map[bool]string{true: "图片最多12MB", false: "视频文件不能超过30MB"}[entry.Media == "image"])
+		return
+	}
+	if entry.Media == "image" {
+		if _, err := temp.Seek(0, io.SeekStart); err != nil {
+			response.InternalError(ctx, "保存素材失败")
+			return
+		}
+		config, _, err := image.DecodeConfig(temp)
+		if err != nil || config.Width < 32 || config.Height < 32 || int64(config.Width)*int64(config.Height) > 24000000 {
+			response.BadRequest(ctx, "图片无法解析或尺寸不符：至少32像素，最多2400万像素")
+			return
+		}
+	}
+	if err := temp.Sync(); err != nil {
+		response.InternalError(ctx, "保存素材失败")
+		return
+	}
+	tempClosed = true
+	if err := temp.Close(); err != nil {
+		response.InternalError(ctx, "保存素材失败")
+		return
+	}
+	entry.Size = written
 	handler.mu.Lock()
 	defer handler.mu.Unlock()
 	entries, err := handler.entries()
@@ -230,19 +379,8 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 		response.InternalError(ctx, "投稿存储不可用，请稍后重试")
 		return
 	}
-	var size int64
-	owned, pending := 0, 0
-	for _, existing := range entries {
-		size += existing.Size
-		if existing.OwnerID == subject.UserID {
-			owned++
-			if existing.Status == "pending" {
-				pending++
-			}
-		}
-	}
-	if len(entries) >= 1000 || size+entry.Size > 512<<20 || owned >= 20 || pending >= 5 {
-		response.Error(ctx, http.StatusTooManyRequests, "投稿额度已满：每人最多5份待审核、20份投稿；请联系管理员清理存储")
+	if reason := studioQuota(entries, subject.UserID, entry.Size); reason != "" {
+		response.Error(ctx, http.StatusTooManyRequests, reason)
 		return
 	}
 	token := make([]byte, 16)
@@ -252,12 +390,8 @@ func (handler *StudioHandler) Submit(ctx *gin.Context) {
 	}
 	entry.ID = hex.EncodeToString(token)
 	entry.MediaURL = "/api/v1/studio/gallery/" + entry.ID + "/media"
-	if err := os.MkdirAll(handler.root, 0700); err != nil {
-		response.InternalError(ctx, "投稿目录不可写")
-		return
-	}
 	mediaPath := filepath.Join(handler.root, entry.ID+".media")
-	if err := os.WriteFile(mediaPath, content, 0600); err != nil {
+	if err := os.Rename(tempName, mediaPath); err != nil {
 		response.InternalError(ctx, "保存素材失败")
 		return
 	}
@@ -406,8 +540,14 @@ func (handler *StudioHandler) Review(ctx *gin.Context) {
 		response.InternalError(ctx, "审核未保存，请重试")
 		return
 	}
+	// 退回不能再审核通过：只保留记录和原因，删除素材，释放存储。
+	if entry.Status == "rejected" {
+		handler.removeMedia(entry.ID)
+	}
 	response.Success(ctx, entry)
 }
+
+// Withdraw 由作者撤回：删除记录和素材，不再计入任何额度，无法恢复。
 func (handler *StudioHandler) Withdraw(ctx *gin.Context) {
 	subject, ok := middleware.GetAuthSubjectFromContext(ctx)
 	if !ok {
@@ -421,10 +561,43 @@ func (handler *StudioHandler) Withdraw(ctx *gin.Context) {
 		response.NotFound(ctx, "投稿不存在")
 		return
 	}
-	entry.Status, entry.Reason = "withdrawn", "作者撤回"
-	if err := handler.save(entry); err != nil {
-		response.InternalError(ctx, "撤回未保存，请重试")
+	if err := handler.remove(entry.ID); err != nil {
+		response.InternalError(ctx, "撤回未完成，请重试")
 		return
 	}
+	entry.Status, entry.Reason = "withdrawn", "作者撤回"
 	response.Success(ctx, entry)
+}
+
+// AdminDelete 由管理员删除任意投稿的记录和素材，用于清理存储；操作经管理员审计中间件记录。
+func (handler *StudioHandler) AdminDelete(ctx *gin.Context) {
+	role, ok := middleware.GetUserRoleFromContext(ctx)
+	if !ok || role != service.RoleAdmin {
+		response.Forbidden(ctx, "只有管理员可以删除投稿")
+		return
+	}
+	handler.mu.Lock()
+	defer handler.mu.Unlock()
+	entry, err := handler.read(ctx.Param("id"))
+	if err != nil {
+		response.NotFound(ctx, "投稿不存在")
+		return
+	}
+	if err := handler.remove(entry.ID); err != nil {
+		response.InternalError(ctx, "删除未完成，请重试")
+		return
+	}
+	response.Success(ctx, gin.H{"id": entry.ID, "deleted": true})
+}
+
+// remove 先删记录再删素材：记录删除失败时什么都不改；素材残留只记日志，不影响额度统计。
+func (handler *StudioHandler) remove(id string) error {
+	if !studioIDPattern.MatchString(id) {
+		return os.ErrNotExist
+	}
+	if err := os.Remove(filepath.Join(handler.root, id+".json")); err != nil {
+		return err
+	}
+	handler.removeMedia(id)
+	return nil
 }

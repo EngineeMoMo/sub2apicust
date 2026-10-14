@@ -34,6 +34,7 @@ func studioTestRouter(handler *StudioHandler) *gin.Engine {
 	router.GET("/review", handler.ReviewList)
 	router.POST("/review/:id", handler.Review)
 	router.POST("/withdraw/:id", handler.Withdraw)
+	router.DELETE("/admin/:id", handler.AdminDelete)
 	router.GET("/private/:id", handler.PrivateMedia)
 	router.GET("/public/:id", handler.PublicMedia)
 	router.GET("/gallery", handler.PublicList)
@@ -120,12 +121,18 @@ func TestStudioPrivatePublishUnpublishAndWithdraw(t *testing.T) {
 	require.Equal(t, http.StatusOK, studioCall(router, "POST", "/review/"+entry.ID, `{"action":"unpublish","expected_status":"published","reason":"授权需要补充"}`, 9, "admin").Code)
 	require.Equal(t, http.StatusNotFound, studioCall(router, "GET", "/public/"+entry.ID, "", 0, "").Code)
 	require.Equal(t, http.StatusNotFound, studioCall(router, "POST", "/withdraw/"+entry.ID, "", 2, "user").Code)
-	require.Equal(t, http.StatusOK, studioCall(router, "POST", "/withdraw/"+entry.ID, "", 1, "user").Code)
-	require.Equal(t, http.StatusBadRequest, studioCall(router, "POST", "/review/"+entry.ID, `{"action":"approve","expected_status":"withdrawn","review_confirmed":true}`, 9, "admin").Code)
+	withdrawn := studioCall(router, "POST", "/withdraw/"+entry.ID, "", 1, "user")
+	require.Equal(t, http.StatusOK, withdrawn.Code)
+	require.Contains(t, withdrawn.Body.String(), `"status":"withdrawn"`)
+	// 撤回删除记录和素材：不能再审核，也不再出现在任何列表。
+	require.Equal(t, http.StatusNotFound, studioCall(router, "POST", "/review/"+entry.ID, `{"action":"approve","expected_status":"withdrawn","review_confirmed":true}`, 9, "admin").Code)
+	require.Equal(t, http.StatusNotFound, studioCall(router, "GET", "/private/"+entry.ID, "", 1, "user").Code)
 	require.Equal(t, http.StatusUnauthorized, studioCall(router, "GET", "/mine", "", 0, "").Code)
 	require.Equal(t, http.StatusForbidden, studioCall(router, "GET", "/review", "", 1, "user").Code)
-	require.Contains(t, studioCall(router, "GET", "/mine", "", 1, "user").Body.String(), "withdrawn")
+	require.Contains(t, studioCall(router, "GET", "/mine", "", 1, "user").Body.String(), `"data":[]`)
 	require.Contains(t, studioCall(router, "GET", "/mine", "", 2, "user").Body.String(), `"data":[]`)
+	_, err := os.Stat(filepath.Join(handler.root, entry.ID+".media"))
+	require.ErrorIs(t, err, os.ErrNotExist)
 }
 func TestStudioUploadValidationAndQuota(t *testing.T) {
 	handler := &StudioHandler{root: t.TempDir()}
@@ -142,7 +149,10 @@ func TestStudioUploadValidationAndQuota(t *testing.T) {
 	for _, content := range [][]byte{[]byte("<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>"), []byte("<html>not image</html>"), {1, 2, 3}} {
 		require.Equal(t, http.StatusBadRequest, studioUpload(t, router, 1, content, nil).Code)
 	}
-	require.Equal(t, http.StatusRequestEntityTooLarge, studioUpload(t, router, 1, make([]byte, studioFileLimit+1), nil).Code)
+	oversized := make([]byte, studioImageLimit+1) // 文件头是合法 PNG，只是超过图片上限
+	copy(oversized, studioPNG(t))
+	require.Equal(t, http.StatusRequestEntityTooLarge, studioUpload(t, router, 1, oversized, nil).Code)
+	require.Equal(t, http.StatusBadRequest, studioUpload(t, router, 1, make([]byte, studioImageLimit+1), nil).Code, "无法识别的文件头直接拒绝，不读完整正文")
 	for index := 0; index < 5; index++ {
 		require.Equal(t, http.StatusCreated, studioUpload(t, router, 1, studioPNG(t), nil).Code)
 	}
@@ -165,9 +175,13 @@ func TestStudioRestartAndCorruptRecordFailClosed(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, studioCall(restarted, "GET", "/public/"+entry.ID, "", 0, "").Code)
 }
 func TestStudioMP4SignatureRangeAndPublishedWithdrawal(t *testing.T) {
-	handler := &StudioHandler{root: t.TempDir()}
-	router := studioTestRouter(handler)
 	signature := []byte{0, 0, 0, 24, 'f', 't', 'y', 'p', 'm', 'p', '4', '2', 0, 0, 0, 0, 'm', 'p', '4', '2', 'i', 's', 'o', 'm'}
+	// 视频成片未开放：默认处理器在后端拒绝，不能靠前端隐藏选项。
+	closed := studioUpload(t, studioTestRouter(&StudioHandler{root: t.TempDir()}), 1, signature, map[string]string{"media": "video", "prompt_kind": "reference"})
+	require.Equal(t, http.StatusBadRequest, closed.Code)
+	require.Contains(t, closed.Body.String(), "暂未开放")
+	handler := &StudioHandler{root: t.TempDir(), allowVideo: true}
+	router := studioTestRouter(handler)
 	upload := studioUpload(t, router, 1, signature, map[string]string{"media": "video", "prompt_kind": "reference"})
 	require.Equal(t, http.StatusCreated, upload.Code, upload.Body.String())
 	entry := studioEntry(t, upload)

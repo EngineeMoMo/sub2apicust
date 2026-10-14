@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { studioAPI } from '@/custom/studio/api'
-const client = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
+const client = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), delete: vi.fn() }))
 vi.mock('@/api/client', () => ({ apiClient: client }))
-beforeEach(() => { client.get.mockReset().mockResolvedValue({ data: [] }); client.post.mockReset().mockResolvedValue({ data: { status: 'pending' } }) })
+beforeEach(() => { client.get.mockReset().mockResolvedValue({ data: [] }); client.post.mockReset().mockResolvedValue({ data: { status: 'pending' } }); client.delete.mockReset().mockResolvedValue({ data: { deleted: true } }) })
 describe('投稿API使用认证客户端，不把Token放入媒体URL', () => {
   it('用户与管理员目录、blob预览走不同受保护入口', async () => {
     await studioAPI.list(false); await studioAPI.list(true)
@@ -18,5 +18,11 @@ describe('投稿API使用认证客户端，不把Token放入媒体URL', () => {
     expect(client.post).toHaveBeenCalledWith('/studio/submissions', body, expect.objectContaining({ timeout: 120000 }))
     await studioAPI.review({ id: 'a'.repeat(32), status: 'pending' } as Parameters<typeof studioAPI.review>[0], 'approve', '', true)
     expect(client.post).toHaveBeenLastCalledWith('/admin/studio/submissions/' + 'a'.repeat(32) + '/review', { action: 'approve', expected_status: 'pending', reason: '', review_confirmed: true })
+  })
+  it('管理员删除只接受投稿编号，走受保护的管理入口', async () => {
+    await studioAPI.remove('a'.repeat(32))
+    expect(client.delete).toHaveBeenCalledWith('/admin/studio/submissions/' + 'a'.repeat(32))
+    await expect(studioAPI.remove('../x')).rejects.toThrow('无效')
+    expect(client.delete).toHaveBeenCalledTimes(1)
   })
 })
