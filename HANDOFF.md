@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-15 用户要求保证效率，已补做性能与回源复核（无业务源码变更）**：在已发布794479760的实现上，用Go1.27.2 windows/amd64复跑缓存及活动专项，GOMAXPROCS=1／4／16各重复3次，10个顶层／35个含子项场景共315次通过、零失败零跳过；并发100个相同缓存项冷请求合并为一次回源、消费更新余额不重新汇总月充值、失效防旧值写回、月初／到期和福利边界均通过。9组热缓存微基准为897.4–1525ns/op（约0.9–1.5微秒），policy-loads/op与monthly-loads/op均为0；2687–2688B/op、19 allocs/op，保留用户／分组／Key副本以免污染认证缓存。CPU参数只设置GOMAXPROCS，基准循环本身串行；使用桩仓库，不代表生产QPS、P95或完整HTTP链路。证据output/group-access-performance-20261015/verification.json及cache-and-schedule.jsonl，记录4个相关源码／测试文件SHA256。未改业务代码、未重建镜像或部署，更新标签仍sha-7944797；真实生产吞吐与P95继续待验，不承诺所有环境绝无性能影响。
+
 - **2026-10-15 分组门槛、缓存、到期与不定期福利已发布（最新终态）**：功能b5e3c217f、前端CI清单0339bb5b5及缓存类型补修794479760593961c08ea842095543ec1d0bd58c5已推origin/main；正式发布以最终794479760为准。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724771)（全量unit／integration、独立PG18分组退款／双实例缓存、既有PG18／Redis专项、脚本、Go lint 0 issues、前端52文件815项及类型／lint）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724898)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724764)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-7944797`（linux/amd64），摘要`sha256:34cf7d44c87608d92964329571250f65127b20dc3ca5cc99f7bf582533e4b0c5`，registry的revision／source／平台、正式embed构建日志及26个生产源码哈希交叉验真。初次CI的3处errcheck已补齐五类缓存取值检查，19项缓存专项通过，失败记录保留；原69项／50项及Linux11955顶层unit属补修前本地基线，不能冒充最终CI计数。证据`output/group-access-cache-20261015/verified-release.json`及同目录各job日志。用户备份数据库／配置／app_data后，在实际部署目录执行`./update.sh sha-7944797`，前后端同版并自动执行最终257迁移。管理入口「分组管理 → 开放规则 → 分时福利倍率」，可填入三段示例并选择23点兜底；指定日期一次性生效，不每日循环。退款／余额失去资格仍拒绝，只有到期切兜底；正常缓存命中不聚合充值，通知异步不能承诺零传播延迟。未代部署本机8080或生产、未配置真实业务活动；真实商户退款、页面交互、生产P95和WS客户端重连待用户更新验收。下方未提交／待门禁均为历史；之后仅文档skip-ci提交不产生新镜像，仍使用7944797固定标签。
 
 - **2026-10-15 本轮CI缓存类型检查补修，待新SHA门禁**：功能b5e3c217f及前端CI清单0339bb5b5已推origin/main。0339的安全／脚本／前端52文件815项成功，但Go静态检查发现自有资格缓存3处未经检查的类型断言；已对规则、用户、分组、月充值和订阅五类取值统一检查，错误类型／空指针返回错误而非panic，不放行旧资格。新增8种异常缓存回归；本机Go1.27.2缓存专项6顶层／含子项19项全部通过、零跳过，证据output/group-access-cache-20261015/cache-typecheck-fix.jsonl。原69项及Linux全量是补修前基线，最终以新SHA的全量CI／安全／GHCR为准，尚不交付旧失败SHA标签；未部署。
@@ -589,6 +591,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] **用户效率要求专项复核**：35项缓存／活动场景在9组复测共315次通过，100并发同项冷请求仅一次回源；9组热缓存基准规则／月充值新增回源0/op，约0.9–1.5微秒。证据output/group-access-performance-20261015/verification.json；仅本地桩仓库基准，生产负载／P95仍待实际环境验收，业务源码和sha-7944797镜像不变。
 
 - [x] **分组缓存及福利发布门禁（用户已授权）**：最终794479760已推送；同SHA CI38727724771（unit／integration、专用PG18、Go lint 0、前端52文件815项）／安全38727724898／GHCR38727724764全部成功，固定sha-7944797的revision、source、平台与digest和embed日志交叉验真；证据verified-release.json，未代部署。
 
