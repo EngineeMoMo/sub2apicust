@@ -189,7 +189,11 @@ func (s *CustomGroupAccessService) loadPolicies(ctx context.Context) (map[int64]
 	if err != nil {
 		return nil, err
 	}
-	return value.(map[int64]CustomGroupAccessPolicy), nil
+	policies, ok := value.(map[int64]CustomGroupAccessPolicy)
+	if !ok {
+		return nil, errors.New("分组规则缓存类型无效")
+	}
+	return policies, nil
 }
 
 func (s *CustomGroupAccessService) loadUser(ctx context.Context, userID int64) (*User, error) {
@@ -198,7 +202,11 @@ func (s *CustomGroupAccessService) loadUser(ctx context.Context, userID int64) (
 	if err != nil {
 		return nil, err
 	}
-	user := *value.(*User)
+	cached, ok := value.(*User)
+	if !ok || cached == nil {
+		return nil, errors.New("分组资格用户缓存无效")
+	}
+	user := *cached
 	return &user, nil
 }
 
@@ -208,7 +216,11 @@ func (s *CustomGroupAccessService) loadGroup(ctx context.Context, groupID int64)
 	if err != nil {
 		return nil, err
 	}
-	group := *value.(*Group)
+	cached, ok := value.(*Group)
+	if !ok || cached == nil {
+		return nil, errors.New("分组资格分组缓存无效")
+	}
+	group := *cached
 	return &group, nil
 }
 
@@ -237,11 +249,15 @@ func (s *CustomGroupAccessService) loadFacts(ctx context.Context, userID int64, 
 	if err != nil {
 		return customGroupAccessFacts{}, err
 	}
+	monthlyRecharge, ok := value.(float64)
+	if !ok {
+		return customGroupAccessFacts{}, errors.New("分组资格月充值缓存类型无效")
+	}
 	user, err := s.loadUser(ctx, userID)
 	if err != nil {
 		return customGroupAccessFacts{}, err
 	}
-	return customGroupAccessFacts{Balance: user.Balance, MonthlyRecharge: value.(float64)}, nil
+	return customGroupAccessFacts{Balance: user.Balance, MonthlyRecharge: monthlyRecharge}, nil
 }
 
 func (s *CustomGroupAccessService) loadSubscription(ctx context.Context, userID, groupID int64) (*UserSubscription, error) {
@@ -253,7 +269,10 @@ func (s *CustomGroupAccessService) loadSubscription(ctx context.Context, userID,
 	if err != nil {
 		return nil, err
 	}
-	subscription := value.(*UserSubscription)
+	subscription, ok := value.(*UserSubscription)
+	if !ok || subscription == nil {
+		return nil, errors.New("分组资格订阅缓存无效")
+	}
 	if s.cache != nil && !subscription.ExpiresAt.IsZero() && !now.Before(subscription.ExpiresAt) {
 		return nil, ErrGroupNotAllowed
 	}

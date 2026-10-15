@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -54,6 +55,55 @@ func TestCustomGroupAccessCacheWarmRequests(t *testing.T) {
 			} else {
 				require.Zero(t, counting.factsLoads.Load())
 			}
+		})
+	}
+}
+
+func TestCustomGroupAccessCacheInvalidValues(t *testing.T) {
+	now := time.Date(2026, 10, 15, 12, 0, 0, 0, time.UTC)
+	start, _ := customGroupAccessMonth(now)
+	monthlyKey := customGroupAccessCacheKey("monthly", 1) + ":" + strconv.FormatInt(start.Unix(), 10)
+	cases := []struct {
+		name  string
+		key   string
+		value any
+		load  func(*CustomGroupAccessService) error
+	}{
+		{"policies-type", "policies", "invalid", func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadPolicies(context.Background())
+			return err
+		}},
+		{"user-type", "user:1", "invalid", func(svc *CustomGroupAccessService) error { _, err := svc.loadUser(context.Background(), 1); return err }},
+		{"user-nil", "user:1", (*User)(nil), func(svc *CustomGroupAccessService) error { _, err := svc.loadUser(context.Background(), 1); return err }},
+		{"group-type", "group:1", "invalid", func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadGroup(context.Background(), 1)
+			return err
+		}},
+		{"group-nil", "group:1", (*Group)(nil), func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadGroup(context.Background(), 1)
+			return err
+		}},
+		{"monthly-type", monthlyKey, "invalid", func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadFacts(context.Background(), 1, true)
+			return err
+		}},
+		{"subscription-type", "subscription:1:1", "invalid", func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadSubscription(context.Background(), 1, 1)
+			return err
+		}},
+		{"subscription-nil", "subscription:1:1", (*UserSubscription)(nil), func(svc *CustomGroupAccessService) error {
+			_, err := svc.loadSubscription(context.Background(), 1, 1)
+			return err
+		}},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			svc, _, _ := customAccessTestFixture()
+			svc.now = func() time.Time { return now }
+			svc.cache = newCustomGroupAccessCache()
+			svc.cache.health(true)
+			svc.cache.entries[test.key] = &customGroupAccessCacheEntry{value: test.value, expires: now.Add(time.Minute)}
+			require.Error(t, test.load(svc))
 		})
 	}
 }

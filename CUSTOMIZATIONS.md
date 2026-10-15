@@ -2,6 +2,8 @@
 
 ## 2026-10-15 分组开放门槛、到期与福利时段（未发布）
 
+- 发布门禁补修：资格缓存五类取值补齐类型及用户／分组／订阅空指针检查，避免异常缓存panic；8种异常值回归及本机缓存专项19项通过。初次0339bb5b5的CI静态检查3处errcheck失败已保留日志，最终新SHA门禁与固定镜像见HANDOFF；未新增上游业务接缝。
+
 - 用户已要求发布供自行更新测试，最终功能SHA／CI／安全／镜像以HANDOFF最新状态为准，下方未提交为本地阶段。上游接缝新增`.github/workflows/backend-ci.yml`的独立group-access-postgres（PG18、5434、group_access_test）及unit步骤CUSTOM_GROUP_ACCESS_TEST_DSN，真实退款／双实例缓存回归进入每次CI，避免缺少DSN而跳过；服务与专用测试库不复用业务库或其他专项库。`Makefile`的FRONTEND_CRITICAL_VITEST追加groupAccess三文件，将配置弹窗、独立开关、时间转换及福利边界纳入CI。
 
 - 最终验证：69项后端专项含PG18双实例零跳过、十轮缓存／活动专项、前端7文件50项及类型／i18n／lint／构建通过；Linux58包11955顶层unit通过（含子项23316通过／36跳过，真实PG另实际通过），最终embed退出0。退出清理测试漏参已补，首失败证据保留。临时PG及匿名卷已清理，源码未提交部署；最终证据 `output/group-access-cache-20261015/verification.json`。
