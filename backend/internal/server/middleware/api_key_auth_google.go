@@ -131,6 +131,12 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 			return
 		}
 
+		// [CUSTOM] Google 协议同样执行实时门槛与到期路由。
+		var groupAccessOK bool
+		apiKey, groupAccessOK = prepareCustomGroupAccess(c, apiKeyService, apiKey, true)
+		if !groupAccessOK {
+			return
+		}
 		// 简易模式：跳过余额和订阅检查
 		if cfg.RunMode == config.RunModeSimple {
 			c.Set(string(ContextKeyAPIKey), apiKey)

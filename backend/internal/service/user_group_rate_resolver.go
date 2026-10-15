@@ -49,7 +49,8 @@ func (r *userGroupRateResolver) Resolve(ctx context.Context, userID, groupID int
 	key := fmt.Sprintf("%d:%d", userID, groupID)
 	if r.cache != nil {
 		if cached, ok := r.cache.Get(key); ok {
-			if multiplier, castOK := cached.(float64); castOK {
+			// [CUSTOM] 未设置用户专属倍率时，沿用当前活动分组倍率，避免缓存锁住上一个时段。
+			if multiplier, castOK := customGroupCachedRate(cached, groupDefaultMultiplier); castOK {
 				userGroupRateCacheHitTotal.Add(1)
 				return multiplier
 			}
@@ -63,9 +64,9 @@ func (r *userGroupRateResolver) Resolve(ctx context.Context, userID, groupID int
 	value, err, shared := r.sf.Do(key, func() (any, error) {
 		if r.cache != nil {
 			if cached, ok := r.cache.Get(key); ok {
-				if multiplier, castOK := cached.(float64); castOK {
+				if _, castOK := customGroupCachedRate(cached, groupDefaultMultiplier); castOK {
 					userGroupRateCacheHitTotal.Add(1)
-					return multiplier, nil
+					return cached, nil
 				}
 			}
 		}
@@ -76,7 +77,7 @@ func (r *userGroupRateResolver) Resolve(ctx context.Context, userID, groupID int
 			return nil, repoErr
 		}
 
-		multiplier := groupDefaultMultiplier
+		var multiplier any = customGroupRateUseDefault{}
 		if userRate != nil {
 			multiplier = *userRate
 		}
@@ -94,7 +95,7 @@ func (r *userGroupRateResolver) Resolve(ctx context.Context, userID, groupID int
 		return groupDefaultMultiplier
 	}
 
-	multiplier, ok := value.(float64)
+	multiplier, ok := customGroupCachedRate(value, groupDefaultMultiplier)
 	if !ok {
 		userGroupRateCacheFallbackTotal.Add(1)
 		return groupDefaultMultiplier

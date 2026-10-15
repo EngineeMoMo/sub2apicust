@@ -1,5 +1,21 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-15 分组开放门槛、到期与福利时段（未发布）
+
+- 用户已要求发布供自行更新测试，最终功能SHA／CI／安全／镜像以HANDOFF最新状态为准，下方未提交为本地阶段。上游接缝新增`.github/workflows/backend-ci.yml`的独立group-access-postgres（PG18、5434、group_access_test）及unit步骤CUSTOM_GROUP_ACCESS_TEST_DSN，真实退款／双实例缓存回归进入每次CI，避免缺少DSN而跳过；服务与专用测试库不复用业务库或其他专项库。
+
+- 最终验证：69项后端专项含PG18双实例零跳过、十轮缓存／活动专项、前端7文件50项及类型／i18n／lint／构建通过；Linux58包11955顶层unit通过（含子项23316通过／36跳过，真实PG另实际通过），最终embed退出0。退出清理测试漏参已补，首失败证据保留。临时PG及匿名卷已清理，源码未提交部署；最终证据 `output/group-access-cache-20261015/verification.json`。
+
+- 用户要求分组月充值／余额门槛独立开关，同时开启为 AND；防止充值达标绑定后退款仍保留资格。追加整个分组的到期时间及到期后分组，已有 Key 自动路由，不直接关闭退款。
+- 新增 `backend/migrations/257_custom_group_access_policy.sql`、`backend/internal/service/custom_group_access*.go`、`custom_group_rate_schedule*.go`、`backend/internal/handler/admin/custom_group_access_handler.go`、`backend/internal/server/middleware/custom_group_access.go`。独立表存规则；北京时间自然月、USD账户本金剔除赠送及已退比例，退款中订单暂不计入。资格使用独立缓存和事务通知，未改认证或计费余额缓存；保存带版本并在事务中串行校验切换链，防并发循环。
+- 后续缓存优化：257增加事务提交后NOTIFY触发器，进程LISTEN更新余额、失效月充值／规则／授权／分组／订阅；30秒TTL、月初强制切换、4096项上限、singleflight和加载令牌防旧值回写。监听每秒心跳、3秒健康租约，异常回源，回源失败拒绝，不承诺异步通知零延迟。余额变化不会重算月充值，仅余额门槛不聚合订单。新增一次性多时段活动配置，最多32段，起止日期按北京时间，独立开关、非每日循环；到期仍可接目标分组。
+- 追加上游接缝：`backend/cmd/server/wire.go` 的cleanup注入并停止监听，`wire_gen.go`由Wire重新生成，`wire_gen_test.go`补齐退出清理测试的新参数；`backend/internal/service/user_group_rate_resolver.go`缓存「无用户覆盖」标记，按本次分组基础倍率解析，防止上一时段倍率缓存冻结下一段；`backend/internal/service/batch_image_public.go`注入活动服务，提交时固定活动倍率到任务快照。APIKeyService可选分组与模型广场展示当时倍率；分组复制同时继承活动配置。用户专属倍率／高峰／独立图片价格保留原优先级。
+- 上游接缝：`backend/internal/service/api_key_service.go` 增加可选服务指针、创建／改绑实时校验及可选分组过滤；`service/wire.go` 新 provider；`handler/handler.go` 与 `handler/wire.go` 新管理员 handler；`cmd/server/wire_gen.go` 由 Wire 重新生成依赖接线；`server/routes/admin.go` 新增管理员 GET／PUT `groups/:id/access-policy`。
+- 上游接缝：`server/middleware/api_key_auth.go`、`api_key_auth_google.go` 在原有基础鉴权之后、订阅与账单上下文之前解析有效分组；`handler/model_plaza_handler.go` 隐藏未达标及到期分组，匿名隐藏有门槛分组；`handler/openai_gateway_handler.go` 的 Responses WebSocket BeforeRequest 每轮重新校验，路由变化须重连，重连自动采用目标；`repository/group_repo.go` 在分组复制事务里同时复制规则，失败整体回滚。
+- 前端新增 `frontend/src/custom/groupAccess/` 的 API／时间校验、中英文文案、独立配置按钮及弹窗、专项测试；仅在 `frontend/src/views/admin/GroupsView.vue` 新增导入和行内入口，均带 `[CUSTOM]`。没有换肤或修改 `theme.css`。
+- 实现边界与操作说明见 `deploy/GROUP_ACCESS_RULES.md`。原有专属授权、订阅、平台及目标门槛继续约束；到期路由只改变单次请求副本，不批量写回 Key。测试和发布状态以 HANDOFF 最新条目为准，当前未提交、未部署。
+- 初版验证40项后端／42项前端见 `output/group-access-20261015/verification.json`；后续缓存、多实例PG、事务回滚、并发失效、十轮重复、三段福利及批量生图快照的最终证据改看 `output/group-access-cache-20261015/verification.json`。源码未提交发布，生产和新CI尚未验收，不沿用初版测试数代替最终结果。
+
 ## 2026-10-15 Claude 成功搜索结果计数下限
 
 - 功能2847434f96400713e81c72146d0202223a7c84c5已推送，CI38677336658/安全38677336554/GHCR38677336670同SHA全绿；固定sha-2847434镜像摘要/revision/source已验真。本机Go1.27.2的25项叶子专项、58包11935顶层unit（含子测试23257通过、34跳过）、gofmt与embed编译通过；生产未部署。完整证据见HANDOFF与output/newapi-ledger-20261014/result-floor-verified-release.json。

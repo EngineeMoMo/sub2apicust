@@ -1,5 +1,11 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-15发布补充：用户已要求更新测试，分组门槛／缓存／福利本轮提交推送origin/main并核验同SHA CI／安全／GHCR；CI独立PG18与CUSTOM_GROUP_ACCESS_TEST_DSN须随接缝保留。固定镜像与终态以HANDOFF最新记录为准，生产由用户备份后自行更新；下方未授权／未提交状态为历史。
+
+2026-10-15后续补充优先：分组门槛已加入独立事务通知缓存，并追加按指定日期的多时段福利倍率。257仍未发布，最终版本包含活动JSON及缓存通知触发器，不可用本地早期257替代；保留Wire监听退出清理、默认用户倍率缓存标记、批量生图活动快照、复制事务及当前倍率展示接缝。规则／月充值热请求不再逐次回源；退款通知异步、30秒TTL兜底，监听异常回源拒绝失败。最终证据见output/group-access-cache-20261015/verification.json及HANDOFF，未提交部署；下方40／42项为初版历史。
+
+2026-10-15 分组开放规则源码完成、未发布：新增257迁移，两个门槛独立开关和分组到期后的同平台目标自动路由，保留原退款；完整接缝见CUSTOMIZATIONS及deploy/GROUP_ACCESS_RULES.md。40项专项含PG18、Linux58包unit、前端42项与构建／lint／Linux embed已通过，证据output/group-access-20261015/verification.json；本轮尚未提交或跑远端CI，没有本功能镜像标签，不把下方旧标签当作包含新功能。发布后须核验对应SHA CI／安全／GHCR，备份后同版升级并验证退款与到期账单；生产由用户部署。
+
 2026-10-14全工作区发布终态：59项保留改动已汇合上游0.2.16并推送6406511c687e59b2afd37cf24da3db0d6011bea5，含248/249、工坊清理限流、智力效率、依赖/更新脚本；同SHA CI38522649457/安全38522649572/GHCR38522649396全绿，Go unit/integration/专用PG18/Redis8/lint及embed编译通过。正式固定镜像ghcr.io/engineemomo/sub2apicust:sha-6406511（linux/amd64），摘要sha256:9608581fa3c7e8c9b36e368e7815f58376c9c3ee9d2c48f449e0412f6b2244bb，registry/源码标签/构建日志验真。用户备份数据库/配置/app_data后`./update.sh sha-6406511`，前后端同版；生产与本机8080未更新。最终交接文档skip-ci不产生新镜像，历史59项未发布状态由本条覆盖，证据见HANDOFF和output/workspace-release-20261014。
 
 2026-10-14 上游0.2.16发布终态：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。

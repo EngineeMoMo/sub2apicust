@@ -1,5 +1,15 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-15发布授权补充：用户已要求更新测试，分组门槛／缓存／分时福利进入本轮提交与镜像门禁，最终固定标签及同SHA CI／安全／GHCR以HANDOFF最新状态为准。用户在实际部署目录备份数据库／配置／app_data后执行本轮固定标签更新；未代部署本机8080或生产。下方尚未授权／未提交为历史阶段，不能据此使用旧标签。
+
+2026-10-15后续补充：待发布分组规则现包含资格缓存优化及一次性分时福利倍率。最终257还包含事务通知触发器和活动JSON，应用每实例增加一个LISTEN连接；前后端必须同版。入口、三段福利示例、到期兜底、原有倍率优先级及通知延迟边界见[分组开放规则](GROUP_ACCESS_RULES.md)。最终验证看output/group-access-cache-20261015/verification.json及HANDOFF，当前未提交／推送／发布镜像或部署；旧标签不包含本功能，下方初版测试数属历史。
+
+## 2026-10-15 分组开放门槛与到期切换（源码完成，尚未发布）
+
+新增257迁移及管理员「分组管理 → 开放规则」：月净充值／账户余额门槛独立开关，同时开启须同时满足；退款后原Key也会重查资格。分组可设统一到期时间和同平台目标，已有Key下一请求按目标权限及价格自动路由，无需手动改绑。金额为USD账户额度，月份按北京时间自然月；操作与WS边界见[分组开放规则](GROUP_ACCESS_RULES.md)。
+
+本机40项后端专项含PG18、Linux58包unit、前端42项／类型／lint／构建及Linux embed编译通过，证据output/group-access-20261015/verification.json。当前未提交、未推送、无本轮CI或镜像标签；下方所有旧固定标签均不包含本功能。待发布后核验同SHA CI／安全／GHCR，备份数据库／配置／app_data后升级同版前后端及257迁移，再验管理员保存、真实退款资格和原Key到期后实际账单。未代部署本机8080或生产。
+
 ## 2026-10-15 搜索流式初始0漏计修复（当前已核验）
 
 功能提交`fb5916a4fe1853995b18f016d0806a2990a4c73b`已推送origin/main，同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635231)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635268)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635087)全部成功，含后端unit/integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-fb5916a`（linux/amd64），摘要`sha256:0c33d76be7e126af2e171d7d9086b1e84abcbe38cfde9c28507a1aa982154570`；registry/revision/source及正式embed构建日志已交叉核验。

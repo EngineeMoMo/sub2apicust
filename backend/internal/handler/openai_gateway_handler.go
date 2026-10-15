@@ -2976,6 +2976,14 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 				return nil
 			},
 			BeforeRequest: func(turn int, payload []byte, originalModel string) error {
+				// [CUSTOM] 长连接每轮校验分组资格，退款不能保留旧资格；路由变化后重连自动取新分组。
+				if err := h.apiKeyService.ValidateCustomGroupAccessContinuation(c.Request.Context(), apiKey); err != nil {
+					closeCode := coderws.StatusPolicyViolation
+					if errors.Is(err, service.ErrGroupAccessRouteChanged) {
+						closeCode = coderws.StatusTryAgainLater
+					}
+					return service.NewOpenAIWSClientCloseError(closeCode, "分组资格或路由已变化，请重新连接", err)
+				}
 				// [CUSTOM] 长连接每轮重查包号，撤销/到期后不能继续借用原账号。
 				if err := h.gatewayService.CheckCustomDedicatedAccount(c.Request.Context(), account); err != nil {
 					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "专属账号不可用，请联系管理员", nil)

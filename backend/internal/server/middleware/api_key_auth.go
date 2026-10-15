@@ -163,6 +163,12 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		if abortIfAPIKeyGroupNotAllowed(c, apiKey) {
 			return
 		}
+		// [CUSTOM] 每次请求重新校验资格，并在到期后仅复制当前请求的有效分组。
+		var groupAccessOK bool
+		apiKey, groupAccessOK = prepareCustomGroupAccess(c, apiKeyService, apiKey, false)
+		if !groupAccessOK {
+			return
+		}
 		ctx := context.WithValue(c.Request.Context(), ctxkey.UserID, apiKey.User.ID)
 		// [CUSTOM] 记录原始用户/分组，备用路由不能绕过包号归属与有效期。
 		ctx, dedicatedErr := apiKeyService.CustomDedicatedContext(ctx, apiKey)

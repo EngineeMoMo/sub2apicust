@@ -335,6 +335,9 @@ func registerUserManagementRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 func registerGroupRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	groups := admin.Group("/groups")
 	{
+		// [CUSTOM] 管理员独立配置分组门槛、到期时间与自动切换目标。
+		groups.GET("/:id/access-policy", h.Admin.CustomGroupAccess.Get)
+		groups.PUT("/:id/access-policy", h.Admin.CustomGroupAccess.Save)
 		groups.GET("", h.Admin.Group.List)
 		groups.GET("/all", h.Admin.Group.GetAll)
 		groups.GET("/usage-summary", h.Admin.Group.GetUsageSummary)

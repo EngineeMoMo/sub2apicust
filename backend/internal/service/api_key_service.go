@@ -288,6 +288,8 @@ type RateLimitCacheInvalidator interface {
 }
 
 type APIKeyService struct {
+	// [CUSTOM] 分组净充值／余额门槛与到期自动路由，见 custom_group_access.go。
+	customGroupAccess *CustomGroupAccessService
 	// [CUSTOM] 包号独占校验，见 custom_dedicated_accounts.go。
 	customDedicated           *CustomDedicatedService
 	apiKeyRepo                APIKeyRepository
@@ -527,6 +529,10 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 		// 检查用户是否可以绑定该分组
 		if !s.canUserBindGroup(ctx, user, group) {
 			return nil, ErrGroupNotAllowed
+		}
+		// [CUSTOM] 创建 Key 时同步校验实时开放门槛，不能直接传分组 ID 绕过。
+		if err := s.checkCustomGroupBinding(ctx, userID, group.ID); err != nil {
+			return nil, err
 		}
 	}
 
@@ -852,6 +858,10 @@ func (s *APIKeyService) Update(ctx context.Context, id int64, userID int64, req 
 			return nil, ErrGroupNotAllowed
 		}
 
+		// [CUSTOM] 修改绑定同样校验，已有绑定的请求另由认证入口实时校验。
+		if err := s.checkCustomGroupBinding(ctx, userID, group.ID); err != nil {
+			return nil, err
+		}
 		apiKey.GroupID = req.GroupID
 		fields.GroupID = true
 	}
@@ -1081,10 +1091,20 @@ func (s *APIKeyService) GetAvailableGroups(ctx context.Context, userID int64) ([
 		subscribedGroupIDs[sub.GroupID] = true
 	}
 
+	// [CUSTOM] 充值、余额及到期条件与实际请求同源，退款后不再出现在可选分组。
+	denied, err := s.CustomDeniedGroupIDs(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 	// 过滤出用户有权限的分组
 	availableGroups := make([]Group, 0)
 	for _, group := range allGroups {
-		if s.canUserBindGroupInternal(user, &group, subscribedGroupIDs) {
+		if !denied[group.ID] && s.canUserBindGroupInternal(user, &group, subscribedGroupIDs) {
+			// [CUSTOM] 可选分组展示当前活动时段的基础倍率，与本次请求计费一致。
+			group.RateMultiplier, err = s.CustomGroupRate(ctx, group.ID, group.RateMultiplier)
+			if err != nil {
+				return nil, err
+			}
 			availableGroups = append(availableGroups, group)
 		}
 	}

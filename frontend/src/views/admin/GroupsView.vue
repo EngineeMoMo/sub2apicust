@@ -381,6 +381,8 @@
 
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-1">
+              <!-- [CUSTOM] 独立开放规则弹窗：门槛、到期时间及自动切换分组。 -->
+              <GroupAccessPolicyButton v-if="!authStore.isSimpleMode" :group="row" />
               <button
                 @click="handleEdit(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary-600 dark:hover:bg-dark-700 dark:hover:text-primary-400"
@@ -4305,6 +4307,8 @@ import Icon from "@/components/icons/Icon.vue";
 import GroupI18nField from "@/components/admin/group/GroupI18nField.vue";
 import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipliersModal.vue";
 import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
+// [CUSTOM] 分组开放规则保留在 custom 叠加层。
+import GroupAccessPolicyButton from "@/custom/groupAccess/GroupAccessPolicyButton.vue";
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";
 import ReasoningEffortPolicyFields from "@/components/admin/group/ReasoningEffortPolicyFields.vue";
 import CodexManifestAccountsField from "@/components/admin/group/CodexManifestAccountsField.vue";

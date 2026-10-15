@@ -243,6 +243,13 @@ func (r *groupRepository) CreateFromSource(ctx context.Context, groupIn *service
 	if count, countErr := result.RowsAffected(); countErr == nil {
 		groupIn.AccountCount = count
 	}
+	// [CUSTOM] 复制分组时在同一事务复制开放规则，防止副本丢失充值／余额门槛。
+	if _, err := txClient.ExecContext(ctx, `INSERT INTO custom_group_access_policies
+		(group_id, monthly_recharge_enabled, monthly_recharge_min, balance_enabled, balance_min, expires_at, fallback_group_id, rate_schedule_enabled, rate_schedule)
+		SELECT $2, monthly_recharge_enabled, monthly_recharge_min, balance_enabled, balance_min, expires_at, fallback_group_id, rate_schedule_enabled, rate_schedule
+		FROM custom_group_access_policies WHERE group_id=$1`, sourceGroupID, groupIn.ID); err != nil {
+		return err
+	}
 	if err := enqueueSchedulerOutbox(ctx, txClient, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
 		return err
 	}

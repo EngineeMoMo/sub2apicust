@@ -150,6 +150,27 @@ func (h *ModelPlazaHandler) Get(c *gin.Context) {
 	}
 
 	visible := filterPlazaVisibleGroups(groups, allowedGroups, restrictPublicGroups)
+	// [CUSTOM] 匿名用户看不到有门槛的分组，登录用户按实时净充值／余额筛选。
+	var visibilityUserID int64
+	if authed {
+		visibilityUserID = subject.UserID
+	}
+	denied, err := h.apiKeyService.CustomDeniedGroupIDs(c.Request.Context(), visibilityUserID)
+	if response.ErrorFrom(c, err) {
+		return
+	}
+	filtered := make([]service.PlazaGroup, 0, len(visible))
+	for _, group := range visible {
+		if !denied[group.ID] {
+			// [CUSTOM] 广场展示当前活动基础倍率，保留已有用户专属倍率优先级。
+			group.RateMultiplier, err = h.apiKeyService.CustomGroupRate(c.Request.Context(), group.ID, group.RateMultiplier)
+			if response.ErrorFrom(c, err) {
+				return
+			}
+			filtered = append(filtered, group)
+		}
+	}
+	visible = filtered
 
 	// 广场可匿名访问，分组文案随请求语言变化，提示中间缓存按语言区分。
 	// 追加而非覆盖：CORS 中间件已为具体来源写入 Vary: Origin。

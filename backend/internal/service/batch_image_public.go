@@ -92,6 +92,8 @@ type BatchImagePublicService struct {
 	BillingRepo       UsageBillingRepository
 	AuthCache         APIKeyAuthCacheInvalidator
 	Config            *config.Config
+	// [CUSTOM] 提交时采用当前福利倍率并固定到任务计费快照。
+	GroupAccess *CustomGroupAccessService
 }
 
 type BatchImagePricingSnapshot struct {
@@ -182,7 +184,7 @@ type BatchImageItemsQuery struct {
 	Cursor string
 }
 
-func NewBatchImagePublicService(repo BatchImageRepository, accountRepo AccountRepository, groupRepo GroupRepository, userGroupRateRepo UserGroupRateRepository, queue BatchImageQueue, pricing *BatchImageModelPricingResolver, billingRepo UsageBillingRepository, authCache APIKeyAuthCacheInvalidator, cfg *config.Config) *BatchImagePublicService {
+func NewBatchImagePublicService(repo BatchImageRepository, accountRepo AccountRepository, groupRepo GroupRepository, userGroupRateRepo UserGroupRateRepository, queue BatchImageQueue, pricing *BatchImageModelPricingResolver, billingRepo UsageBillingRepository, authCache APIKeyAuthCacheInvalidator, cfg *config.Config, groupAccess *CustomGroupAccessService) *BatchImagePublicService {
 	return &BatchImagePublicService{
 		Repo:              repo,
 		AccountRepo:       accountRepo,
@@ -194,6 +196,7 @@ func NewBatchImagePublicService(repo BatchImageRepository, accountRepo AccountRe
 		BillingRepo:       billingRepo,
 		AuthCache:         authCache,
 		Config:            cfg,
+		GroupAccess:       groupAccess,
 	}
 }
 
@@ -1014,6 +1017,12 @@ func (s *BatchImagePublicService) resolvePricingSnapshot(ctx context.Context, ow
 			return nil, ErrBatchImageGroupDisabled
 		}
 		groupDefaultMultiplier := group.RateMultiplier
+		if s.GroupAccess != nil {
+			groupDefaultMultiplier, err = s.GroupAccess.groupRate(ctx, group.ID, groupDefaultMultiplier)
+			if err != nil {
+				return nil, ErrBatchImageSettlementPricingMissing
+			}
+		}
 		if groupDefaultMultiplier < 0 {
 			groupDefaultMultiplier = 0
 		}

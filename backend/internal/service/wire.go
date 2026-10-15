@@ -856,6 +856,8 @@ func ProvideAPIKeyService(
 
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
+	// [CUSTOM] 独立分组开放规则服务，初始化时接入 APIKeyService。
+	ProvideCustomGroupAccessService,
 	// [CUSTOM] 包号独占服务与调度保护。
 	NewCustomDedicatedService,
 	// Core services
