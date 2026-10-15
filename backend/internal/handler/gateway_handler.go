@@ -1038,9 +1038,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 							_ = h.antigravityGatewayService.WriteMappedClaudeError(c, account, promptTooLongErr.StatusCode, promptTooLongErr.RequestID, promptTooLongErr.Body)
 							return
 						}
-						fallbackAPIKey := cloneAPIKeyWithGroup(apiKey, fallbackGroup)
 						// [CUSTOM] 错误兜底不能绕过目标门槛和到期规则。
-						fallbackAPIKey, err = h.apiKeyService.PrepareCustomGroupFallback(c.Request.Context(), apiKey, fallbackGroup)
+						fallbackAPIKey, err := h.apiKeyService.PrepareCustomGroupFallback(c.Request.Context(), apiKey, fallbackGroup)
 						if err != nil {
 							status, code, message, _ := billingErrorDetails(err)
 							h.handleStreamingAwareError(c, status, code, message, streamStarted)
@@ -1595,17 +1594,6 @@ func (h *GatewayHandler) AntigravityModels(c *gin.Context) {
 		"object": "list",
 		"data":   models,
 	})
-}
-
-func cloneAPIKeyWithGroup(apiKey *service.APIKey, group *service.Group) *service.APIKey {
-	if apiKey == nil || group == nil {
-		return apiKey
-	}
-	cloned := *apiKey
-	groupID := group.ID
-	cloned.GroupID = &groupID
-	cloned.Group = group
-	return &cloned
 }
 
 // Usage handles getting account balance and usage statistics for CC Switch integration

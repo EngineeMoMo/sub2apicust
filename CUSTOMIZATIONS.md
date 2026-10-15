@@ -2,6 +2,7 @@
 
 ## 2026-10-15 分组活动显示与审查补修（本地完成，未发布）
 
+- 发布静态检查补修：gateway_handler错误兜底直接使用统一资格服务返回的Key副本，移除先clone再覆盖的无效赋值及未再调用的cloneAPIKeyWithGroup旧helper；首轮c4fa7fd的ineffassign失败日志保留，最终业务SHA及门禁以HANDOFF为准。
 - 发布授权更新：用户已要求提交推送并构建新镜像。本轮全部接缝及258随实际业务提交发布，CI／安全／GHCR和registry身份需按新SHA核验，最终标签与摘要见HANDOFF。以下未提交是本地阶段；生产仍不代部署。
 - 用户追加分组到期删除语义：新增`backend/internal/service/custom_group_expiry_store.go`、`custom_group_expiry_worker.go`及unit／真实PG回归；事务内平移绑定Key的用户及显式授权、持久改绑未删除Key，解除旧组账号／模型路由／审核范围并处理其他组兜底引用，最后软删除原组，保留历史账单和Key属性。目标若引用源组，清除该自指兜底；其他引用改为目标。失败回滚，原组保留，目标的用户专属倍率不覆盖，账号不搬。只支持同平台按量组，订阅／包号禁止自动合并权益，包号包括撤销／已逻辑删除的隔离记录。`custom_group_access_store.go`规则保存持有源组共享锁并拒绝已删组；`custom_group_access.go`保存校验及旧认证快照经保留的过期策略解析目标，`custom_group_access_listener.go`标准模式启停worker、保存／跨实例变更唤醒，cache增加已解码通知入口。按最近到期时间设置定时器，30秒兜底重试，不给每条业务请求加SQL；失败组不占住其他到期组的时间边界。新增`258_custom_group_expiry_binding_guard.sql`以共享行锁防止并发Key／授权重新绑定已删除分组，已发布257不改。
 - 前端custom开放规则明确「到期删除并平移用户」「平移分组」，说明与福利时段结束的差异；目标排除订阅，订阅源不能新开删除、仍能关闭旧配置，福利示例不替订阅源开启删除。新增真实`GetAvailableGroups`服务路径边界回归，验证1→0.8→1而不更改基础值。升级启动即处理现有已到期配置，部署前须备份并审阅；未部署或改线上配置。
