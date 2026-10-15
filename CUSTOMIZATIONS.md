@@ -1,5 +1,13 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-15 Claude 搜索流式初始 0 漏计修复
+
+- `backend/internal/service/custom_claude_tool_billing.go`：区分 `message_start` 的初始 0 与后续有效计量，防止初始 0 屏蔽成功 `web_search_tool_result` 的次数回退；保留累计去重、JSON/终态计量及错误/普通工具不收费。
+- 新增 `backend/internal/service/custom_claude_tool_billing_stream_test.go`：通用/直通 SSE 的 12 组边界、缓冲/流式 Responses 转换及余额/订阅完整结算。输入 127/输出 529、搜索基础价 0.05、倍率 0.15 的总实扣验证为 0.00874740。
+- `deploy/CLAUDE_TOOL_BILLING.md`：更新初始 0 与最终计量的边界，记录复现与金额公式。
+- 本机隔离Docker Go1.27.2验证：新增28项专项先失败后通过；全量unit的58包/11931顶层通过，34跳过，gofmt与embed编译通过。提交/CI/镜像状态以HANDOFF最新记录为准。
+- 沿用既有共享观察器接缝，无新增上游业务文件改动、配置字段或数据库迁移。生产原始响应与部署版本尚未取得，不能把源码回归等同现场根因已确认；生产仍由用户手动升级验收。
+
 ## 2026-10-14 Claude 网页搜索工具附加费
 
 用户已要求“增加相关收费”。新增 Claude 内置 web_search 的实际调用量与基础单价快照，叠加到 Token/阶梯费用；普通客户端工具和搜索启动事件不收费。复用分组 web_search_price_per_call，nil 默认0.01/次、显式0免费，Claude 工具费应用 Token 同一有效倍率（用户专属/分组及高峰）。新增 nullable JSONB 迁移256，旧账单不补扣；不自动同步 New API 配置，不承诺未知工具费/充值价值造成的全部差价已解决。配置与边界见 [deploy/CLAUDE_TOOL_BILLING.md](deploy/CLAUDE_TOOL_BILLING.md)。最终功能d3a2c346352e7eca5aacc197785fd366f90f83b6已推送origin/main，同SHA CI/安全/GHCR全部成功；固定ghcr.io/engineemomo/sub2apicust:sha-d3a2c34及sha256:5baca94dfd6ad73ea03117406400253c083ff9886addca0e4b80528bb6149ba5经registry/源码标签/构建日志核验。生产及本机8080未部署；首个候选的errcheck仅修复DTO测试类型检查，正式终态与待办见HANDOFF。

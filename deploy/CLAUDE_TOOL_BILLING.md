@@ -18,7 +18,7 @@
 ## 次数证据与边界
 
 1. 优先读取上游原始 JSON/SSE 的 `usage.server_tool_use.web_search_requests`。只接受非负整数，不接受字符串、负数、分数或溢出值。
-2. 流式开始和结束事件通常重复或累计报告次数，取最大累计值，不按事件相加；明确返回 0 时保留权威 0。
+2. 流式重复或累计报告的有效次数取最大值，不按事件相加。`message_start` 的初始 0 只表示开始时尚未搜索，不阻止随后成功结果的回退计数；`message_delta` 或非流式 JSON 中的有效计数（包括 0）仍优先于结果回退。
 3. 没有有效计数时，只从实际 `web_search_tool_result` 且 `content` 是成功结果数组的内容块回退计数；按 `tool_use_id` 去重。错误结果对象不产生工具费，搜索启动/普通客户端工具不产生工具费。
 4. 上游同时不返回有效次数和成功结果时，无法核实搜索量，不猜测收费。本轮未给其他工具（网页抓取、代码执行等）添加无依据的固定费。
 5. 已覆盖 Claude 通用网关、Anthropic API Key 直通的 JSON/SSE、Claude→Responses 的缓冲/流式转换，以及 OpenAI 网关的 Claude 原生 Messages 转发。上游若先转换为另一套协议并删除全部 Claude 工具计量，需要另取原始响应再补适配。
@@ -42,6 +42,22 @@
 主要新增实现为 `backend/internal/service/custom_claude_tool_billing.go`、`backend/internal/repository/custom_tool_usage_json.go`、`frontend/src/custom/components/UsageToolCosts.vue`。全部上游接缝登记在 CUSTOMIZATIONS.md；Ent 从 schema 生成，不手改生成文件。
 
 测试包括默认/自定义/免费价格、有效倍率、SSE 累计去重、失败工具免费、普通工具不收费、双原生网关叠加、账号统计、余额/订阅/Key 额度、JSON/DTO/前端表单保存与展示。隔离 PostgreSQL 验证迁移重跑、同步/批量/最佳努力写入、旧日志兼容及余额/订阅幂等。
+
+## 2026-10-15 流式初始 0 漏计修复
+
+已在隔离测试中复现：上游先发 `message_start.usage.server_tool_use.web_search_requests=0`，随后返回成功的 `web_search_tool_result`，最后的 `message_delta.usage` 只有 Token、没有搜索次数。旧逻辑把初始 0 锁定为权威计量，使搜索次数保持 0，最终只收 Token 费。
+
+修复只调整初始 0 的处理，沿用按 `tool_use_id` 去重的成功结果回退；JSON 的明确 0、终态有效计数、失败搜索和普通客户端工具的处理保留。流式中断前已收到成功结果也可记录次数。共享观察器使通用/直通 SSE、Claude 原生 Messages 和缓冲/流式 Responses 转换同时生效，无新增迁移。
+
+使用用户账单相同的输入 127、输出 529、输入价 3/M、输出价 15/M，构造一次成功搜索，分组基础搜索价 0.05、有效倍率 0.15：
+
+```text
+Token 基础费 = 127 × 3 / 1000000 + 529 × 15 / 1000000 = 0.008316
+搜索实扣费 = 1 × 0.05 × 0.15 = 0.0075
+总实扣费 = (0.008316 + 0.05) × 0.15 = 0.00874740
+```
+
+新增回归先在旧代码失败，修复后验证余额、订阅、Key 额度及速率额度同额结算，工具快照记录 1 次及 0.0075 实扣。该测试证明源码边界已修复；尚无该笔生产原始响应，不能据此认定现场必然属于此边界。若上游既不回传有效次数也没有成功结果，本站仍无法从账单截图还原协议计量，应取得脱敏 JSON/SSE 后针对实际格式适配。
 
 ## 取证来源
 

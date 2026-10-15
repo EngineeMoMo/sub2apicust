@@ -15,13 +15,16 @@ type ToolCallCost struct {
 	ActualCost float64 `json:"actual_cost"`
 }
 
-func (u *ClaudeUsage) observeWebSearchCount(node gjson.Result) {
+func (u *ClaudeUsage) observeWebSearchCount(node gjson.Result, initial bool) {
 	value := node.Get("server_tool_use.web_search_requests")
 	if value.Type != gjson.Number {
 		return
 	}
 	count, err := strconv.ParseInt(value.Raw, 10, 32)
 	if err != nil || count < 0 {
+		return
+	}
+	if initial && count == 0 {
 		return
 	}
 	if !u.webSearchCountObserved {
@@ -54,7 +57,7 @@ func observeClaudeToolResponse(body []byte, usage *ClaudeUsage) {
 		return
 	}
 	parsed := gjson.ParseBytes(body)
-	usage.observeWebSearchCount(parsed.Get("usage"))
+	usage.observeWebSearchCount(parsed.Get("usage"), false)
 	parsed.Get("content").ForEach(func(_, block gjson.Result) bool {
 		usage.observeWebSearchResult(block)
 		return true
@@ -68,9 +71,9 @@ func observeClaudeToolEvent(data string, usage *ClaudeUsage) {
 	parsed := gjson.Parse(data)
 	switch parsed.Get("type").String() {
 	case "message_start":
-		usage.observeWebSearchCount(parsed.Get("message.usage"))
+		usage.observeWebSearchCount(parsed.Get("message.usage"), true)
 	case "message_delta":
-		usage.observeWebSearchCount(parsed.Get("usage"))
+		usage.observeWebSearchCount(parsed.Get("usage"), false)
 	case "content_block_start":
 		usage.observeWebSearchResult(parsed.Get("content_block"))
 	}
