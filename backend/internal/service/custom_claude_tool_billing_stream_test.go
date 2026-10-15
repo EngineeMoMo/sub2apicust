@@ -36,7 +36,7 @@ func TestCustomClaudeToolInitialZeroStream(t *testing.T) {
 		{"failed_result", []string{`{"type":"content_block_start","content_block":{"type":"web_search_tool_result","tool_use_id":"search_a","content":{"type":"web_search_tool_result_error","error_code":"unavailable"}}}`, customClaudeSearchEnd}, 0},
 		{"server_start_only", []string{`{"type":"content_block_start","content_block":{"type":"server_tool_use","name":"web_search","id":"search_a"}}`, customClaudeSearchEnd}, 0},
 		{"client_tool_only", []string{`{"type":"content_block_start","content_block":{"type":"tool_use","name":"web_search","id":"search_a"}}`, customClaudeSearchEnd}, 0},
-		{"explicit_final_zero", []string{customClaudeSearchResult, `{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":0}}}`}, 0},
+		{"explicit_final_zero_with_success", []string{customClaudeSearchResult, `{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":0}}}`}, 1},
 		{"explicit_final_count", []string{customClaudeSearchResult, `{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":2}}}`}, 2},
 		{"invalid_final_count", []string{customClaudeSearchResult, `{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":-1}}}`}, 1},
 		{"string_final_count", []string{customClaudeSearchResult, `{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":"2"}}}`}, 1},

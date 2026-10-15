@@ -1,5 +1,13 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-15 Claude 成功搜索结果计数下限
+
+- 用户更新后同时间127/587的上游账单仍含搜索一次，本站只扣纯Token费。源码回归另证实：成功 `web_search_tool_result` 会被后续显式0覆盖，非流式JSON的0或较小计量也会屏蔽已成功的结果；尚未取得生产原始响应，不能认定该笔必然属于此边界。
+- `backend/internal/service/custom_claude_tool_billing.go`：搜索次数统一取“有效累计报告的最大值”和“按 `tool_use_id` 去重的成功结果数”的较大值，结果与计量不相加；JSON、开头/终态0及较小计数均不能抹去已成功结果。错误、普通客户端工具、只有启动而没有计量/成功结果仍不产生搜索费；没有证据仍为0。
+- `backend/internal/service/gateway_service.go`：既有 `[CUSTOM]` ClaudeUsage 接缝删除不再需要的 `webSearchCountObserved` 状态，保留内存去重集合与json排除规则；不修改输入、输出或缓存Token赋值。
+- 新增 `backend/internal/service/custom_claude_tool_billing_result_test.go`，覆盖通用/直通SSE、JSON、缓冲/流式Responses转换、报告低于结果/结果晚到/重复事件，以及余额、订阅、Key额度与速率额度完整结算。既有 `custom_claude_tool_billing_test.go` 与 `custom_claude_tool_billing_stream_test.go` 同步新计数规则。
+- `deploy/CLAUDE_TOOL_BILLING.md` 更新计数优先级与127/587的工具费公式。本条覆盖下方历史“终态明确0仍压过成功结果”的规则；无新迁移、无历史账单补扣。验证及发布状态以HANDOFF第四/五节最新记录为准。
+
 ## 2026-10-15 Claude 搜索流式初始 0 漏计修复
 
 - `backend/internal/service/custom_claude_tool_billing.go`：区分 `message_start` 的初始 0 与后续有效计量，防止初始 0 屏蔽成功 `web_search_tool_result` 的次数回退；保留累计去重、JSON/终态计量及错误/普通工具不收费。
@@ -25,7 +33,7 @@
 
 | 文件 | 接缝与维护要求 |
 | --- | --- |
-| backend/internal/service/gateway_service.go | ClaudeUsage 付费搜索次数与流式权威计量/去重状态；保持json:"-"，从原始上游解析。 |
+| backend/internal/service/gateway_service.go | ClaudeUsage 付费搜索次数与成功结果去重状态；保持json:"-"，从原始上游解析，计量和成功结果取较大值。 |
 | backend/internal/service/gateway_anthropic_passthrough.go | parseSSEUsagePassthrough / parseClaudeUsageFromResponseBody 接入工具实际用量。 |
 | backend/internal/service/gateway_upstream_response.go | 通用SSE/非流式解析与中断流可计费用量识别。 |
 | backend/internal/service/gateway_forward_as_responses.go | 缓冲/流式协议转换前解析原始工具计量，避免转换器只保留Token而漏费。 |

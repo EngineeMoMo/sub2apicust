@@ -15,7 +15,7 @@ type ToolCallCost struct {
 	ActualCost float64 `json:"actual_cost"`
 }
 
-func (u *ClaudeUsage) observeWebSearchCount(node gjson.Result, initial bool) {
+func (u *ClaudeUsage) observeWebSearchCount(node gjson.Result) {
 	value := node.Get("server_tool_use.web_search_requests")
 	if value.Type != gjson.Number {
 		return
@@ -24,15 +24,7 @@ func (u *ClaudeUsage) observeWebSearchCount(node gjson.Result, initial bool) {
 	if err != nil || count < 0 {
 		return
 	}
-	if initial && count == 0 {
-		return
-	}
-	if !u.webSearchCountObserved {
-		u.WebSearchRequests = int(count)
-		u.webSearchCountObserved = true
-	} else if int(count) > u.WebSearchRequests {
-		u.WebSearchRequests = int(count)
-	}
+	u.WebSearchRequests = max(u.WebSearchRequests, int(count))
 }
 
 func (u *ClaudeUsage) observeWebSearchResult(block gjson.Result) {
@@ -47,9 +39,7 @@ func (u *ClaudeUsage) observeWebSearchResult(block gjson.Result) {
 		u.webSearchResultIDs = make(map[string]struct{})
 	}
 	u.webSearchResultIDs[id] = struct{}{}
-	if !u.webSearchCountObserved {
-		u.WebSearchRequests = len(u.webSearchResultIDs)
-	}
+	u.WebSearchRequests = max(u.WebSearchRequests, len(u.webSearchResultIDs))
 }
 
 func observeClaudeToolResponse(body []byte, usage *ClaudeUsage) {
@@ -57,7 +47,7 @@ func observeClaudeToolResponse(body []byte, usage *ClaudeUsage) {
 		return
 	}
 	parsed := gjson.ParseBytes(body)
-	usage.observeWebSearchCount(parsed.Get("usage"), false)
+	usage.observeWebSearchCount(parsed.Get("usage"))
 	parsed.Get("content").ForEach(func(_, block gjson.Result) bool {
 		usage.observeWebSearchResult(block)
 		return true
@@ -71,9 +61,9 @@ func observeClaudeToolEvent(data string, usage *ClaudeUsage) {
 	parsed := gjson.Parse(data)
 	switch parsed.Get("type").String() {
 	case "message_start":
-		usage.observeWebSearchCount(parsed.Get("message.usage"), true)
+		usage.observeWebSearchCount(parsed.Get("message.usage"))
 	case "message_delta":
-		usage.observeWebSearchCount(parsed.Get("usage"), false)
+		usage.observeWebSearchCount(parsed.Get("usage"))
 	case "content_block_start":
 		usage.observeWebSearchResult(parsed.Get("content_block"))
 	}

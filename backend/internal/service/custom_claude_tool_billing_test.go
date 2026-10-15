@@ -26,7 +26,7 @@ func TestCustomClaudeToolResponseUsage(t *testing.T) {
 		{"server_start", `{"content":[{"type":"server_tool_use","name":"web_search","id":"a"}]}`, 0},
 		{"successful_fallback", `{"content":[{"type":"web_search_tool_result","tool_use_id":"a","content":[]},{"type":"web_search_tool_result","tool_use_id":"a","content":[]}]}`, 1},
 		{"error_free", `{"content":[{"type":"web_search_tool_result","tool_use_id":"a","content":{"type":"web_search_tool_result_error","error_code":"unavailable"}}]}`, 0},
-		{"reported_zero", `{"usage":{"server_tool_use":{"web_search_requests":0}},"content":[{"type":"web_search_tool_result","tool_use_id":"a","content":[]}]}`, 0},
+		{"reported_zero_with_success", `{"usage":{"server_tool_use":{"web_search_requests":0}},"content":[{"type":"web_search_tool_result","tool_use_id":"a","content":[]}]}`, 1},
 		{"no_usage", `{"usage":{"input_tokens":132,"output_tokens":354}}`, 0},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -53,14 +53,14 @@ func TestCustomClaudeToolStreamCumulative(t *testing.T) {
 	}
 }
 
-func TestCustomClaudeToolStreamFallbackAndAuthority(t *testing.T) {
+func TestCustomClaudeToolStreamFallbackAndReports(t *testing.T) {
 	usage := &ClaudeUsage{}
 	successful := `{"type":"content_block_start","content_block":{"type":"web_search_tool_result","tool_use_id":"a","content":[]}}`
 	observeClaudeToolEvent(successful, usage)
 	observeClaudeToolEvent(successful, usage)
 	require.Equal(t, 1, usage.WebSearchRequests)
 	observeClaudeToolEvent(`{"type":"message_delta","usage":{"server_tool_use":{"web_search_requests":0}}}`, usage)
-	require.Zero(t, usage.WebSearchRequests)
+	require.Equal(t, 1, usage.WebSearchRequests)
 	require.True(t, (&ClaudeUsage{WebSearchRequests: 1}).hasObservedTokens())
 }
 
