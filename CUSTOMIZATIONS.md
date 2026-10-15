@@ -2,6 +2,8 @@
 
 ## 2026-10-15 Claude 成功搜索结果计数下限
 
+- 功能2847434f96400713e81c72146d0202223a7c84c5已推送，CI38677336658/安全38677336554/GHCR38677336670同SHA全绿；固定sha-2847434镜像摘要/revision/source已验真。本机Go1.27.2的25项叶子专项、58包11935顶层unit（含子测试23257通过、34跳过）、gofmt与embed编译通过；生产未部署。完整证据见HANDOFF与output/newapi-ledger-20261014/result-floor-verified-release.json。
+
 - 用户更新后同时间127/587的上游账单仍含搜索一次，本站只扣纯Token费。源码回归另证实：成功 `web_search_tool_result` 会被后续显式0覆盖，非流式JSON的0或较小计量也会屏蔽已成功的结果；尚未取得生产原始响应，不能认定该笔必然属于此边界。
 - `backend/internal/service/custom_claude_tool_billing.go`：搜索次数统一取“有效累计报告的最大值”和“按 `tool_use_id` 去重的成功结果数”的较大值，结果与计量不相加；JSON、开头/终态0及较小计数均不能抹去已成功结果。错误、普通客户端工具、只有启动而没有计量/成功结果仍不产生搜索费；没有证据仍为0。
 - `backend/internal/service/gateway_service.go`：既有 `[CUSTOM]` ClaudeUsage 接缝删除不再需要的 `webSearchCountObserved` 状态，保留内存去重集合与json排除规则；不修改输入、输出或缓存Token赋值。
