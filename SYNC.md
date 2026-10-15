@@ -1,6 +1,6 @@
 # 同步上游 & 构建部署 Runbook
 
-2026-10-15最新发布授权：本轮分组补修已获用户明确提交推送／构建镜像授权。提交origin/main并核验同一业务SHA的CI、安全、GHCR和registry revision／source／平台／摘要，最终固定标签以HANDOFF为准；下方未授权／未提交为历史阶段。生产由用户备份及审阅现有到期规则后自行更新。
+2026-10-15本轮发布终态优先：最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。含R1–R4、管理员当前活动倍率及基础说明、分组到期事务平移后软删除与迁移258；福利时段结束仍只恢复基础倍率，沿用原计费逻辑。**新版启动会补处理已有到期规则，用户须先备份数据库／配置／app_data并审阅源组及平移目标，再执行`./update.sh sha-0e99748`。**生产由用户手动更新，真实收费与到期平移现场验收仍待；20:30历史故障根因未知。证据在`output/group-access-fix-20261015/verified-release.json`、`release-source-proof.json`及同目录job日志；首轮c4fa7fd的ineffassign失败已补修，旧候选不作交付。后续`[skip ci]`纯文档提交不改变镜像业务版本。下方未发布／待核验均为历史阶段。
 
 2026-10-15最新到期补修优先：用户要求的「到期持久平移授权／Key，再删除原组」已本地实现，福利时段结束仍仅恢复基础倍率。新增custom expiry store／worker与迁移258（并发绑定保护），257不修改；同步须保留标准模式worker启停、规则保存锁、跨实例唤醒和旧认证快照解析。按最近到期时间执行，30秒兜底；失败回滚保留原组，仅同平台按量组支持，订阅／包号拒绝自动合并权益。**首次运行新版会补处理已有到期规则，升级前审阅并备份。**未提交／发布／部署，前后端须同版，最终本地验证见HANDOFF及output/group-access-fix-20261015/verification.json。
 

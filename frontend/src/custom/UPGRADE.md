@@ -1,5 +1,7 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
+2026-10-15分组补修发布终态优先：最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。含R1–R4、管理员当前活动倍率及基础说明、分组到期事务平移后软删除与迁移258；福利时段结束仍只恢复基础倍率，沿用原计费逻辑。**新版启动会补处理已有到期规则，用户须先备份数据库／配置／app_data并审阅源组及平移目标，再执行`./update.sh sha-0e99748`。**生产由用户手动更新，真实收费与到期平移现场验收仍待；20:30历史故障根因未知。证据在`output/group-access-fix-20261015/verified-release.json`、`release-source-proof.json`及同目录job日志；首轮c4fa7fd的ineffassign失败已补修，旧候选不作交付。后续`[skip ci]`纯文档提交不改变镜像业务版本。升级保留本文件下方GroupRateMultiplier／服务器共用时钟／批量接口和到期平移相关接缝；下方未发布为历史。
+
 2026-10-15追加分组到期语义（未发布）：保留custom/GroupAccessPolicyButton的「到期删除并平移用户」「平移分组」及与福利时段结束的区别说明；订阅目标不进入候选，订阅源不能新开启删除、仍能关闭旧配置，福利示例不替订阅源开启删除。后台新增expiry worker／store与迁移258，事务持久平移授权／Key后软删，失败保留原组，257不改；仅同平台按量组适用，包号／订阅不自动合并权益。前后端须同版，启动将处理已有到期配置，发布前审阅并备份。后端真实GetAvailableGroups边界回归已覆盖1→0.8→1，不能只以UI值确认实际收费。最终验证／发布状态见HANDOFF及verification.json。
 
 2026-10-15晚间分组倍率显示补修（未发布）：保留GroupsView的GroupRateMultiplier槽、provideGroupRateDisplay共用时钟及加载／保存后的reloadGroupRates；保留GroupAccessPolicyButton的saved事件和custom/groupAccess/rateDisplay.ts、GroupRateMultiplier.vue、GET /admin/groups/rate-schedules。列表展示活动当前值与基础说明，服务器对时、边界本地计算、每30秒批量同步配置，失败明确未知，禁止逐行轮询或把活动值写回基础字段。计费仍使用原后台请求时倍率，前后端同版；升级接缝见CUSTOMIZATIONS，验证／发布状态见HANDOFF。

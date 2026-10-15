@@ -1,9 +1,11 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-15 分组活动显示与审查补修（本地完成，未发布）
+## 2026-10-15 分组活动显示与审查补修（已发布sha-0e99748）
+
+- 发布终态：最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。含R1–R4、管理员当前活动倍率及基础说明、分组到期事务平移后软删除与迁移258；福利时段结束仍只恢复基础倍率，沿用原计费逻辑。**新版启动会补处理已有到期规则，用户须先备份数据库／配置／app_data并审阅源组及平移目标，再执行`./update.sh sha-0e99748`。**生产由用户手动更新，真实收费与到期平移现场验收仍待；20:30历史故障根因未知。证据在`output/group-access-fix-20261015/verified-release.json`、`release-source-proof.json`及同目录job日志；首轮c4fa7fd的ineffassign失败已补修，旧候选不作交付。后续`[skip ci]`纯文档提交不改变镜像业务版本。
 
 - 发布静态检查补修：gateway_handler错误兜底直接使用统一资格服务返回的Key副本，移除先clone再覆盖的无效赋值及未再调用的cloneAPIKeyWithGroup旧helper；首轮c4fa7fd的ineffassign失败日志保留，最终业务SHA及门禁以HANDOFF为准。
-- 发布授权更新：用户已要求提交推送并构建新镜像。本轮全部接缝及258随实际业务提交发布，CI／安全／GHCR和registry身份需按新SHA核验，最终标签与摘要见HANDOFF。以下未提交是本地阶段；生产仍不代部署。
+- 发布授权与范围：用户要求的提交推送及新镜像构建已完成。本节全部接缝及258随业务0e99748发布，证据见HANDOFF及verified-release.json；生产由用户手动更新。
 - 用户追加分组到期删除语义：新增`backend/internal/service/custom_group_expiry_store.go`、`custom_group_expiry_worker.go`及unit／真实PG回归；事务内平移绑定Key的用户及显式授权、持久改绑未删除Key，解除旧组账号／模型路由／审核范围并处理其他组兜底引用，最后软删除原组，保留历史账单和Key属性。目标若引用源组，清除该自指兜底；其他引用改为目标。失败回滚，原组保留，目标的用户专属倍率不覆盖，账号不搬。只支持同平台按量组，订阅／包号禁止自动合并权益，包号包括撤销／已逻辑删除的隔离记录。`custom_group_access_store.go`规则保存持有源组共享锁并拒绝已删组；`custom_group_access.go`保存校验及旧认证快照经保留的过期策略解析目标，`custom_group_access_listener.go`标准模式启停worker、保存／跨实例变更唤醒，cache增加已解码通知入口。按最近到期时间设置定时器，30秒兜底重试，不给每条业务请求加SQL；失败组不占住其他到期组的时间边界。新增`258_custom_group_expiry_binding_guard.sql`以共享行锁防止并发Key／授权重新绑定已删除分组，已发布257不改。
 - 前端custom开放规则明确「到期删除并平移用户」「平移分组」，说明与福利时段结束的差异；目标排除订阅，订阅源不能新开删除、仍能关闭旧配置，福利示例不替订阅源开启删除。新增真实`GetAvailableGroups`服务路径边界回归，验证1→0.8→1而不更改基础值。升级启动即处理现有已到期配置，部署前须备份并审阅；未部署或改线上配置。
 - 管理列表上游接缝`frontend/src/views/admin/GroupsView.vue`：倍率槽改custom/GroupRateMultiplier，页面一次提供共用时钟与批量时段，加载／刷新分组及保存开放规则后同步。新增`frontend/src/custom/groupAccess/GroupRateMultiplier.vue`、`rateDisplay.ts`及回归；`api.ts`读取`GET /admin/groups/rate-schedules`，`GroupAccessPolicyButton`发saved事件，时段字段改称「时段倍率」。活动显示0.8x并注明基础1x，到期恢复基础值；按服务器时间计算，页面每秒更新，每30秒一次批量刷新配置，隐藏时不轮询配置，失败标未知。原有专属倍率／高峰／独立图片规则不变。
@@ -12,7 +14,7 @@
 - R2改custom监听器：通知消费和单个串行心跳分别运行；跟踪原net.Conn、Ping设置2秒deadline、停机取消拨号并关闭原连接后等待退出，保持断连回源失败拒绝。真实PG18注入消费者延迟和1000通知、三轮恢复、连接终止、Stop及net.Pipe阻塞解除已有正式回归。
 - R3上游接缝`backend/internal/service/user.go`增加RPM快照已加载标识，`billing_cache_service.go`识别「已加载但无覆盖」并避免重复查库；新增custom_group_access_rpm.go，按用户／目标缓存nil、0及正覆盖值，用户／订阅通知同时失效。不得沿用原组RPM给目标组，迁移257未修改。
 - R4上游接缝`backend/internal/server/middleware/api_key_auth.go`：已拥有异步图片任务GET不执行新增金额门槛和到期切组；保留原Key／用户／IP／归属与包号鉴权。POST新增生成仍需门槛；正式回归验证GET成功、同路径POST403。
-- 线上仅只读确认test下拉0.8x→时段结束后1x，未验证真实收费。专项及全量结果、文件SHA256见`output/group-access-fix-20261015/verification.json`；未提交发布或替换本机／生产应用，以下794479760门禁不代表这轮源码已发布。
+- 线上仅只读确认test下拉0.8x→时段结束后1x，未验证真实收费。完整本地专项见`output/group-access-fix-20261015/verification.json`；最终发布门禁和registry验真见同目录`verified-release.json`。本轮未替换本机／生产应用，以下794479760门禁为旧版历史。
 
 ## 2026-10-15 分组开放门槛、到期与福利时段（已发布）
 
