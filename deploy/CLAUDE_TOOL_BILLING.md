@@ -45,6 +45,8 @@
 
 ## 2026-10-15 流式初始 0 漏计修复
 
+功能提交 `fb5916a4fe1853995b18f016d0806a2990a4c73b` 已推送，同 SHA CI、后端 unit/integration、静态检查、安全扫描与 GHCR 构建全部成功。固定镜像 `ghcr.io/engineemomo/sub2apicust:sha-fb5916a`（linux/amd64），摘要 `sha256:0c33d76be7e126af2e171d7d9086b1e84abcbe38cfde9c28507a1aa982154570`；由用户备份后按更新手册升级。生产未代部署，旧账单不补扣。
+
 已在隔离测试中复现：上游先发 `message_start.usage.server_tool_use.web_search_requests=0`，随后返回成功的 `web_search_tool_result`，最后的 `message_delta.usage` 只有 Token、没有搜索次数。旧逻辑把初始 0 锁定为权威计量，使搜索次数保持 0，最终只收 Token 费。
 
 修复只调整初始 0 的处理，沿用按 `tool_use_id` 去重的成功结果回退；JSON 的明确 0、终态有效计数、失败搜索和普通客户端工具的处理保留。流式中断前已收到成功结果也可记录次数。共享观察器使通用/直通 SSE、Claude 原生 Messages 和缓冲/流式 Responses 转换同时生效，无新增迁移。

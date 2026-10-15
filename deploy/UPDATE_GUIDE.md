@@ -1,5 +1,19 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-15 搜索流式初始0漏计修复（当前已核验）
+
+功能提交`fb5916a4fe1853995b18f016d0806a2990a4c73b`已推送origin/main，同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635231)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635268)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38665635087)全部成功，含后端unit/integration、lint、前端及脚本检查。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-fb5916a`（linux/amd64），摘要`sha256:0c33d76be7e126af2e171d7d9086b1e84abcbe38cfde9c28507a1aa982154570`；registry/revision/source及正式embed构建日志已交叉核验。
+
+修复上游`message_start`先报搜索次数0、随后有成功结果、终态缺次数时仅收Token的问题。沿用分组搜索基础价和有效倍率，无新增配置或迁移；旧版升级仍需执行既有256迁移。先备份数据库、配置和app_data并记录旧镜像，由用户在部署目录执行：
+
+```bash
+./update.sh sha-fb5916a
+```
+
+升级后确认实际镜像、health和前后端同版，检查请求实际所在分组的搜索基础单价。以新请求核验账单中的`web_search`次数和工具附加费，再与上游同一请求对账；基础价0.05、有效倍率0.15、一次成功搜索应加0.0075，输入127/输出529且价卡3/M与15/M时总实扣0.00874740。历史账单不补扣。该金额已由源码回归验证，尚无该笔生产原始响应，不把源码复现当现场根因已确认；若仍无搜索快照，需检查脱敏原始JSON/SSE是否含实际计量或成功结果。
+
+本轮没有代部署生产或替换本机8080，隔离测试镜像/导出容器已清理，原业务镜像和卷保留。证据`output/newapi-ledger-20261014/search-zero-verified-release.json`；后续纯文档skip-ci提交不生成新镜像。
+
 ## 2026-10-14 Claude网页搜索工具附加费（当前可更新版）
 
 功能提交`d3a2c346352e7eca5aacc197785fd366f90f83b6`已推送origin/main，同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38589112494)、[安全扫描](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38589112074)、[GHCR构建](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38589112344)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-d3a2c34`（linux/amd64），摘要`sha256:5baca94dfd6ad73ea03117406400253c083ff9886addca0e4b80528bb6149ba5`；registry manifest、revision/source标签及构建日志交叉核验。首个候选d83900dc2因DTO测试errcheck未通过，更新使用本段最终固定版本。
