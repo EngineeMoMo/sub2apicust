@@ -1,5 +1,9 @@
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
 
+2026-10-15追加分组到期语义（未发布）：保留custom/GroupAccessPolicyButton的「到期删除并平移用户」「平移分组」及与福利时段结束的区别说明；订阅目标不进入候选，订阅源不能新开启删除、仍能关闭旧配置，福利示例不替订阅源开启删除。后台新增expiry worker／store与迁移258，事务持久平移授权／Key后软删，失败保留原组，257不改；仅同平台按量组适用，包号／订阅不自动合并权益。前后端须同版，启动将处理已有到期配置，发布前审阅并备份。后端真实GetAvailableGroups边界回归已覆盖1→0.8→1，不能只以UI值确认实际收费。最终验证／发布状态见HANDOFF及verification.json。
+
+2026-10-15晚间分组倍率显示补修（未发布）：保留GroupsView的GroupRateMultiplier槽、provideGroupRateDisplay共用时钟及加载／保存后的reloadGroupRates；保留GroupAccessPolicyButton的saved事件和custom/groupAccess/rateDisplay.ts、GroupRateMultiplier.vue、GET /admin/groups/rate-schedules。列表展示活动当前值与基础说明，服务器对时、边界本地计算、每30秒批量同步配置，失败明确未知，禁止逐行轮询或把活动值写回基础字段。计费仍使用原后台请求时倍率，前后端同版；升级接缝见CUSTOMIZATIONS，验证／发布状态见HANDOFF。
+
 2026-10-15分组福利发布：最终794479760／固定sha-7944797，同SHA CI／安全／GHCR全部成功；前端52文件815项、类型／lint及正式前后端embed构建通过。Makefile已纳入groupAccess三个测试文件，升级保留此清单及GroupsView的[CUSTOM]入口；后端五类缓存取值补修与迁移257同版。摘要与源码验真、操作及待验边界见HANDOFF／deploy/GROUP_ACCESS_RULES.md，未代部署8080或生产。下方未发布状态为历史阶段。
 
 2026-10-15后续补充优先：开放规则弹窗增加可独立关闭的一次性多时段福利倍率，最多32段北京时间起止日期；「三段福利示例」预填0.1至18:00、0.15至20:30、0.1至23:00及23:00到期，仍须选择兜底。时段外恢复基础倍率，用户专属／高峰／独立图片定价保留原规则；源API可选分组和模型广场显示当时基础倍率，不能只改展示而漏掉请求／批量生图快照及用户倍率缓存接缝。资格使用独立事件缓存，原认证与计费缓存不变；前后端须同版发布，最终证据output/group-access-cache-20261015/verification.json，未提交部署。

@@ -163,11 +163,13 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		if abortIfAPIKeyGroupNotAllowed(c, apiKey) {
 			return
 		}
-		// [CUSTOM] 每次请求重新校验资格，并在到期后仅复制当前请求的有效分组。
-		var groupAccessOK bool
-		apiKey, groupAccessOK = prepareCustomGroupAccess(c, apiKeyService, apiKey, false)
-		if !groupAccessOK {
-			return
+		// [CUSTOM] 已付费图片读取保留原Key归属；金额门槛和到期切组仅约束新请求。
+		if !isAsyncImageTaskRead(c.Request.Method, c.Request.URL.Path) {
+			var groupAccessOK bool
+			apiKey, groupAccessOK = prepareCustomGroupAccess(c, apiKeyService, apiKey, false)
+			if !groupAccessOK {
+				return
+			}
 		}
 		ctx := context.WithValue(c.Request.Context(), ctxkey.UserID, apiKey.User.ID)
 		// [CUSTOM] 记录原始用户/分组，备用路由不能绕过包号归属与有效期。

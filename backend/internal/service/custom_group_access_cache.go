@@ -135,6 +135,10 @@ func (c *customGroupAccessCache) changed(payload string) error {
 	if err := json.Unmarshal([]byte(payload), &change); err != nil {
 		return err
 	}
+	return c.applyChange(change)
+}
+
+func (c *customGroupAccessCache) applyChange(change customGroupAccessChange) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	switch change.Kind {
@@ -155,8 +159,9 @@ func (c *customGroupAccessCache) changed(payload string) error {
 	case "user", "subscription":
 		delete(c.entries, customGroupAccessCacheKey("user", change.ID))
 		prefix := customGroupAccessCacheKey("subscription", change.ID) + ":"
+		rpmPrefix := customGroupAccessCacheKey("rpm", change.ID) + ":"
 		for key := range c.entries {
-			if strings.HasPrefix(key, prefix) {
+			if strings.HasPrefix(key, prefix) || strings.HasPrefix(key, rpmPrefix) {
 				delete(c.entries, key)
 			}
 		}

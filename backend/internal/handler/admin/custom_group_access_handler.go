@@ -59,3 +59,14 @@ func (h *CustomGroupAccessHandler) Save(c *gin.Context) {
 	}
 	response.Success(c, saved)
 }
+
+func (h *CustomGroupAccessHandler) RateSchedules(c *gin.Context) {
+	if !h.supported(c) {
+		return
+	}
+	schedules, err := h.service.AdminRateSchedules(c.Request.Context())
+	if response.ErrorFrom(c, err) {
+		return
+	}
+	response.Success(c, schedules)
+}

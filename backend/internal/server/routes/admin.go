@@ -338,6 +338,8 @@ func registerGroupRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		// [CUSTOM] 管理员独立配置分组门槛、到期时间与自动切换目标。
 		groups.GET("/:id/access-policy", h.Admin.CustomGroupAccess.Get)
 		groups.PUT("/:id/access-policy", h.Admin.CustomGroupAccess.Save)
+		// [CUSTOM] 批量读取活动时段，管理列表按服务器时间显示当前倍率。
+		groups.GET("/rate-schedules", h.Admin.CustomGroupAccess.RateSchedules)
 		groups.GET("", h.Admin.Group.List)
 		groups.GET("/all", h.Admin.Group.GetAll)
 		groups.GET("/usage-summary", h.Admin.Group.GetUsageSummary)

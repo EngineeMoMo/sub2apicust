@@ -95,6 +95,13 @@ func (s *customGroupAccessSQLStore) Save(ctx context.Context, policy CustomGroup
 	if _, err := tx.ExecContext(ctx, "SELECT pg_advisory_xact_lock(25720261015)"); err != nil {
 		return nil, err
 	}
+	var groupID int64
+	if err := tx.QueryRowContext(ctx, "SELECT id FROM groups WHERE id=$1 AND deleted_at IS NULL FOR SHARE", policy.GroupID).Scan(&groupID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrGroupNotFound
+		}
+		return nil, err
+	}
 	policies, err := listCustomGroupAccess(ctx, tx)
 	if err != nil {
 		return nil, err

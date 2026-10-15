@@ -24,6 +24,16 @@ export async function getGroupAccessPolicy(groupId: number): Promise<GroupAccess
   return data
 }
 
+export interface GroupRateSchedules {
+  server_time: string
+  schedules: Record<number, Pick<GroupAccessPolicy, 'rate_schedule_enabled' | 'rate_schedule'>>
+}
+
+export async function getGroupRateSchedules(): Promise<GroupRateSchedules> {
+  const { data } = await apiClient.get<GroupRateSchedules>('/admin/groups/rate-schedules')
+  return data
+}
+
 export async function saveGroupAccessPolicy(groupId: number, policy: GroupAccessPolicy): Promise<GroupAccessPolicy> {
   const { data } = await apiClient.put<GroupAccessPolicy>(`/admin/groups/${groupId}/access-policy`, policy)
   return data

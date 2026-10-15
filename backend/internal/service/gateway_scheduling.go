@@ -927,6 +927,19 @@ func (s *GatewayService) resolveGatewayGroup(ctx context.Context, groupID *int64
 	if groupID == nil {
 		return nil, nil, nil
 	}
+	// [CUSTOM] 所有选号入口共用与鉴权层相同的降级解析，保留无定制服务的上游路径。
+	if s.customGroupAccess != nil {
+		group, err := s.resolveGroupByID(ctx, *groupID)
+		if err != nil {
+			return nil, nil, err
+		}
+		userID, _ := ctx.Value(ctxkey.UserID).(int64)
+		prepared, err := s.customGroupAccess.prepareClientFallback(ctx, &APIKey{UserID: userID, GroupID: groupID, Group: group})
+		if err != nil {
+			return nil, nil, err
+		}
+		return prepared.Group, prepared.GroupID, nil
+	}
 
 	currentID := *groupID
 	visited := map[int64]struct{}{}
@@ -940,7 +953,6 @@ func (s *GatewayService) resolveGatewayGroup(ctx context.Context, groupID *int64
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if !group.ClaudeCodeOnly || IsClaudeCodeClient(ctx) {
 			return group, &currentID, nil
 		}

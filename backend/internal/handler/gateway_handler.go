@@ -173,6 +173,28 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	reqModel := parsedReq.Model
 	reqStream := parsedReq.Stream
 	bindRequestedReasoningEffort(c, body, reqModel)
+
+	// 设置 max_tokens=1 + haiku 探测请求标识到 context 中
+	// 必须在 SetClaudeCodeClientContext 之前设置，因为 ClaudeCodeValidator 需要读取此标识进行绕过判断
+	if isMaxTokensOneHaikuRequest(reqModel, parsedReq.MaxTokens) {
+		ctx := service.WithIsMaxTokensOneHaikuRequest(c.Request.Context(), true, h.metadataBridgeEnabled())
+		c.Request = c.Request.WithContext(ctx)
+	}
+
+	// 检查是否为 Claude Code 客户端，设置到 context 中（复用已解析请求，避免二次反序列化）。
+	SetClaudeCodeClientContext(c, body, parsedReq)
+	isClaudeCodeClient := service.IsClaudeCodeClient(c.Request.Context())
+	// [CUSTOM] 客户端识别完成后先解析降级，后续并发、额度、计费及选号使用同一分组。
+	var groupAccessOK bool
+	apiKey, groupAccessOK = h.prepareCustomGatewayGroup(c, apiKey)
+	if !groupAccessOK {
+		return
+	}
+	// [CUSTOM] 分组策略与渠道映射须在降级完成后解析，目标白名单同样生效。
+	if customGatewayGroupBlocksModel(c, apiKey, body) {
+		h.errorResponse(c, http.StatusNotFound, "not_found_error", "Model is not available for this group")
+		return
+	}
 	ensureCompositeTargetPlatform(c, apiKey, reqModel)
 	if policyBody, changed, err := applyAnthropicReasoningEffortPolicyForRequest(c, apiKey, body); err != nil {
 		respondOpenAIReasoningEffortPolicyError(c, err, h.errorResponse)
@@ -188,20 +210,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		reqStream = parsedReq.Stream
 	}
 	reqLog = reqLog.With(zap.String("model", reqModel), zap.Bool("stream", reqStream))
-
-	// 解析渠道级模型映射
 	channelMapping, _ := h.gatewayService.ResolveChannelMappingAndRestrict(c.Request.Context(), apiKey.GroupID, reqModel)
-
-	// 设置 max_tokens=1 + haiku 探测请求标识到 context 中
-	// 必须在 SetClaudeCodeClientContext 之前设置，因为 ClaudeCodeValidator 需要读取此标识进行绕过判断
-	if isMaxTokensOneHaikuRequest(reqModel, parsedReq.MaxTokens) {
-		ctx := service.WithIsMaxTokensOneHaikuRequest(c.Request.Context(), true, h.metadataBridgeEnabled())
-		c.Request = c.Request.WithContext(ctx)
-	}
-
-	// 检查是否为 Claude Code 客户端，设置到 context 中（复用已解析请求，避免二次反序列化）。
-	SetClaudeCodeClientContext(c, body, parsedReq)
-	isClaudeCodeClient := service.IsClaudeCodeClient(c.Request.Context())
 
 	// 版本检查：仅对 Claude Code 客户端，拒绝低于最低版本的请求
 	if !h.checkClaudeCodeVersion(c) {
@@ -1030,6 +1039,23 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 							return
 						}
 						fallbackAPIKey := cloneAPIKeyWithGroup(apiKey, fallbackGroup)
+						// [CUSTOM] 错误兜底不能绕过目标门槛和到期规则。
+						fallbackAPIKey, err = h.apiKeyService.PrepareCustomGroupFallback(c.Request.Context(), apiKey, fallbackGroup)
+						if err != nil {
+							status, code, message, _ := billingErrorDetails(err)
+							h.handleStreamingAwareError(c, status, code, message, streamStarted)
+							return
+						}
+						fallbackGroup = fallbackAPIKey.Group
+						if fallbackGroup.Platform != service.PlatformAnthropic || fallbackGroup.IsSubscriptionType() || fallbackGroup.FallbackGroupIDOnInvalidRequest != nil {
+							h.handleStreamingAwareError(c, http.StatusForbidden, "GROUP_ACCESS_EXPIRED", "兜底分组不可用于当前请求", streamStarted)
+							return
+						}
+						// [CUSTOM] 错误兜底也遵守目标模型白名单。
+						if customGatewayGroupBlocksModel(c, fallbackAPIKey, body) {
+							h.handleStreamingAwareError(c, http.StatusNotFound, "not_found_error", "Model is not available for this group", streamStarted)
+							return
+						}
 						if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil, service.PlatformFromAPIKey(fallbackAPIKey)); err != nil {
 							status, code, message, retryAfter := billingErrorDetails(err)
 							if retryAfter > 0 {
@@ -1042,6 +1068,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 						ctx := context.WithValue(c.Request.Context(), ctxkey.ForcePlatform, "")
 						c.Request = c.Request.WithContext(ctx)
 						currentAPIKey = fallbackAPIKey
+						setCustomGatewayGroup(c, fallbackAPIKey) // [CUSTOM] 同步账单及路由上下文。
+						channelMapping, _ = h.gatewayService.ResolveChannelMappingAndRestrict(c.Request.Context(), fallbackAPIKey.GroupID, reqModel)
 						currentSubscription = nil
 						fallbackUsed = true
 						retryWithFallback = true
@@ -2182,6 +2210,16 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 	body = parsedReq.Body.Bytes()
 	// count_tokens 走 messages 严格校验时，复用已解析请求，避免二次反序列化。
 	SetClaudeCodeClientContext(c, body, parsedReq)
+	// [CUSTOM] count_tokens 与 messages 共用目标分组资格解析。
+	var groupAccessOK bool
+	apiKey, groupAccessOK = h.prepareCustomGatewayGroup(c, apiKey)
+	if !groupAccessOK {
+		return
+	}
+	if customGatewayGroupBlocksModel(c, apiKey, body) {
+		h.errorResponse(c, http.StatusNotFound, "not_found_error", "Model is not available for this group")
+		return
+	}
 	ensureCompositeTargetPlatform(c, apiKey, parsedReq.Model)
 	reqLog = reqLog.With(zap.String("model", parsedReq.Model), zap.Bool("stream", parsedReq.Stream))
 	// 在请求上下文中记录 thinking 状态，供 Antigravity 最终模型 key 推导/模型维度限流使用

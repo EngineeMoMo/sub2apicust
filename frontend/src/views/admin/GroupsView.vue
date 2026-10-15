@@ -261,10 +261,9 @@
             </div>
           </template>
 
-          <template #cell-rate_multiplier="{ value }">
-            <span class="text-sm text-gray-700 dark:text-gray-300"
-              >{{ value }}x</span
-            >
+          <!-- [CUSTOM] 当前活动倍率与基础倍率分别展示，时段边界自动更新。 -->
+          <template #cell-rate_multiplier="{ row }">
+            <GroupRateMultiplier :group="row" />
           </template>
 
           <template #cell-is_exclusive="{ value }">
@@ -382,7 +381,7 @@
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-1">
               <!-- [CUSTOM] 独立开放规则弹窗：门槛、到期时间及自动切换分组。 -->
-              <GroupAccessPolicyButton v-if="!authStore.isSimpleMode" :group="row" />
+              <GroupAccessPolicyButton v-if="!authStore.isSimpleMode" :group="row" @saved="reloadGroupRates" />
               <button
                 @click="handleEdit(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary-600 dark:hover:bg-dark-700 dark:hover:text-primary-400"
@@ -4309,6 +4308,8 @@ import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipl
 import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
 // [CUSTOM] 分组开放规则保留在 custom 叠加层。
 import GroupAccessPolicyButton from "@/custom/groupAccess/GroupAccessPolicyButton.vue";
+import GroupRateMultiplier from "@/custom/groupAccess/GroupRateMultiplier.vue";
+import { provideGroupRateDisplay } from "@/custom/groupAccess/rateDisplay";
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";
 import ReasoningEffortPolicyFields from "@/components/admin/group/ReasoningEffortPolicyFields.vue";
 import CodexManifestAccountsField from "@/components/admin/group/CodexManifestAccountsField.vue";
@@ -4460,6 +4461,8 @@ const groupPricingToAPI = (
 const { t } = useI18n();
 const appStore = useAppStore();
 const authStore = useAuthStore();
+// [CUSTOM] 页面共用批量时段与服务器时钟，避免逐行轮询。
+const { reload: reloadGroupRates } = provideGroupRateDisplay(computed(() => !authStore.isSimpleMode));
 const onboardingStore = useOnboardingStore();
 
 const ALWAYS_VISIBLE_COLUMNS = new Set(["name", "actions"]);
@@ -5628,6 +5631,8 @@ const loadGroups = async () => {
     );
     if (signal.aborted) return;
     groups.value = response.items;
+    // [CUSTOM] 手动刷新及分组分页后同步活动配置。
+    void reloadGroupRates();
     pagination.total = response.total;
     pagination.pages = response.pages;
     if (hasVisibleUsageSummaryConsumer.value) {

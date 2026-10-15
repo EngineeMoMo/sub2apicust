@@ -942,7 +942,7 @@ func (s *BillingCacheService) checkRPM(ctx context.Context, user *User, group *G
 		var override *int
 		if user.UserGroupRPMOverride != nil {
 			override = user.UserGroupRPMOverride
-		} else if s.userGroupRateRepo != nil {
+		} else if !user.UserGroupRPMOverrideLoaded && s.userGroupRateRepo != nil { // [CUSTOM] 已缓存的空覆盖值沿用分组限额。
 			dbOverride, err := s.userGroupRateRepo.GetRPMOverrideByUserAndGroup(ctx, user.ID, group.ID)
 			if err != nil {
 				logger.LegacyPrintf(

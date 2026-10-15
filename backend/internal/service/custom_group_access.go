@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	ErrGroupAccessRequirements = infraerrors.Forbidden("GROUP_ACCESS_REQUIREMENTS", "当前月净充值或账户余额未达到该分组的开放条件")
-	ErrGroupAccessExpired      = infraerrors.Forbidden("GROUP_ACCESS_EXPIRED", "该分组已到期，且没有可用的到期后分组")
-	ErrGroupAccessPolicyStale  = infraerrors.Conflict("GROUP_ACCESS_POLICY_STALE", "开放规则已被修改，请重新打开后保存")
-	ErrGroupAccessRouteChanged = infraerrors.Forbidden("GROUP_ACCESS_ROUTE_CHANGED", "分组路由已变化，请重新连接；无需修改 Key 或分组绑定")
+	ErrGroupAccessRequirements    = infraerrors.Forbidden("GROUP_ACCESS_REQUIREMENTS", "当前月净充值或账户余额未达到该分组的开放条件")
+	ErrGroupAccessExpired         = infraerrors.Forbidden("GROUP_ACCESS_EXPIRED", "该分组已到期，且没有可用的到期后分组")
+	ErrGroupAccessPolicyStale     = infraerrors.Conflict("GROUP_ACCESS_POLICY_STALE", "开放规则已被修改，请重新打开后保存")
+	ErrGroupAccessRouteChanged    = infraerrors.Forbidden("GROUP_ACCESS_ROUTE_CHANGED", "分组路由已变化，请重新连接；无需修改 Key 或分组绑定")
+	ErrGroupAccessExpiryDedicated = infraerrors.BadRequest("GROUP_ACCESS_EXPIRY_DEDICATED", "包号分组不能通过到期任务删除或平移")
 )
 
 type CustomGroupAccessPolicy struct {
@@ -46,13 +47,16 @@ type CustomGroupAccessService struct {
 	groups        GroupRepository
 	users         UserRepository
 	subscriptions UserSubscriptionRepository
+	rates         UserGroupRateRepository
 	now           func() time.Time
 	cache         *customGroupAccessCache
 	stop          func()
+	expiryWake    chan struct{}
 }
 
 func NewCustomGroupAccessService(db *sql.DB, groups GroupRepository, users UserRepository, subscriptions UserSubscriptionRepository, apiKeys *APIKeyService) *CustomGroupAccessService {
 	result := &CustomGroupAccessService{store: &customGroupAccessSQLStore{db: db}, groups: groups, users: users, subscriptions: subscriptions, now: time.Now}
+	result.rates = apiKeys.userGroupRateRepo
 	apiKeys.customGroupAccess = result
 	return result
 }
@@ -107,10 +111,19 @@ func (s *CustomGroupAccessService) Save(ctx context.Context, policy CustomGroupA
 		if !target.IsActive() || target.Platform != source.Platform {
 			return nil, infraerrors.BadRequest("GROUP_ACCESS_INVALID_FALLBACK", "到期后分组须启用且与原分组属于同一平台")
 		}
+		if source.IsSubscriptionType() || target.IsSubscriptionType() {
+			return nil, infraerrors.BadRequest("GROUP_ACCESS_EXPIRY_SUBSCRIPTION", "到期删除并平移仅支持同平台按量分组；订阅权益不能自动删除或合并")
+		}
+		if store, ok := s.store.(*customGroupAccessSQLStore); ok {
+			if err := store.checkExpiryDedicatedGroups(ctx, source.ID, target.ID); err != nil {
+				return nil, err
+			}
+		}
 	}
 	saved, err := s.store.Save(ctx, policy)
 	if err == nil {
 		s.cache.invalidate("policies")
+		s.wakeGroupExpiry()
 	}
 	return saved, err
 }
@@ -207,6 +220,15 @@ func (s *CustomGroupAccessService) PrepareKey(ctx context.Context, key *APIKey) 
 			return nil, ErrGroupAccessExpired
 		}
 		seen[groupID] = true
+		// 到期迁移完成后原组已软删除，旧认证快照仍通过保留的规则解析目标。
+		policy := policies[groupID]
+		if policy.expired(now) {
+			if policy.FallbackGroupID == nil {
+				return nil, ErrGroupAccessExpired
+			}
+			groupID = *policy.FallbackGroupID
+			continue
+		}
 		group, err := s.loadGroup(ctx, groupID)
 		if err != nil {
 			return nil, err
@@ -216,14 +238,6 @@ func (s *CustomGroupAccessService) PrepareKey(ctx context.Context, key *APIKey) 
 		}
 		if !group.IsSubscriptionType() && !user.CanBindGroup(group.ID, group.IsExclusive) {
 			return nil, ErrGroupNotAllowed
-		}
-		policy := policies[groupID]
-		if policy.expired(now) {
-			if policy.FallbackGroupID == nil {
-				return nil, ErrGroupAccessExpired
-			}
-			groupID = *policy.FallbackGroupID
-			continue
 		}
 		if !s.canUse(ctx, user, group) {
 			return nil, ErrGroupNotAllowed
@@ -245,6 +259,9 @@ func (s *CustomGroupAccessService) PrepareKey(ctx context.Context, key *APIKey) 
 		group.RateMultiplier = policy.rateAt(now, group.RateMultiplier)
 		prepared.GroupID = &groupID
 		prepared.Group = group
+		if err := s.prepareRPM(ctx, key, user, groupID); err != nil {
+			return nil, err
+		}
 		prepared.User = user
 		return &prepared, nil
 	}

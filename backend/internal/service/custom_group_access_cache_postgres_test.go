@@ -61,7 +61,7 @@ func TestCustomGroupAccessPostgresMultiInstanceCache(t *testing.T) {
 	storeDB, err := sql.Open("postgres", schemaDSN)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = storeDB.Close() })
-	_, err = storeDB.Exec(`CREATE TABLE groups(id BIGINT PRIMARY KEY);
+	_, err = storeDB.Exec(`CREATE TABLE groups(id BIGINT PRIMARY KEY,deleted_at TIMESTAMPTZ);
 CREATE TABLE users(id BIGINT PRIMARY KEY,balance NUMERIC(20,8),status TEXT,deleted_at TIMESTAMPTZ);
 CREATE TABLE payment_orders(id BIGINT PRIMARY KEY,user_id BIGINT,order_type TEXT,amount NUMERIC(20,2),bonus_amount NUMERIC(20,2),refund_amount NUMERIC(20,2),status TEXT,paid_at TIMESTAMPTZ);
 CREATE TABLE user_allowed_groups(user_id BIGINT,group_id BIGINT);

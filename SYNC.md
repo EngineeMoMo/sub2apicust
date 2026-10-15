@@ -1,5 +1,13 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-15最新发布授权：本轮分组补修已获用户明确提交推送／构建镜像授权。提交origin/main并核验同一业务SHA的CI、安全、GHCR和registry revision／source／平台／摘要，最终固定标签以HANDOFF为准；下方未授权／未提交为历史阶段。生产由用户备份及审阅现有到期规则后自行更新。
+
+2026-10-15最新到期补修优先：用户要求的「到期持久平移授权／Key，再删除原组」已本地实现，福利时段结束仍仅恢复基础倍率。新增custom expiry store／worker与迁移258（并发绑定保护），257不修改；同步须保留标准模式worker启停、规则保存锁、跨实例唤醒和旧认证快照解析。按最近到期时间执行，30秒兜底；失败回滚保留原组，仅同平台按量组支持，订阅／包号拒绝自动合并权益。**首次运行新版会补处理已有到期规则，升级前审阅并备份。**未提交／发布／部署，前后端须同版，最终本地验证见HANDOFF及output/group-access-fix-20261015/verification.json。
+
+2026-10-15本地分组补修优先：管理员列表当前活动倍率与基础说明、R1–R4源码修复和正式回归已完成，结果见HANDOFF及output/group-access-fix-20261015/verification.json。新增批量只读rate-schedules接口，前后端须同版；257未修改。未提交推送／新镜像或部署，不能以旧sha-7944797和旧CI证明本轮已发布。同步时保留CUSTOMIZATIONS新登记的网关降级、RPM快照、图片读取、Wire与列表接缝。
+
+2026-10-15 20:26审查补充：已发布sha-7944797存在4项已复现待修问题（降级门槛绕过、通知Ping互等、RPM逐次查询、图片结果读取误拦），见deploy/GROUP_ACCESS_REVIEW.md和HANDOFF待办。本轮仅审查，无新镜像／部署；下一次补修需将复现纳入正式测试并重新执行同SHA门禁。下方发布成功不表示这些问题已修复。
+
 2026-10-15分组功能发布终态：最终794479760593961c08ea842095543ec1d0bd58c5已推origin/main，同SHA CI38727724771／安全38727724898／GHCR38727724764全部成功，含unit／integration、独立PG18、Go lint 0及前端52文件815项。固定sha-7944797（linux/amd64），摘要sha256:34cf7d44c87608d92964329571250f65127b20dc3ca5cc99f7bf582533e4b0c5，registry／源码／embed日志已验真。257已首次发布，保留最终迁移、CI独立group_access_test库与Makefile三个前端专项；用户备份后`./update.sh sha-7944797`，本机8080和生产未代部署。证据见HANDOFF和output/group-access-cache-20261015/verified-release.json；下方257未发布／待门禁为历史阶段，纯文档skip-ci提交不替代此镜像SHA。
 
 2026-10-15发布补充：用户已要求更新测试，分组门槛／缓存／福利本轮提交推送origin/main并核验同SHA CI／安全／GHCR；CI独立PG18与CUSTOM_GROUP_ACCESS_TEST_DSN须随接缝保留。固定镜像与终态以HANDOFF最新记录为准，生产由用户备份后自行更新；下方未授权／未提交状态为历史。

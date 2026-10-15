@@ -43,7 +43,7 @@ func TestCustomGroupAccessPostgresRefundAndConcurrentPolicy(t *testing.T) {
 	schemaDB.SetMaxOpenConns(4)
 	_, err = schemaDB.ExecContext(ctx, "SELECT 1")
 	require.NoError(t, err)
-	_, err = schemaDB.ExecContext(ctx, `CREATE TABLE groups(id BIGINT PRIMARY KEY);
+	_, err = schemaDB.ExecContext(ctx, `CREATE TABLE groups(id BIGINT PRIMARY KEY,deleted_at TIMESTAMPTZ);
  CREATE TABLE users(id BIGINT PRIMARY KEY, balance NUMERIC(20,8) NOT NULL, deleted_at TIMESTAMPTZ);
  CREATE TABLE payment_orders(id BIGSERIAL PRIMARY KEY, user_id BIGINT, order_type TEXT DEFAULT 'balance',
  amount NUMERIC(20,2), bonus_amount NUMERIC(20,2) DEFAULT 0, pay_amount NUMERIC(20,2), refund_amount NUMERIC(20,2) DEFAULT 0,

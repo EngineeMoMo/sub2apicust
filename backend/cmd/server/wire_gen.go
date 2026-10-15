@@ -33,7 +33,6 @@ import (
 // Injectors from wire.go:
 
 func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
-	// [CUSTOM] 分组开放规则、分时福利及资格监听器接线和退出清理。
 	configConfig, err := config.ProvideConfig()
 	if err != nil {
 		return nil, err
@@ -185,7 +184,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	channelMonitorV2Repository := repository.NewChannelMonitorV2Repository(db)
 	channelMonitorV2Service := service.ProvideChannelMonitorV2Service(channelMonitorV2Repository, settingService)
 	channelMonitorV2Handler := handler.NewChannelMonitorV2Handler(channelMonitorV2Service, apiKeyService)
-	customGroupAccessService := service.ProvideCustomGroupAccessService(db, groupRepository, userRepository, userSubscriptionRepository, apiKeyService, configConfig)
+	// [CUSTOM] 共享资格服务用于既有网关降级；本文件接线已通过Wire重新生成。
+	customGroupAccessService := service.ProvideCustomGroupAccessService(db, groupRepository, userRepository, userSubscriptionRepository, apiKeyService, gatewayService, configConfig)
 	customGroupAccessHandler := admin.NewCustomGroupAccessHandler(customGroupAccessService, configConfig)
 	dashboardAggregationRepository := repository.NewDashboardAggregationRepository(db)
 	dashboardStatsCache := repository.NewDashboardCache(redisClient, configConfig)

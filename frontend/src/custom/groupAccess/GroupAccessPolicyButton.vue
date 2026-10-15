@@ -66,7 +66,7 @@
         <section class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-dark-600">
           <div class="flex items-center justify-between gap-4">
             <span class="font-medium">{{ text('expiry') }}</span>
-            <Toggle v-model="expiryEnabled" :aria-label="text('expiry')" data-testid="expiry-toggle" />
+            <Toggle v-model="expiryEnabled" :disabled="group.subscription_type === 'subscription' && !expiryEnabled" :aria-label="text('expiry')" data-testid="expiry-toggle" />
           </div>
           <p class="text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{ text('expiryHint') }}</p>
           <template v-if="expiryEnabled">
@@ -108,6 +108,7 @@ import { fromBeijingDateTime, getGroupAccessPolicy, normalizeGroupRateSchedule, 
 import { groupAccessMessages } from './messages'
 
 const props = defineProps<{ group: AdminGroup }>()
+const emit = defineEmits<{ saved: [] }>()
 const { locale } = useI18n()
 const text = (key: keyof typeof groupAccessMessages.zh) => groupAccessMessages[(locale?.value ?? 'zh').startsWith('zh') ? 'zh' : 'en'][key]
 const appStore = useAppStore()
@@ -124,7 +125,7 @@ const rateScheduleEnabled = ref(false)
 const ratePeriods = ref<GroupRatePeriod[]>([])
 let requestVersion = 0
 
-const fallbackGroups = computed(() => candidates.value.filter(candidate => candidate.id !== props.group.id && candidate.status === 'active' && candidate.platform === props.group.platform))
+const fallbackGroups = computed(() => candidates.value.filter(candidate => candidate.id !== props.group.id && candidate.status === 'active' && candidate.platform === props.group.platform && candidate.subscription_type !== 'subscription'))
 
 async function load() {
   const version = ++requestVersion
@@ -161,8 +162,10 @@ function seedPeriods() {
     { starts_at: `${date}T18:00:00`, ends_at: `${date}T20:30:00`, rate_multiplier: 0.15 },
     { starts_at: `${date}T20:30:00`, ends_at: `${date}T23:00:00`, rate_multiplier: 0.1 },
   ]
-  expiryEnabled.value = true
-  expiryInput.value = `${date}T23:00:00`
+  if (props.group.subscription_type !== 'subscription') {
+    expiryEnabled.value = true
+    expiryInput.value = `${date}T23:00:00`
+  }
 }
 
 function close() {
@@ -201,6 +204,7 @@ async function save() {
     await saveGroupAccessPolicy(groupId, { ...current, group_id: groupId, expires_at: expiry, fallback_group_id: expiryEnabled.value ? fallbackId.value : null, rate_schedule_enabled: rateScheduleEnabled.value, rate_schedule: schedule })
     if (version !== requestVersion || props.group.id !== groupId) return
     appStore.showSuccess(text('saved'))
+    emit('saved')
     show.value = false
     requestVersion++
   } catch (cause) {

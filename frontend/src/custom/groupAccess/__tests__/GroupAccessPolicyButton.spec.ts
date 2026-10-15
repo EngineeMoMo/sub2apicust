@@ -13,9 +13,9 @@ vi.mock('@/stores/app', () => ({ useAppStore: () => ({ showSuccess: mocks.succes
 const group = { id: 1, name: '定制组', platform: 'anthropic', status: 'active' } as AdminGroup
 const original: GroupAccessPolicy = { group_id: 1, monthly_recharge_enabled: false, monthly_recharge_min: 100, balance_enabled: false, balance_min: 20, expires_at: null, fallback_group_id: null, updated_at: null }
 
-function render() {
+function render(currentGroup = group) {
   return mount(GroupAccessPolicyButton, {
-    props: { group },
+    props: { group: currentGroup },
     global: {
       plugins: [createI18n({ legacy: false, locale: 'zh', messages: { zh: {} } })],
       stubs: { BaseDialog: { props: ['show'], template: '<div v-if="show"><slot /></div>' }, Icon: true },
@@ -26,7 +26,7 @@ function render() {
 beforeEach(() => {
   vi.resetAllMocks()
   mocks.get.mockResolvedValue({ ...original })
-  mocks.groups.mockResolvedValue([group, { ...group, id: 2, name: '常规组' }, { ...group, id: 3, platform: 'openai' }])
+  mocks.groups.mockResolvedValue([group, { ...group, id: 2, name: '常规组' }, { ...group, id: 3, platform: 'openai' }, { ...group, id: 4, subscription_type: 'subscription' }])
   mocks.save.mockResolvedValue({ ...original })
 })
 
@@ -49,6 +49,7 @@ describe('分组开放规则配置', () => {
         { starts_at: '2026-11-01T12:30:00.000Z', ends_at: '2026-11-01T15:00:00.000Z', rate_multiplier: 0.1 },
       ],
     }))
+    expect(wrapper.emitted('saved')).toHaveLength(1)
     wrapper.unmount()
   })
 
@@ -88,6 +89,9 @@ describe('分组开放规则配置', () => {
     await wrapper.get('[data-testid="expires-at"]').setValue('2026-11-01T00:00')
     expect(wrapper.find('[data-testid="fallback-group"] option[value="3"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="fallback-group"] option[value="1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="fallback-group"] option[value="4"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('到期删除并平移用户')
+    expect(wrapper.text()).toContain('分时福利的时段结束只恢复基础倍率')
     await wrapper.get('[data-testid="fallback-group"]').setValue('2')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
@@ -104,6 +108,30 @@ describe('分组开放规则配置', () => {
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     expect(mocks.save).toHaveBeenCalledWith(1, expect.objectContaining({ balance_enabled: true, expires_at: null, fallback_group_id: null }))
+    wrapper.unmount()
+  })
+
+  it('订阅分组禁止开启到期删除，仍可配置福利倍率', async () => {
+    const wrapper = render({ ...group, subscription_type: 'subscription' })
+    await wrapper.get('[data-testid="group-access-policy"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="expiry-toggle"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="schedule-toggle"]').attributes('disabled')).toBeUndefined()
+    await wrapper.get('[data-testid="schedule-toggle"]').trigger('click')
+    await wrapper.get('[data-testid="seed-periods"]').trigger('click')
+    expect(wrapper.find('[data-testid="expires-at"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('订阅分组可以关闭旧到期设置', async () => {
+    mocks.get.mockResolvedValue({ ...original, expires_at: '2026-10-31T16:00:00Z', fallback_group_id: 2 })
+    const wrapper = render({ ...group, subscription_type: 'subscription' })
+    await wrapper.get('[data-testid="group-access-policy"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="expiry-toggle"]').trigger('click')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(mocks.save).toHaveBeenCalledWith(1, expect.objectContaining({ expires_at: null, fallback_group_id: null }))
     wrapper.unmount()
   })
 
