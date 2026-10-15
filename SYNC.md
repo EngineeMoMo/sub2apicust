@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-15分组功能发布终态：最终794479760593961c08ea842095543ec1d0bd58c5已推origin/main，同SHA CI38727724771／安全38727724898／GHCR38727724764全部成功，含unit／integration、独立PG18、Go lint 0及前端52文件815项。固定sha-7944797（linux/amd64），摘要sha256:34cf7d44c87608d92964329571250f65127b20dc3ca5cc99f7bf582533e4b0c5，registry／源码／embed日志已验真。257已首次发布，保留最终迁移、CI独立group_access_test库与Makefile三个前端专项；用户备份后`./update.sh sha-7944797`，本机8080和生产未代部署。证据见HANDOFF和output/group-access-cache-20261015/verified-release.json；下方257未发布／待门禁为历史阶段，纯文档skip-ci提交不替代此镜像SHA。
+
 2026-10-15发布补充：用户已要求更新测试，分组门槛／缓存／福利本轮提交推送origin/main并核验同SHA CI／安全／GHCR；CI独立PG18与CUSTOM_GROUP_ACCESS_TEST_DSN须随接缝保留。固定镜像与终态以HANDOFF最新记录为准，生产由用户备份后自行更新；下方未授权／未提交状态为历史。
 
 2026-10-15后续补充优先：分组门槛已加入独立事务通知缓存，并追加按指定日期的多时段福利倍率。257仍未发布，最终版本包含活动JSON及缓存通知触发器，不可用本地早期257替代；保留Wire监听退出清理、默认用户倍率缓存标记、批量生图活动快照、复制事务及当前倍率展示接缝。规则／月充值热请求不再逐次回源；退款通知异步、30秒TTL兜底，监听异常回源拒绝失败。最终证据见output/group-access-cache-20261015/verification.json及HANDOFF，未提交部署；下方40／42项为初版历史。

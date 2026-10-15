@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-15 分组门槛、缓存、到期与不定期福利已发布（最新终态）**：功能b5e3c217f、前端CI清单0339bb5b5及缓存类型补修794479760593961c08ea842095543ec1d0bd58c5已推origin/main；正式发布以最终794479760为准。同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724771)（全量unit／integration、独立PG18分组退款／双实例缓存、既有PG18／Redis专项、脚本、Go lint 0 issues、前端52文件815项及类型／lint）、[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724898)、[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724764)全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-7944797`（linux/amd64），摘要`sha256:34cf7d44c87608d92964329571250f65127b20dc3ca5cc99f7bf582533e4b0c5`，registry的revision／source／平台、正式embed构建日志及26个生产源码哈希交叉验真。初次CI的3处errcheck已补齐五类缓存取值检查，19项缓存专项通过，失败记录保留；原69项／50项及Linux11955顶层unit属补修前本地基线，不能冒充最终CI计数。证据`output/group-access-cache-20261015/verified-release.json`及同目录各job日志。用户备份数据库／配置／app_data后，在实际部署目录执行`./update.sh sha-7944797`，前后端同版并自动执行最终257迁移。管理入口「分组管理 → 开放规则 → 分时福利倍率」，可填入三段示例并选择23点兜底；指定日期一次性生效，不每日循环。退款／余额失去资格仍拒绝，只有到期切兜底；正常缓存命中不聚合充值，通知异步不能承诺零传播延迟。未代部署本机8080或生产、未配置真实业务活动；真实商户退款、页面交互、生产P95和WS客户端重连待用户更新验收。下方未提交／待门禁均为历史；之后仅文档skip-ci提交不产生新镜像，仍使用7944797固定标签。
+
 - **2026-10-15 本轮CI缓存类型检查补修，待新SHA门禁**：功能b5e3c217f及前端CI清单0339bb5b5已推origin/main。0339的安全／脚本／前端52文件815项成功，但Go静态检查发现自有资格缓存3处未经检查的类型断言；已对规则、用户、分组、月充值和订阅五类取值统一检查，错误类型／空指针返回错误而非panic，不放行旧资格。新增8种异常缓存回归；本机Go1.27.2缓存专项6顶层／含子项19项全部通过、零跳过，证据output/group-access-cache-20261015/cache-typecheck-fix.jsonl。原69项及Linux全量是补修前基线，最终以新SHA的全量CI／安全／GHCR为准，尚不交付旧失败SHA标签；未部署。
 
 - **2026-10-15 用户要求更新测试，进入本轮发布门禁（最新状态）**：用户要求「好了吗你我更新测试下」，按既有协作约定提交并推送 origin/main，生产仍由用户手动更新。发布前 fetch 确认远端与本地基线同为879f3b2e85c5cd5105d3c2d8afcae15c4193959a；最终本地验证证据见output/group-access-cache-20261015/verification.json。新增CI独立PG18及CUSTOM_GROUP_ACCESS_TEST_DSN，让退款和双实例缓存专项不靠跳过通过；待本轮实际功能SHA的CI／安全／GHCR全部成功并核验固定镜像后交付更新命令。未部署本机8080或生产，未配置真实福利活动；下方未授权／未提交为阶段记录，最终发布状态须更新本条。
@@ -588,7 +590,7 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **分组缓存及福利发布门禁（用户已授权）**：提交推送origin/main后检查同功能SHA的CI（含专用PG18退款与多实例缓存）／安全／GHCR及镜像revision、source、平台与digest，全部通过后交付固定标签；不沿用旧结果。
+- [x] **分组缓存及福利发布门禁（用户已授权）**：最终794479760已推送；同SHA CI38727724771（unit／integration、专用PG18、Go lint 0、前端52文件815项）／安全38727724898／GHCR38727724764全部成功，固定sha-7944797的revision、source、平台与digest和embed日志交叉验真；证据verified-release.json，未代部署。
 
 - [x] **分组缓存与福利最终全量验证**：最终69项后端／50项前端、Linux58包11955顶层unit（含子项23316通过／36跳过）及embed退出0；真实PG双实例另实际通过，十轮专项通过。完整证据output/group-access-cache-20261015/verification.json，临时PG已清理。
 - [ ] **分组缓存及活动部署后验收**：用户已要求发布用于更新测试；本轮CI／镜像门禁通过后，由用户备份并同版升级最终257；验证通知传播延迟与故障回源、真实退款撤销资格、活动日期／18:00／20:30／23:00及目标权限／模型／账单、批量生图快照和WS重连。生产负载与P95尚未压测，不以隔离微基准代替；不自动配置真实活动或部署生产。

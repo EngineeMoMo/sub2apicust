@@ -1,5 +1,17 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-15 分组门槛、到期、缓存与分时福利（已发布）
+
+最终发布提交`794479760593961c08ea842095543ec1d0bd58c5`，同SHA [CI](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724771)（unit／integration、专用PG18、Go lint 0、前端52文件815项）／[安全](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724898)／[GHCR](https://github.com/EngineeMoMo/sub2apicust/actions/runs/38727724764)全部成功。固定`ghcr.io/engineemomo/sub2apicust:sha-7944797`（linux/amd64），摘要`sha256:34cf7d44c87608d92964329571250f65127b20dc3ca5cc99f7bf582533e4b0c5`，registry的revision／source与正式embed构建日志已验真。下方未提交／待发布是历史阶段；纯文档skip-ci提交不生成替代镜像。
+
+先备份数据库、部署配置和app_data，再由用户在实际部署目录执行：
+
+```bash
+./update.sh sha-7944797
+```
+
+升级自动执行最终257迁移，默认不开启已有分组规则。刷新后台进入「分组管理 → 开放规则」，两个USD额度门槛可分别开关，同时开启为AND；指定日期的分时福利可填三段示例，23点换组须选兜底。先用测试分组把时段改成未来几分钟，验证保存／单独关闭／原Key新请求倍率和到期切换；再验真实退款资格与实际账单。退款或余额失去资格仍拒绝，只有到期触发兜底；WS跨分组／基础倍率变化需重连。详见[操作说明](GROUP_ACCESS_RULES.md)，未代部署8080或生产、未配置真实活动；生产吞吐和商户退款待验。
+
 2026-10-15发布授权补充：用户已要求更新测试，分组门槛／缓存／分时福利进入本轮提交与镜像门禁，最终固定标签及同SHA CI／安全／GHCR以HANDOFF最新状态为准。用户在实际部署目录备份数据库／配置／app_data后执行本轮固定标签更新；未代部署本机8080或生产。下方尚未授权／未提交为历史阶段，不能据此使用旧标签。
 
 2026-10-15后续补充：待发布分组规则现包含资格缓存优化及一次性分时福利倍率。最终257还包含事务通知触发器和活动JSON，应用每实例增加一个LISTEN连接；前后端必须同版。入口、三段福利示例、到期兜底、原有倍率优先级及通知延迟边界见[分组开放规则](GROUP_ACCESS_RULES.md)。最终验证看output/group-access-cache-20261015/verification.json及HANDOFF，当前未提交／推送／发布镜像或部署；旧标签不包含本功能，下方初版测试数属历史。

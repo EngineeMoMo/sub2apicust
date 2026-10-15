@@ -1,5 +1,7 @@
 # 本机 Docker 构建网络故障与防复发清单
 
+2026-10-15正式发布补充：最终794479760已推送，同SHA CI38727724771／安全38727724898／GHCR38727724764全部成功，正式固定sha-7944797及摘要／源码／embed已交叉验真，详见HANDOFF及output/group-access-cache-20261015/verified-release.json。新增缓存类型检查的19项本机专项通过；下方「未生成发布镜像」为早期隔离阶段。用户自行更新，本机8080、业务容器和卷及生产均未代部署，真实业务活动未配置。
+
 2026-10-15最终终态：Linux58包unit及embed退出0，前端50项／构建、后端69项含真实PG双实例和十轮专项通过；临时容器sub2apicust-group-access-cache-20261015已核验ID 9e8420b00b60259ea5318b6ab33bbb8e9788c460f02c5b0a343d72ad27472972后连匿名卷清理。只导出验证产物，未生成本轮业务发布镜像或部署8080／生产。最终证据output/group-access-cache-20261015/verification.json，首次server测试漏参已修并保留失败记录。
 
 2026-10-15缓存与福利补充验证：继续只使用独立group_access_test数据库和缓存中的Go1.27.2镜像，不操作业务容器或业务卷。后端69项专项含真实PG双实例／提交／回滚，前端50项及构建已通过；最终Linux全量与embed结果见output/group-access-cache-20261015/verification.json。活动在表单配置后才生效，本轮未设置任何业务分组或部署本机8080／生产。旧output/group-access-20261015为初版证据，不能冒充最终源码验证。
