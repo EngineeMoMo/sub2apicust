@@ -131,14 +131,14 @@ func TestCustomCollectionHoldPostgres(t *testing.T) {
 		released := order(OrderStatusExpired, now.Add(-25*time.Hour), "")
 		exec("UPDATE custom_payment_collection_ledger SET release_checked_at=$1 WHERE order_id=$2", now.Add(-10*time.Minute), checkedRecently)
 		exec("UPDATE custom_payment_collection_ledger SET released=true WHERE order_id=$1", released)
-		ids, e := customDueCollectionHolds(context.Background(), db, now, 24*time.Hour, 20)
+		ids, e := customDueCollectionHolds(context.Background(), db, now, 24*time.Hour, 20, now.Add(-customCollectionRecheckBackoff))
 		require.NoError(t, e)
 		require.ElementsMatch(t, []int64{failedNoEntry, wapDue, unprovenDue}, ids)
 		for _, id := range []int64{wapRecent, unprovenRecent, pendingOld, checkedRecently, released} {
 			require.NotContains(t, ids, id)
 		}
 		require.NoError(t, customMarkCollectionChecked(context.Background(), db, unprovenDue, now))
-		ids, e = customDueCollectionHolds(context.Background(), db, now, 24*time.Hour, 20)
+		ids, e = customDueCollectionHolds(context.Background(), db, now, 24*time.Hour, 20, now.Add(-customCollectionRecheckBackoff))
 		require.NoError(t, e)
 		require.NotContains(t, ids, unprovenDue, "刚复查过的订单进入退避")
 	})

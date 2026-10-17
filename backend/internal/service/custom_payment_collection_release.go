@@ -241,7 +241,7 @@ func (s *PaymentService) customSweepCollectionHolds(ctx context.Context, now tim
 	if err != nil {
 		return 0, err
 	}
-	ids, err := customDueCollectionHoldsCheckedBefore(ctx, s.entClient, now, wait, customCollectionReleaseBatch, checkedBefore)
+	ids, err := customDueCollectionHolds(ctx, s.entClient, now, wait, customCollectionReleaseBatch, checkedBefore)
 	if err != nil {
 		return 0, fmt.Errorf("list collection holds: %w", err)
 	}
@@ -284,11 +284,7 @@ func (s *PaymentService) customSweepCollectionHolds(ctx context.Context, now tim
 // customDueCollectionHolds 粗筛可能到期的预占：已结束未付、未释放、未在退避期内复查过。
 // 可证明期限的订单（建单失败无入口，或地址带 time_expire）在期限加余量后即可复查；
 // 其他订单等到期限＋等待期＋余量。最终资格仍由 customCollectionHoldDeadline 判定。
-func customDueCollectionHolds(ctx context.Context, db customCollectionSQL, now time.Time, unproven time.Duration, limit int) ([]int64, error) {
-	return customDueCollectionHoldsCheckedBefore(ctx, db, now, unproven, limit, now.Add(-customCollectionRecheckBackoff))
-}
-
-func customDueCollectionHoldsCheckedBefore(ctx context.Context, db customCollectionSQL, now time.Time, unproven time.Duration, limit int, checkedBefore time.Time) ([]int64, error) {
+func customDueCollectionHolds(ctx context.Context, db customCollectionSQL, now time.Time, unproven time.Duration, limit int, checkedBefore time.Time) ([]int64, error) {
 	rows, err := db.QueryContext(ctx, `SELECT o.id FROM payment_orders o
  JOIN custom_payment_collection_ledger l ON l.order_id=o.id
  WHERE l.paid_at IS NULL AND NOT l.released AND o.paid_at IS NULL

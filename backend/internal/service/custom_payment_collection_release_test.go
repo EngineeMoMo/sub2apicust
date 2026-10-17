@@ -285,7 +285,8 @@ func TestCustomCollectionLatePaymentNeverReleased(t *testing.T) {
 	ok, err := customMarkCollectionReleased(f.ctx, f.client, o.ID)
 	require.NoError(t, err)
 	require.False(t, ok)
-	ids, err := customDueCollectionHolds(f.ctx, f.client, time.Now(), 24*time.Hour, 20)
+	now := time.Now()
+	ids, err := customDueCollectionHolds(f.ctx, f.client, now, 24*time.Hour, 20, now.Add(-customCollectionRecheckBackoff))
 	require.NoError(t, err)
 	require.NotContains(t, ids, o.ID)
 }

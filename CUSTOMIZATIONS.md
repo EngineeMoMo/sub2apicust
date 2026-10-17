@@ -4,6 +4,8 @@
 
 - **发布授权更新**：用户已明确要求提交推送后自行更新；本轮支付补丁进入origin/main提交及同SHA CI／安全／GHCR门禁，最终固定镜像以HANDOFF最新发布记录为准。下方未提交为本地验证阶段；不代部署生产，不夹带其他任务的未提交代码。
 
+- **首轮门禁补修**：2af3c432c的安全与前端53文件824项通过，Go lint发现兼容旧测试签名的查询包装仅在unit标签使用而报unused。移除多余包装，生产与 `custom_payment_collection_release_test.go`、`custom_payment_collection_postgres_test.go` 统一调用带复查截止时间的查询，保持原筛选规则。失败日志与首轮结果保留，最终发布须核验补修后的新SHA。
+
 - 用户截图显示大量已取消旧订单仍占用额度，要求无需逐单点击。新增 `custom_payment_collection_auto_release.go`，收款配置增加 `missing_provider_auto_release`（默认关闭，兼容旧配置）；管理员明确保存开启后，只处理原支付实例确实不存在、已取消／过期／失败、未记录付款且超过订单期限＋配置等待时长（默认24小时）＋10分钟的占用。通道仍存在但配置／解密／网络查询失败不能使用此兜底；历史实例引用缺失、无效或冲突时保留。
 - Go层检查后，事务内SQL再次核验当前订单状态、付款记录、期限、列与快照绑定及实例不存在，释放账本与 `COLLECTION_HOLD_AUTO_RELEASED` 审计同事务提交，审计失败回滚。仅释放占用，不修改订单付款状态，不发余额／订阅；审计明确“未能核实实际收款”。不新增迁移或表结构，迟到付款沿用现有账本触发器恢复已收记录。
 - `custom_payment_collection_release.go` 读取已保存策略并接入现有后台复查，保留每60秒调度、每轮最多20笔、失败30分钟退避。新增 `CustomRecheckCollectionHolds` 和定制处理器 `admin/custom_payment_collection.go` 的 `RecheckCollection`（25秒超时），可跳过退避立即复查一批，但不能绕过等待期或开关。**上游接缝**：`backend/internal/server/routes/payment.go` 在已有管理员鉴权、审计与合规中间件组内加 `[CUSTOM]` 的 `POST /admin/payment/collection/recheck`。
