@@ -1,8 +1,8 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-17 历史通道缺失时自动分批清理收款占用（本地已验证，未发布）
+## 2026-10-17 历史通道缺失时自动分批清理收款占用（已发布sha-16ef917）
 
-- **发布授权更新**：用户已明确要求提交推送后自行更新；本轮支付补丁进入origin/main提交及同SHA CI／安全／GHCR门禁，最终固定镜像以HANDOFF最新发布记录为准。下方未提交为本地验证阶段；不代部署生产，不夹带其他任务的未提交代码。
+- **发布终态**：最终业务提交`16ef9172cf666e6361f17161aa83a53178ee0f3f`已推送origin/main；同SHA CI `39029645317`（unit／integration、专用PG18、Go lint 0 issues、前端53文件824项）、安全`39029645211`、GHCR `39029645261`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-16ef917`，平台`linux/amd64`，index digest `sha256:49b4285ec235151d36459e3cdd49320103fffa0864d1c552351378a43ef64d07`；registry revision／source／平台／摘要及正式embed构建日志已交叉核验。证据`output/payment-auto-release-20261017/verified-release.json`、`release-final-verification.json`及同目录job日志。首轮2af3c432c的unused已补修并保留失败记录；不使用首轮候选交付。未代部署生产或处理真实订单，其他任务未提交工作保留。后续纯文档`[skip ci]`提交不改变该业务镜像。下方未提交／未发布为本地验证阶段。
 
 - **首轮门禁补修**：2af3c432c的安全与前端53文件824项通过，Go lint发现兼容旧测试签名的查询包装仅在unit标签使用而报unused。移除多余包装，生产与 `custom_payment_collection_release_test.go`、`custom_payment_collection_postgres_test.go` 统一调用带复查截止时间的查询，保持原筛选规则。失败日志与首轮结果保留，最终发布须核验补修后的新SHA。
 
@@ -13,7 +13,7 @@
 - 新增 `custom_payment_collection_auto_release_test.go`、`repository/custom_payment_collection_auto_release_postgres_test.go`：默认关闭、三类终态×四类绑定、等待期、已付与账本已付、现存／停用通道、无效／冲突引用、读取后绑定变化、审计回滚、管理员跳过退避、45笔按20／20／5／0推进，以及PG完整迁移、迟到付款更新、10轮付款更新与自动释放并发。最终与既有删除保护／收款回归合跑，后端104个叶子用例通过（service80、repository24），0失败0跳过；前端9项、类型、定制文件ESLint、i18n3项、生产构建及Go1.27.2 Windows/amd64最终embed编译通过。首轮测试夹具未注入loadBalancer的失败日志单独保留，已补齐夹具。证据 `output/payment-auto-release-20261017/verification.json` 及同目录日志。
 - **发布与现场边界**：未提交／推送／发布镜像／更新业务应用或生产，隔离PG18容器核实完整ID且无业务卷后已清理。启用新策略后通常按分钟批次推进，近期复查失败的旧单仍受30分钟退避，可点一次立即批量复查。测试中的迟到付款是数据库付款状态更新，不能证明已删实例的真实webhook能验签或订单47已核实收款。原默认“缺通道保留占用”仍适用于开关关闭的站点；生产已有订单尚未代处理，真实收款仍须商户账单取证。同步上游须保留新路由接缝、策略字段、事务校验及回归。
 
-## 2026-10-17 支付通道删除时保留未释放的收款占用（源码已验证，未发布）
+## 2026-10-17 支付通道删除时保留未释放的收款占用（已发布sha-16ef917）
 
 - 用户报告订单47历史绑定的支付实例3缺失。新增 `backend/internal/service/custom_payment_provider_guard.go`：删除前查询未付款且未释放的收款账本，按订单 `provider_instance_id` 或 `provider_snapshot.provider_instance_id` 匹配原通道；不因订单已取消／过期／失败而忽略占用，字符串去首尾空格与原解析一致。存在占用时返回409 `PROVIDER_COLLECTION_HOLDS`，提示去设置→支付核账处理或停用；查询失败拒绝删除，不自动释放额度。
 - **上游接缝**：`backend/internal/service/payment_config_providers.go` 的 `DeleteProviderInstance` 在原进行中订单保护与实际硬删除之间新增4行 `[CUSTOM]` 检查。原 PENDING／PAID／RECHARGING 保护保持；已释放、账本已记录付款或不涉及该通道的订单不增加删除限制。没有新增迁移、表结构或前端修改；现有错误提取会回退显示后端中文消息。

@@ -1,5 +1,19 @@
 # 日常更新操作手册（定制版 sub2api）
 
+## 2026-10-17 支付通道删除保护与历史占用自动清理（当前可更新版）
+
+最终业务提交`16ef9172cf666e6361f17161aa83a53178ee0f3f`已推送origin/main；同SHA CI `39029645317`（unit／integration、专用PG18、Go lint 0 issues、前端53文件824项）、安全`39029645211`、GHCR `39029645261`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-16ef917`，平台`linux/amd64`，index digest `sha256:49b4285ec235151d36459e3cdd49320103fffa0864d1c552351378a43ef64d07`；registry revision／source／平台／摘要及正式embed构建日志已交叉核验。
+
+按现有流程备份数据库、部署配置和app_data后，在实际部署目录执行：
+
+```bash
+./update.sh sha-16ef917
+```
+
+更新后在设置→支付开启“原支付通道已删除时，超期占用自动清理”并保存（默认关闭）；已取消／过期／失败、未记录付款且原实例确实不存在的历史占用，在期限＋配置等待（默认24小时）＋10分钟后按每60秒最多20笔处理，失败仍有30分钟退避，可点一次“立即批量复查”。只释放占用，不充值或发订阅，实际收款须商户账单核实。
+
+支付补丁没有新增迁移；通道仍存在但配置／查询失败、已付款、引用无效／冲突及等待未满的订单继续保留，不换绑历史订单。更新后刷新管理员页面，检查清理审计和占用下降。证据`output/payment-auto-release-20261017/verified-release.json`、`release-final-verification.json`及同目录job日志。首轮2af3c432c的unused已补修并保留失败记录；不使用首轮候选交付。未代部署生产或处理真实订单，其他任务未提交工作保留。后续纯文档`[skip ci]`提交不改变该业务镜像。以下旧标签及未发布状态为历史阶段。
+
 ## 2026-10-15 分组活动显示、到期平移删除及R1–R4补修（当前可更新版）
 
 最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。
