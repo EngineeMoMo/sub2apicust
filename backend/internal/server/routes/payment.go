@@ -104,6 +104,8 @@ func RegisterPaymentRoutes(
 		// Config
 		// [CUSTOM] 管理员收款账本，不向普通用户暴露总额。
 		adminGroup.GET("/collection", adminPaymentHandler.GetCollection)
+		// [CUSTOM] 按已保存策略批量复查，不能跳过等待期或自动清理开关。
+		adminGroup.POST("/collection/recheck", adminPaymentHandler.RecheckCollection)
 		adminGroup.POST("/collection/manual", adminPaymentHandler.RecordCollection)
 		adminGroup.POST("/collection/:id/close", adminPaymentHandler.CloseCollection)
 		// [CUSTOM] 渠道无法复查时的人工释放，须原因、确认与等待期，写审计。

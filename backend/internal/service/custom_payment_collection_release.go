@@ -204,14 +204,19 @@ func customCollectionUnprovenWindowOf(p *CustomCollectionPolicy) time.Duration {
 
 // 读不到配置时报错而不是退回默认值，避免把管理员调长的等待期悄悄缩短。
 func (s *PaymentService) customCollectionUnprovenWindow(ctx context.Context) (time.Duration, error) {
+	wait, _, err := s.customCollectionReleasePolicy(ctx)
+	return wait, err
+}
+
+func (s *PaymentService) customCollectionReleasePolicy(ctx context.Context) (time.Duration, bool, error) {
 	if s.configService == nil {
-		return customCollectionUnprovenWindowOf(nil), nil
+		return customCollectionUnprovenWindowOf(nil), false, nil
 	}
 	cfg, err := s.configService.GetPaymentConfig(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("load collection policy: %w", err)
+		return 0, false, fmt.Errorf("load collection policy: %w", err)
 	}
-	return customCollectionUnprovenWindowOf(cfg.Collection), nil
+	return customCollectionUnprovenWindowOf(cfg.Collection), cfg.Collection != nil && cfg.Collection.MissingProviderAutoRelease, nil
 }
 
 // CustomReleaseUnpayableCollectionHolds 由订单过期任务定期调用，复查已结束订单的收款预占。
@@ -220,19 +225,31 @@ func (s *PaymentService) CustomReleaseUnpayableCollectionHolds(ctx context.Conte
 }
 
 func (s *PaymentService) customReleaseUnpayableCollectionHolds(ctx context.Context, now time.Time, resolve func(context.Context, *dbent.PaymentOrder) (payment.Provider, error)) (int, error) {
+	return s.customSweepCollectionHolds(ctx, now, resolve, now.Add(-customCollectionRecheckBackoff), "system")
+}
+
+func (s *PaymentService) CustomRecheckCollectionHolds(ctx context.Context, adminID int64) (int, error) {
+	now := time.Now()
+	return s.customSweepCollectionHolds(ctx, now, s.getOrderProvider, now, fmt.Sprintf("admin:%d", adminID))
+}
+
+func (s *PaymentService) customSweepCollectionHolds(ctx context.Context, now time.Time, resolve func(context.Context, *dbent.PaymentOrder) (payment.Provider, error), checkedBefore time.Time, operator string) (int, error) {
 	if s == nil || s.entClient == nil {
 		return 0, nil
 	}
-	wait, err := s.customCollectionUnprovenWindow(ctx)
+	wait, autoReleaseMissing, err := s.customCollectionReleasePolicy(ctx)
 	if err != nil {
 		return 0, err
 	}
-	ids, err := customDueCollectionHolds(ctx, s.entClient, now, wait, customCollectionReleaseBatch)
+	ids, err := customDueCollectionHoldsCheckedBefore(ctx, s.entClient, now, wait, customCollectionReleaseBatch, checkedBefore)
 	if err != nil {
 		return 0, fmt.Errorf("list collection holds: %w", err)
 	}
 	released := 0
 	for _, id := range ids {
+		if ctx.Err() != nil {
+			break
+		}
 		// 先记复查时间，失败的订单按退避间隔重试，不会每轮都占满批次。
 		if err := customMarkCollectionChecked(ctx, s.entClient, id, now); err != nil {
 			slog.Warn("mark collection hold checked failed", "orderID", id, "error", err)
@@ -244,10 +261,20 @@ func (s *PaymentService) customReleaseUnpayableCollectionHolds(ctx context.Conte
 		}
 		prov, err := resolve(ctx, o)
 		if err != nil {
+			if autoReleaseMissing {
+				ok, releaseErr := s.customAutoReleaseMissingProviderHold(ctx, o, now, wait, operator)
+				if releaseErr != nil {
+					slog.Warn("auto release missing provider collection hold failed", "orderID", id, "error", releaseErr)
+				}
+				if ok {
+					released++
+					continue
+				}
+			}
 			slog.Warn("resolve collection hold provider failed", "orderID", id, "error", err)
 			continue
 		}
-		if outcome, _ := s.customRecheckCollectionHold(ctx, o, prov, now, wait, "system", false); outcome == customHoldReleased {
+		if outcome, _ := s.customRecheckCollectionHold(ctx, o, prov, now, wait, operator, false); outcome == customHoldReleased {
 			released++
 		}
 	}
@@ -258,6 +285,10 @@ func (s *PaymentService) customReleaseUnpayableCollectionHolds(ctx context.Conte
 // 可证明期限的订单（建单失败无入口，或地址带 time_expire）在期限加余量后即可复查；
 // 其他订单等到期限＋等待期＋余量。最终资格仍由 customCollectionHoldDeadline 判定。
 func customDueCollectionHolds(ctx context.Context, db customCollectionSQL, now time.Time, unproven time.Duration, limit int) ([]int64, error) {
+	return customDueCollectionHoldsCheckedBefore(ctx, db, now, unproven, limit, now.Add(-customCollectionRecheckBackoff))
+}
+
+func customDueCollectionHoldsCheckedBefore(ctx context.Context, db customCollectionSQL, now time.Time, unproven time.Duration, limit int, checkedBefore time.Time) ([]int64, error) {
 	rows, err := db.QueryContext(ctx, `SELECT o.id FROM payment_orders o
  JOIN custom_payment_collection_ledger l ON l.order_id=o.id
  WHERE l.paid_at IS NULL AND NOT l.released AND o.paid_at IS NULL
@@ -267,7 +298,7 @@ func customDueCollectionHolds(ctx context.Context, db customCollectionSQL, now t
   OR o.expires_at <= $8)
  ORDER BY CASE WHEN l.release_checked_at IS NULL THEN 0 ELSE 1 END, o.expires_at, o.id LIMIT $9`,
 		OrderStatusExpired, OrderStatusCancelled, OrderStatusFailed,
-		now.Add(-customCollectionRecheckBackoff),
+		checkedBefore,
 		now.Add(-customCollectionReleaseMargin), OrderStatusFailed, "%time_expire%",
 		now.Add(-unproven-customCollectionReleaseMargin), limit)
 	if err != nil {

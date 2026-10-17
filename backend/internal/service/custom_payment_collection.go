@@ -25,7 +25,8 @@ type CustomCollectionPolicy struct {
 	// 同一用户未付且未释放的预占合计上限；缺省为单笔上限的3倍且不超过每日上限（248 触发器同一口径）。
 	UserHoldMax float64 `json:"user_hold_max"`
 	// 无法由付款入口证明期限的订单（旧手机 WAP、电脑网站支付、易支付等）在订单期限后再等多少小时才复查释放。
-	UnprovenReleaseHours int `json:"unproven_release_hours"`
+	UnprovenReleaseHours       int  `json:"unproven_release_hours"`
+	MissingProviderAutoRelease bool `json:"missing_provider_auto_release"`
 }
 
 const customCollectionDefaultUnprovenHours = 24

@@ -1,5 +1,24 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-17 历史通道缺失时自动分批清理收款占用（本地已验证，未发布）
+
+- **发布授权更新**：用户已明确要求提交推送后自行更新；本轮支付补丁进入origin/main提交及同SHA CI／安全／GHCR门禁，最终固定镜像以HANDOFF最新发布记录为准。下方未提交为本地验证阶段；不代部署生产，不夹带其他任务的未提交代码。
+
+- 用户截图显示大量已取消旧订单仍占用额度，要求无需逐单点击。新增 `custom_payment_collection_auto_release.go`，收款配置增加 `missing_provider_auto_release`（默认关闭，兼容旧配置）；管理员明确保存开启后，只处理原支付实例确实不存在、已取消／过期／失败、未记录付款且超过订单期限＋配置等待时长（默认24小时）＋10分钟的占用。通道仍存在但配置／解密／网络查询失败不能使用此兜底；历史实例引用缺失、无效或冲突时保留。
+- Go层检查后，事务内SQL再次核验当前订单状态、付款记录、期限、列与快照绑定及实例不存在，释放账本与 `COLLECTION_HOLD_AUTO_RELEASED` 审计同事务提交，审计失败回滚。仅释放占用，不修改订单付款状态，不发余额／订阅；审计明确“未能核实实际收款”。不新增迁移或表结构，迟到付款沿用现有账本触发器恢复已收记录。
+- `custom_payment_collection_release.go` 读取已保存策略并接入现有后台复查，保留每60秒调度、每轮最多20笔、失败30分钟退避。新增 `CustomRecheckCollectionHolds` 和定制处理器 `admin/custom_payment_collection.go` 的 `RecheckCollection`（25秒超时），可跳过退避立即复查一批，但不能绕过等待期或开关。**上游接缝**：`backend/internal/server/routes/payment.go` 在已有管理员鉴权、审计与合规中间件组内加 `[CUSTOM]` 的 `POST /admin/payment/collection/recheck`。
+- 前端仅改定制文件 `frontend/src/custom/paymentCollection.ts`、`components/PaymentCollectionSettings.vue` 及相应测试：新增“原支付通道已删除时，超期占用自动清理”开关和“立即批量复查”按钮，解释保存后生效及未核实收款的边界；原逐单关单／人工释放保留，样式和上游页面未改。
+- 新增 `custom_payment_collection_auto_release_test.go`、`repository/custom_payment_collection_auto_release_postgres_test.go`：默认关闭、三类终态×四类绑定、等待期、已付与账本已付、现存／停用通道、无效／冲突引用、读取后绑定变化、审计回滚、管理员跳过退避、45笔按20／20／5／0推进，以及PG完整迁移、迟到付款更新、10轮付款更新与自动释放并发。最终与既有删除保护／收款回归合跑，后端104个叶子用例通过（service80、repository24），0失败0跳过；前端9项、类型、定制文件ESLint、i18n3项、生产构建及Go1.27.2 Windows/amd64最终embed编译通过。首轮测试夹具未注入loadBalancer的失败日志单独保留，已补齐夹具。证据 `output/payment-auto-release-20261017/verification.json` 及同目录日志。
+- **发布与现场边界**：未提交／推送／发布镜像／更新业务应用或生产，隔离PG18容器核实完整ID且无业务卷后已清理。启用新策略后通常按分钟批次推进，近期复查失败的旧单仍受30分钟退避，可点一次立即批量复查。测试中的迟到付款是数据库付款状态更新，不能证明已删实例的真实webhook能验签或订单47已核实收款。原默认“缺通道保留占用”仍适用于开关关闭的站点；生产已有订单尚未代处理，真实收款仍须商户账单取证。同步上游须保留新路由接缝、策略字段、事务校验及回归。
+
+## 2026-10-17 支付通道删除时保留未释放的收款占用（源码已验证，未发布）
+
+- 用户报告订单47历史绑定的支付实例3缺失。新增 `backend/internal/service/custom_payment_provider_guard.go`：删除前查询未付款且未释放的收款账本，按订单 `provider_instance_id` 或 `provider_snapshot.provider_instance_id` 匹配原通道；不因订单已取消／过期／失败而忽略占用，字符串去首尾空格与原解析一致。存在占用时返回409 `PROVIDER_COLLECTION_HOLDS`，提示去设置→支付核账处理或停用；查询失败拒绝删除，不自动释放额度。
+- **上游接缝**：`backend/internal/service/payment_config_providers.go` 的 `DeleteProviderInstance` 在原进行中订单保护与实际硬删除之间新增4行 `[CUSTOM]` 检查。原 PENDING／PAID／RECHARGING 保护保持；已释放、账本已记录付款或不涉及该通道的订单不增加删除限制。没有新增迁移、表结构或前端修改；现有错误提取会回退显示后端中文消息。
+- **回归**：新增 `backend/internal/service/custom_payment_provider_guard_test.go`，覆盖三类终态×订单列／快照／二者／快照空格的12种绑定、已结清／无关占用允许删除、原进行中保护、查账失败不删除，以及通道已缺失时自动复查仍保留占用、核账确认后人工释放并写审计。有效旧代码基线有13个叶子用例失败，修复后全部通过；首次共用SQLite夹具并行冲突已改为顺序执行，该次日志单独保留，不作为缺陷证据。
+- 新增 `backend/internal/repository/custom_payment_provider_guard_postgres_test.go`，在隔离 PostgreSQL 18 的完整迁移链上验证同样12种历史绑定，并确认释放后可删；与原真实收款占用／人工释放回归合跑。服务专项45个叶子用例通过，1个PG专项在该阶段跳过后已在真实PG阶段实际执行；真实PG阶段19个叶子用例全部通过、0跳过。Go1.27.2 Windows/amd64 `go build -tags embed ./cmd/server` 成功，格式与差异检查通过；证据 `output/payment-provider-guard-20261017/verification.json` 及同目录日志。
+- **边界**：删除保护适用于后台服务删除时检查到的占用；不新增数据库级约束。已被删除的实例不会由补丁重建，不自动给旧订单换绑新通道。生产订单47仍需现场核对商户账单、等待期和账本，再使用既有人工释放入口。本轮未提交／推送／发布镜像或部署；隔离PG容器使用tmpfs，按完整ID核验后已清理。同步上游时保留本接缝与上述回归，不能将本地Windows编译等同Linux CI或生产验收。
+
 ## 2026-10-15 分组活动显示与审查补修（已发布sha-0e99748）
 
 - 发布终态：最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。含R1–R4、管理员当前活动倍率及基础说明、分组到期事务平移后软删除与迁移258；福利时段结束仍只恢复基础倍率，沿用原计费逻辑。**新版启动会补处理已有到期规则，用户须先备份数据库／配置／app_data并审阅源组及平移目标，再执行`./update.sh sha-0e99748`。**生产由用户手动更新，真实收费与到期平移现场验收仍待；20:30历史故障根因未知。证据在`output/group-access-fix-20261015/verified-release.json`、`release-source-proof.json`及同目录job日志；首轮c4fa7fd的ineffassign失败已补修，旧候选不作交付。后续`[skip ci]`纯文档提交不改变镜像业务版本。

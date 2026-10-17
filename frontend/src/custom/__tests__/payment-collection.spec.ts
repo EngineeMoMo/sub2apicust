@@ -17,6 +17,43 @@ beforeEach(() => {
 })
 
 describe('共享收款配置', () => {
+  it('原通道缺失的自动清理默认关闭，开启后随配置保存', async () => {
+    const wrapper = mount(PaymentCollectionSettings)
+    await flushPromises()
+    const toggle = wrapper.find<HTMLInputElement>('#collection-auto-missing-provider')
+    expect(toggle.element.checked).toBe(false)
+    expect(wrapper.text()).toContain('不代表已核实未收款')
+    await toggle.setValue(true)
+    await wrapper.findAll('button').find(b => b.text() === '保存收款配置')!.trigger('click')
+    await flushPromises()
+    expect(api.updateConfig).toHaveBeenLastCalledWith({ collection: { ...policy(), missing_provider_auto_release: true } })
+    wrapper.unmount()
+  })
+  it('一次批量复查并刷新占用，不逐单提交人工释放', async () => {
+    api.get.mockResolvedValue({ data: { paid: 0, held: 20, remaining: 980, pending: [
+      { order_id: 47, amount: 10, status: 'CANCELLED' }, { order_id: 48, amount: 10, status: 'CANCELLED' }
+    ] } })
+    api.post.mockResolvedValue({ data: { released: 2 } })
+    const wrapper = mount(PaymentCollectionSettings)
+    await flushPromises()
+    await wrapper.findAll('button').find(b => b.text() === '立即批量复查')!.trigger('click')
+    await flushPromises()
+    expect(api.post).toHaveBeenCalledExactlyOnceWith('/admin/payment/collection/recheck')
+    expect(api.get).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toContain('本次已释放 2 笔收款占用')
+    wrapper.unmount()
+  })
+  it('批量复查失败仍刷新统计并保留错误信息', async () => {
+    api.get.mockResolvedValue({ data: { paid: 0, held: 10, remaining: 990, pending: [{ order_id: 47, amount: 10, status: 'CANCELLED' }] } })
+    api.post.mockRejectedValue(new Error('读取自动清理规则失败'))
+    const wrapper = mount(PaymentCollectionSettings)
+    await flushPromises()
+    await wrapper.findAll('button').find(b => b.text() === '立即批量复查')!.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').text()).toContain('读取自动清理规则失败')
+    expect(api.get).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
   it('按实付分值处理50元与49.99元边界', () => {
     expect(collectionAllows(policy(), 50, 'CNY')).toBe(true)
     expect(collectionAllows(policy(), 50.01, 'CNY')).toBe(false)

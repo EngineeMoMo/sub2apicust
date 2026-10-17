@@ -10,6 +10,7 @@ export interface CollectionPolicy {
   user_hold_max?: number
   // 无法证明付款期限的订单在期限后再等多少小时复查释放，默认24。
   unproven_release_hours?: number
+  missing_provider_auto_release?: boolean
 }
 
 export interface CollectionHold {

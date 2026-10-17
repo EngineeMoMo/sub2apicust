@@ -1,10 +1,24 @@
 package admin
 
 import (
+	"context"
+	"strconv"
+	"time"
+
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
+
+func (h *PaymentHandler) RecheckCollection(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	defer cancel()
+	released, err := h.paymentService.CustomRecheckCollectionHolds(ctx, getAdminIDFromContext(c))
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"released": released})
+}
 
 func (h *PaymentHandler) CloseCollection(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)

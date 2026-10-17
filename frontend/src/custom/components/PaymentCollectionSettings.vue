@@ -13,6 +13,9 @@
         <label>每个用户的待付占用上限（元）<input v-model.number="policy.user_hold_max" class="input" type="number" min="0.01" step="0.01" placeholder="默认单笔上限的3倍" /></label>
         <label>无法证明期限的订单复查等待（小时）<input v-model.number="policy.unproven_release_hours" class="input" type="number" min="1" max="360" step="1" placeholder="24" /></label>
       </div>
+      <label><input id="collection-auto-missing-provider" v-model="policy.missing_provider_auto_release" type="checkbox" /> 原支付通道已删除时，超期占用自动清理</label>
+      <p>保存后生效。仅处理已取消、过期或失败且未记录付款的订单，在订单期限加上方等待时长及10分钟后自动分批清理，无需逐单点击。通道仍存在但查询失败的订单继续保留。</p>
+      <p>此规则仅释放收款额度占用，不代表已核实未收款，也不会发放余额或订阅；已到账但未入账的订单仍须核对商户账单处理。默认关闭，每笔自动清理都会记录审计。</p>
       <p>上限50元允许支付50元；严格小于50元请设置49.99元。快捷金额为充值基数，含手续费的实付超过上限时不可选。</p>
       <p>同一用户未付款、未释放的订单合计不能超过待付占用上限，防止单个账号反复下单再取消占满全站额度；须不低于单笔上限、不超过每日上限。付款入口带有绝对期限的订单（支付宝扫码与手机网站支付）过期后约10分钟复查渠道；电脑网站支付、易支付等无法证明期限的订单，再按上面的等待时间复查。</p>
       <label><input v-model="policy.allow_custom_amount" type="checkbox" /> 允许用户输入自定义充值金额</label>
@@ -22,7 +25,9 @@
       <div v-if="usage" class="mofa-collection-summary" role="status">
         <strong>今日已收 ¥{{ usage.paid.toFixed(2) }}</strong><span>待确认占用 ¥{{ usage.held.toFixed(2) }}</span><span>剩余额度 ¥{{ usage.remaining.toFixed(2) }}{{ policy.enabled ? '' : '（限额未启用）' }}</span>
       </div>
-      <p>取消、失败或超时的订单在最晚可付款时间之前继续占用额度；过期后系统向渠道复查，确认未付款才释放，渠道确认已付款则同步付款。退款不恢复当日已收款额度。</p>
+      <p>取消、失败或超时的订单在最晚可付款时间之前继续占用额度；过期后系统向渠道复查，确认未付款才释放，渠道确认已付款则同步付款。开启上方自动清理后，已删除通道的超期订单按该规则处理。退款不恢复当日已收款额度。</p>
+      <button type="button" class="btn btn-secondary" :disabled="saving || !usage?.pending?.length" @click="recheckOrders">立即批量复查</button>
+      <p>按已保存的规则复查，无需逐单操作；剩余订单由后台继续分批处理，不会跳过等待期。</p>
       <details v-if="usage?.pending?.length"><summary>检查待确认订单（最近100条）</summary>
         <div v-for="order in usage.pending" :key="order.order_id" class="mofa-collection-summary">
           <span>订单 #{{ order.order_id }} · ¥{{ order.amount }} · {{ order.status }} · 期限 {{ formatCollectionTime(order.expires_at, policy.timezone) }}</span>
@@ -95,6 +100,14 @@ async function closeOrder(id: number) {
   try { await apiClient.post(`/admin/payment/collection/${id}/close`); message.value = '已确认渠道关单并释放收款预占' }
   catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '渠道关单未确认，额度继续保留') }
   finally { try { await refreshUsage() } catch { /* 保留主要操作结果，下次加载刷新统计。 */ } saving.value = false }
+}
+async function recheckOrders() {
+  saving.value = true; failed.value = false; message.value = ''
+  try {
+    const { data } = await apiClient.post<{ released: number }>('/admin/payment/collection/recheck')
+    message.value = `本次已释放 ${data.released} 笔收款占用，其余订单由后台继续分批复查`
+  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '批量复查未完成，未确认的占用继续保留') }
+  finally { await refreshUsage().catch(() => undefined); saving.value = false }
 }
 function startRelease(id: number) { releaseTarget.value = id; releaseReason.value = ''; releaseConfirmed.value = false; message.value = '' }
 function cancelRelease() { releaseTarget.value = null; releaseReason.value = ''; releaseConfirmed.value = false }

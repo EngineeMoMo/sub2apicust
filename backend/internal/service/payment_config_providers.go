@@ -530,6 +530,10 @@ func (s *PaymentConfigService) DeleteProviderInstance(ctx context.Context, id in
 		return infraerrors.Conflict("PENDING_ORDERS",
 			fmt.Sprintf("this instance has %d in-progress orders and cannot be deleted — wait for orders to complete or disable the instance first", count))
 	}
+	// [CUSTOM] 已结束订单仍可能有收款预占，删除前保留原通道供复查。
+	if err := s.customCheckProviderCollectionHolds(ctx, id); err != nil {
+		return err
+	}
 	return s.entClient.PaymentProviderInstance.DeleteOneID(id).Exec(ctx)
 }
 
