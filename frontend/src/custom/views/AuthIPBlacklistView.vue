@@ -156,7 +156,7 @@ onMounted(() => { void loadConfig(); void loadEntries(1) })
     <div class="space-y-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">IP 黑名单</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">仅累计密码认证失败和请求格式异常，成功操作不计数。验证码校验、业务校验、已有限流和服务端故障不计数。达到次数后按所选方式封禁，也可由管理员手动新增名单。</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">累计密码认证失败、请求格式异常和缺失必要人机验证凭证的请求，成功操作不计数。已提交但未通过的人机挑战、验证码校验、业务校验、已有限流和服务端故障不计数。达到次数后按所选方式封禁，也可由管理员手动新增名单。</p>
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">正常模型调用和已登录管理员的管理操作不受影响。页面时间：{{ timezone }}；统计采用服务端滑动窗口。</p>
       </div>
 

@@ -428,19 +428,25 @@ func (s *AuthService) VerifyCaptcha(ctx context.Context, proof CaptchaProof, rem
 		if s.tencentCaptchaService == nil {
 			return ErrTencentCaptchaNotConfigured
 		}
-		return s.tencentCaptchaService.VerifyTicketWithConfig(ctx, providerConfig.Tencent, proof.TencentTicket, proof.TencentRandstr, remoteIP)
+		// [CUSTOM] 缺失必要凭证单独标记，供认证 IP 防护计数，保留原错误协议。
+		err := s.tencentCaptchaService.VerifyTicketWithConfig(ctx, providerConfig.Tencent, proof.TencentTicket, proof.TencentRandstr, remoteIP)
+		return customAuthCaptchaProofError(err, customAuthTencentCaptchaProofMissing(proof))
 	}
 	if aliyunEnabled {
 		if s.aliyunCaptchaService == nil {
 			return ErrAliyunCaptchaNotConfigured
 		}
-		return s.aliyunCaptchaService.VerifyParamWithConfig(ctx, providerConfig.Aliyun, proof.TurnstileToken)
+		// [CUSTOM] 仅缺失凭证计数，已提交的挑战失败和验证服务故障仍排除。
+		err := s.aliyunCaptchaService.VerifyParamWithConfig(ctx, providerConfig.Aliyun, proof.TurnstileToken)
+		return customAuthCaptchaProofError(err, strings.TrimSpace(proof.TurnstileToken) == "")
 	}
 	if turnstileEnabled {
-		if s.turnstileService == nil || strings.TrimSpace(providerConfig.TurnstileSecretKey) == "" {
+		// [CUSTOM] 服务端未配置不计数；明确缺失凭证时附带认证 IP 失败标记。
+		if s.turnstileService == nil || s.turnstileService.verifier == nil || strings.TrimSpace(providerConfig.TurnstileSecretKey) == "" {
 			return ErrTurnstileNotConfigured
 		}
-		return s.turnstileService.VerifyTokenWithSecret(ctx, providerConfig.TurnstileSecretKey, proof.TurnstileToken, remoteIP)
+		err := s.turnstileService.VerifyTokenWithSecret(ctx, providerConfig.TurnstileSecretKey, proof.TurnstileToken, remoteIP)
+		return customAuthCaptchaProofError(err, strings.TrimSpace(proof.TurnstileToken) == "")
 	}
 	if required {
 		return ErrTurnstileNotConfigured
@@ -483,18 +489,22 @@ func (s *AuthService) VerifyActionCaptchaIfEnabled(ctx context.Context, proof Ca
 		if s.aliyunCaptchaService == nil {
 			return ErrAliyunCaptchaNotConfigured
 		}
-		return s.aliyunCaptchaService.VerifyParamWithConfig(ctx, providerConfig.Aliyun, proof.TurnstileToken)
+		// [CUSTOM] 扩展认证入口沿用缺失凭证的结构化计数标记。
+		err := s.aliyunCaptchaService.VerifyParamWithConfig(ctx, providerConfig.Aliyun, proof.TurnstileToken)
+		return customAuthCaptchaProofError(err, strings.TrimSpace(proof.TurnstileToken) == "")
 	}
 	if s.tencentCaptchaService == nil {
 		return ErrTencentCaptchaNotConfigured
 	}
-	return s.tencentCaptchaService.VerifyTicketWithConfig(
+	// [CUSTOM] 灾备票据与正常挑战失败排除，仅缺少必要字段计数。
+	err = s.tencentCaptchaService.VerifyTicketWithConfig(
 		ctx,
 		providerConfig.Tencent,
 		proof.TencentTicket,
 		proof.TencentRandstr,
 		remoteIP,
 	)
+	return customAuthCaptchaProofError(err, customAuthTencentCaptchaProofMissing(proof))
 }
 
 // VerifyTurnstileForRegister 保留旧内部接口，生产 handler 使用 VerifyCaptchaForRegister。

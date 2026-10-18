@@ -108,6 +108,17 @@ func authIPCountFailure(status int, body []byte) bool {
 		return false
 	}
 	detail := strings.ToLower(result.Reason + " " + result.Message)
+	if status == http.StatusBadRequest {
+		if result.Metadata[service.AuthIPFailureMetadataKey] == service.AuthIPFailureMissingCaptchaProof {
+			switch result.Reason {
+			case "TURNSTILE_VERIFICATION_FAILED", "TENCENT_CAPTCHA_VERIFICATION_FAILED", "ALIYUN_CAPTCHA_VERIFICATION_FAILED":
+				return true
+			}
+		}
+		if result.Reason == "" && (strings.HasPrefix(strings.ToLower(result.Message), "invalid request") || strings.HasPrefix(strings.ToLower(result.Message), "invalid passkey response")) {
+			return true
+		}
+	}
 	for _, excluded := range []string{"captcha", "turnstile", "verification code", "验证码", "totp", "expired", "过期"} {
 		if strings.Contains(detail, excluded) {
 			return false
@@ -116,7 +127,7 @@ func authIPCountFailure(status int, body []byte) bool {
 	if status == http.StatusUnauthorized {
 		return result.Reason == "INVALID_CREDENTIALS" || result.Reason == "PASSKEY_VERIFICATION_FAILED"
 	}
-	return result.Reason == "" && (strings.Contains(detail, "invalid request") || strings.Contains(detail, "invalid passkey response"))
+	return false
 }
 
 type authIPResponseBuffer struct {

@@ -1,5 +1,7 @@
 # 敏感认证 IP 黑名单
 
+2026-10-18缺凭证漏计修复：开启的人机服务要求凭证而请求未提交时，现在作为明确认证失败累计；已提交但未通过的挑战仍排除。三服务商保留原400/reason，使用服务端metadata区分；腾讯灾备票据、网络故障及服务端未配置不计数。包含captcha/turnstile/TOTP字段名的请求格式错误不再被关键词误排除。自动开关/阈值/范围/期限保持配置值，不回灌历史审计，不自动封禁截图IP。发布与镜像以HANDOFF本轮新SHA终态为准，旧sha-57aad62及以下历史镜像不含此修复；生产由用户备份后手动更新。
+
 2026-10-14 上游0.2.16发布终态：功能fe6323ca643af95cd779e8c4700b1bc2583eb29a已推origin/main，包含upstream/main=9c2cca9e627291bc719bada3d57de23b625a4180与正式v0.2.16；同SHA CI38517873853（unit/integration、专用PG18/Redis8、lint0、前端47文件774项含IP管理16项）、安全38517873829及GHCR38517873878全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-fe6323c（linux/amd64），摘要sha256:3740fc0c7b541500a4ba50f94a59696a4cb3dcf52335dca0578275547bb7660d；registry/revision/source、源码树605c0fbae241ffb0bda14d14798dfe9cd5465a0c及二进制0.2.16-custom.fe6323ca6交叉验真。Ent生成无差异、Go embed、定制专项与4189源码61条/正式镜像25条真实HTTP验收通过，覆盖登录、管理员权限、通配符/网段封禁、永久默认与在线更新拒绝。210个自有源码/迁移保持，主工作区main已快进；其他59个未提交文件已备份恢复，依赖仅合入Vue3.5.43并整理原锁文件，付款/248/249/智力效率等其他会话工作仍未发布。3个测试容器、测试卷/网络及工具镜像已清理，原8080镜像b311d7372950与原卷保留，8080/PG/Redis当前仍停止，未把原8080当0.2.16验收。生产由用户备份后执行`./update.sh sha-fe6323c`，生产真实IP及共享网段误拦率仍待；此前sha-bbee35d及本轮“待发布”条目是阶段记录。证据output/upstream-sync-20261014/verified-release.json、formal-smoke.json、original-work-restored.json与cleanup.json。
 
 2026-10-14 同步上游0.2.16：用户要求更新开源fork，目标upstream/main=9c2cca9e6（正式v0.2.16=c3cb8588ce6a5aef4dc29fa4f71ac91f3c0bdf3d，主线随后仅版本号/赞助信息更新）；相对711bfc744新增235条上游提交。merge-tree演算后在独立工作树合并，14处文本冲突逐项解决，保留Go1.27.2、x/image0.45.0、SheetJS0.20.3、DOMPurify3.4.16及认证IP/包号CI存储；采用Vue3.5.43和上游完整13平台配额测试。210个自有源码/迁移文件哈希保持，原6平台fixture已由上游动态清单取代。前端47文件774项、lint/类型/生产构建；Docker内Ent生成无差异、Go embed、PG18/Redis8专项及4189隔离61条真实HTTP验收通过。原8080应用未替换、其他会话未提交改动保留，生产未部署；本轮功能SHA/CI/安全/GHCR终态及固定镜像以HANDOFF最新记录为准，不能沿用sha-bbee35d的门禁证明0.2.16。证据output/upstream-sync-20261014。
@@ -19,8 +21,8 @@
 ## 规则与时间
 
 - 默认同一网段最近120分钟累计10次可识别的认证失败，第10次返回`403`、`reason=IP_BLOCKED`并永久封禁整个网段；IPv4默认/24（如210.230.206.*），IPv6默认/64。管理员可改为每个IP分开累计，或调整IPv4前缀1–32、IPv6前缀1–128；前缀越小范围越大。默认`permanent`，须管理员移除；管理员可选择`timed`（临时，1–1440分钟，到期解除），临时时长默认值保留15分钟。次数、统计周期、范围、方式及时长均只允许管理员调整。
-- 成功请求不计数，包括正常登录、注册、发验证码、两步验证的正常中间步骤、Passkey 和 OAuth 操作。计入明确的 `401 INVALID_CREDENTIALS`、`401 PASSKEY_VERIFICATION_FAILED`，以及无业务 reason 的 `400 Invalid request` / `Invalid passkey response`。未知错误保守排除，不把所有 400/401 都当攻击。切换受保护接口不会清零。
-- 人机验证／验证码校验失败、TOTP 错误、邮件或表单业务校验、令牌过期／失效、429 已有限流、500/503 服务端故障不计数；原有单接口限流继续保留。成功操作不触发本名单，但仍受原有分钟限流约束。
+- 成功请求不计数，包括正常登录、注册、发验证码、两步验证的正常中间步骤、Passkey 和 OAuth 操作。计入明确的 `401 INVALID_CREDENTIALS`、`401 PASSKEY_VERIFICATION_FAILED`，以及无业务 reason 的 `400 Invalid request` / `Invalid passkey response`；格式错误中的captcha/turnstile/TOTP等字段名不影响计数。还计入启用服务商且配置完整时缺失必要人机凭证的400：服务端附加`metadata.auth_ip_failure=missing_captcha_proof`并保留三种`*_VERIFICATION_FAILED`原reason。未知错误保守排除，不把所有 400/401 都当攻击。切换受保护接口不会清零。
+- 已提交但未通过的人机挑战、腾讯`trerror_`灾备票据、人机验证服务网络故障、验证码校验失败、TOTP 错误、邮件或表单业务校验、令牌过期／失效、429 已有限流、500/503 服务端故障不计数；原有单接口限流继续保留。成功操作不触发本名单，但仍受原有分钟限流约束。
 - 每次统计 `(当前时刻－window_seconds, 当前时刻]`；恰好落在起点的事件排除，横跨整点仍累计，未来分值不计入。
 - 请求进入时从 Redis `TIME` 取得 UTC 时间，完成后仅将符合条件的失败事件按进入时间加入 Lua 滑动窗口。处理完成时已过窗口边界的事件不加入。同毫秒并发请求使用唯一成员，不会合并。认证响应短暂缓冲以在第 10 次失败时替换为受控拒绝，缓冲最大 256KiB，较大／流式响应原样透传。
 - 数据库和 API 时间保留 UTC；页面按浏览器所在时区转换一次，页面明确标注时区。审计日志时间依旧是请求处理结束的时间，可能略晚于计数时间。

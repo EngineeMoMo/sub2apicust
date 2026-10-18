@@ -155,6 +155,9 @@ func TestAuthIPBlacklistOnlyCountsAuthenticationFailures(t *testing.T) {
 		{401, "INVALID_CREDENTIALS", "invalid email or password", true},
 		{401, "PASSKEY_VERIFICATION_FAILED", "passkey verification failed", true},
 		{400, "", "Invalid request: missing password", true},
+		{400, "", "Invalid request: json: cannot unmarshal number into Go struct field LoginRequest.turnstile_token of type string", true},
+		{400, "", "Invalid request: json: cannot unmarshal number into Go struct field LoginRequest.tencent_captcha_ticket of type string", true},
+		{400, "", "Invalid request: Key: 'Login2FARequest.TotpCode' Error:Field validation failed", true},
 		{400, "INVALID_EMAIL", "invalid email", false},
 		{400, "", "Email already exists", false},
 		{400, "CAPTCHA_INVALID", "invalid captcha", false},
@@ -206,4 +209,20 @@ func TestAuthIPBlacklistFailureResponsesAndLargeSuccessRemainIntact(t *testing.T
 	require.Equal(t, 200, recorder.Code)
 	require.Equal(t, large, recorder.Body.String())
 	require.Equal(t, 10, counter.calls)
+}
+
+func TestAuthIPBlacklistMissingCaptchaProofClassification(t *testing.T) {
+	for _, reason := range []string{"TURNSTILE_VERIFICATION_FAILED", "TENCENT_CAPTCHA_VERIFICATION_FAILED", "ALIYUN_CAPTCHA_VERIFICATION_FAILED", "UNRELATED"} {
+		for _, status := range []int{200, 400, 401, 429, 500, 503} {
+			for _, marker := range []string{"", service.AuthIPFailureMissingCaptchaProof, "unknown"} {
+				body, err := json.Marshal(response.Response{
+					Code: status, Reason: reason, Message: "captcha verification failed",
+					Metadata: map[string]string{service.AuthIPFailureMetadataKey: marker},
+				})
+				require.NoError(t, err)
+				counted := status == http.StatusBadRequest && reason != "UNRELATED" && marker == service.AuthIPFailureMissingCaptchaProof
+				require.Equal(t, counted, authIPCountFailure(status, body), "status=%d reason=%s marker=%s", status, reason, marker)
+			}
+		}
+	}
 }

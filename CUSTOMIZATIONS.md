@@ -1,5 +1,12 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-18 缺失人机验证凭证的认证 IP 计数
+
+- 新增`backend/internal/service/custom_auth_captcha_failure.go`：仅明确缺失必要字段且返回已知验证失败400时附加`metadata.auth_ip_failure=missing_captcha_proof`，复制metadata，不修改共享错误或既有status/reason。腾讯`trerror_`灾备票据排除；已提交挑战失败、远端故障和服务端未配置排除。
+- 上游接缝逐处登记：`backend/internal/service/auth_service.go`五处`[CUSTOM]`——①`VerifyCaptcha`腾讯分支；②同方法阿里云分支；③同方法Turnstile分支（同时检查verifier已配置）；④`VerifyActionCaptchaIfEnabled`阿里云分支；⑤同方法腾讯分支。均在原服务验证后附加标记，保留配置错误优先；不扩大Turnstile的动作入口覆盖范围。
+- 定制`backend/internal/server/middleware/custom_auth_ip_blacklist.go`只识别HTTP400＋上述标记＋三种已知reason，普通验证码错误仍不计数；无业务reason的请求格式错误优先于captcha/TOTP关键词排除，避免字段名误排除。原自动开关、阈值、网段聚合、封禁方式与历史不回灌保留。
+- 定制`frontend/src/custom/views/AuthIPBlacklistView.vue`及`deploy/AUTH_IP_BLACKLIST.md`同步计数说明，不修改主题或数据库。新增handler/service回归及中间件分类回归：本地真实Login handler配真实验证/防护服务，12次缺凭证请求在第10次403，挑战失败/服务故障/关闭规则不新增名单，三服务商正常与异常均验证。结果与发布状态见HANDOFF及output/auth-login-probe-20261018，生产未代部署。
+
 ## 2026-10-18 独立订单核账菜单（已发布sha-57aad62）
 
 - 2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。

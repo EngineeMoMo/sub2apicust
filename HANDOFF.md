@@ -39,6 +39,7 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-18 登录400缺失人机凭证漏计修复（本地验证通过，待本轮发布核验）**：两张截图显示189.24.123.4在21:50:43–21:50:51至少5次登录400，详情请求ID f0c2f0ce-57fa-415e-b1f4-24bb742fa2c3、Go-http-client/1.1、尝试admin@sub2api.local且没有人机验证字段；生产公开settings/public只读确认Turnstile开启、腾讯/阿里云关闭。源码与修复前红灯证明：缺少必要凭证的400被验证码关键词整体排除；格式错误也可能因字段名包含turnstile/TOTP被漏计。现新增服务端metadata区分缺失凭证，三服务商和腾讯/阿里云扩展认证入口均覆盖，格式错误优先识别；正常挑战失败、腾讯灾备票据、网络/服务端故障、成功操作不计数，原状态/reason及自动开关/阈值/范围/期限保留。真实Login handler＋本地httptest验证第10次403/IP_BLOCKED，前9次400；关闭规则不新增封禁。相关后端631顶层＋321子项、前端IP管理16项、类型检查/定向lint/Go embed通过；既有TestDingTalkOAuthStart_Disabled跳过1项，未宣称本地真实PG已跑。证据output/auth-login-probe-20261018。生产私有自动开关/阈值/实际镜像及历史响应原因仍不知道，现有审计不保存响应reason，不把复现路径认定为现场唯一根因；未发送生产登录、未封禁该IP、未代部署。其他会话工作保留，后续按新SHA核验CI/安全/GHCR。
 - **2026-10-18 订单核账菜单发布终态（优先于下方阶段记录）**：2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。
 
 - **2026-10-17 独立订单核账菜单（本地完成，未提交发布）**：按用户“人工订单别藏在设置里”的要求，新增管理员“订单管理 → 订单核账”（`/admin/orders/reconciliation`），集中今日收款／占用、最近100条待确认单、立即批量复查、渠道关单、等待期后的人工释放及线下收款登记；设置→支付只保留限额／自动清理规则／联系方式和跳转入口。拆出定制 `PaymentCollectionOperations.vue` 与 `AdminOrderReconciliationView.vue`，实际守卫限制管理员与支付开关；未改后端释放时机、付款保护或审计，不处理真实订单。4文件82项相关回归、typecheck、本轮7个源码／测试文件ESLint及生产构建通过（i18n检查、vue-tsc -b、Vite；仅有既有大包提示），隔离产物与证据在`output/order-reconciliation-20261017/`（verification.json记录源码哈希及命令结果、build.log）。上游仅侧栏两行[CUSTOM]及实际守卫测试接缝，详见CUSTOMIZATIONS新节。尚未提交推送／发布新镜像／部署，浏览器真实登录／手机视觉／商户核账待验；其他会话未提交改动保留，下方sha-16ef917是上一次支付补丁，不含此菜单。
@@ -619,6 +620,8 @@
 
 ## 五、待办 / 下一步
 
+- [x] **2026-10-18 连续登录400漏计源码修复与本地验证**：缺失必要人机凭证标记计数，含验证码字段名的格式错误不再误排除，覆盖三服务商及故障/正常挑战/关闭规则；详见第四节及deploy/AUTH_IP_BLACKLIST.md。
+- [ ] **2026-10-18 连续登录400修复发布与生产验收**：仅提交本轮修复及对应交接，检查新SHA CI/安全/GHCR和固定镜像来源；用户备份后手动更新，核实自动开关、阈值/范围及真实客户端IP。截图5次不能证明达到默认10次；历史审计不回灌，当前未实际封禁189.24.123.4，不自动开启规则或代部署。
 - [x] **独立订单核账入口**：新增“订单管理 → 订单核账”，人工处理迁出设置；限额与自动清理配置保留设置→支付，权限及操作回归已覆盖，详见第四节。
 - [x] **核账菜单发布门禁**：业务提交57aad622fa4cdeea90df1d22866b6b514a92e94b已推送origin/main；同SHA CI39135534896／安全39135534923／GHCR39135534858全部成功，固定sha-57aad62及registry来源已核验，详见第四节。
 - [ ] **核账菜单真实验收**：用户备份后执行`./update.sh sha-57aad62`，验收“订单管理 → 订单核账”、手机操作与真实商户核账；生产由用户更新，未代部署或处理真实订单，其他任务工作保留。
