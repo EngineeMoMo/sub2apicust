@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import PaymentCollectionSettings from '@/custom/components/PaymentCollectionSettings.vue'
+import AdminOrderReconciliationView from '@/custom/views/AdminOrderReconciliationView.vue'
 import { collectionAllows, type CollectionPolicy } from '@/custom/paymentCollection'
+import { customRoutes } from '@/custom/routes'
+import sidebar from '@/components/layout/AppSidebar.vue?raw'
 
 const api = vi.hoisted(() => ({ getConfig: vi.fn(), updateConfig: vi.fn(), get: vi.fn(), post: vi.fn() }))
 vi.mock('@/api/admin/payment', () => ({ adminPaymentAPI: api }))
 vi.mock('@/api/client', () => ({ apiClient: api }))
+vi.mock('@/components/layout/AppLayout.vue', () => ({ default: { template: '<main><slot /></main>' } }))
 const policy = (): CollectionPolicy => ({ enabled: true, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [10,20,40], allow_custom_amount: false, contact_text: '联系管理员' })
+const renderSettings = () => mount(PaymentCollectionSettings, { global: { stubs: { RouterLink: RouterLinkStub } } })
+const renderOperations = () => mount(AdminOrderReconciliationView, { global: { stubs: { RouterLink: RouterLinkStub } } })
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,7 +24,7 @@ beforeEach(() => {
 
 describe('共享收款配置', () => {
   it('原通道缺失的自动清理默认关闭，开启后随配置保存', async () => {
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderSettings()
     await flushPromises()
     const toggle = wrapper.find<HTMLInputElement>('#collection-auto-missing-provider')
     expect(toggle.element.checked).toBe(false)
@@ -34,7 +40,7 @@ describe('共享收款配置', () => {
       { order_id: 47, amount: 10, status: 'CANCELLED' }, { order_id: 48, amount: 10, status: 'CANCELLED' }
     ] } })
     api.post.mockResolvedValue({ data: { released: 2 } })
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderOperations()
     await flushPromises()
     await wrapper.findAll('button').find(b => b.text() === '立即批量复查')!.trigger('click')
     await flushPromises()
@@ -46,7 +52,7 @@ describe('共享收款配置', () => {
   it('批量复查失败仍刷新统计并保留错误信息', async () => {
     api.get.mockResolvedValue({ data: { paid: 0, held: 10, remaining: 990, pending: [{ order_id: 47, amount: 10, status: 'CANCELLED' }] } })
     api.post.mockRejectedValue(new Error('读取自动清理规则失败'))
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderOperations()
     await flushPromises()
     await wrapper.findAll('button').find(b => b.text() === '立即批量复查')!.trigger('click')
     await flushPromises()
@@ -62,10 +68,12 @@ describe('共享收款配置', () => {
     expect(collectionAllows(policy(), Number.NaN, 'CNY')).toBe(false)
     expect(collectionAllows(undefined, 100, 'CNY')).toBe(true)
   })
-  it('读取后台配置、显示占用并独立保存', async () => {
-    const wrapper = mount(PaymentCollectionSettings)
+  it('设置仅保存收款规则，并提供独立核账入口', async () => {
+    const wrapper = renderSettings()
     await flushPromises()
-    expect(wrapper.text()).toContain('今日已收 ¥900.00')
+    expect(wrapper.findComponent(RouterLinkStub).props('to')).toBe('/admin/orders/reconciliation')
+    expect(wrapper.findAll('button').map(button => button.text())).toEqual(['保存收款配置'])
+    expect(api.get).not.toHaveBeenCalled()
     await wrapper.find('input[type="number"]').setValue(49.99)
     await wrapper.findAll('button').find(b => b.text() === '保存收款配置')!.trigger('click')
     await flushPromises()
@@ -75,7 +83,7 @@ describe('共享收款配置', () => {
   })
   it('读取失败不允许用默认值覆盖已有配置', async () => {
     api.getConfig.mockRejectedValue(new Error('配置读取失败'))
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderSettings()
     await flushPromises()
     expect(wrapper.findAll('button').map(b => b.text())).toEqual(['重新加载'])
     expect(api.updateConfig).not.toHaveBeenCalled()
@@ -84,7 +92,7 @@ describe('共享收款配置', () => {
   it('关单未确认仍保留错误提示并重新读取占用', async () => {
     api.get.mockResolvedValue({ data: { paid: 0, held: 50, remaining: 950, pending: [{order_id: 9, amount: 50, status: 'EXPIRED'}] } })
     api.post.mockRejectedValue(new Error('未能确认渠道关单'))
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderOperations()
     await flushPromises()
     await wrapper.findAll('button').find(b => b.text() === '查询并关闭渠道订单')!.trigger('click')
     await flushPromises()
@@ -95,7 +103,7 @@ describe('共享收款配置', () => {
   })
   it('保存按用户封顶与等待时间，清空时不提交由后端补默认', async () => {
     api.getConfig.mockResolvedValue({ data: { collection: { ...policy(), user_hold_max: 150, unproven_release_hours: 24 } } })
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderSettings()
     await flushPromises()
     const numbers = wrapper.findAll('input[type="number"]')
     await numbers[2].setValue(100)
@@ -114,7 +122,7 @@ describe('共享收款配置', () => {
     api.get.mockResolvedValue({ data: { paid: 0, held: 100, remaining: 900, pending: [
       { order_id: 9, amount: 50, status: 'EXPIRED', expires_at: past, manual_release_after: future },
       { order_id: 10, amount: 50, status: 'CANCELLED', expires_at: past, manual_release_after: past }] } })
-    const wrapper = mount(PaymentCollectionSettings)
+    const wrapper = renderOperations()
     await flushPromises()
     const releases = wrapper.findAll('button').filter(b => b.text() === '人工释放')
     expect(releases[0].attributes('disabled')).toBeDefined()
@@ -129,6 +137,91 @@ describe('共享收款配置', () => {
     await flushPromises()
     expect(api.post).toHaveBeenCalledWith('/admin/payment/collection/10/release', { reason: '渠道实例已删除，已核对商户账单无此笔收款', confirmed: true })
     expect(wrapper.text()).toContain('已人工释放收款占用')
+    wrapper.unmount()
+  })
+})
+
+describe('独立订单核账页面', () => {
+  it('路由要求管理员，菜单位于订单管理分组', () => {
+    const route = customRoutes.find(record => record.path === '/admin/orders/reconciliation')
+    expect(route?.meta).toMatchObject({ title: '订单核账', requiresAuth: true, requiresAdmin: true, requiresPayment: true })
+    const adminGroup = sidebar.slice(sidebar.indexOf('// Admin navigation items'))
+    expect(adminGroup).toMatch(/featureFlag: flagAdminPayment,[\s\S]*?children: \[[\s\S]*?path: '\/admin\/orders\/reconciliation'/)
+    expect(sidebar.slice(0, sidebar.indexOf('// Admin navigation items'))).not.toContain("path: '/admin/orders/reconciliation'")
+  })
+
+  it('显示今日统计和空状态，不加载配置表单或自动发起操作', async () => {
+    const wrapper = renderOperations()
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('订单核账')
+    expect(wrapper.text()).toContain('今日已收 ¥900.00')
+    expect(wrapper.text()).toContain('待确认占用 ¥40.00')
+    expect(wrapper.text()).toContain('剩余额度 ¥60.00')
+    expect(wrapper.text()).toContain('暂无待确认的收款占用')
+    expect(wrapper.text()).toContain('超期占用自动清理：未开启')
+    expect(wrapper.findComponent(RouterLinkStub).props('to')).toBe('/admin/orders')
+    expect(wrapper.findAll('button').find(button => button.text() === '立即批量复查')!.attributes('disabled')).toBeDefined()
+    expect(wrapper.find('#collection-auto-missing-provider').exists()).toBe(false)
+    expect(api.updateConfig).not.toHaveBeenCalled()
+    expect(api.post).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('配置读取失败时不显示可操作的占用，允许重新加载', async () => {
+    api.getConfig.mockRejectedValueOnce(new Error('配置不可用'))
+    const wrapper = renderOperations()
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('配置不可用')
+    expect(wrapper.findAll('button').map(button => button.text())).toEqual(['重新加载'])
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('今日已收 ¥900.00')
+    expect(api.post).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('刷新读取已保存的自动清理规则与最新占用', async () => {
+    const wrapper = renderOperations()
+    await flushPromises()
+    api.getConfig.mockResolvedValueOnce({ data: { collection: { ...policy(), missing_provider_auto_release: true } } })
+    api.get.mockResolvedValueOnce({ data: { paid: 910, held: 0, remaining: 90, pending: [] } })
+    await wrapper.findAll('button').find(button => button.text() === '刷新数据')!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('超期占用自动清理：已开启')
+    expect(wrapper.text()).toContain('今日已收 ¥910.00')
+    expect(wrapper.text()).toContain('待确认占用 ¥0.00')
+    expect(api.getConfig).toHaveBeenCalledTimes(2)
+    expect(api.updateConfig).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('新页面登记线下收款，并刷新当天统计', async () => {
+    const wrapper = renderOperations()
+    await flushPromises()
+    await wrapper.get('input[type="number"]').setValue(20)
+    await wrapper.get('input[maxlength="100"]').setValue('merchant-20261017-001')
+    await wrapper.findAll('button').find(button => button.text() === '登记已收款')!.trigger('click')
+    await flushPromises()
+    expect(api.post).toHaveBeenCalledExactlyOnceWith('/admin/payment/collection/manual', { amount: 20, reference: 'merchant-20261017-001' })
+    expect(wrapper.text()).toContain('已登记收款，请另行分配订阅或余额')
+    expect(wrapper.get<HTMLInputElement>('input[maxlength="100"]').element.value).toBe('')
+    expect(api.get).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  it('操作成功但统计刷新失败时保留操作结果并提示刷新', async () => {
+    const wrapper = renderOperations()
+    await flushPromises()
+    await wrapper.get('input[type="number"]').setValue(20)
+    await wrapper.get('input[maxlength="100"]').setValue('merchant-20261017-002')
+    api.get.mockRejectedValueOnce(new Error('统计暂不可用'))
+    await wrapper.findAll('button').find(button => button.text() === '登记已收款')!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('已登记收款，请另行分配订阅或余额')
+    expect(wrapper.get('[role="alert"]').text()).toContain('刷新收款统计失败')
+    expect(wrapper.get<HTMLInputElement>('input[maxlength="100"]').element.value).toBe('')
+    expect(api.post).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })
 })

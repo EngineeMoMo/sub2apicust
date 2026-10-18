@@ -6,6 +6,12 @@ import { previewSections } from '@/custom/guest/preview'
 
 export const customRoutes: RouteRecordRaw[] = [
   {
+    path: '/admin/orders/reconciliation',
+    name: 'AdminOrderReconciliation',
+    component: () => import('@/custom/views/AdminOrderReconciliationView.vue'),
+    meta: { title: '订单核账', requiresAuth: true, requiresAdmin: true, requiresPayment: true }
+  },
+  {
     path: '/admin/ip-blacklist',
     name: 'AuthIPBlacklist',
     component: () => import('@/custom/views/AuthIPBlacklistView.vue'),

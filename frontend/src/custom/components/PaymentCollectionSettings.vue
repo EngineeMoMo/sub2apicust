@@ -22,37 +22,7 @@
       <label>管理员开通联系方式与说明<textarea v-model="policy.contact_text" class="input" rows="3" placeholder="例如：微信 xxx。请提供套餐名称和本站账号，由管理员核实后开通。" /></label>
       <p>此说明会展示给用户与游客，请勿填写密钥。套餐编辑中可选择“联系管理员开通”。</p>
       <button type="button" class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? '正在保存…' : '保存收款配置' }}</button>
-      <div v-if="usage" class="mofa-collection-summary" role="status">
-        <strong>今日已收 ¥{{ usage.paid.toFixed(2) }}</strong><span>待确认占用 ¥{{ usage.held.toFixed(2) }}</span><span>剩余额度 ¥{{ usage.remaining.toFixed(2) }}{{ policy.enabled ? '' : '（限额未启用）' }}</span>
-      </div>
-      <p>取消、失败或超时的订单在最晚可付款时间之前继续占用额度；过期后系统向渠道复查，确认未付款才释放，渠道确认已付款则同步付款。开启上方自动清理后，已删除通道的超期订单按该规则处理。退款不恢复当日已收款额度。</p>
-      <button type="button" class="btn btn-secondary" :disabled="saving || !usage?.pending?.length" @click="recheckOrders">立即批量复查</button>
-      <p>按已保存的规则复查，无需逐单操作；剩余订单由后台继续分批处理，不会跳过等待期。</p>
-      <details v-if="usage?.pending?.length"><summary>检查待确认订单（最近100条）</summary>
-        <div v-for="order in usage.pending" :key="order.order_id" class="mofa-collection-summary">
-          <span>订单 #{{ order.order_id }} · ¥{{ order.amount }} · {{ order.status }} · 期限 {{ formatCollectionTime(order.expires_at, policy.timezone) }}</span>
-          <button type="button" class="btn btn-secondary" :disabled="saving" @click="closeOrder(order.order_id)">查询并关闭渠道订单</button>
-          <button type="button" class="btn btn-secondary" :disabled="saving || !canManuallyRelease(order)" :title="canManuallyRelease(order) ? '' : '等待期结束前不能人工释放'" @click="startRelease(order.order_id)">人工释放</button>
-          <span v-if="!canManuallyRelease(order)">{{ formatCollectionTime(order.manual_release_after, policy.timezone) }} 后可人工释放</span>
-        </div>
-      </details>
-      <div v-if="releaseTarget" class="mofa-collection-summary" role="group" aria-labelledby="collection-release-title">
-        <strong id="collection-release-title">人工释放订单 #{{ releaseTarget }}</strong>
-        <p>仅在渠道实例已删除、长期查询失败等系统无法复查时使用。释放前先核对商户账单确认此单未收款；渠道仍能查到已付款时会拒绝并同步付款。操作会记录管理员和原因。</p>
-        <label>释放原因<textarea v-model.trim="releaseReason" class="input" rows="2" maxlength="500" placeholder="例如：渠道实例已删除，已核对商户账单无此笔收款" /></label>
-        <label><input v-model="releaseConfirmed" type="checkbox" /> 我已核对商户账单，确认该订单未收款</label>
-        <button type="button" class="btn btn-secondary" :disabled="saving" @click="cancelRelease">取消</button>
-        <button type="button" class="btn btn-primary" :disabled="saving || releaseReason.length < 3 || !releaseConfirmed" @click="releaseOrder">确认人工释放</button>
-      </div>
-      <details>
-        <summary>登记今日线下收款</summary>
-        <p>同一收款账户的线下到账也要登记；此操作只记录收款，不发放余额或订阅。金额按当前所设时区的今日入账。</p>
-        <div class="mofa-collection-grid">
-          <label>已收人民币金额<input v-model.number="manualAmount" class="input" type="number" min="0.01" step="0.01" /></label>
-          <label>唯一收款参考号<input v-model.trim="reference" class="input" maxlength="100" placeholder="填写商户流水号，避免重复登记" /></label>
-        </div>
-        <button type="button" class="btn btn-secondary" :disabled="saving || !reference || !manualAmount" @click="record">登记已收款</button>
-      </details>
+      <RouterLink class="btn btn-secondary" to="/admin/orders/reconciliation">前往订单核账：复查占用、人工释放与登记收款</RouterLink>
     </template>
     <button v-else type="button" class="btn btn-secondary" @click="load">重新加载</button>
     <p v-if="message" :role="failed ? 'alert' : 'status'">{{ message }}</p>
@@ -60,22 +30,19 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { adminPaymentAPI } from '@/api/admin/payment'
-import { apiClient } from '@/api/client'
 import { extractApiErrorMessage } from '@/utils/apiError'
-import { canManuallyRelease, formatCollectionTime, type CollectionHold, type CollectionPolicy } from '@/custom/paymentCollection'
+import type { CollectionPolicy } from '@/custom/paymentCollection'
 const policy = ref<CollectionPolicy>({ enabled: false, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [10,20,30,40], allow_custom_amount: true, contact_text: '' })
 const quickText = ref('10,20,30,40')
 const loading = ref(true), loaded = ref(false), saving = ref(false), failed = ref(false), message = ref('')
-const manualAmount = ref<number | null>(null), reference = ref('')
-const releaseTarget = ref<number | null>(null), releaseReason = ref(''), releaseConfirmed = ref(false)
-const usage = ref<{paid:number;held:number;remaining:number;pending?:CollectionHold[]} | null>(null)
 // 清空的数字输入不提交，由后端按单笔／每日上限补默认值。
 const optionalNumber = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? value : undefined
-async function refreshUsage() { usage.value = (await apiClient.get('/admin/payment/collection')).data }
 async function load() {
   loading.value = true
-  try { const { data } = await adminPaymentAPI.getConfig(); if (data.collection) policy.value = data.collection; quickText.value = policy.value.quick_amounts.join(','); loaded.value = true; await refreshUsage() }
+  failed.value = false; message.value = ''
+  try { const { data } = await adminPaymentAPI.getConfig(); if (data.collection) policy.value = data.collection; quickText.value = policy.value.quick_amounts.join(','); loaded.value = true }
   catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '读取收款配置失败') }
   finally { loading.value = false }
 }
@@ -85,38 +52,9 @@ async function save() {
     const values = quickText.value.split(/[,，\s]+/).filter(Boolean).map(Number)
     if (!values.length || values.some(v => !Number.isFinite(v) || v <= 0)) throw new Error('请输入有效的快捷充值金额')
     await adminPaymentAPI.updateConfig({ collection: { ...policy.value, quick_amounts: values, user_hold_max: optionalNumber(policy.value.user_hold_max), unproven_release_hours: optionalNumber(policy.value.unproven_release_hours) } }); policy.value.quick_amounts = values
-    await refreshUsage(); message.value = '收款配置已保存'
+    message.value = '收款配置已保存'
   } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, err instanceof Error ? err.message : '保存失败') }
   finally { saving.value = false }
-}
-async function record() {
-  saving.value = true; failed.value = false; message.value = ''
-  try { await apiClient.post('/admin/payment/collection/manual', { amount: manualAmount.value, reference: reference.value }); await refreshUsage(); reference.value = ''; manualAmount.value = null; message.value = '已登记收款，请另行分配订阅或余额' }
-  catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '登记失败') }
-  finally { saving.value = false }
-}
-async function closeOrder(id: number) {
-  saving.value = true; failed.value = false; message.value = ''
-  try { await apiClient.post(`/admin/payment/collection/${id}/close`); message.value = '已确认渠道关单并释放收款预占' }
-  catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '渠道关单未确认，额度继续保留') }
-  finally { try { await refreshUsage() } catch { /* 保留主要操作结果，下次加载刷新统计。 */ } saving.value = false }
-}
-async function recheckOrders() {
-  saving.value = true; failed.value = false; message.value = ''
-  try {
-    const { data } = await apiClient.post<{ released: number }>('/admin/payment/collection/recheck')
-    message.value = `本次已释放 ${data.released} 笔收款占用，其余订单由后台继续分批复查`
-  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '批量复查未完成，未确认的占用继续保留') }
-  finally { await refreshUsage().catch(() => undefined); saving.value = false }
-}
-function startRelease(id: number) { releaseTarget.value = id; releaseReason.value = ''; releaseConfirmed.value = false; message.value = '' }
-function cancelRelease() { releaseTarget.value = null; releaseReason.value = ''; releaseConfirmed.value = false }
-async function releaseOrder() {
-  if (!releaseTarget.value || releaseReason.value.length < 3 || !releaseConfirmed.value) return
-  saving.value = true; failed.value = false; message.value = ''
-  try { await apiClient.post(`/admin/payment/collection/${releaseTarget.value}/release`, { reason: releaseReason.value, confirmed: true }); cancelRelease(); message.value = '已人工释放收款占用，并记录审计' }
-  catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '人工释放未完成，额度继续保留') }
-  finally { try { await refreshUsage() } catch { /* 保留主要操作结果，下次加载刷新统计。 */ } saving.value = false }
 }
 onMounted(load)
 </script>

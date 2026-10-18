@@ -1,5 +1,14 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-17 独立订单核账菜单（本地完成，未发布）
+
+- 2026-10-18用户授权提交推送；已逐个核验本轮7个源码／测试文件SHA256与10-17通过版本一致。正式CI／安全／GHCR及镜像来源待本轮提交核验，发布终态见HANDOFF，不沿用旧镜像结果。下方“尚未提交”是本地完成时的历史状态。
+
+- 管理员“订单管理 → 订单核账”进入 `/admin/orders/reconciliation`。新增 `frontend/src/custom/views/AdminOrderReconciliationView.vue`、`custom/components/PaymentCollectionOperations.vue`；今日已收／占用／剩余额度、最近100条待确认订单、立即批量复查、渠道关单、原因与账单确认后的人工释放、线下收款登记集中在新页。加载和刷新使用已保存的规则，不在核账页编辑配置，不自动执行写操作。
+- `custom/components/PaymentCollectionSettings.vue` 只保留限额、自动清理规则、联系方式及独立保存，增加前往核账页的入口。复用现有后台接口及付款／等待期／审计保护，未修改后端、迁移或自动释放时机。操作后刷新失败单独提示，保留已成功操作的结果，避免误导重复登记。
+- 上游接缝逐处登记：① `frontend/src/components/layout/AppSidebar.vue` 的管理员订单 children 增加两行 `[CUSTOM]` 菜单项，沿用订单分组的管理员、支付开关与简易模式展示规则；② `frontend/src/router/__tests__/feature-access.spec.ts` 增加 `[CUSTOM]` 路由导入与权限表，使用实际注册守卫验证匿名跳登录、普通用户回个人仪表盘、管理员可进入及支付关闭时拦截。实际路由只新增在 `custom/routes.ts`，未修改上游 router/index.ts。
+- 原有 `custom/__tests__/payment-collection.spec.ts` 已在正式关键回归清单中，迁移操作回归至独立页面并覆盖配置入口、空状态、加载失败重试、刷新最新策略、人工释放确认、线下登记与统计刷新失败。与实际守卫、侧栏及升级契约共4文件82项通过，typecheck、本轮7个源码／测试文件ESLint及生产构建通过（i18n、vue-tsc -b、Vite，仅既有大包提示）。命令结果／源码哈希与构建日志见 `output/order-reconciliation-20261017/verification.json`、`build.log`。无新增样式，其他会话的 theme.css 等改动保留。尚未提交推送、构建发布镜像或部署，浏览器真实登录／手机视觉／商户核账未验，旧 sha-16ef917 不包含新菜单。
+
 ## 2026-10-17 历史通道缺失时自动分批清理收款占用（已发布sha-16ef917）
 
 - **发布终态**：最终业务提交`16ef9172cf666e6361f17161aa83a53178ee0f3f`已推送origin/main；同SHA CI `39029645317`（unit／integration、专用PG18、Go lint 0 issues、前端53文件824项）、安全`39029645211`、GHCR `39029645261`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-16ef917`，平台`linux/amd64`，index digest `sha256:49b4285ec235151d36459e3cdd49320103fffa0864d1c552351378a43ef64d07`；registry revision／source／平台／摘要及正式embed构建日志已交叉核验。证据`output/payment-auto-release-20261017/verified-release.json`、`release-final-verification.json`及同目录job日志。首轮2af3c432c的unused已补修并保留失败记录；不使用首轮候选交付。未代部署生产或处理真实订单，其他任务未提交工作保留。后续纯文档`[skip ci]`提交不改变该业务镜像。下方未提交／未发布为本地验证阶段。

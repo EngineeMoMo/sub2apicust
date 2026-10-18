@@ -1,4 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+// [CUSTOM] 核账页面使用实际路由元数据验证管理员与支付开关守卫。
+import { customRoutes } from '@/custom/routes'
 
 type NavigationGuard = (
   to: Record<string, any>,
@@ -133,6 +135,25 @@ describe('feature route guard', () => {
     appStore.publicSettingsLoaded = false
     appStore.cachedPublicSettings = null
     appStore.fetchPublicSettings.mockReset()
+  })
+
+  // [CUSTOM] 人工核账与既有订单页面共用实际注册的权限守卫。
+  it.each([
+    { authenticated: false, admin: false, payment: true, target: 'login' },
+    { authenticated: true, admin: false, payment: true, target: '/dashboard' },
+    { authenticated: true, admin: true, payment: true, target: 'allow' },
+    { authenticated: true, admin: true, payment: false, target: '/admin/dashboard' },
+  ])('订单核账权限：$target', async ({ authenticated, admin, payment, target }) => {
+    const route = customRoutes.find(record => record.path === '/admin/orders/reconciliation')!
+    authStore.isAuthenticated = authenticated
+    authStore.isAdmin = admin
+    appStore.publicSettingsLoaded = true
+    appStore.cachedPublicSettings = { payment_enabled: payment }
+    const { navigation, next } = runGuard(route.meta!, route.path)
+    await navigation
+    if (target === 'login') expect(next).toHaveBeenCalledWith({ path: '/login', query: { redirect: route.path } })
+    else if (target === 'allow') expect(next).toHaveBeenCalledWith()
+    else expect(next).toHaveBeenCalledWith(target)
   })
 
   // [CUSTOM] 使用实际注册的路由守卫验证游客入口。

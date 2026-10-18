@@ -855,6 +855,8 @@ const adminNavItems = computed((): NavItem[] => {
       children: [
         { path: '/admin/orders/dashboard', label: t('nav.paymentDashboard'), icon: ChartIcon },
         { path: '/admin/orders', label: t('nav.orderManagement'), icon: OrderIcon },
+        // [CUSTOM] 日常核账入口独立于支付设置，沿用订单菜单权限与功能开关。
+        { path: '/admin/orders/reconciliation', label: locale.value.startsWith('zh') ? '订单核账' : 'Order reconciliation', icon: ShieldIcon },
         { path: '/admin/orders/plans', label: t('nav.paymentPlans'), icon: CreditCardIcon },
       ],
     },
