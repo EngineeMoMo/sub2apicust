@@ -2,6 +2,8 @@
 
 ## 2026-10-18 缺失人机验证凭证的认证 IP 计数
 
+- 2026-10-18认证IP缺凭证计数发布终态：业务`117e9a1a08f1a225dbe5b041ae243be29251770b`已推origin/main；同SHA CI `39138612694`（unit／integration、专用PG18／Redis8、Go lint 0 issues、前端53文件830项）、安全`39138612602`、GHCR `39138612579`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-117e9a1`（linux/amd64），index digest `sha256:166ede3f3a5aa77028b4479f754e353442285fa28b466d426a0194c5eb8e6896`；registry revision／source／摘要与正式embed日志交叉验真，IP管理chunk `AuthIPBlacklistView-b89c0411.js`。缺失必要人机凭证的400及包含captcha／TOTP字段名的格式错误现按规则累计，正常挑战失败／腾讯灾备票据／服务故障／成功操作仍不计数；原自动开关／阈值／范围／期限不变，无新迁移、不回灌历史。用户备份后手动`./update.sh sha-117e9a1`并确认自动规则。未代部署、未实际封禁189.24.123.4；生产私有规则／实际版本／历史响应原因仍未核实，复现路径不等于现场唯一根因。证据`output/auth-login-probe-20261018/verified-release.json`、`release-source-proof.json`、`local-verification.json`及job日志。本轮便携Go本地embed通过，覆盖历史无Go未编译判断；后续纯文档skip-ci不改变业务镜像，其他会话工作保留。
+
 - 新增`backend/internal/service/custom_auth_captcha_failure.go`：仅明确缺失必要字段且返回已知验证失败400时附加`metadata.auth_ip_failure=missing_captcha_proof`，复制metadata，不修改共享错误或既有status/reason。腾讯`trerror_`灾备票据排除；已提交挑战失败、远端故障和服务端未配置排除。
 - 上游接缝逐处登记：`backend/internal/service/auth_service.go`五处`[CUSTOM]`——①`VerifyCaptcha`腾讯分支；②同方法阿里云分支；③同方法Turnstile分支（同时检查verifier已配置）；④`VerifyActionCaptchaIfEnabled`阿里云分支；⑤同方法腾讯分支。均在原服务验证后附加标记，保留配置错误优先；不扩大Turnstile的动作入口覆盖范围。
 - 定制`backend/internal/server/middleware/custom_auth_ip_blacklist.go`只识别HTTP400＋上述标记＋三种已知reason，普通验证码错误仍不计数；无业务reason的请求格式错误优先于captcha/TOTP关键词排除，避免字段名误排除。原自动开关、阈值、网段聚合、封禁方式与历史不回灌保留。
