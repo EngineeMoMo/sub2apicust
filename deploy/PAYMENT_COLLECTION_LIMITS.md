@@ -1,5 +1,7 @@
 # 收款限额、快捷充值与人工开通
 
+2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。
+
 2026-10-17 核账入口调整（本地完成，未发布）：日常操作移到管理员“订单管理 → 订单核账”（`/admin/orders/reconciliation`），包含今日统计、待确认订单、批量复查、渠道关单、人工释放和线下收款登记。“设置 → 支付”继续保存限额、自动清理策略和联系方式，并提供跳转入口。新页沿用现有管理员权限及后台付款／等待期／审计保护；此菜单尚不在旧镜像 sha-16ef917 内，交付状态以 HANDOFF 为准。
 
 2026-10-14安全补修发布终态：6406511c6/sha-6406511已推送发布，同SHA CI（含真实PG18、unit/integration）、安全及GHCR全绿，正式镜像摘要/源码标签验真。新增248用户待付封顶、249限量套餐每用户单笔待付，过了付款入口期限加余量并渠道复查未付才自动释放；无法证明期限的入口另等配置等待期。管理员人工释放须过等待期、明确原因与商户账单确认，已付款拒绝释放并同步。手机WAP在启用收款限额时写入绝对期限。备份数据库/配置/app_data后`./update.sh sha-6406511`，前后端同版；生产未代部署，支付宝真实小额付款/过期入口/释放仍待用户验收。下方10-08“仅关单成功释放”为历史，最新规则见本文后续安全补修章节和HANDOFF。

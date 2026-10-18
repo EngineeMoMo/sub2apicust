@@ -1,8 +1,8 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
-## 2026-10-17 独立订单核账菜单（本地完成，未发布）
+## 2026-10-18 独立订单核账菜单（已发布sha-57aad62）
 
-- 2026-10-18用户授权提交推送；已逐个核验本轮7个源码／测试文件SHA256与10-17通过版本一致。正式CI／安全／GHCR及镜像来源待本轮提交核验，发布终态见HANDOFF，不沿用旧镜像结果。下方“尚未提交”是本地完成时的历史状态。
+- 2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。
 
 - 管理员“订单管理 → 订单核账”进入 `/admin/orders/reconciliation`。新增 `frontend/src/custom/views/AdminOrderReconciliationView.vue`、`custom/components/PaymentCollectionOperations.vue`；今日已收／占用／剩余额度、最近100条待确认订单、立即批量复查、渠道关单、原因与账单确认后的人工释放、线下收款登记集中在新页。加载和刷新使用已保存的规则，不在核账页编辑配置，不自动执行写操作。
 - `custom/components/PaymentCollectionSettings.vue` 只保留限额、自动清理规则、联系方式及独立保存，增加前往核账页的入口。复用现有后台接口及付款／等待期／审计保护，未修改后端、迁移或自动释放时机。操作后刷新失败单独提示，保留已成功操作的结果，避免误导重复登记。
