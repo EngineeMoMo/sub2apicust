@@ -2,7 +2,7 @@
 
 ## 2026-10-19 同步上游v0.2.17
 
-- 本轮隔离合并后核验312个自有新增文件不变、全部被触及[CUSTOM]标记未减少；前端53文件831项、lint/类型/构建和Go embed通过。专项639项含子项通过；本机缺DSN的12项存储测试由本轮CI补验，Windows全量失败不能冒称通过。详见output/upstream-sync-20261019。
+- 2026-10-19上游v0.2.17同步发布终态：业务5233e9090698a9bd02f645340cd19e85e7e27743已推origin/main，包含upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084及新增47条上游提交；同SHA CI 39196526010（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端53文件831项）、安全39196525919、GHCR 39196526008全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-5233e90（linux/amd64），index digest sha256:08fe2367c8241ca9b43fe741b1ccd03db65ba5a8a5579f8bbc4a8f4ce6d2c550；registry revision/source/摘要与正式embed构建日志交叉验真，正式镜像隔离28项HTTP检查含真实登录、角色权限及IP防护通过。无新增迁移或依赖；312个自有新增文件内容不变，支付两处冲突保留WAP期限/快捷金额定制，原未提交产品工作不混入。生产由用户备份后手动./update.sh sha-5233e90，未代部署或付费生图。PR8028仍未合并，本轮不包含，不能保证解决截图无图。证据output/upstream-sync-20261019/verified-release.json、release-source-proof.json、formal-smoke.json及job日志；Windows全量5项失败如实保留在backend-unit-summary.json，正式Linux CI通过覆盖本轮发布门禁。后续纯文档skip-ci提交不改变此业务镜像。
 - 合入upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084；新增47上游提交，无新迁移或依赖变更。
 - 两处冲突：payment/types.go保留time导入的原[CUSTOM] WAP期限标记；payment_order.go采用上游OrderType白名单，把原[CUSTOM]快捷金额校验保留在balance分支，不影响subscription验证及非法类型拒绝。未新增配置或接缝。
 - 保留认证IP、分组福利/到期平移、包号、付款回调竞争保护、收款占用、品牌、SynaRoute和工具计费；定制文件哈希与接缝核验及本轮发布终态见HANDOFF和output/upstream-sync-20261019。PR8028未合并，不夹带。
