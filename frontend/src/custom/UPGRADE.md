@@ -1,3 +1,5 @@
+2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
+
 2026-10-18认证IP计数补修：保留AuthIPBlacklistView对缺失必要人机凭证计数、已提交但挑战失败不计数的说明，前后端同版本。后端auth_service.go五处[CUSTOM]与custom_auth_captcha_failure.go的结构化标记不可丢失；不能把所有验证码400当攻击。验证与发布状态见HANDOFF和deploy/AUTH_IP_BLACKLIST.md。
 
 <!-- 2026-10-07：周/月开通即计时、支付宝官方直码接缝优先于下方历史短码说明。 -->
@@ -201,7 +203,7 @@ git diff --check
 - 教程scope与FAQ的guideTarget保持公开／控制台／预览各自入口；官网点密钥入口使用GuestAction，取消可继续阅读。安装和第三方配置以页面链接的官方版本为准，静态示例不读取真实密钥。
 - 本轮80项定向、3项国际化、typecheck／ESLint／build通过；浏览器公开与预览验收证据见HANDOFF，当前只在4175预览，8080与生产未更新。
 
-## 智力效率 v6 与可用性补强（2026-10-19，发布准备）
+## 智力效率 v6 与可用性补强（2026-10-19，已发布 sha-e8cec34）
 
 - 根 `Makefile` 的 `[CUSTOM] FRONTEND_CRITICAL_VITEST` 须保留 `intelligence.spec.ts` 与 `intelligence-view.spec.ts` 两项，将全部 38 项前端回归纳入 CI；不以一次本地测试替代后续发布门禁。
 
@@ -210,7 +212,7 @@ git diff --check
 - 默认 Docker 的持久目录已有 `/app/data` 卷，成功快照位于 `intelligence-cache/last-success.json`；自定义 `pricing.data_dir` 须保证对应目录可写并保留。首次成功读取后才会创建，升级／重建时不要删除该缓存。缓存写入失败不会阻断网络读取，但日志会记录 `intelligence snapshot save failed`。
 - 重启读回时校验 1MiB 上限、版本／计分规则／费用口径／指标和样本，保持真实读取时间与“历史数据”标记。未知汇总版本及源站故障不覆盖好快照；恢复后自动更新；坏文件不阻断联网恢复。没有曾成功保存的数据时，不伪造数据补空页。
 - 当前明确接受 v5 和已取证的 `radar-bench-public-summary-v6-150-details`，未知计分规则仍拒绝；版本日志带实际 schema／score_version／policy。源站变更后先核对规则，再更新契约，不能以可用性为由混用分数。组合容量对齐前端 200，超限继续拒绝，并发／单轮限时不变。
-- 本地后端 21 组／53 子用例、前端 38 项、类型／定向 lint、Vite 生产构建及嵌入新静态资源的 embed 编译通过，智力页面 chunk 为 `IntelligenceView-uaCUL_Nu.js`。发布终态及本轮证据见 HANDOFF；尚未提交推送／部署，不沿用旧 CI 结果。
+- 本地后端 21 组／53 子用例、前端 38 项、类型／定向 lint、Vite 生产构建及 embed 编译通过。本地 chunk `IntelligenceView-uaCUL_Nu.js` 来自含其他会话工作的工作区；正式发布以 e8cec341f 及本文件顶部发布终态为准，生产仍待用户更新验收。
 
 ## 智力效率改接雷达Bench v1（2026-10-12）
 

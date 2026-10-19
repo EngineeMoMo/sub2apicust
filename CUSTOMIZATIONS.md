@@ -200,7 +200,7 @@
 
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
 
-## 2026-10-19 智力效率重启回退与故障恢复（发布准备）
+## 2026-10-19 智力效率重启回退与故障恢复（已发布 sha-e8cec34）
 
 - **取证范围**：沿本功能读取链路核实三处风险：成功快照只有进程内一份，重启遇格式升级／源站异常会回到无数据；浏览器失败后固定十分钟才自动复查，而后端网络失败通常一分钟可重试；后端 64 个组合硬限制小于前端 200，源站扩容到 65 个会整轮拒绝。未将这些源码路径宣称为生产已发生的额外故障。
 - **自有新增文件**：`backend/internal/handler/custom_intelligence_storage.go`、`custom_intelligence_storage_test.go`。仅保存已校验的投影快照，保留题库摘要、计分版本／规则、费用口径及原始读取时间，大小限制 1MiB；路径为现有 `pricing.data_dir/intelligence-cache/last-success.json`，默认 Docker `WORKDIR /app` 与配置 `./data` 对应已有 `/app/data` 卷。采用同目录临时文件、Sync、关闭后重命名；失败不覆盖旧成功快照。
@@ -210,7 +210,7 @@
 - **CI 门禁补齐（新增登记）**：发布核对发现根 `Makefile` 的 `FRONTEND_CRITICAL_VITEST` 尚未包含智力效率。已在原 `[CUSTOM]` 清单加入 `intelligence.spec.ts` 与 `intelligence-view.spec.ts`，每次 CI 运行本功能全部 38 项前端用例。只提交这两项及注释“智力效率”，其他会话未提交的工坊／生图门禁继续保留；最终业务 SHA 与 CI 以后续门禁补齐提交为准，不用首个 75310bbf0 的结果冒充最终提交。
 - **验证**：Go 1.27.2 后端 21 组／53 子用例、前端两文件 38 项、TypeScript 与定向 ESLint 通过；后端 embed 编译通过。验证包含重启后未知版本／503 的 200 回退、好文件不被覆盖、恢复后更新、16 类坏缓存拒绝、写盘失败仍 200、零分／缺统计保存、200／201 组合边界、隐藏页／卸载和周期恢复。证据 `output/intelligence-resilience-tests-20261019.jsonl`、`output/intelligence-resilience-{frontend,typecheck,eslint,build}-20261019.log`。首轮测试模拟恢复错误使用“200 空响应”而未返回 JSON，已改为清除模拟状态并通过；失败日志保留，不把它当生产异常。
 - **最终构建**：Vite 生产构建成功，智力页面 chunk 为 `IntelligenceView-uaCUL_Nu.js`；随后嵌入本轮静态资源的 Go embed 编译也成功。构建日志 `output/intelligence-resilience-vite-build-20261019.log`，汇总 `output/intelligence-resilience-verification-20261019.json`。Vite 仍提示现有大 chunk，退出 0；当前工作区其他会话源码保留，不能把本地构建当作已隔离发布的正式镜像。
-- **发布边界**：用户已授权本轮提交并推送，仅包含本功能与维护文档；正式 CI、安全扫描、镜像与生产验收仍待本轮 SHA。生产不代部署，真实卷的可写性／缓存留存及浏览器验收仍需现场核实。
+- **发布终态**：2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
 
 ## 2026-10-19 智力效率兼容源站 v6 汇总（随同可用性补强发布）
 

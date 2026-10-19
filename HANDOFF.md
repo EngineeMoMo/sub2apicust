@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **发布终态优先**：2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
+
 - **2026-10-19 智力效率 CI 门禁补齐**：首个业务提交 75310bbf0517b60d83a507010b8bc89eee9e247d 已推 origin/main；发布检查发现 Makefile 的前端关键清单原先未纳入智力效率。现补两个已通过的 spec（共 38 项）进入 `[CUSTOM] FRONTEND_CRITICAL_VITEST`，不混入其他会话同文件未提交的工坊门禁。最终业务 SHA、55 文件关键回归与正式 CI／GHCR 以本次门禁补齐后的提交为准；首个提交的运行记录保留，不冒充最终发布结果。
 
 - **2026-10-19 智力效率发布准备（用户已授权）**：用户明确要求提交并推送本轮代码，范围为 v6 兼容、成功快照持久化、故障恢复／200 组合边界及本功能文档；其他会话产品／海报工作不混入。已 fetch 核实发布前 HEAD 与 origin/main 同为 7ee076e953506beaa754e066360372f08021bb3c，本地已完成 21 组／53 子用例、前端 38 项、类型／lint／Vite／Go embed。下一步记录本轮业务提交及其 CI／安全／GHCR 终态，生产不代部署；下方本地阶段“未授权／未提交”不再作为发布授权判断。
@@ -634,7 +636,8 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **2026-10-19 智力效率 v6 与可用性补强发布验收**：一并发布已复现的 v6 兼容、成功快照持久化、故障一分钟复查与 200 组合容量。用户已授权本轮提交／推送，待同 SHA CI／GHCR 核验，生产由用户更新；前后端同版，确认现有 `pricing.data_dir` 所在卷保留且可写（默认 `/app/data`），至少成功读取一次后核实 `intelligence-cache/last-success.json` 已落盘。登录核验 `/api/v1/intelligence` 200、历史数据提示／原读取时间、自动恢复及矩阵费用／耗时；生产故障或重启演练由用户授权后执行，不用模拟测试冒充现场。若仍失败，取实际镜像 SHA、接口响应和 `intelligence source refresh failed`／`intelligence snapshot load/save failed` 日志；不要用旧发布的 CI 代替本修复验证。
+- [x] **2026-10-19 智力效率 v6 与可用性补强发布门禁**：业务 e8cec341f16900e9057397325668a0914e8e2361 已推 origin/main，同 SHA CI／安全／GHCR 全成功；固定 sha-e8cec34 的 registry revision／source／摘要及正式构建日志已核验，见第四节和 output/intelligence-release-20261019/verified-release.json。
+- [ ] **智力效率生产更新与现场验收**：用户备份后手动 `./update.sh sha-e8cec34`，前后端同版，确认 `pricing.data_dir` 所在卷保留且可写（默认 `/app/data`），成功读取一次后核实 `intelligence-cache/last-success.json` 落盘。登录检查 `/api/v1/intelligence` 200、历史提示／原读取时间、自动恢复及矩阵费用／耗时；生产重启或故障演练需用户授权，不用模拟测试冒充现场。若仍失败，收集实际镜像 SHA、接口响应及 `intelligence source refresh failed`／`intelligence snapshot load/save failed` 日志。本轮未部署生产或执行正式镜像 HTTP 验收。
 
 - [x] **2026-10-19 上游v0.2.17发布门禁**：业务5233e9090698a9bd02f645340cd19e85e7e27743已推送；同SHA CI/安全/GHCR全成功，固定sha-5233e90及registry/source/embed/隔离登录验收通过，见第四节及output/upstream-sync-20261019/verified-release.json。
 - [ ] **2026-10-19 上游v0.2.17生产验收**：用户备份数据库、配置及app_data后，在服务器部署目录执行./update.sh sha-5233e90，检查真实登录、业务请求与支付/退款流程；生产未代部署。PR8028不在此版本，截图无图仍须实际请求取证。
