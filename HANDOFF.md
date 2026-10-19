@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-19 智力效率 CI 门禁补齐**：首个业务提交 75310bbf0517b60d83a507010b8bc89eee9e247d 已推 origin/main；发布检查发现 Makefile 的前端关键清单原先未纳入智力效率。现补两个已通过的 spec（共 38 项）进入 `[CUSTOM] FRONTEND_CRITICAL_VITEST`，不混入其他会话同文件未提交的工坊门禁。最终业务 SHA、55 文件关键回归与正式 CI／GHCR 以本次门禁补齐后的提交为准；首个提交的运行记录保留，不冒充最终发布结果。
+
 - **2026-10-19 智力效率发布准备（用户已授权）**：用户明确要求提交并推送本轮代码，范围为 v6 兼容、成功快照持久化、故障恢复／200 组合边界及本功能文档；其他会话产品／海报工作不混入。已 fetch 核实发布前 HEAD 与 origin/main 同为 7ee076e953506beaa754e066360372f08021bb3c，本地已完成 21 组／53 子用例、前端 38 项、类型／lint／Vite／Go embed。下一步记录本轮业务提交及其 CI／安全／GHCR 终态，生产不代部署；下方本地阶段“未授权／未提交”不再作为发布授权判断。
 
 - **2026-10-19 智力效率可用性构建收口**：本轮最终 Go 1.27.2 后端 21 组／53 子用例、前端 38 项、类型／定向 ESLint、Vite 生产构建及随后包含新静态资源的 `go build -tags embed ./cmd/server` 全部成功。智力页面产物 `IntelligenceView-uaCUL_Nu.js`；Vite 仍有大于 500kB 的 chunk 提示，构建退出 0。证据 `output/intelligence-resilience-tests-20261019.jsonl`、`output/intelligence-resilience-{frontend,typecheck,eslint,vite-build,build}-20261019.log` 及 `output/intelligence-resilience-verification-20261019.json`。这是当前工作区本地验证，包含其他会话保留源码，不作为已隔离发布的镜像；未提交、推送或操作生产，本轮 CI／GHCR 与真实数据卷可写性、历史快照落盘及登录浏览器验收仍待。下条“生产构建收口”已由本条完成。

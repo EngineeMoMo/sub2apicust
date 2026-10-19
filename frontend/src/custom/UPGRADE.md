@@ -203,6 +203,8 @@ git diff --check
 
 ## 智力效率 v6 与可用性补强（2026-10-19，发布准备）
 
+- 根 `Makefile` 的 `[CUSTOM] FRONTEND_CRITICAL_VITEST` 须保留 `intelligence.spec.ts` 与 `intelligence-view.spec.ts` 两项，将全部 38 项前端回归纳入 CI；不以一次本地测试替代后续发布门禁。
+
 - 本节覆盖下节“始终十分钟轮询”和“仅进程内缓存”的历史实现：成功时十分钟，故障／历史或部分数据时一分钟复查本站缓存；后端仍独立限流和退避，隐藏页面不请求，不新增常驻采集。
 - 合并上游时保留 `backend/internal/server/router.go` 已有 `[CUSTOM] RegisterIntelligenceRoutes` 接缝，调用参数须带 `cfg.Pricing.DataDir`。其余实现为自有文件，不新增配置或数据库迁移；前后端同版发布。
 - 默认 Docker 的持久目录已有 `/app/data` 卷，成功快照位于 `intelligence-cache/last-success.json`；自定义 `pricing.data_dir` 须保证对应目录可写并保留。首次成功读取后才会创建，升级／重建时不要删除该缓存。缓存写入失败不会阻断网络读取，但日志会记录 `intelligence snapshot save failed`。

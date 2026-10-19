@@ -1,6 +1,6 @@
 .PHONY: build build-backend build-frontend test test-backend test-frontend test-frontend-critical
 
-# [CUSTOM] 分组门槛／福利、IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存、工坊投稿、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
+# [CUSTOM] 分组门槛／福利、IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存、工坊投稿、智力效率、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
 	src/custom/groupAccess/__tests__/GroupAccessPolicyButton.spec.ts \
 	src/custom/groupAccess/__tests__/GroupRateMultiplier.spec.ts \
@@ -10,6 +10,8 @@ FRONTEND_CRITICAL_VITEST := \
 	src/custom/__tests__/payment-collection.spec.ts \
 	src/custom/__tests__/studio-submissions.spec.ts \
 	src/custom/__tests__/studio-api.spec.ts \
+	src/custom/__tests__/intelligence.spec.ts \
+	src/custom/__tests__/intelligence-view.spec.ts \
 	src/custom/__tests__/svg-sanitization.spec.ts \
 	src/custom/__tests__/motion.spec.ts \
 	src/custom/__tests__/public-nav.spec.ts \
