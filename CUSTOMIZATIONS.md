@@ -1,5 +1,12 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-19 同步上游v0.2.17
+
+- 本轮隔离合并后核验312个自有新增文件不变、全部被触及[CUSTOM]标记未减少；前端53文件831项、lint/类型/构建和Go embed通过。专项639项含子项通过；本机缺DSN的12项存储测试由本轮CI补验，Windows全量失败不能冒称通过。详见output/upstream-sync-20261019。
+- 合入upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084；新增47上游提交，无新迁移或依赖变更。
+- 两处冲突：payment/types.go保留time导入的原[CUSTOM] WAP期限标记；payment_order.go采用上游OrderType白名单，把原[CUSTOM]快捷金额校验保留在balance分支，不影响subscription验证及非法类型拒绝。未新增配置或接缝。
+- 保留认证IP、分组福利/到期平移、包号、付款回调竞争保护、收款占用、品牌、SynaRoute和工具计费；定制文件哈希与接缝核验及本轮发布终态见HANDOFF和output/upstream-sync-20261019。PR8028未合并，不夹带。
+
 ## 2026-10-18 缺失人机验证凭证的认证 IP 计数
 
 - 2026-10-18认证IP缺凭证计数发布终态：业务`117e9a1a08f1a225dbe5b041ae243be29251770b`已推origin/main；同SHA CI `39138612694`（unit／integration、专用PG18／Redis8、Go lint 0 issues、前端53文件830项）、安全`39138612602`、GHCR `39138612579`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-117e9a1`（linux/amd64），index digest `sha256:166ede3f3a5aa77028b4479f754e353442285fa28b466d426a0194c5eb8e6896`；registry revision／source／摘要与正式embed日志交叉验真，IP管理chunk `AuthIPBlacklistView-b89c0411.js`。缺失必要人机凭证的400及包含captcha／TOTP字段名的格式错误现按规则累计，正常挑战失败／腾讯灾备票据／服务故障／成功操作仍不计数；原自动开关／阈值／范围／期限不变，无新迁移、不回灌历史。用户备份后手动`./update.sh sha-117e9a1`并确认自动规则。未代部署、未实际封禁189.24.123.4；生产私有规则／实际版本／历史响应原因仍未核实，复现路径不等于现场唯一根因。证据`output/auth-login-probe-20261018/verified-release.json`、`release-source-proof.json`、`local-verification.json`及job日志。本轮便携Go本地embed通过，覆盖历史无Go未编译判断；后续纯文档skip-ci不改变业务镜像，其他会话工作保留。

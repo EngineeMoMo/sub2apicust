@@ -127,24 +127,29 @@ func (s *PaymentService) CreateOrder(ctx context.Context, req CreateOrderRequest
 }
 
 func (s *PaymentService) validateOrderInput(ctx context.Context, req CreateOrderRequest, cfg *PaymentConfig) (*dbent.SubscriptionPlan, error) {
-	if req.OrderType == payment.OrderTypeBalance && cfg.BalanceDisabled {
-		return nil, infraerrors.Forbidden("BALANCE_PAYMENT_DISABLED", "balance recharge has been disabled")
-	}
-	// [CUSTOM] 关闭自定义金额后，直接调用接口也只能使用配置的快捷金额。
-	if req.OrderType == payment.OrderTypeBalance && cfg.Collection != nil && !cfg.Collection.AllowCustomAmount {
-		found := false
-		for _, v := range cfg.Collection.QuickAmounts {
-			if v == req.Amount {
-				found = true
-				break
+	// 订单类型必须走白名单：未知类型会跳过充值开关与倍率计算，履约时却仍按余额到账。
+	switch req.OrderType {
+	case payment.OrderTypeBalance:
+		if cfg.BalanceDisabled {
+			return nil, infraerrors.Forbidden("BALANCE_PAYMENT_DISABLED", "balance recharge has been disabled")
+		}
+		// [CUSTOM] 关闭自定义金额后，直接调用接口也只能使用配置的快捷金额。
+		if cfg.Collection != nil && !cfg.Collection.AllowCustomAmount {
+			found := false
+			for _, quickAmount := range cfg.Collection.QuickAmounts {
+				if quickAmount == req.Amount {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return nil, infraerrors.BadRequest("CUSTOM_AMOUNT_DISABLED", "请选择配置的快捷充值金额")
 			}
 		}
-		if !found {
-			return nil, infraerrors.BadRequest("CUSTOM_AMOUNT_DISABLED", "请选择配置的快捷充值金额")
-		}
-	}
-	if req.OrderType == payment.OrderTypeSubscription {
+	case payment.OrderTypeSubscription:
 		return s.validateSubOrder(ctx, req)
+	default:
+		return nil, infraerrors.BadRequest("INVALID_ORDER_TYPE", "unsupported order type")
 	}
 	if math.IsNaN(req.Amount) || math.IsInf(req.Amount, 0) || req.Amount <= 0 {
 		return nil, infraerrors.BadRequest("INVALID_AMOUNT", "amount must be a positive number")

@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-18（Asia/Shanghai）。
+> 最后更新：2026-10-19（Asia/Shanghai）。
 
 ---
 
@@ -38,6 +38,10 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+
+- **2026-10-19 上游同步本地门禁**：隔离合并两处冲突已解决；312个自有新增文件内容不变，仅自有deploy/UPDATE_GUIDE.md按交接协议更新，所有被上游触及文件的[CUSTOM]标记未减少，Go1.27.2/依赖锁/CI/主题接缝不变。支付、退款、Responses、生图、防护专项277项顶层＋362项子项通过，12项真实存储回归本机未配DSN跳过，须由同SHA CI专用PG18/Redis8实际运行。前端lint/类型/53文件831项/生产构建、web embed回归及Go embed编译通过。Windows全量测试另发现3项缺sh及1项协议目录测试失败，本轮不修改无关源码，等待正式Linux CI证明；不得称本机全量通过。证据output/upstream-sync-20261019，尚未验收生产。
+
+- **2026-10-19 上游v0.2.17同步进行中**：用户明确要求合并fork供其更新，授权合并、验证和推送origin/main，生产由用户自行更新。目标upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084（含10月16日正式v0.2.17），相对9c2cca9e6新增47提交、150文件，无新迁移或依赖变更。先merge-tree演算，再在隔离工作树合并；两处支付冲突保留WAP期限与快捷金额限制，并采用上游订单类型白名单、退款等待及EasyPay校验。主工作区42个未提交文件共1218177字节已备份至output/upstream-sync-20261019/before-main，排除本轮发布。PR8028仍未合并，本轮不夹带候选补丁；截图图片问题根因仍需现场取证。验证、发布与同SHA镜像证据待本轮收口更新。
 
 - **2026-10-18 登录400缺失人机凭证漏计修复（已发布sha-117e9a1）**：2026-10-18认证IP缺凭证计数发布终态：业务`117e9a1a08f1a225dbe5b041ae243be29251770b`已推origin/main；同SHA CI `39138612694`（unit／integration、专用PG18／Redis8、Go lint 0 issues、前端53文件830项）、安全`39138612602`、GHCR `39138612579`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-117e9a1`（linux/amd64），index digest `sha256:166ede3f3a5aa77028b4479f754e353442285fa28b466d426a0194c5eb8e6896`；registry revision／source／摘要与正式embed日志交叉验真，IP管理chunk `AuthIPBlacklistView-b89c0411.js`。缺失必要人机凭证的400及包含captcha／TOTP字段名的格式错误现按规则累计，正常挑战失败／腾讯灾备票据／服务故障／成功操作仍不计数；原自动开关／阈值／范围／期限不变，无新迁移、不回灌历史。用户备份后手动`./update.sh sha-117e9a1`并确认自动规则。未代部署、未实际封禁189.24.123.4；生产私有规则／实际版本／历史响应原因仍未核实，复现路径不等于现场唯一根因。证据`output/auth-login-probe-20261018/verified-release.json`、`release-source-proof.json`、`local-verification.json`及job日志。本轮便携Go本地embed通过，覆盖历史无Go未编译判断；后续纯文档skip-ci不改变业务镜像，其他会话工作保留。 截图21:50:43–21:50:51至少5次登录400，详情尝试admin@sub2api.local且没有人机字段；公开settings/public确认Turnstile开启。本地真实Login handler验证前9次400、第10次403/IP_BLOCKED；相关后端631顶层＋321子项、IP页16项、本地类型／lint／embed通过，既有钉钉禁用项跳过。现有审计不保存响应reason，未发送生产登录或自动开启规则。
 - **2026-10-18 订单核账菜单发布终态（优先于下方阶段记录）**：2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。
@@ -619,6 +623,8 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [ ] **2026-10-19 上游v0.2.17发布门禁**：完成定制保留核验、前后端检查及embed构建后推送；检查本轮同SHA CI/安全/GHCR及镜像revision，提供固定更新标签。生产不代部署，PR8028不视为已修。
 
 - [x] **2026-10-18 连续登录400漏计源码修复与本地验证**：缺失必要人机凭证标记计数，含验证码字段名的格式错误不再误排除，覆盖三服务商及故障/正常挑战/关闭规则；详见第四节及deploy/AUTH_IP_BLACKLIST.md。
 - [x] **2026-10-18 连续登录400修复发布**：业务117e9a1a08f1a225dbe5b041ae243be29251770b已推origin/main；同SHA CI／安全／GHCR成功，固定sha-117e9a1及摘要、来源、embed均已核验，见第四节与output/auth-login-probe-20261018/verified-release.json。
