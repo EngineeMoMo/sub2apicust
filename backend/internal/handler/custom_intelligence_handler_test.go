@@ -541,7 +541,7 @@ func TestIntelligenceRouteRequiresAuthentication(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	reject := func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUnauthorized) }
-	RegisterIntelligenceRoutes(router.Group("/api/v1"), "", false, reject, nil, nil)
+	RegisterIntelligenceRoutes(router.Group("/api/v1"), t.TempDir(), "", false, reject, nil, nil)
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/intelligence", nil))
 	require.Equal(t, http.StatusUnauthorized, recorder.Code)

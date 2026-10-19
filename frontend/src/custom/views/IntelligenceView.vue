@@ -23,7 +23,7 @@
       </div>
       <p v-if="failed" class="mofa-intel-alert" role="alert">{{ snapshot ? copy.retained : copy.error }}</p>
       <p v-else-if="snapshot?.refreshFailed" class="mofa-intel-alert" role="status">{{ copy.sourceFailed }}</p>
-      <p v-if="snapshot && unreadCount" class="mofa-intel-alert" role="status">{{ copy.partial }} · {{ unreadCount }} / {{ snapshot.points.length }}</p>
+      <p v-if="snapshot && unreadCount && !snapshot.refreshFailed" class="mofa-intel-alert" role="status">{{ copy.partial }} · {{ unreadCount }} / {{ snapshot.points.length }}</p>
       <div v-if="!snapshot" class="mofa-intel-empty" role="status">
         <IntelligenceIcon class="mofa-intel-emblem" /><p>{{ loading ? copy.loading : copy.error }}</p>
         <button v-if="!loading" class="btn btn-secondary" type="button" @click="refresh">{{ copy.refresh }}</button>

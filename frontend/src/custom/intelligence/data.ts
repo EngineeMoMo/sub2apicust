@@ -1,6 +1,7 @@
 // 本站后端代读的 Codex Radar「雷达Bench」公开汇总（源站接口无 CORS，浏览器不直连源站）。
 export const INTELLIGENCE_ENDPOINT = '/intelligence'
 export const REFRESH_INTERVAL = 10 * 60 * 1000 // 与服务端缓存周期一致
+export const RETRY_INTERVAL = 60 * 1000
 export const REQUEST_TIMEOUT = 60_000 // 首次读取源站需逐个档位查询，服务端最多等 45 秒
 export const LOW_COVERAGE_THRESHOLD = 40 // 与源站页面「数据不足」阈值一致
 export const EFFORTS = ['ultra', 'max', 'xhigh', 'high', 'medium', 'low']

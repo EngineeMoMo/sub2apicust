@@ -37,11 +37,12 @@ const (
 	// 只接受已核对过字段含义的契约版本；源站升级版本后显示「格式变化」，不猜测新字段。
 	intelligenceScoreVersion  = "radar-bench-v2-150"
 	intelligenceSummarySchema = "radar-bench-public-summary-v5-150-daily-graded-count"
+	intelligenceDetailsSchema = "radar-bench-public-summary-v6-150-details"
 	intelligencePolicyVersion = "radar-bench-v2-last3-per-task-equal-weight-150"
 	intelligenceCostBasis     = "official_standard_api_equivalent; no estimates or claimed cash charges"
 	intelligenceScoreMax      = 150
 
-	intelligenceMaxSelections = 64
+	intelligenceMaxSelections = 200
 	intelligenceConcurrency   = 3 // 与源站页面自身的读取并发一致
 	intelligenceBindingLimit  = 1 << 20
 	intelligenceSummaryLimit  = 256 << 10
@@ -147,14 +148,15 @@ type intelligenceResponse struct {
 	RefreshFailed bool `json:"refresh_failed"`
 }
 
-// 进程内缓存：只在有人打开页面时读取源站，同一时间只跑一轮，不是常驻定时采集。
+// 按需缓存：只在有人打开页面时读取源站，同一时间只跑一轮，成功结果落盘供重启后回退。
 type intelligenceCache struct {
-	client    *http.Client
-	clientErr error
-	origin    string
-	now       func() time.Time
-	coldWait  time.Duration
-	staleWait time.Duration
+	client      *http.Client
+	clientErr   error
+	origin      string
+	now         func() time.Time
+	coldWait    time.Duration
+	staleWait   time.Duration
+	storagePath string
 
 	mu       sync.Mutex
 	snapshot *intelligenceSnapshot
@@ -184,8 +186,9 @@ func newIntelligenceCache(proxyURL string, allowDirectOnProxyError bool) *intell
 
 // RegisterIntelligenceRoutes 注册智力效率数据接口：与 /intelligence 页面一样只对登录用户开放，沿用面板全局限流。
 // 刷新只读本站缓存，不会把每次访问放大成源站请求。
-func RegisterIntelligenceRoutes(v1 *gin.RouterGroup, proxyURL string, allowDirectOnProxyError bool, jwtAuth gin.HandlerFunc, settingService *service.SettingService, limiter *middleware.PanelRateLimiter) {
+func RegisterIntelligenceRoutes(v1 *gin.RouterGroup, dataDir, proxyURL string, allowDirectOnProxyError bool, jwtAuth gin.HandlerFunc, settingService *service.SettingService, limiter *middleware.PanelRateLimiter) {
 	cache := newIntelligenceCache(proxyURL, allowDirectOnProxyError)
+	cache.configureStorage(dataDir)
 	group := v1.Group("/intelligence")
 	group.Use(jwtAuth, middleware.BackendModeUserGuard(settingService), limiter.Global())
 	group.GET("", cache.Get)
@@ -237,6 +240,11 @@ func (cache *intelligenceCache) refresh(done chan struct{}) {
 	previous := cache.snapshot
 	cache.mu.Unlock()
 	snapshot, retry, err := cache.safeRead(ctx, previous)
+	if err == nil {
+		if storeErr := cache.saveSnapshot(snapshot); storeErr != nil {
+			slog.Warn("intelligence snapshot save failed", "error", storeErr)
+		}
+	}
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
 	defer close(done)
@@ -486,8 +494,9 @@ func validateIntelligenceBinding(binding intelligenceBinding) error {
 
 // intelligenceSummaryPoint 按源站页面同样的约束校验公开汇总，只取展示字段；不重算分数、不补零。
 func intelligenceSummaryPoint(summary intelligenceSummary, binding intelligenceBinding, selection intelligenceSelection) (intelligencePoint, error) {
-	if summary.Schema != intelligenceSummarySchema || summary.ScoreVersion != intelligenceScoreVersion || summary.ScoreMax != intelligenceScoreMax || summary.PolicyVersion != intelligencePolicyVersion {
-		return intelligencePoint{}, intelligenceInvalid("summary version")
+	validSchema := summary.Schema == intelligenceSummarySchema || summary.Schema == intelligenceDetailsSchema
+	if !validSchema || summary.ScoreVersion != intelligenceScoreVersion || summary.ScoreMax != intelligenceScoreMax || summary.PolicyVersion != intelligencePolicyVersion {
+		return intelligencePoint{}, intelligenceInvalid(fmt.Sprintf("summary version: schema=%.100q score_version=%.100q score_max=%g policy=%.100q", summary.Schema, summary.ScoreVersion, summary.ScoreMax, summary.PolicyVersion))
 	}
 	if summary.Benchmark != binding.Benchmark || summary.CatalogVersion != binding.CatalogVersion || summary.TaskSetSHA256 != binding.TaskSetSHA256 {
 		return intelligencePoint{}, intelligenceInvalid("summary benchmark differs from binding")

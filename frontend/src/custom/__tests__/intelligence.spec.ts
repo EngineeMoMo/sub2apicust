@@ -3,7 +3,7 @@ import { defineComponent } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import {
   EFFORTS, formatMinutes, formatPrice, formatScore, INTELLIGENCE_ENDPOINT, lowCoverage, matrixRows, modelLabel, parseIntelligence, pointFlags,
-  REFRESH_INTERVAL, REQUEST_TIMEOUT, sortEfficiencyPoints, sortMatrixRows, type IntelligencePoint
+  REFRESH_INTERVAL, REQUEST_TIMEOUT, RETRY_INTERVAL, sortEfficiencyPoints, sortMatrixRows, type IntelligencePoint
 } from '@/custom/intelligence/data'
 import { useIntelligence } from '@/custom/intelligence/useIntelligence'
 import { intelligenceCopy } from '@/custom/intelligence/copy'
@@ -58,6 +58,11 @@ describe('智力效率数据契约', () => {
     expect(pointFlags({ ...point, state: 'unavailable', coverage: null }, labels)).toEqual(['读取失败'])
     expect(lowCoverage({ ...point, coverage: 40 })).toBe(false)
     expect(lowCoverage({ ...point, coverage: null })).toBe(false)
+  })
+  it('与后端一致支持两百个组合，超限继续拒绝', () => {
+    const points = Array.from({ length: 200 }, (_, index) => ({ ...point, model: `model-${index}` }))
+    expect(parseIntelligence(payload(points)).points).toHaveLength(200)
+    expect(() => parseIntelligence(payload([...points, { ...point, model: 'over-limit' }]))).toThrow()
   })
   it('矩阵按模型成行；按指定档位降序、缺失最后、同分保留原序且不修改原数组', () => {
     const rows = matrixRows([
@@ -159,5 +164,46 @@ describe('智力效率同步生命周期', () => {
     expect(api.failed.value).toBe(true)
     expect(api.loading.value).toBe(false)
     expect(api.snapshot.value).toBeNull()
+  })
+  it('首次失败一分钟后重试，恢复后回到十分钟周期', async () => {
+    client.get.mockRejectedValueOnce(new Error('offline'))
+    await start()
+    expect(api.failed.value).toBe(true)
+    await vi.advanceTimersByTimeAsync(RETRY_INTERVAL - 1)
+    expect(client.get).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(client.get).toHaveBeenCalledTimes(2)
+    expect(api.failed.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL - 1)
+    expect(client.get).toHaveBeenCalledTimes(2)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(client.get).toHaveBeenCalledTimes(3)
+  })
+  it.each(['源站失败', '部分档位失败'])('收到历史数据时一分钟复查：%s', async (failure) => {
+    const data = payload([{ ...point, state: failure === '源站失败' ? 'ok' : 'retained' }])
+    data.refresh_failed = failure === '源站失败'
+    client.get.mockResolvedValueOnce({ data })
+    await start()
+    await vi.advanceTimersByTimeAsync(RETRY_INTERVAL)
+    expect(client.get).toHaveBeenCalledTimes(2)
+    await vi.advanceTimersByTimeAsync(RETRY_INTERVAL)
+    expect(client.get).toHaveBeenCalledTimes(2)
+  })
+  it('失败后隐藏页面不重试，回到页面时恢复且不重复请求', async () => {
+    client.get.mockRejectedValueOnce(new Error('offline'))
+    await start()
+    document.dispatchEvent(new Event('visibilitychange'))
+    await flushPromises()
+    expect(client.get).toHaveBeenCalledTimes(1)
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    await vi.advanceTimersByTimeAsync(RETRY_INTERVAL)
+    expect(client.get).toHaveBeenCalledTimes(1)
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    document.dispatchEvent(new Event('visibilitychange'))
+    await flushPromises()
+    expect(client.get).toHaveBeenCalledTimes(2)
+    wrapper?.unmount(); wrapper = undefined
+    await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL)
+    expect(client.get).toHaveBeenCalledTimes(2)
   })
 })

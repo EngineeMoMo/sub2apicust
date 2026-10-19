@@ -200,6 +200,26 @@
 
 接缝登记：[CUSTOM] backend/go.mod 与自动生成go.sum、Dockerfile、deploy/Dockerfile、backend/Dockerfile、.github/workflows/backend-ci.yml、security-scan.yml、release.yml。三种镜像构建入口统一安全工具链；锁文件不手工注释；升级仅涉及工具链和模块版本，不改变包号业务及通用限流规则。
 
+## 2026-10-19 智力效率重启回退与故障恢复（发布准备）
+
+- **取证范围**：沿本功能读取链路核实三处风险：成功快照只有进程内一份，重启遇格式升级／源站异常会回到无数据；浏览器失败后固定十分钟才自动复查，而后端网络失败通常一分钟可重试；后端 64 个组合硬限制小于前端 200，源站扩容到 65 个会整轮拒绝。未将这些源码路径宣称为生产已发生的额外故障。
+- **自有新增文件**：`backend/internal/handler/custom_intelligence_storage.go`、`custom_intelligence_storage_test.go`。仅保存已校验的投影快照，保留题库摘要、计分版本／规则、费用口径及原始读取时间，大小限制 1MiB；路径为现有 `pricing.data_dir/intelligence-cache/last-success.json`，默认 Docker `WORKDIR /app` 与配置 `./data` 对应已有 `/app/data` 卷。采用同目录临时文件、Sync、关闭后重命名；失败不覆盖旧成功快照。
+- **恢复与边界**：启动加载时重新校验文件、指标／样本／时间／重复组合及计分口径，恢复的正常格改为 retained，缺失仍为 unavailable，全页提示为历史数据；立即尝试刷新，未知契约或源站故障仍返回带旧时间的历史快照，源站恢复后自动更新。损坏／过大／不兼容文件不阻断新读取；落盘失败只记日志，成功网络请求仍返回 200。缓存没有伪造的“当前时间”，也不自动放行未知计分规则。必须曾经成功保存且卷被保留才有跨重启回退。
+- **自有文件调整**：`custom_intelligence_handler.go` 接入加载／成功持久化，组合上限对齐前端 200，源站版本拒绝日志带实际 schema／score_version／policy（每项截断 100 字符）；保留 3 并发、40 秒单轮限时、请求上限、已知契约与原代理回退规则。`frontend/src/custom/intelligence/useIntelligence.ts` 故障／历史／部分数据时一分钟复查本站缓存，成功后十分钟；隐藏页不请求，手动刷新去重与卸载中断保持。`data.ts` 新增重试常量，`copy.ts`、`IntelligenceView.vue` 明确旧时间提示，避免整轮失败又重复提示为“部分失败”；两项原前端测试补故障恢复和 200 边界。
+- **既有上游接缝更新（逐处登记）**：`backend/internal/server/router.go` 已有 `[CUSTOM] RegisterIntelligenceRoutes` 调用增传 `cfg.Pricing.DataDir`。不新增配置键、依赖或迁移。原认证测试同步调用签名；认证、代理和在线限流范围保持。
+- **验证**：Go 1.27.2 后端 21 组／53 子用例、前端两文件 38 项、TypeScript 与定向 ESLint 通过；后端 embed 编译通过。验证包含重启后未知版本／503 的 200 回退、好文件不被覆盖、恢复后更新、16 类坏缓存拒绝、写盘失败仍 200、零分／缺统计保存、200／201 组合边界、隐藏页／卸载和周期恢复。证据 `output/intelligence-resilience-tests-20261019.jsonl`、`output/intelligence-resilience-{frontend,typecheck,eslint,build}-20261019.log`。首轮测试模拟恢复错误使用“200 空响应”而未返回 JSON，已改为清除模拟状态并通过；失败日志保留，不把它当生产异常。
+- **最终构建**：Vite 生产构建成功，智力页面 chunk 为 `IntelligenceView-uaCUL_Nu.js`；随后嵌入本轮静态资源的 Go embed 编译也成功。构建日志 `output/intelligence-resilience-vite-build-20261019.log`，汇总 `output/intelligence-resilience-verification-20261019.json`。Vite 仍提示现有大 chunk，退出 0；当前工作区其他会话源码保留，不能把本地构建当作已隔离发布的正式镜像。
+- **发布边界**：用户已授权本轮提交并推送，仅包含本功能与维护文档；正式 CI、安全扫描、镜像与生产验收仍待本轮 SHA。生产不代部署，真实卷的可写性／缓存留存及浏览器验收仍需现场核实。
+
+## 2026-10-19 智力效率兼容源站 v6 汇总（随同可用性补强发布）
+
+- **取证与原因**：2026-10-19 匿名 GET 绑定与 `gpt-6.1-sol/low` 汇总均为 HTTP 200；源站已返回 `radar-bench-public-summary-v6-150-details`，本站原先只允许 v5。真实响应回放在修复前返回 503，日志明确为 `summary version`，不是把源站能连通等同于业务成功。
+- **字段语义核对**：读取源站 `/assets/radar-bench.mjs` 与 `/assets/radar-bench-display.mjs`；计分版本、150 满分、题库、最近三次等权计分规则未变，费用／耗时仍按 `known_total / known_samples`。v6 新增 `detail_metrics`、`source_scores`，本页继续只投影已有展示字段。
+- **改动**：自有文件 `backend/internal/handler/custom_intelligence_handler.go` 精确接受 v5 和 v6 两个已核对版本；未知版本、计分规则／题库／档位及指标边界仍按原规则拒绝，没有新增上游接缝或迁移。
+- **回归**：新增 `custom_intelligence_schema_test.go` 与 `testdata/intelligence_summary_v6.json`（2026-10-19 15:09:12 +08 实取原文），验证真实 v6 的 HTTP 200、得分、覆盖、判分题次、费用／耗时及样本口径，并拒绝七类契约异常；原 v5、缓存／退避／认证测试保留。证据 `output/intelligence-v6-before-20261019.log`、`output/intelligence-v6-after-20261019.log`；前端两文件 33 项回归通过，日志 `output/intelligence-v6-frontend-20261019.log`。
+- **编译与最终回归**：已有便携 Go 1.27.2 完成本地 `go build -tags embed ./cmd/server`，使用现有静态资源；15 组／31 子用例全部通过，详见 `output/intelligence-v6-final-tests-20261019.jsonl` 和 `output/intelligence-v6-build-20261019.log`。未将本机编译等同于正式 CI 或部署。
+- **边界**：本轮未提交、推送、重建运行中的 Docker 或部署生产；用户现场版本、认证接口返回与服务器日志尚未取证，不把本地复现写成生产唯一原因。后续发布需单独验证本轮 SHA 的 CI／GHCR；下方“未发布”为 10-12 的历史阶段，本功能原版已随 sha-6406511 发布。
+
 ## 2026-10-12 智力效率改接雷达Bench v1（未发布）
 
 用户指定数据源 https://codex-reset-radar.pages.dev/#codex-community（与 codexradar.com 同站）。本节优先于下方「智力效率页面（2026-09-27）」中关于数据源、轮询和字段的描述。

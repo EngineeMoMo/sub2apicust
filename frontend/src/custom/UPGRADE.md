@@ -201,6 +201,15 @@ git diff --check
 - 教程scope与FAQ的guideTarget保持公开／控制台／预览各自入口；官网点密钥入口使用GuestAction，取消可继续阅读。安装和第三方配置以页面链接的官方版本为准，静态示例不读取真实密钥。
 - 本轮80项定向、3项国际化、typecheck／ESLint／build通过；浏览器公开与预览验收证据见HANDOFF，当前只在4175预览，8080与生产未更新。
 
+## 智力效率 v6 与可用性补强（2026-10-19，发布准备）
+
+- 本节覆盖下节“始终十分钟轮询”和“仅进程内缓存”的历史实现：成功时十分钟，故障／历史或部分数据时一分钟复查本站缓存；后端仍独立限流和退避，隐藏页面不请求，不新增常驻采集。
+- 合并上游时保留 `backend/internal/server/router.go` 已有 `[CUSTOM] RegisterIntelligenceRoutes` 接缝，调用参数须带 `cfg.Pricing.DataDir`。其余实现为自有文件，不新增配置或数据库迁移；前后端同版发布。
+- 默认 Docker 的持久目录已有 `/app/data` 卷，成功快照位于 `intelligence-cache/last-success.json`；自定义 `pricing.data_dir` 须保证对应目录可写并保留。首次成功读取后才会创建，升级／重建时不要删除该缓存。缓存写入失败不会阻断网络读取，但日志会记录 `intelligence snapshot save failed`。
+- 重启读回时校验 1MiB 上限、版本／计分规则／费用口径／指标和样本，保持真实读取时间与“历史数据”标记。未知汇总版本及源站故障不覆盖好快照；恢复后自动更新；坏文件不阻断联网恢复。没有曾成功保存的数据时，不伪造数据补空页。
+- 当前明确接受 v5 和已取证的 `radar-bench-public-summary-v6-150-details`，未知计分规则仍拒绝；版本日志带实际 schema／score_version／policy。源站变更后先核对规则，再更新契约，不能以可用性为由混用分数。组合容量对齐前端 200，超限继续拒绝，并发／单轮限时不变。
+- 本地后端 21 组／53 子用例、前端 38 项、类型／定向 lint、Vite 生产构建及嵌入新静态资源的 embed 编译通过，智力页面 chunk 为 `IntelligenceView-uaCUL_Nu.js`。发布终态及本轮证据见 HANDOFF；尚未提交推送／部署，不沿用旧 CI 结果。
+
 ## 智力效率改接雷达Bench v1（2026-10-12）
 
 本节优先于下方 2026-09-27 节中的数据源、30 分钟轮询、IQ、harness、低样本 30 等描述。

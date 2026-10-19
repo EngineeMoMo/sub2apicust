@@ -141,7 +141,8 @@ describe('智力效率页面交互', () => {
     await button(page, '刷新数据').trigger('click')
     await flushPromises()
     expect(page.find('[role=alert]').exists()).toBe(false)
-    expect(page.text()).toContain('本轮读取数据源失败，显示的是上次成功读取的数据。')
+    expect(page.text()).toContain('暂未获取到新数据，显示上次成功读取的数据；请留意上方的数据读取时间。')
+    expect(page.text()).not.toContain('部分组合本轮未能读取')
   })
   it('英文界面提供等价信息且不含外链', async () => {
     const page = await render('en')
