@@ -2,6 +2,8 @@
 
 ## 2026-10-19 魔法配方／魔法工坊升级（本地完成，未提交发布）
 
+- **发布终态（2026-10-21）**：业务 `e182790f0`＋安全补修 `ce5dda212930a49c6213e6134207c684c1e63791` 已推 origin/main，同 SHA CI／安全／GHCR 全部成功，固定镜像 `sha-ce5dda2`（digest `sha256:556fe03e3076ee88fef27287906ba9b25d9387a2082532270110ffea988d9874`）。补修把 Go 固定到 1.27.3（`backend/go.mod` 原 [CUSTOM] 注释沿用，`Dockerfile`／`deploy/Dockerfile`／`backend/Dockerfile` 与 `backend-ci.yml`／`release.yml`／`security-scan.yml` 的版本校验同步），`frontend/pnpm-lock.yaml` 仅 follow-redirects 1.16.0→1.16.1。同步上游时保留 Go 1.27.3 及以上与 follow-redirects ≥1.16.1，不能退回。
+
 - **用户要求**：完善配方与工坊并升级页面效果；工坊“加入直接生成”（复用控制台本人 Key／模型，点击才生成计费，视频不开放）；配方补“代码审查、周报汇报、邮件回复”；后续反馈线上控制台“复制提示词等按钮不可用”，并要求根据工坊图片和提示词生成简短视频、只在点击预览时播放并缓存在浏览器复用（选择脚本在用户本机运行，8 段×5 秒·480p）。
 - **改动的上游文件只有 `Makefile`、`.dockerignore` 与 `.github/workflows/backend-ci.yml`（均带 [CUSTOM]）**；其余为自有定制文件：
   - `backend/internal/web/custom_family_products.go`（自有文件，嵌入产品服务，关键常量带 [CUSTOM] 注释）：新增 `familyStudioEmbeddedCSP`，`?embedded=1` 时 `img-src`／`connect-src` 放开 https 与本机地址；两种工坊页 `media-src 'self' blob:`；白名单加 `generate.mjs`、`videos.mjs`、`video-cache.mjs`；`familyClipPath` 匹配 `assets/clip-<条目>-<10位sha256>.mp4`，这类文件 `Cache-Control: public, max-age=31536000, immutable` 与 ETag，其余仍 no-store；Range 由 ServeContent 提供。测试 `custom_family_products_test.go` 覆盖白名单、CSP、immutable／304／206 与非法文件名。
