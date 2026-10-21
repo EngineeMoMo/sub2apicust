@@ -29,6 +29,38 @@ export const catalog = [
     ]
   },
   {
+    id: 'review', file: '09-code-review.md', category: 'work', title: '代码改动审查',
+    description: '合并前先过一遍改动。每条意见都对得上代码原文，看不到的地方只提问题。',
+    outcome: '分级审查意见、测试缺口、待作者回答的问题', tags: ['代码', '审查', 'Code Review', '测试', '开发'],
+    fields: [
+      { id: 'purpose', label: '改动目的', type: 'text', required: true, example: '订单列表改为分页返回，避免一次查询全部订单。' },
+      { id: 'focus', label: '重点关注', type: 'text', required: false, hint: '例如正确性、权限、性能；不确定可以留空。', emptyValue: '不额外指定，按正确性、边界与可维护性审查。', example: '分页正确性、能否看到别人的订单。' },
+      { id: 'material', label: '改动片段与测试记录', required: true, hint: '改动按 [D1] 编号并注明文件；测试按 [T1] 写真实结果，没测就写“未测试”。先删掉密钥和内部地址。', example: '[D1] orders/list.py 新增函数：\ndef list_orders(db, user_id, page, size):\n    offset = page * size\n    return db.query("SELECT * FROM orders WHERE user_id = %s LIMIT %s OFFSET %s", (user_id, size, offset))\n[D2] api/orders.py 调用：list_orders(db, request.user_id, int(request.args["page"]), int(request.args["size"]))，没有范围检查。\n[T1] 本地手动请求 page=1&size=20，返回了20条，没有跑自动化测试。' }
+    ]
+  },
+  {
+    id: 'weekly', file: '10-weekly-report.md', category: 'work', title: '周报汇报整理',
+    description: '把一周的零散记录整理成能发出去的周报。每条都有出处，没做的不补。',
+    outcome: '已完成、进行中、风险与下周计划', tags: ['周报', '汇报', '总结', '团队'],
+    fields: [
+      { id: 'period', label: '汇报周期', type: 'text', required: true, example: '2026-10-12至2026-10-16' },
+      { id: 'audience', label: '汇报对象', type: 'text', required: false, hint: '不确定可以留空，默认按团队内部周报整理。', emptyValue: '未指定，按团队内部周报处理', example: '产品组' },
+      { id: 'material', label: '本周工作记录', required: true, hint: '按 [W1] 编号，写做了什么、结果如何；聊天记录可以直接粘贴。', example: '[W1] 登录页改版上线，修复了手机端按钮遮挡。\n[W2] 订单导出做了一半，Excel格式还没确定。\n[W3] 支付回调周三超时两次，原因没查清，可能和第三方有关。' },
+      { id: 'plan', label: '下周已确定的安排', required: false, hint: '只写已经确定的事；没有就留空，不会替你规划。', emptyValue: '未提供', example: '周二评审导出格式。' }
+    ]
+  },
+  {
+    id: 'reply', file: '11-email-reply.md', category: 'work', title: '来信回复草稿',
+    description: '逐条回应来信。承诺只来自你的立场，缺的信息留空位，可疑要求单独提醒。',
+    outcome: '回复草稿、承诺清单、发送前待确认项', tags: ['邮件', '回复', '客户', '沟通'],
+    fields: [
+      { id: 'material', label: '来信内容', required: true, hint: '按 [M1] 分段或分问题编号。删掉与回复无关的个人信息。', example: '[M1] 王经理您好，我们订的200个定制杯子，能否保证10月25日前到货？\n[M2] 另外想把杯身颜色从白色改成浅蓝色，价格会变吗？' },
+      { id: 'stance', label: '我的立场', required: true, hint: '同意、拒绝或部分同意什么，原因是什么。草稿里的承诺只来自这里和下一项。', example: '按白色方案可以保证交期；改色可以做，每个加价2元，交期要等工厂确认。' },
+      { id: 'facts', label: '可以写进回复的事实', required: false, hint: '订单号、数量、金额、日期等；缺少的会在草稿里留【待填】。', emptyValue: '未提供，缺少的信息请用【待填】占位', example: '原订单200个，总价6000元。' },
+      { id: 'tone', label: '语气与对象', type: 'text', required: false, emptyValue: '按来信的正式程度，礼貌克制', example: '客户，正式但亲切。' }
+    ]
+  },
+  {
     id: 'paper', file: '04-student-understand.md', category: 'university', title: '大学论文精读',
     description: '不止读懂摘要，也分清作者的结论究竟由什么证据支持。', outcome: '研究问题、方法、证据、局限与理解题', tags: ['大学', '论文', '文献', '研究'],
     fields: [

@@ -1,2 +1,8 @@
 /node_modules/
 /test-output/
+/fixtures/.embedded-recipes/
+/fixtures/.video-run/
+# 视频生成脚本的本机任务号与被替换的旧成片，不提交。
+/.video-jobs.json
+/.video-archive/
+*.tmp-*

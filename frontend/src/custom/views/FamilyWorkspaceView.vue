@@ -1,7 +1,10 @@
 <template>
   <AppLayout>
-    <section class="mofa-product-workspace" :aria-label="product === 'recipes' ? '魔法配方工作区' : '魔法工坊工作区'">
-      <div v-if="!loaded" class="mofa-product-workspace-loading" role="status">正在打开{{ product === 'recipes' ? '魔法配方' : '魔法工坊' }}…</div>
+    <section class="mofa-product-workspace" :aria-label="product === 'recipes' ? '魔法配方工作区' : '魔法工坊工作区'" :aria-busy="!loaded">
+      <div v-if="!loaded" class="mofa-product-workspace-loading" role="status">
+        <span class="mofa-product-workspace-spinner" aria-hidden="true" />
+        <span>正在打开{{ product === 'recipes' ? '魔法配方' : '魔法工坊' }}…</span>
+      </div>
       <iframe :key="product" ref="frame" :src="source" :title="product === 'recipes' ? '魔法配方' : '魔法工坊'" referrerpolicy="no-referrer" @load="initialize" />
     </section>
   </AppLayout>
@@ -20,7 +23,12 @@ import { acceptsWorkspaceMessage, WorkspaceConnections } from '@/custom/family/w
 
 const route = useRoute(), router = useRouter(), auth = useAuthStore(), app = useAppStore()
 const product = computed(() => route.path === '/tools/studio' ? 'studio' : 'recipes')
-const source = computed(() => '/' + product.value + '/?embedded=1')
+// 工坊公开页的“登录控制台生成”会带上条目编号，只接受目录里的编号格式，转成子页 hash。
+const studioItem = computed(() => {
+  const item = route.query?.item
+  return product.value === 'studio' && typeof item === 'string' && /^[a-z0-9-]{1,80}$/.test(item) ? item : ''
+})
+const source = computed(() => '/' + product.value + '/?embedded=1' + (studioItem.value ? '#item=' + studioItem.value : ''))
 const frame = ref<HTMLIFrameElement>(), loaded = ref(false)
 let nonce = '', epoch = 0, observer: MutationObserver | undefined
 const connections = new WorkspaceConnections({
@@ -51,8 +59,9 @@ async function receive(event: MessageEvent) {
   }
   if (action === 'family') { send('mofa-host-response', { id, result: null }); void router.push('/family'); return }
   if (action === 'studio-submit' && product.value === 'studio') { send('mofa-host-response', { id, result: null }); void router.push('/tools/studio/submit'); return }
-  if (product.value !== 'recipes') return
   if (action === 'manage-keys') { send('mofa-host-response', { id, result: null }); void router.push('/keys'); return }
+  // 工坊只开放生图连接；文字连接仍只给配方。
+  if (product.value === 'studio' && payload.kind !== 'image') { send('mofa-host-response', { id, error: '魔法工坊只支持生图连接。' }); return }
   const started = epoch
   try {
     const result = await connections.execute(action, payload)

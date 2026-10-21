@@ -3,11 +3,20 @@
 <head>
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="description" content="魔法工坊：探索图片创作方法，改成自己的提示词，发现Skills与工作流。视频与分镜待开放。">
+ <meta name="description" content="魔法工坊：探索图片创作方法，改成自己的提示词，在控制台用自己的生图模型直接生成，发现Skills与工作流。视频与分镜待开放。">
  <meta name="color-scheme" content="dark light">
  <title>魔法工坊 · 魔法家族</title>
  <link rel="icon" href="assets/mofa-mark-flat.png">
  <link rel="stylesheet" href="theme.css">
+ <!-- 模块依赖有三层（app → catalog → new-gallery），预加载让它们与页面同时下载，少等两次往返。 -->
+ <link rel="modulepreload" href="app.mjs">
+ <link rel="modulepreload" href="catalog.mjs">
+ <link rel="modulepreload" href="new-gallery.mjs">
+ <link rel="modulepreload" href="core.mjs">
+ <link rel="modulepreload" href="icons.mjs">
+ <link rel="modulepreload" href="generate.mjs">
+ <link rel="modulepreload" href="videos.mjs">
+ <link rel="modulepreload" href="video-cache.mjs">
  <script src="host-client.js"></script>
  <script type="module" src="app.mjs"></script>
 </head>
@@ -25,16 +34,20 @@
  </header>
  <main class="workspace">
   <section class="library" id="collection" aria-labelledby="page-title">
-   <div class="page-heading"><div><h1 id="page-title">灵感，从这里开始。</h1><p id="page-description">找一个喜欢的效果，做成自己的作品。</p></div><button class="text-button" id="history-button"></button></div>
+   <div class="page-heading">
+    <div class="heading-copy"><p class="eyebrow">魔法家族 · 创作灵感库</p><h1 id="page-title">灵感，从这里开始。</h1><p id="page-description">找一个喜欢的效果，做成自己的作品。</p><ul id="hero-stats" class="hero-stats" aria-label="内容概况"></ul></div>
+    <div class="heading-actions"><button class="text-button" id="shuffle-button"></button><button class="text-button" id="history-button"></button></div>
+   </div>
    <div class="community-bar"><a id="submit-work" class="text-button" href="https://ai.mofamilys.com/tools/studio/submit">分享作品与提示词</a><span id="community-status" role="status">投稿需登录，审核通过后才公开。</span><button id="refresh-community" class="text-button" hidden>刷新投稿</button></div>
    <div id="catalog-controls">
     <div class="search-row"><label class="search-box"><span id="search-icon"></span><input id="search" type="search" placeholder="搜效果、提示词、风格或工具…" aria-label="搜索灵感" maxlength="160" autocomplete="off"><kbd>/</kbd></label><label class="sort-control"><span class="sr-only">排序</span><select id="sort"><option value="featured">精选顺序</option><option value="title">按标题</option><option value="reverse">倒序浏览</option></select></label></div>
     <div class="filter-line"><div id="media-filters" class="segments" role="group" aria-label="按媒介筛选"></div><button id="more-filters" class="text-button" aria-expanded="false" aria-controls="advanced-filters"></button></div>
-    <div id="advanced-filters" class="advanced-filters" hidden><label>资源类型<select id="resource-type"><option value="all">全部类型</option><option value="prompt">提示词</option><option value="skill">Agent Skill</option><option value="workflow">工作流</option></select></label><p>图片、Skills与工作流可浏览；视频与分镜待开放。选择Skill或工作流会进入对应资源区。</p></div>
-    <div id="category-filters" class="category-filters" role="group" aria-label="按用途筛选"></div>
-    <div class="style-filter-line"><span>视觉风格</span><div id="style-filters" class="category-filters" role="group" aria-label="按视觉风格筛选"></div></div>
+    <div id="advanced-filters" class="advanced-filters" hidden><label>资源类型<select id="resource-type"><option value="all">全部类型</option><option value="prompt">提示词</option><option value="skill">Agent Skill</option><option value="workflow">工作流</option></select></label><p id="advanced-scope">图片、Skills与工作流可浏览；视频与分镜待开放。选择Skill或工作流会进入对应资源区。</p></div>
+    <div id="category-filters" class="category-filters chip-row" role="group" aria-label="按用途筛选"></div>
+    <div class="style-filter-line"><span>视觉风格</span><div id="style-filters" class="category-filters chip-row" role="group" aria-label="按视觉风格筛选"></div></div>
    </div>
    <p id="video-availability" class="video-availability fine-print">视频与分镜待开放。你可以先探索图片，或使用 Skills 和工作流。</p>
+   <p id="clip-cache" class="clip-cache fine-print" hidden><span id="clip-cache-text" role="status" aria-live="polite"></span><button id="clip-only" class="text-button" type="button">只看短视频</button><button id="clip-clear" class="text-button" type="button" hidden>清除本机视频缓存</button></p>
    <div class="collection-caption"><span id="result-count" role="status" aria-live="polite"></span><span id="collection-note">原创示例 · 提示词待实测</span></div>
    <div id="gallery" class="gallery"></div>
    <div id="empty-state" class="empty-state" hidden><div id="empty-icon"></div><h2 id="empty-title">暂时没有找到</h2><p id="empty-description"></p><button id="empty-action" class="primary-button">清除筛选</button></div>
@@ -49,17 +62,35 @@
    <div id="bench-origin"></div>
    <form id="material-form" class="material-form"><div class="section-label"><h4>换成你的内容</h4><button id="reset-materials" class="text-button" type="button">恢复示例</button></div><div id="material-fields"></div></form>
    <div class="prompt-section"><div class="section-label"><label for="prompt-output">复用模板 · 完整提示词</label><div class="language-switch" role="group" aria-label="提示词语言"><button id="language-zh" aria-pressed="true">中文</button><button id="language-en" aria-pressed="false">English</button></div></div><textarea id="prompt-output" rows="6" readonly aria-describedby="prompt-note"></textarea><p id="prompt-note" class="fine-print">复用模板不等于原始生成记录。空白使用示例值；你的替换内容只留在当前页面。</p></div>
+   <section id="generate-panel" class="generate-panel" aria-labelledby="generate-title" hidden>
+    <div class="generate-head"><h4 id="generate-title">用我的模型生成</h4><span id="generate-chip" class="generate-chip" hidden></span></div>
+    <p id="generate-intro" class="fine-print">在控制台选择自己的生图密钥和模型，点击生成才会调用，按该密钥所属分组计费。</p>
+    <div id="generate-setup" class="generate-setup" hidden>
+     <label class="generate-field">密钥与分组<select id="generate-key"><option value="">正在读取…</option></select></label>
+     <label class="generate-field">生图模型<select id="generate-model" disabled><option value="">先选择密钥</option></select></label>
+     <div class="generate-row"><button id="generate-apply" class="primary-button" type="button" disabled>使用所选模型</button><button id="generate-manage" class="text-button" type="button">管理密钥</button><button id="generate-cancel" class="text-button" type="button">取消</button></div>
+    </div>
+    <div id="generate-ready" class="generate-ready" hidden>
+     <div class="generate-options"><label class="generate-field">提示词来源<select id="generate-source"></select></label><label class="generate-field">尺寸<select id="generate-size"></select></label></div>
+     <p id="generate-size-hint" class="fine-print"></p>
+     <div class="generate-row"><button id="generate-run" class="primary-button" type="button"></button><button id="generate-stop" class="secondary-button" type="button" hidden>停止等待</button><button id="generate-change" class="text-button" type="button">换模型</button></div>
+    </div>
+    <a id="generate-link" class="generate-link" href="https://ai.mofamilys.com/tools/studio" hidden></a>
+    <p id="generate-status" class="generate-status fine-print" role="status" aria-live="polite"></p>
+    <div id="generate-results" class="generate-results"></div>
+   </section>
    <details class="instructions"><summary>使用步骤与注意事项</summary><ol id="usage-steps"></ol><p id="usage-requirements"></p><p id="usage-tip"></p><div id="skill-command"></div></details>
    <a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer"></a>
    <p class="fine-print source-note">方法参考官方指南；原创模板尚未逐条实测。</p>
    </div>
    <div class="bench-actions"><button id="copy-prompt" class="primary-button"></button><button id="download-prompt" class="icon-button" aria-label="下载提示词文本" title="下载TXT"></button><button id="share-item" class="icon-button" aria-label="复制条目链接" title="复制条目链接"></button></div>
-   <p class="fine-print action-note">复制后在目标工具使用，当前页面不调用生成模型。</p>
+   <p class="fine-print action-note">复制后在目标工具使用；只有点击“生成”才会调用你选择的模型。</p>
   </aside>
  </main>
  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
- <dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-caption"><div class="dialog-bar"><span id="preview-caption"></span><button id="close-preview" class="icon-button" aria-label="关闭作品预览"></button></div><div class="preview-layout"><div id="preview-media"></div><div id="preview-details"></div></div></dialog>
-<dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title"><div class="dialog-bar"><h2 id="about-title">从灵感到自己的作品</h2><button id="close-about" class="icon-button" aria-label="关闭使用说明"></button></div><ol><li>点开图像，查看完整作品和对应提示词。</li><li>原始提示词保留实际发送的文字；复用模板可以替换主体和场景，两者分开。</li><li>复制到对应工具；Skills和工作流先按官方说明准备环境。</li></ol><p>目前可浏览47张AI图像。视频与分镜暂未开放，相关入口和作品不会展示；后续准备好成片、对应提示词与使用条件后再开放。</p><p>题材与视觉风格分别筛选，覆盖像素、水墨、美漫、水彩、剪纸、复古未来等。图片投稿需登录并提供模型与完整提示词，审核通过才展示；反推模板与原始记录明确区分。人工审核不等于模型效果验证。</p><p>收藏、主题和最近浏览保存在当前浏览器。替换材料仅当前页有效；下载TXT会保存你的材料，请先脱敏。</p><p id="storage-status"></p><button id="clear-history" class="secondary-button">清除最近浏览</button></dialog>
+ <dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-caption"><div class="dialog-bar"><span id="preview-caption"></span><div class="dialog-tools"><button id="preview-prev" class="icon-button" aria-label="上一张作品" title="上一张（←）"></button><span id="preview-position" class="preview-position" aria-live="polite"></span><button id="preview-next" class="icon-button" aria-label="下一张作品" title="下一张（→）"></button><button id="close-preview" class="icon-button" aria-label="关闭作品预览"></button></div></div><div class="preview-layout"><div id="preview-media"></div><div id="preview-details"></div></div></dialog>
+ <dialog id="result-dialog" class="result-dialog" aria-labelledby="result-caption"><div class="dialog-bar"><span id="result-caption">生成结果</span><button id="close-result" class="icon-button" aria-label="关闭生成结果"></button></div><div class="result-stage"><img id="result-image" alt="" referrerpolicy="no-referrer"></div><p id="result-error" class="fine-print result-error" role="alert" hidden>图片暂时无法显示，远程地址可能已过期。</p><p id="result-revised" class="fine-print" hidden></p><div class="result-actions"><a id="result-download" class="primary-button" hidden>下载原图</a><p id="result-save-note" class="fine-print" hidden>远程图片可长按或右键保存。</p></div></dialog>
+<dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title"><div class="dialog-bar"><h2 id="about-title">从灵感到自己的作品</h2><button id="close-about" class="icon-button" aria-label="关闭使用说明"></button></div><ol><li>点开图像，查看完整作品和对应提示词。</li><li>原始提示词保留实际发送的文字；复用模板可以替换主体和场景，两者分开。</li><li>复制到对应工具；Skills和工作流先按官方说明准备环境。</li><li>在魔法 API 控制台打开工坊时，可以选择自己的生图密钥和模型，在右侧直接生成一张。</li></ol><p id="about-scope">目前可浏览47张AI图像。视频与分镜暂未开放，相关入口和作品不会展示；后续准备好成片、对应提示词与使用条件后再开放。</p><p>直接生成只调用你选择的密钥和模型，按该密钥所属分组计费；不会自动生成，也不会自动重试。生成结果只留在当前页面，刷新或退出登录后清除，请及时下载。</p><p>题材与视觉风格分别筛选，覆盖像素、水墨、美漫、水彩、剪纸、复古未来等。图片投稿需登录并提供模型与完整提示词，审核通过才展示；反推模板与原始记录明确区分。人工审核不等于模型效果验证。</p><p>收藏、主题和最近浏览保存在当前浏览器。替换材料仅当前页有效；下载TXT会保存你的材料，请先脱敏。</p><p id="storage-status"></p><button id="clear-history" class="secondary-button">清除最近浏览</button></dialog>
  <noscript><p class="noscript">请启用JavaScript使用搜索、收藏和提示词编辑。</p></noscript>
 </body>
 </html>

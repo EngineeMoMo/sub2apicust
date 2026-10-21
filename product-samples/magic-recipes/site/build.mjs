@@ -25,6 +25,8 @@ for (const entry of catalog) {
 const logo = await readFile(path.join(directory, '../../../frontend/src/custom/assets/mofa-mark-flat.png'));
 const style = await readFile(path.join(directory, 'theme.css'), 'utf8');
 const core = await readFile(path.join(directory, 'core.cjs'), 'utf8');
+const markdown = await readFile(path.join(directory, 'markdown.cjs'), 'utf8');
+const clipboard = await readFile(path.join(directory, 'clipboard.cjs'), 'utf8');
 const model = await readFile(path.join(directory, 'model.cjs'), 'utf8');
 const connector = await readFile(path.join(directory, 'magic-connect.cjs'), 'utf8');
 const modelUi = await readFile(path.join(directory, 'model-ui.js'), 'utf8');
@@ -34,7 +36,7 @@ const template = await readFile(path.join(directory, 'template.html'), 'utf8');
 const safeData = JSON.stringify(recipes).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
 let html = template.replace('%%LOGO%%', 'data:image/png;base64,' + logo.toString('base64'))
   .replace('%%STYLE%%', () => style).replace('%%DATA%%', () => safeData)
-  .replace('%%CORE%%', () => core).replace('%%MODEL%%', () => model)
+  .replace('%%CORE%%', () => core).replace('%%MARKDOWN%%', () => markdown).replace('%%CLIPBOARD%%', () => clipboard).replace('%%MODEL%%', () => model)
   .replace('%%CONNECTOR%%', () => connector)
   .replace('%%MODEL_UI%%', () => host + '\n;' + modelUi).replace('%%APP%%', () => app);
 const outputIndex = process.argv.indexOf('--output');

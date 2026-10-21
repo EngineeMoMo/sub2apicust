@@ -4,18 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: https: http://localhost:* http://127.0.0.1:* http://[::1]:*; connect-src https: http://localhost:* http://127.0.0.1:* http://[::1]:*; form-action 'none'; base-uri 'none'">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: https: http://localhost:* http://127.0.0.1:*; connect-src https: http://localhost:* http://127.0.0.1:*; form-action 'none'; base-uri 'none'">
 <title>魔法配方 · 魔法家族</title>
 <style>%%STYLE%%</style>
 </head>
 <body>
 <a class="skip" href="#workspace">跳到配方内容</a>
 <header class="header">
-  <a href="#meeting" class="brand" aria-label="魔法配方首页"><img src="%%LOGO%%" width="42" height="42" alt="魔法家族狮冠M标识"><span><strong>魔法配方</strong><small>魔法家族</small></span></a>
-  <div class="header-actions"><span class="prototype">本地原型</span><button id="open-model-settings" type="button" class="quiet" aria-controls="model-settings" aria-expanded="false">模型设置</button><button id="open-tutorial" type="button" class="quiet" data-open-tutorial aria-controls="usage-tutorial" aria-expanded="false">使用教程</button><button id="theme" type="button" class="quiet">切换浅色</button></div>
+  <a href="#meeting" class="brand" aria-label="魔法配方首页"><img src="%%LOGO%%" width="40" height="40" alt="魔法家族狮冠M标识"><span><strong>魔法配方</strong><small>魔法家族</small></span></a>
+  <div class="header-actions"><span class="prototype">本地原型</span><button id="open-model-settings" type="button" class="quiet" aria-controls="model-settings" aria-expanded="false"><span class="connection-dot" aria-hidden="true"></span>模型设置</button><button id="open-tutorial" type="button" class="quiet" data-open-tutorial aria-controls="usage-tutorial" aria-expanded="false">使用教程</button><button id="theme" type="button" class="quiet">切换浅色</button></div>
 </header>
 <main class="shell">
-  <section class="intro" aria-labelledby="intro-title"><div><h1 id="intro-title">好方法，不必每次从头想。</h1><p>选配方、填材料，复制提示词，或接入自己的模型直接运行。</p></div><p class="local-note">整理提示词免费，模型运行按你的服务计费。<br>材料与密钥只留在本页，刷新后清除。</p></section>
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="intro-copy"><p class="eyebrow">魔法家族 · 可复用的 AI 工作方法</p><h1 id="intro-title">好方法，不必每次从头想。</h1><p class="intro-lead">选配方、填材料，复制提示词，或接入自己的模型直接运行。</p>
+      <ul class="hero-chips" aria-label="配方特点"><li><strong id="hero-count">11</strong> 份配方</li><li>整理提示词不调用模型</li><li>运行按你的服务计费</li></ul>
+      <p class="local-note">材料与密钥只留在本页，刷新后清除。</p></div>
+    <ol class="hero-flow" aria-label="使用流程"><li><span>01</span>选一份配方</li><li><span>02</span>填入你的材料</li><li><span>03</span>复制或直接运行</li></ol>
+  </section>
   <section id="model-settings" class="model-settings" aria-labelledby="settings-title" hidden>
     <div class="settings-heading"><div><h2 id="settings-title">接入自己的模型</h2><p>登录魔法 API 选择已有配置，或手动填写兼容接口。文字和生图分别设置。</p></div><button id="close-model-settings" class="quiet" type="button">收起设置</button></div>
     <div class="field connection-kind"><label for="model-kind">连接用途</label><select id="model-kind"><option value="text">文字模型</option><option value="image">生图模型</option></select></div>
@@ -65,6 +71,7 @@
         <h3>常见问题</h3>
         <details><summary>点了整理，为什么没有回答、图片或视频？</summary><p>“整理并生成提示词”只把材料填入现成模板，不调用模型。需要复制到对应工具，或配置连接后点击“用我的模型运行”或“用我的模型生图”。视频接口尚未接入。</p></details>
         <details><summary>连接失败或提示跨域怎么办？</summary><p>先核对接口地址、格式、密钥和模型权限。浏览器直连接口需要服务允许当前页面来源的跨域请求（CORS）。若服务不允许，可由服务管理员配置许可，或继续复制到已有 AI 工具使用。页面不会绕过浏览器限制。</p></details>
+        <details><summary>回答为什么是一段段出现的？</summary><p>默认开启“边生成边显示”，收到多少就显示多少。表格和列表会排好版，可随时切换“原文”查看模型返回的原始文字。点击“停止等待”只会停止本页接收，服务端可能已经开始处理并计费。如果服务不支持流式返回，可以关闭这个开关后重新运行。</p></details>
         <details><summary>登录魔法 API 后为什么不能带回配置？</summary><p>两端都需要发布支持此功能的版本。独立部署配方时，管理员须明确允许配方页面来源；浏览器须允许打开登录窗口。若窗口被安全策略隔离、关闭或超过五分钟，请重新发起，也可手动填写连接。清除本页连接不会退出原站账号。</p></details>
         <details><summary>复制按钮没有生效怎么办？</summary><p>在“完整提示词预览”框内全选后手动复制：Windows 使用 Ctrl+A、Ctrl+C；Mac 使用 Command+A、Command+C；手机可长按文字选择“全选”和“复制”。也可尝试下载 TXT 后打开复制，文件会包含你的明文材料。</p></details>
         <details><summary>AI 没有直接给结论，而是在问我问题？</summary><p>部分大学配方会先给提示、等待你尝试，这是分步学习设计。页面内运行时，在回答下方填写并发送追问；外部工具请在原对话中回答。每次追问也会调用模型。</p></details>
@@ -75,8 +82,8 @@
   </details>
   <div class="layout">
     <aside class="library" aria-label="配方目录">
-      <div class="library-title"><h2>配方库</h2><span id="count">8 份</span></div>
-      <label class="search-label" for="search">搜索配方</label><input type="search" id="search" placeholder="论文、报错、生图…" autocomplete="off" maxlength="100">
+      <div class="library-title"><h2>配方库</h2><span id="count">11 份</span></div>
+      <label class="search-label" for="search">搜索配方</label><div class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="search" placeholder="论文、报错、周报…" autocomplete="off" maxlength="100"><kbd>/</kbd></div>
       <div class="filters" aria-label="按用途筛选"><button type="button" data-category="all" aria-pressed="true">全部</button><button type="button" data-category="work" aria-pressed="false">工作</button><button type="button" data-category="university" aria-pressed="false">大学</button><button type="button" data-category="creative" aria-pressed="false">创作</button></div>
       <p id="list-status" class="sr-only" role="status"></p><nav id="recipe-list" aria-label="选择配方"></nav>
       <div id="empty" hidden><p>没有找到匹配配方。</p><button id="reset-search" type="button" class="quiet">清除筛选</button></div>
@@ -85,26 +92,28 @@
     <article id="workspace" class="workspace" tabindex="-1">
       <div class="recipe-top"><span id="category-label" class="category-label"></span><span id="version" class="version"></span></div>
       <h2 id="recipe-title"></h2><p id="recipe-description" class="description"></p>
-      <div class="outcome"><span>你将得到</span><p id="outcome"></p></div>
+      <div class="outcome"><span>你将得到</span><ul id="outcome" class="outcome-list"></ul></div>
+      <ol id="recipe-steps" class="recipe-steps" aria-label="使用进度"><li data-step="fill"><span class="step-mark" aria-hidden="true">1</span><span class="step-text">填写材料</span></li><li data-step="compile"><span class="step-mark" aria-hidden="true">2</span><span class="step-text">整理提示词</span></li><li data-step="use"><span class="step-mark" aria-hidden="true">3</span><span class="step-text">复制或运行</span></li></ol>
       <div class="view-buttons" aria-label="配方内容"><button id="edit-view" type="button" aria-pressed="true">填写材料</button><button id="guide-view" type="button" aria-pressed="false">示例与方法</button></div>
       <section id="editor" aria-label="填写配方材料">
-        <div class="form-heading"><div><h3>准备你的材料</h3><p>必填项已标注；不确定的信息不用猜。</p></div><button id="load-example" type="button" class="quiet">填入虚构示例</button></div>
+        <div class="form-heading"><div><h3>准备你的材料</h3><p>必填项已标注；不确定的信息不用猜。按 Ctrl+Enter 也可以整理。</p></div><button id="load-example" type="button" class="quiet">填入虚构示例</button></div>
         <p id="example-notice" class="notice" hidden>当前使用虚构教学材料，仅用于体验，不代表真实记录。</p>
         <form id="recipe-form" novalidate autocomplete="off"><div id="fields"></div><p id="form-error" role="alert" class="error" hidden></p><div class="form-actions"><button type="submit" class="primary" aria-describedby="assembly-note">整理并生成提示词</button><button type="button" id="clear" class="quiet">清空此配方</button></div></form>
         <p id="assembly-note" class="fine-print">仅将你的材料填入配方模板，不调用模型，也不直接生成回答、图片或视频。</p>
         <p class="privacy">请先移除材料中的密钥、密码与个人信息。整理时材料仅留本页；点击模型运行或发送追问会把提示词与当前对话发送到你设置的接口。</p>
-        <section id="result" class="result" hidden aria-labelledby="result-title"><div class="result-heading"><div><h3 id="result-title">提示词已整理完成</h3><p id="result-description">已按模板组装材料，没有调用模型。请复制到支持相应能力的 AI 工具中使用。</p></div></div><label for="output">完整提示词预览</label><textarea id="output" readonly spellcheck="false" rows="14"></textarea><div class="result-actions"><button id="copy" class="primary" type="button">复制提示词</button><button id="download" class="quiet" type="button">下载 TXT</button><button id="result-tutorial" class="quiet" type="button" data-open-tutorial aria-controls="usage-tutorial" aria-expanded="false">复制后怎么用？</button></div><p class="fine-print">TXT 是含输入材料的明文文件，下载前请检查脱敏。</p><p id="result-next" class="result-next">下一步：到自己的 AI 工具新建对话，粘贴完整提示词并发送。请先检查材料是否已脱敏。</p></section>
+        <section id="result" class="result" hidden aria-labelledby="result-title"><div class="result-heading"><span class="result-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><div><h3 id="result-title">提示词已整理完成</h3><p id="result-description">已按模板组装材料，没有调用模型。请复制到支持相应能力的 AI 工具中使用。</p></div></div><label for="output">完整提示词预览</label><textarea id="output" readonly spellcheck="false" rows="14"></textarea><p id="output-meta" class="output-meta"></p><div class="result-actions"><button id="copy" class="primary" type="button">复制提示词</button><button id="download" class="quiet" type="button">下载 TXT</button><button id="result-tutorial" class="quiet" type="button" data-open-tutorial aria-controls="usage-tutorial" aria-expanded="false">复制后怎么用？</button></div><p class="fine-print">TXT 是含输入材料的明文文件，下载前请检查脱敏。</p><p id="result-next" class="result-next">下一步：到自己的 AI 工具新建对话，粘贴完整提示词并发送。请先检查材料是否已脱敏。</p></section>
         <section id="model-run" class="model-run" hidden aria-labelledby="model-run-title">
-          <div class="result-heading"><h3 id="model-run-title">在这里运行</h3><p id="connection-summary"></p></div>
-          <div class="result-actions"><button id="run-model" class="primary" type="button" aria-describedby="run-note">用我的模型运行</button><button id="configure-model" class="quiet" type="button">设置连接</button><button id="stop-model" class="quiet" type="button" hidden>停止等待</button></div>
+          <div class="result-heading"><div><h3 id="model-run-title">在这里运行</h3><p id="connection-summary"></p></div></div>
+          <div class="result-actions"><button id="run-model" class="primary" type="button" aria-describedby="run-note">用我的模型运行</button><button id="configure-model" class="quiet" type="button">设置连接</button><button id="stop-model" class="quiet" type="button" hidden>停止等待</button><label class="stream-toggle" id="stream-toggle"><input id="stream-answer" type="checkbox" checked>边生成边显示</label></div>
           <p id="run-note" class="fine-print">点击后会把上方完整提示词发给你的接口，费用由该服务收取。</p>
           <p id="model-run-status" class="fine-print" role="status" aria-live="polite"></p>
           <p id="model-run-error" class="error" role="alert" hidden></p>
-          <div id="model-answer" class="model-answer" hidden><h3>模型结果</h3><p class="fine-print">这是你的模型返回的内容，请按配方标准检查。</p><div id="conversation"></div><div id="generated-images"></div><button id="copy-answer" class="quiet" type="button" hidden>复制最新回答</button></div>
-          <form id="followup-form" class="followup-form" hidden novalidate autocomplete="off"><label for="followup">继续追问或回答模型的问题</label><textarea id="followup" rows="3" maxlength="12000" placeholder="例如：请解释第二项的依据。"></textarea><p class="fine-print">发送时会附上本次对话，继续使用当前文字连接。</p><button id="send-followup" class="primary" type="submit">发送追问</button></form>
+          <div id="model-waiting" class="model-waiting" hidden><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="model-waiting-text">正在等待模型…</span></div>
+          <div id="model-answer" class="model-answer" hidden><div class="answer-heading"><h3>模型结果</h3><p class="fine-print">这是你的模型返回的内容，请按配方标准检查。</p></div><div id="conversation"></div><div id="generated-images"></div><div class="answer-actions"><button id="copy-answer" class="quiet" type="button" hidden>复制最新回答</button><button id="export-conversation" class="quiet" type="button" hidden>导出对话</button></div></div>
+          <form id="followup-form" class="followup-form" hidden novalidate autocomplete="off"><label for="followup">继续追问或回答模型的问题</label><textarea id="followup" rows="3" maxlength="12000" placeholder="例如：请解释第二项的依据。"></textarea><p class="fine-print">发送时会附上本次对话，继续使用当前文字连接。按 Ctrl+Enter 发送。</p><button id="send-followup" class="primary" type="submit">发送追问</button></form>
         </section>
       </section>
-      <section id="guide" hidden aria-label="使用方法与示例"><h3>先看边界，再开始</h3><p id="scope" class="prose"></p><details open><summary>参考示例（不是模型实测）</summary><pre id="example" class="prose"></pre></details><details><summary>怎样检查 AI 的输出</summary><pre id="checks" class="prose"></pre></details><details><summary>结果不理想时，如何追问</summary><pre id="repair" class="prose"></pre></details><button id="back-to-edit" type="button" class="primary">用这份配方</button></section>
+      <section id="guide" hidden aria-label="使用方法与示例"><h3>先看边界，再开始</h3><div id="scope" class="md guide-scope"></div><details open><summary>参考示例（不是模型实测）</summary><div id="example" class="md"></div></details><details><summary>怎样检查 AI 的输出</summary><div id="checks" class="md"></div></details><details><summary>结果不理想时，如何追问</summary><div id="repair" class="md"></div></details><button id="back-to-edit" type="button" class="primary">用这份配方</button></section>
     </article>
   </div>
   <footer><span>魔法家族 · 可复用的 AI 工作方法</span><a id="magic-family-home" href="https://ai.mofamilys.com/family" target="_blank" rel="noopener noreferrer">家族首页（新窗口）</a><span>支持自己的兼容模型接口</span></footer>
@@ -125,6 +134,8 @@
 <noscript><p class="notice">此页面需要 JavaScript 才能填写和生成提示词。原始 Markdown 配方仍可直接阅读。</p></noscript>
 <script id="recipe-data" type="application/json">%%DATA%%</script>
 <script>%%CORE%%</script>
+<script>%%MARKDOWN%%</script>
+<script>%%CLIPBOARD%%</script>
 <script>%%MODEL%%</script>
 <script>%%CONNECTOR%%</script>
 <script>%%MODEL_UI%%</script>

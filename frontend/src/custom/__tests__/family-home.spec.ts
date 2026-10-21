@@ -157,7 +157,7 @@ describe('统一产品首页', () => {
     expect(linkTo(view, '打开魔法工坊')).toBe('/tools/studio')
     expect(view.get('#recipes').text()).not.toContain('登录后')
     expect(view.get('#studio').text()).not.toContain('登录后')
-    expect(view.get('#studio').text()).toContain('内容首版已完成')
+    expect(view.get('#studio').text()).toContain('点击生成才计费')
   })
 
   it('AI 图例及非实测说明可读屏，API节点保留原M轮廓', () => {

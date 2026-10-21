@@ -22,6 +22,9 @@ function setup(options = {}) {
         return options.fetch(...args);
       };
       window.HTMLElement.prototype.scrollIntoView = () => {};
+      // jsdom 窗口缺少浏览器自带的流式解码能力，测试时注入 Node 的同名实现。
+      window.TextDecoder = TextDecoder;
+      window.TextEncoder = TextEncoder;
       window.confirm = () => { throw new Error('不能调用浏览器原生确认框'); };
       window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
       window.HTMLDialogElement.prototype.close = function (value = '') {
@@ -303,7 +306,7 @@ test('无连接运行定位设置，无效配置不发请求', () => {
     assert.equal(page.requests.length, 0);
   } finally { page.dom.window.close(); }
 });
-test('文字运行和追问带上历史，结果按纯文本显示，编辑材料清除旧对话', async () => {
+test('文字运行和追问带上历史，回答只做安全排版不解释HTML，编辑材料清除旧对话', async () => {
   const page = setup({ fetch: async () => jsonReply({ choices: [{ message: { content: '<img src=x onerror=alert(1)>模拟回答' } }] }) });
   try {
     configure(page);
@@ -497,7 +500,7 @@ test('接口拒绝显示可恢复错误，失败追问保留输入与已成功�
   } finally { page.dom.window.close(); }
 });
 
-test('八份配方虚构示例均能生成且字段不串位', () => {
+test('全部11份配方虚构示例均能生成且字段不串位', () => {
   const page = setup();
   try {
     const recipes = JSON.parse(page.document.getElementById('recipe-data').textContent);
@@ -534,7 +537,7 @@ test('大学筛选只有三项，搜索无结果可恢复', () => {
     input(page.document, 'search', '小学');
     assert.equal(page.document.getElementById('empty').hidden, false);
     page.document.getElementById('reset-search').click();
-    assert.equal(page.document.querySelectorAll('[data-recipe]').length, 8);
+    assert.equal(page.document.querySelectorAll('[data-recipe]').length, 11);
   } finally { page.dom.window.close(); }
 });
 test('切换配方保留本页草稿，重新打开不持久化', () => {
@@ -678,6 +681,23 @@ test('复制成功传递完整文本，失败提供选中回退', async () => {
     assert.equal(failed.document.getElementById('copy').disabled, false);
   } finally { failed.dom.window.close(); }
 });
+test('剪贴板接口被拒时改用 execCommand 复制成功，按钮保持焦点、不留临时文本框', async () => {
+  const page = setup({ writeText: async () => { throw new Error('denied'); } });
+  const copied = [];
+  try {
+    page.window.document.execCommand = command => { copied.push({ command, text: page.document.activeElement?.value }); return command === 'copy'; };
+    page.document.getElementById('load-example').click(); submit(page.document);
+    const button = page.document.getElementById('copy');
+    button.focus(); button.click(); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(copied.length, 1); assert.equal(copied[0].command, 'copy');
+    assert.equal(copied[0].text, page.document.getElementById('output').value);
+    assert.match(page.document.getElementById('status').textContent, /已复制/);
+    assert.equal(page.document.activeElement, button); assert.equal(button.disabled, false); assert.equal(button.hasAttribute('aria-busy'), false);
+    assert.equal(page.document.querySelectorAll('body > textarea').length, 0);
+    assert.equal([...page.document.querySelectorAll('#recipe-steps li')].find(li => li.dataset.step === 'use').dataset.state, 'done');
+    assert.deepEqual(page.errors, []);
+  } finally { page.dom.window.close(); }
+});
 test('深浅色、方法视图和配方直达可用', () => {
   const page = setup({ hash: '#lab' });
   try {
@@ -746,5 +766,182 @@ test('初始页面和提示词整理不发送网络请求，也不保存密钥�
     assert.equal(page.window.localStorage.length, 0);
     assert.equal(page.window.sessionStorage.length, 0);
     assert.match(page.document.querySelector('[http-equiv="Content-Security-Policy"]').content, /connect-src https:/);
+    // 浏览器不接受 CSP 里的 IPv6 字面地址（会报错并忽略），策略里只保留 localhost 与 127.0.0.1。
+    assert.doesNotMatch(page.document.querySelector('[http-equiv="Content-Security-Policy"]').content, /\[::1\]/);
+  } finally { page.dom.window.close(); }
+});
+function sseReply(chunks, options = {}) {
+  let index = 0;
+  const encoder = new TextEncoder();
+  return {
+    ok: true,
+    headers: { get: name => name.toLowerCase() === 'content-type' ? 'text/event-stream' : null },
+    body: { getReader: () => ({
+      read: () => {
+        if (index < chunks.length) return Promise.resolve({ done: false, value: encoder.encode(chunks[index++]) });
+        if (options.hold) return new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true }));
+        return Promise.resolve({ done: true });
+      },
+      cancel: () => Promise.resolve()
+    }) }
+  };
+}
+async function waitFor(check, label) {
+  for (let attempt = 0; attempt < 80; attempt++) {
+    if (check()) return;
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  assert.fail('等待超时：' + label);
+}
+test('流式回答边到边显示，结束后表格排版，可看原文与单条复制，追问带上完整历史', async () => {
+  const copied = [];
+  let calls = 0;
+  const page = setup({ writeText: async text => { copied.push(text); }, fetch: async (_url, options) => {
+    calls++;
+    assert.equal(JSON.parse(options.body).stream, true);
+    return calls === 1
+      ? sseReply(['data: {"choices":[{"delta":{"content":"| 编号 | 任务 |\\n"}}]}\n\n', 'data: {"choices":[{"delta":{"content":"| --- | --- |\\n| T1 | 提交初稿 |"}}]}\n\n', 'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'])
+      : sseReply(['data: {"choices":[{"delta":{"content":"追问的回答"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n']);
+  } });
+  try {
+    configure(page);
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click();
+    await waitFor(() => page.document.querySelector('#conversation .md table') && !page.document.querySelector('#conversation .streaming'), '表格渲染');
+    const entry = page.document.querySelector('#conversation .conversation-entry');
+    assert.equal(entry.querySelector('td:nth-child(2)').textContent, '提交初稿');
+    assert.equal(entry.querySelector('.entry-state').hidden, true);
+    assert.equal(page.document.getElementById('model-waiting').hidden, true);
+    const [rawToggle, copy] = entry.querySelectorAll('.entry-actions button');
+    rawToggle.click();
+    assert.match(entry.querySelector('pre').textContent, /\| T1 \| 提交初稿 \|/);
+    assert.equal(entry.querySelector('table'), null);
+    rawToggle.click();
+    assert.ok(entry.querySelector('table'));
+    copy.click(); await settled();
+    assert.equal(copied.at(-1), '| 编号 | 任务 |\n| --- | --- |\n| T1 | 提交初稿 |');
+    assert.equal(page.document.querySelector('#recipe-steps [data-step="use"]').dataset.state, 'done');
+    assert.equal(page.document.getElementById('export-conversation').hidden, false);
+    input(page.document, 'followup', '继续说明');
+    page.document.getElementById('followup-form').dispatchEvent(new page.window.Event('submit', { cancelable: true }));
+    await waitFor(() => /追问的回答/.test(page.document.getElementById('conversation').textContent) && !page.document.querySelector('#conversation .streaming'), '追问回答');
+    const body = JSON.parse(page.requests[1][1].body);
+    assert.deepEqual(body.messages.map(message => message.role), ['user', 'assistant', 'user']);
+    assert.equal(body.messages[1].content, '| 编号 | 任务 |\n| --- | --- |\n| T1 | 提交初稿 |');
+    assert.equal(page.document.querySelectorAll('#conversation .conversation-entry').length, 3);
+    assert.equal(page.document.querySelectorAll('#conversation .from-user').length, 1);
+    assert.deepEqual(page.errors, []);
+  } finally { page.dom.window.close(); }
+});
+test('流式中途停止保留已收到部分并标为未完成，不带入后续追问', async () => {
+  let calls = 0;
+  const page = setup({ fetch: async (_url, options) => {
+    calls++;
+    if (calls === 2) return sseReply(['data: {"choices":[{"delta":{"content":"半截"}}]}\n\n'], { hold: true, signal: options.signal });
+    return sseReply(['data: {"choices":[{"delta":{"content":"完整回答' + calls + '"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n']);
+  } });
+  try {
+    configure(page);
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click();
+    await waitFor(() => /完整回答1/.test(page.document.getElementById('conversation').textContent) && !page.document.querySelector('#conversation .streaming'), '第一轮');
+    input(page.document, 'followup', '请补充');
+    page.document.getElementById('followup-form').dispatchEvent(new page.window.Event('submit', { cancelable: true }));
+    await waitFor(() => page.document.querySelector('#conversation .streaming'), '开始接收');
+    page.document.getElementById('stop-model').click();
+    await waitFor(() => !page.document.getElementById('model-run-error').hidden, '停止提示');
+    const partial = page.document.querySelector('#conversation .incomplete');
+    assert.ok(partial);
+    assert.match(partial.textContent, /半截/);
+    assert.equal(partial.querySelector('.entry-state').textContent, '未完成');
+    assert.match(page.document.getElementById('model-run-error').textContent, /已停止等待.*未完成/);
+    assert.equal(page.document.getElementById('followup').value, '请补充');
+    assert.equal(page.document.getElementById('run-model').disabled, false);
+    input(page.document, 'followup', '再试一次');
+    page.document.getElementById('followup-form').dispatchEvent(new page.window.Event('submit', { cancelable: true }));
+    await waitFor(() => /完整回答3/.test(page.document.getElementById('conversation').textContent), '第三轮');
+    const body = JSON.parse(page.requests[2][1].body);
+    assert.deepEqual(body.messages.map(message => message.content), [page.document.getElementById('output').value, '完整回答1', '再试一次']);
+  } finally { page.dom.window.close(); }
+});
+test('关闭边生成边显示后按普通请求运行，生图不显示该开关', async () => {
+  const page = setup({ fetch: async () => jsonReply({ choices: [{ message: { content: '普通回答' } }] }) });
+  try {
+    configure(page);
+    page.document.getElementById('load-example').click(); submit(page.document);
+    assert.equal(page.document.getElementById('stream-toggle').hidden, false);
+    page.document.getElementById('stream-answer').checked = false;
+    page.document.getElementById('run-model').click(); await settled();
+    assert.equal(JSON.parse(page.requests[0][1].body).stream, false);
+    assert.match(page.document.getElementById('conversation').textContent, /普通回答/);
+    page.document.querySelector('[data-recipe="image"]').click();
+    page.document.getElementById('load-example').click(); submit(page.document);
+    assert.equal(page.document.getElementById('stream-toggle').hidden, true);
+    assert.equal(page.document.getElementById('open-model-settings').dataset.connected, 'true');
+  } finally { page.dom.window.close(); }
+});
+test('使用进度随填写、整理和复制推进，修改材料后回到整理步骤', async () => {
+  const page = setup();
+  try {
+    const states = () => [...page.document.querySelectorAll('#recipe-steps li')].map(item => item.dataset.state);
+    assert.deepEqual(states(), ['current', 'todo', 'todo']);
+    page.document.getElementById('load-example').click();
+    assert.deepEqual(states(), ['done', 'current', 'todo']);
+    submit(page.document);
+    assert.deepEqual(states(), ['done', 'done', 'current']);
+    assert.match(page.document.getElementById('output-meta').textContent, /共 \d+ 字/);
+    page.document.getElementById('copy').click(); await settled();
+    assert.deepEqual(states(), ['done', 'done', 'done']);
+    assert.equal(page.document.getElementById('copy').textContent, '已复制 ✓');
+    input(page.document, 'input-material', '换一份材料');
+    assert.deepEqual(states(), ['done', 'current', 'todo']);
+    assert.equal(page.document.querySelector('#recipe-steps [aria-current="step"]').dataset.step, 'compile');
+  } finally { page.dom.window.close(); }
+});
+test('工作配方新增代码审查、周报和来信回复，方法页按表格与代码块排版', () => {
+  const page = setup({ hash: '#review' });
+  try {
+    page.document.querySelector('[data-category="work"]').click();
+    assert.deepEqual([...page.document.querySelectorAll('[data-recipe]')].map(item => item.dataset.recipe), ['meeting', 'requirements', 'triage', 'review', 'weekly', 'reply']);
+    assert.equal(page.document.getElementById('recipe-title').textContent, '代码改动审查');
+    page.document.getElementById('guide-view').click();
+    assert.ok(page.document.querySelector('#example table'));
+    assert.ok(page.document.querySelector('#example .md-code pre'));
+    assert.ok(page.document.querySelector('#repair .md-code-copy'));
+    assert.equal(page.document.querySelectorAll('#guide script, #guide img').length, 0);
+    assert.equal(page.document.getElementById('workspace').dataset.tone, 'work');
+    page.document.querySelector('[data-category="all"]').click();
+    page.document.querySelector('[data-recipe="paper"]').click();
+    assert.equal(page.document.getElementById('workspace').dataset.tone, 'university');
+    assert.equal(page.document.getElementById('hero-count').textContent, '11');
+    assert.deepEqual(page.errors, []);
+  } finally { page.dom.window.close(); }
+});
+test('导出对话为本地 Markdown 文件，包含提示词与回答', async () => {
+  const page = setup({ fetch: async () => jsonReply({ choices: [{ message: { content: '导出用回答' } }] }) });
+  try {
+    let exported;
+    page.window.URL.createObjectURL = blob => { exported = blob; return 'blob:test'; };
+    page.window.URL.revokeObjectURL = () => {};
+    configure(page);
+    page.document.getElementById('load-example').click(); submit(page.document);
+    page.document.getElementById('run-model').click(); await settled();
+    assert.equal(page.document.getElementById('export-conversation').hidden, false);
+    page.document.getElementById('export-conversation').click();
+    const text = await new Promise(resolve => { const reader = new page.window.FileReader(); reader.onload = () => resolve(reader.result); reader.readAsText(exported); });
+    assert.match(text, /## 提示词/);
+    assert.match(text, /## 模型回答\n\n导出用回答/);
+    assert.ok(text.includes(page.document.getElementById('output').value));
+    assert.equal(page.requests.length, 1);
+  } finally { page.dom.window.close(); }
+});
+test('按 / 聚焦搜索，Ctrl+Enter 整理当前配方', () => {
+  const page = setup();
+  try {
+    page.document.body.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: '/', bubbles: true, cancelable: true }));
+    assert.equal(page.document.activeElement.id, 'search');
+    page.document.getElementById('load-example').click();
+    page.document.getElementById('input-material').dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(page.document.getElementById('result').hidden, false);
   } finally { page.dom.window.close(); }
 });

@@ -1,5 +1,18 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-19 魔法配方／魔法工坊升级（本地完成，未提交发布）
+
+- **用户要求**：完善配方与工坊并升级页面效果；工坊“加入直接生成”（复用控制台本人 Key／模型，点击才生成计费，视频不开放）；配方补“代码审查、周报汇报、邮件回复”；后续反馈线上控制台“复制提示词等按钮不可用”，并要求根据工坊图片和提示词生成简短视频、只在点击预览时播放并缓存在浏览器复用（选择脚本在用户本机运行，8 段×5 秒·480p）。
+- **改动的上游文件只有 `Makefile`、`.dockerignore` 与 `.github/workflows/backend-ci.yml`（均带 [CUSTOM]）**；其余为自有定制文件：
+  - `backend/internal/web/custom_family_products.go`（自有文件，嵌入产品服务，关键常量带 [CUSTOM] 注释）：新增 `familyStudioEmbeddedCSP`，`?embedded=1` 时 `img-src`／`connect-src` 放开 https 与本机地址；两种工坊页 `media-src 'self' blob:`；白名单加 `generate.mjs`、`videos.mjs`、`video-cache.mjs`；`familyClipPath` 匹配 `assets/clip-<条目>-<10位sha256>.mp4`，这类文件 `Cache-Control: public, max-age=31536000, immutable` 与 ETag，其余仍 no-store；Range 由 ServeContent 提供。测试 `custom_family_products_test.go` 覆盖白名单、CSP、immutable／304／206 与非法文件名。
+  - `frontend/src/custom/views/FamilyWorkspaceView.vue`、`custom/theme.css`、`custom/family/{build-products.mjs,build-products.test.mjs,products.ts}`、`custom/views/FamilyHomeView.vue` 与对应 spec：见 `frontend/src/custom/UPGRADE.md` 本日条目。
+  - `Makefile`：前端关键回归新增两项 family-workspace spec，保留智力效率两项。
+  - `.dockerignore`：排除 `product-samples/magic-studio/{fixtures,tools,.video-jobs.json,.video-archive}`，发布只取白名单静态产物。
+- **自有产品（不涉及上游）**：`product-samples/magic-recipes`（09–11 三份配方、`markdown.cjs`、`clipboard.cjs`、流式回答、三步进度、主题重写）；`product-samples/magic-studio`（`generate.mjs`、`video-plan.mjs`、`videos.mjs`、`video-cache.mjs`、`tools/generate-videos.mjs`、`fixtures/host-fixture.mjs` 与测试、主题与交互）；`product-samples/family-runtime/host-client.js`（会话结束后提示重新登录）。
+- **省流量与 CI（2026-10-21）**：`custom_family_products.go` 新增 `familyTextFile`／`acceptsGzip`／`familyGzip` 与 `familyGzipCache`：HTML/CSS/JS 内容摘要 ETag＋`no-cache`＋`Vary: Accept-Encoding`，≥1KB 且客户端接受时 gzip（内存按摘要缓存），图片 `public, max-age=86400`＋ETag，错误仍 no-store；三份 CSP 去掉浏览器不接受的 `http://[::1]:*`。测试 `TestFamilyProductCachingAndCompression` 及真实 dist 的 gzip 往返。上游文件：`Makefile` 新增 `test-family-products`，`.github/workflows/backend-ci.yml` 前端作业新增 “Family products node tests” 步骤，均带 [CUSTOM]。工坊 `index.html` 加 modulepreload（自有文件）。
+- **程序动效（2026-10-21，自有文件）**：`product-samples/magic-studio/tools/motion/`（effects／recipes／record 页）与 `tools/import-motion-clip.mjs`，只在本机夹具 `/motion/` 提供录制页，不进入镜像（`.dockerignore` 已排除 tools/ 与 fixtures/）；清单 `kind=motion` 的片段在页面标“程序动效 · 主体不动”并循环播放。Go 服务与 serve.mjs 白名单未增加任何录制相关文件。
+- **边界**：未调用真实模型或视频接口，未提交推送、未部署 8080 或生产；`videos.mjs` 为空，页面视频入口保持待开放，成片由用户运行脚本后提交。真实账号／计费／线上复制失败的具体环境未验证。验证结果见 HANDOFF 与 `output/family-products-upgrade-20261019/`。
+
 ## 2026-10-19 同步上游v0.2.17
 
 - 2026-10-19上游v0.2.17同步发布终态：业务5233e9090698a9bd02f645340cd19e85e7e27743已推origin/main，包含upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084及新增47条上游提交；同SHA CI 39196526010（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端53文件831项）、安全39196525919、GHCR 39196526008全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-5233e90（linux/amd64），index digest sha256:08fe2367c8241ca9b43fe741b1ccd03db65ba5a8a5579f8bbc4a8f4ce6d2c550；registry revision/source/摘要与正式embed构建日志交叉验真，正式镜像隔离28项HTTP检查含真实登录、角色权限及IP防护通过。无新增迁移或依赖；312个自有新增文件内容不变，支付两处冲突保留WAP期限/快捷金额定制，原未提交产品工作不混入。生产由用户备份后手动./update.sh sha-5233e90，未代部署或付费生图。PR8028仍未合并，本轮不包含，不能保证解决截图无图。证据output/upstream-sync-20261019/verified-release.json、release-source-proof.json、formal-smoke.json及job日志；Windows全量5项失败如实保留在backend-unit-summary.json，正式Linux CI通过覆盖本轮发布门禁。后续纯文档skip-ci提交不改变此业务镜像。

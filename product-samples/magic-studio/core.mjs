@@ -1,7 +1,40 @@
 export const STORE_KEY = 'mofa-studio:v1';
 export const VIDEO_CONTENT_ENABLED = false;
 export function isItemAvailable(item) {
- return Boolean(item) && (VIDEO_CONTENT_ENABLED || item.media !== 'video' || item.type !== 'prompt');
+ // 由工坊图片生成、已在清单里的短视频单独开放；封存的分镜与旧视频仍受 VIDEO_CONTENT_ENABLED 控制。
+ return Boolean(item) && (VIDEO_CONTENT_ENABLED || item.media !== 'video' || item.type !== 'prompt' || Boolean(item.clip));
+}
+const formatBytes = bytes => bytes >= 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+export { formatBytes };
+// 把清单里的一段短视频变成可浏览条目：首帧沿用来源图片。kind=model 是视频模型成片，提示词为实际发送原文；
+// kind=motion 是程序动效（按原图逐帧渲染局部动态，主体不动），提示词只是给图生视频工具的参考，不能说成生成记录。
+export function clipItem(clip, source) {
+ if (!clip || !source || !/^clip-[a-z0-9-]+$/.test(clip.id) || !/^assets\/clip-[a-z0-9-]+-[a-f0-9]{10}\.mp4$/.test(clip.file)) return null;
+ const seconds = Math.round(Number(clip.duration) || 0), size = formatBytes(Number(clip.bytes) || 0), motion = clip.kind === 'motion';
+ const common = {
+  id: clip.id, clip: { file: clip.file, bytes: Number(clip.bytes) || 0, duration: seconds, resolution: clip.resolution, sha256: clip.sha256, kind: motion ? 'motion' : 'model', loop: motion },
+  category: source.category, styles: source.styles || [], ratio: source.ratio, art: source.art, media: 'video', type: 'prompt',
+  summary: clip.motion, fields: [], zh: clip.prompt, en: clip.prompt,
+  steps: ['在支持“图生视频”的工具里上传来源作品图片作为首帧。', '粘贴下方提示词，时长设为 ' + seconds + ' 秒左右。', '对照原图检查构图、配色和主体有没有变形，再决定是否重试。'],
+  tip: '视频只在点击播放时下载一次，之后保存在当前浏览器，再看不会重复下载；可在列表上方清除。',
+  source: { label: '来源作品：' + source.title, url: '#' + new URLSearchParams({ item: source.id }).toString() },
+  sourceId: source.id,
+ };
+ if (motion) return {
+  ...common, title: source.title + ' · 动态版', tool: '程序动效', tags: [...(source.tags || []), '短视频', '程序动效'],
+  status: '程序动效 · 主体不动', previewLabel: '程序动效 · ' + seconds + ' 秒', motionClip: true,
+  recordNote: '这段动态是按原图「' + source.title + '」逐帧计算的灯光、水波与星光，不是视频模型生成，人物和主体不会动。下方是给图生视频工具的参考提示词，并未用于这段视频。',
+  requirements: '在浏览器里按配方逐帧渲染并录制，' + clip.resolution + '，约 ' + size + '。参考提示词需要目标工具支持以图片作首帧。',
+  generation: { tool: '程序动效', date: String(clip.generatedAt || '').slice(0, 10), framing: clip.resolution + ' · ' + seconds + ' 秒 · 循环播放', notes: '只改变灯光、水面与星光等局部，构图与主体保持原图。' },
+ };
+ return {
+  ...common, title: source.title + ' · 动起来', tool: '视频生成', tags: [...(source.tags || []), '短视频', '图生视频'],
+  status: '已生成 · 效果因模型而异', previewLabel: '图生视频 · ' + seconds + ' 秒',
+  rawPrompt: clip.prompt, rawPromptLabel: '这段视频实际使用的提示词',
+  recordNote: '这是生成这段视频时实际发送的提示词，首帧是来源作品「' + source.title + '」；同一提示词再次生成也会有差异。',
+  requirements: '由 ' + clip.model + ' 按 ' + clip.resolution + ' 生成，约 ' + size + '。需要目标工具支持以图片作首帧；不同模型的动作幅度与稳定性不同。',
+  generation: { tool: clip.model, date: String(clip.generatedAt || '').slice(0, 10), framing: clip.resolution + ' · ' + seconds + ' 秒 · 以来源作品为首帧', notes: '未做逐帧人工修饰。' },
+ };
 }
 const normal = value => String(value || '').normalize('NFKC').toLowerCase().trim();
 export function findItems(items, state, saved) {

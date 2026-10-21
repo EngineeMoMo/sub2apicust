@@ -123,6 +123,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Frontend typecheck and critical vitest
         run: make test-frontend
+      # [CUSTOM] 配方与工坊的 node:test 回归，原先只在本机运行。
+      - name: Family products node tests
+        run: make test-family-products
 
   golangci-lint:
     runs-on: ubuntu-latest

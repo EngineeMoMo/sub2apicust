@@ -55,6 +55,101 @@ test('错误响应不显示服务返回的密钥或 HTML，不自动重试', asy
   await assert.rejects(client.execute(connection(), '配方', [], undefined, async () => { throw new TypeError('Failed to fetch'); }), /CORS/);
   await assert.rejects(client.execute(connection(), '配方', [], undefined, async () => ({ ok: true, json: async () => { throw new Error('not json'); } })), /JSON/);
 });
+function eventStream(chunks, options = {}) {
+  const encoder = new TextEncoder();
+  let index = 0;
+  const body = new ReadableStream({
+    pull(controller) {
+      if (index < chunks.length) controller.enqueue(encoder.encode(chunks[index++]));
+      else if (options.breakAfter) controller.error(new TypeError('network'));
+      else controller.close();
+    }
+  });
+  return new Response(body, { status: 200, headers: { 'Content-Type': options.type ?? 'text/event-stream; charset=utf-8' } });
+}
+test('默认不流式；流式只用于文字，请求体明确 stream', () => {
+  assert.equal(JSON.parse(client.request(connection(), '配方').options.body).stream, false);
+  assert.equal(JSON.parse(client.request(connection(), '配方', [], true).options.body).stream, true);
+  assert.equal(JSON.parse(client.request(connection({ protocol: 'responses' }), '配方', [], true).options.body).stream, true);
+  assert.equal(JSON.parse(client.request(connection({ kind: 'image' }), '图像', [], true).options.body).stream, undefined);
+});
+test('Chat 流式逐段回调，跨块拆开的事件与 CRLF 都能拼接', async () => {
+  const pieces = [];
+  const chunks = ['data: {"choices":[{"delta":{"role":"assistant"}}]}\r', '\n\r\ndata: {"choices":[{"delta":{"content":"第一"}}]}\n', '\ndata: {"choices":[{"del', 'ta":{"content":"段"}}]}\n\n: keepalive\n\ndata: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'];
+  const result = await client.execute(connection(), '配方', [], undefined, async (_url, options) => {
+    assert.equal(JSON.parse(options.body).stream, true);
+    return eventStream(chunks);
+  }, { onDelta: (piece, text) => pieces.push([piece, text]) });
+  assert.equal(result.text, '第一段');
+  assert.equal(result.warning, '');
+  assert.equal(result.streamed, true);
+  assert.deepEqual(pieces, [['第一', '第一'], ['段', '第一段']]);
+  assert.deepEqual(result.messages.map(message => message.role), ['user']);
+});
+test('Responses 流式解析增量、截断与失败事件', async () => {
+  const config = connection({ protocol: 'responses' });
+  const ok = await client.execute(config, '配方', [], undefined, async () => eventStream([
+    'event: response.output_text.delta\ndata: {"type":"response.output_text.delta","delta":"你好"}\n\n',
+    'event: response.incomplete\ndata: {"type":"response.incomplete","response":{"status":"incomplete"}}\n\n'
+  ]), { onDelta: () => {} });
+  assert.equal(ok.text, '你好');
+  assert.match(ok.warning, /未完成/);
+  const completed = await client.execute(config, '配方', [], undefined, async () => eventStream([
+    'data: {"type":"response.completed","response":{"status":"completed","output":[{"type":"message","content":[{"type":"output_text","text":"完整回答"}]}]}}\n\n'
+  ]), { onDelta: () => {} });
+  assert.equal(completed.text, '完整回答');
+  await assert.rejects(client.execute(config, '配方', [], undefined, async () => eventStream([
+    'data: {"type":"response.output_text.delta","delta":"半"}\n\n', 'data: {"type":"response.failed","response":{"error":{"message":"server secret"}}}\n\n'
+  ]), { onDelta: () => {} }), error => /生成中返回错误/.test(error.message) && error.partial === '半' && !error.message.includes('secret'));
+});
+test('请求流式但服务返回普通 JSON 或未标注类型时仍能解析', async () => {
+  const json = await client.execute(connection(), '配方', [], undefined, async () => new Response(JSON.stringify({ choices: [{ message: { content: '普通回答' } }] }), { headers: { 'Content-Type': 'application/json' } }), { onDelta: () => {} });
+  assert.equal(json.text, '普通回答');
+  assert.equal(json.streamed, undefined);
+  const unlabeled = await client.execute(connection(), '配方', [], undefined, async () => eventStream(['data: {"choices":[{"delta":{"content":"无类型"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'], { type: 'text/plain' }), { onDelta: () => {} });
+  assert.equal(unlabeled.text, '无类型');
+});
+test('流式中断保留已收到的文字，空流和中途错误给出可读原因', async () => {
+  await assert.rejects(client.execute(connection(), '配方', [], undefined, async () => eventStream(['data: {"choices":[{"delta":{"content":"已收到"}}]}\n\n'], { breakAfter: true }), { onDelta: () => {} }),
+    error => /连接在回答过程中断开/.test(error.message) && error.partial === '已收到');
+  await assert.rejects(client.execute(connection(), '配方', [], undefined, async () => eventStream(['data: [DONE]\n\n']), { onDelta: () => {} }), /没有返回文字/);
+  await assert.rejects(client.execute(connection(), '配方', [], undefined, async () => eventStream(['data: {"error":{"message":"quota sk-secret"}}\n\n']), { onDelta: () => {} }),
+    error => /生成中返回错误/.test(error.message) && !error.message.includes('sk-secret'));
+  const unfinished = await client.execute(connection(), '配方', [], undefined, async () => eventStream(['data: {"choices":[{"delta":{"content":"没有结束标记"}}]}\n\n']), { onDelta: () => {} });
+  assert.match(unfinished.warning, /可能不完整/);
+});
+test('停止等待会中止读取流，不再回调后续文字', async () => {
+  const controller = new AbortController();
+  const pieces = [];
+  let pulls = 0;
+  const body = new ReadableStream({
+    pull(stream) {
+      pulls++;
+      if (pulls === 1) stream.enqueue(new TextEncoder().encode('data: {"choices":[{"delta":{"content":"第一段"}}]}\n\n'));
+      else return new Promise(() => {});
+    }
+  });
+  const running = client.execute(connection(), '配方', [], controller.signal, async () => new Response(body, { headers: { 'Content-Type': 'text/event-stream' } }), { onDelta: piece => { pieces.push(piece); controller.abort(); } });
+  await assert.rejects(running, error => error.name === 'AbortError');
+  assert.deepEqual(pieces, ['第一段']);
+});
+test('真实本地 HTTP 流式往返', async () => {
+  const server = createServer(async (request, response) => {
+    let body = '';
+    for await (const chunk of request) body += chunk;
+    assert.equal(JSON.parse(body).stream, true);
+    response.writeHead(200, { 'Content-Type': 'text/event-stream' });
+    response.write('data: {"choices":[{"delta":{"content":"本地"}}]}\n\n');
+    setTimeout(() => { response.end('data: {"choices":[{"delta":{"content":"流式"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'); }, 20);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const pieces = [];
+    const result = await client.execute(connection({ base: 'http://127.0.0.1:' + server.address().port + '/v1' }), '虚构材料', [], new AbortController().signal, undefined, { onDelta: piece => pieces.push(piece) });
+    assert.equal(result.text, '本地流式');
+    assert.deepEqual(pieces, ['本地', '流式']);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});
 test('真实本地 HTTP 请求经过兼容协议往返，无付费模型调用', async () => {
   const seen = [];
   const server = createServer(async (request, response) => {

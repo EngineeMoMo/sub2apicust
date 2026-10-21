@@ -41,15 +41,16 @@
     if (config.kind === 'image' && config.size && !/^(auto|\d{2,5}x\d{2,5})$/.test(config.size)) fail('尺寸请填写 auto 或宽x高，例如 1024x1024；实际支持值以服务商为准。', 'size');
     return config;
   }
-  function request(config, prompt, history = []) {
+  function request(config, prompt, history = [], stream = false) {
     if (typeof prompt !== 'string' || !prompt.trim()) fail('请先整理提示词或填写追问。');
     const messages = [...history, { role: 'user', content: prompt }];
     if (messages.reduce((length, message) => length + message.content.length, 0) > 200000) fail('当前对话过长，请重新整理提示词开始新对话。');
+    const streaming = Boolean(stream) && config.kind !== 'image';
     const body = config.kind === 'image'
       ? { model: config.model, prompt, n: 1, ...(config.size ? { size: config.size } : {}) }
       : config.protocol === 'responses'
-        ? { model: config.model, input: messages, stream: false, store: false }
-        : { model: config.model, messages, stream: false };
+        ? { model: config.model, input: messages, stream: streaming, store: false }
+        : { model: config.model, messages, stream: streaming };
     const headers = { 'Content-Type': 'application/json' };
     if (config.key) headers.Authorization = 'Bearer ' + config.key;
     return { url: config.endpoint, options: { method: 'POST', headers, body: JSON.stringify(body), credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer', cache: 'no-store' }, messages };
@@ -88,10 +89,112 @@
     if (typeof content !== 'string' || !content.trim()) fail('接口没有返回文字回答，请检查模型与接口格式。');
     return { text: content, warning };
   }
-  async function execute(config, prompt, history, signal, transport = globalThis.fetch) {
-    const plan = request(config, prompt, history);
+  // 流式回答：兼容 Chat Completions（choices[].delta）与 Responses（response.output_text.delta）事件。
+  const MAX_STREAM_TEXT = 400000;
+  function streamParser(config, onDelta) {
+    const state = { text: '', done: false, warning: '', events: 0 };
+    function add(piece) {
+      if (typeof piece !== 'string' || !piece) return;
+      if (state.text.length + piece.length > MAX_STREAM_TEXT) {
+        piece = piece.slice(0, Math.max(0, MAX_STREAM_TEXT - state.text.length));
+        state.warning = '回答过长，页面只保留前 40 万字。';
+      }
+      if (!piece) return;
+      state.text += piece;
+      onDelta?.(piece, state.text);
+    }
+    function event(payload) {
+      if (!payload || typeof payload !== 'object') return;
+      state.events++;
+      if (payload.error) fail('模型服务在生成中返回错误，请检查服务状态、额度与模型权限。');
+      if (config.protocol === 'responses') {
+        const type = String(payload.type || '');
+        if (type === 'response.output_text.delta' || type === 'response.refusal.delta') add(payload.delta);
+        else if (type === 'response.completed') {
+          state.done = true;
+          if (!state.text) { try { add(answer(config, payload.response).text); } catch { /* 结束时再判断空回答 */ } }
+        } else if (type === 'response.incomplete') { state.done = true; state.warning = '本次回答未完成，请检查服务端输出限制后再追问。'; }
+        else if (type === 'response.failed' || type === 'error') fail('模型服务在生成中返回错误，请检查服务状态、额度与模型权限。');
+        return;
+      }
+      const choice = Array.isArray(payload.choices) ? payload.choices[0] : undefined;
+      const delta = choice?.delta;
+      if (delta) {
+        if (typeof delta.content === 'string') add(delta.content);
+        else if (Array.isArray(delta.content)) add(delta.content.filter(item => item?.type === 'text').map(item => item.text).join(''));
+        if (typeof delta.refusal === 'string') add(delta.refusal);
+      }
+      if (choice?.finish_reason) {
+        state.done = true;
+        if (choice.finish_reason === 'length') state.warning = '本次回答被输出限制截断，可以继续追问。';
+      }
+    }
+    function block(raw) {
+      const data = raw.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).replace(/^ /, '')).join('\n');
+      if (!data) return;
+      if (data.trim() === '[DONE]') { state.done = true; return; }
+      let payload;
+      try { payload = JSON.parse(data); } catch { return; }
+      event(payload);
+    }
+    function finish() {
+      if (!state.text.trim()) fail('接口没有返回文字回答，请检查模型与接口格式。');
+      if (!state.done && !state.warning) state.warning = '连接在回答结束标记前断开，回答可能不完整。';
+      return { text: state.text, warning: state.warning };
+    }
+    return { state, block, finish };
+  }
+  function parseEventStream(config, source, onDelta) {
+    const parser = streamParser(config, onDelta);
+    for (const raw of String(source).replace(/\r\n?/g, '\n').split(/\n\n+/)) parser.block(raw);
+    return parser.finish();
+  }
+  async function readEventStream(config, body, signal, onDelta) {
+    const parser = streamParser(config, onDelta);
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    const drain = () => {
+      let boundary;
+      while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+        const raw = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        parser.block(raw);
+      }
+    };
+    try {
+      for (;;) {
+        if (signal?.aborted) { reader.cancel().catch(() => {}); throw new DOMException('Aborted', 'AbortError'); }
+        let chunk;
+        try { chunk = await reader.read(); }
+        catch (error) {
+          if (signal?.aborted || error?.name === 'AbortError') throw error;
+          const broken = new Error('连接在回答过程中断开，已显示收到的部分。');
+          broken.partial = parser.state.text;
+          throw broken;
+        }
+        if (chunk.done) break;
+        buffer += decoder.decode(chunk.value, { stream: true });
+        // 只在确认不是被拆开的 CRLF 后再统一换行，避免误判事件边界。
+        const tail = buffer.endsWith('\r') ? '\r' : '';
+        buffer = buffer.slice(0, buffer.length - tail.length).replace(/\r\n?/g, '\n') + tail;
+        drain();
+      }
+      buffer = (buffer + decoder.decode()).replace(/\r\n?/g, '\n');
+      drain();
+      if (buffer.trim()) parser.block(buffer);
+    } catch (error) {
+      reader.cancel().catch(() => {});
+      if (error instanceof Error && !('partial' in error) && !(signal?.aborted || error.name === 'AbortError')) error.partial = parser.state.text;
+      throw error;
+    }
+    return parser.finish();
+  }
+  async function execute(config, prompt, history, signal, transport = globalThis.fetch, options = {}) {
+    const stream = config.kind !== 'image' && typeof options.onDelta === 'function';
+    const plan = request(config, prompt, history, stream);
     let response;
-    try { response = await transport(plan.url, { ...plan.options, signal }); }
+    try { response = await (transport || globalThis.fetch)(plan.url, { ...plan.options, signal }); }
     catch (error) {
       if (signal?.aborted || error.name === 'AbortError') throw error;
       fail('无法连接接口。请检查地址、网络与浏览器跨域许可（CORS）；本页不会自动改用其他服务。');
@@ -100,9 +203,22 @@
       const messages = { 400: '请求被拒绝，请检查模型名、接口格式或图片尺寸。', 401: 'API Key 无效或已过期，请在模型设置中更换。', 403: '当前密钥无权使用该模型，请检查分组与模型权限。', 404: '接口或模型不存在，请检查地址与接口格式。', 429: '服务限流或额度不足，请检查额度后稍后重试。' };
       fail(messages[response.status] || '模型服务请求失败（HTTP ' + response.status + '），请检查服务状态。');
     }
+    const type = String(response.headers?.get?.('content-type') || '');
+    if (stream && /text\/event-stream/i.test(type) && typeof response.body?.getReader === 'function') {
+      return { ...(await readEventStream(config, response.body, signal, options.onDelta)), messages: plan.messages, streamed: true };
+    }
+    if (stream && typeof response.text === 'function' && !/json/i.test(type)) {
+      // 少数代理不标注事件流类型：读完整正文后再判断是事件流还是普通 JSON。
+      let raw;
+      try { raw = await response.text(); } catch (error) { if (signal?.aborted || error.name === 'AbortError') throw error; fail('读取接口响应失败，请检查网络后重试。'); }
+      if (/^\s*(data|event|id|retry):/m.test(raw)) return { ...parseEventStream(config, raw, options.onDelta), messages: plan.messages, streamed: true };
+      let payload;
+      try { payload = JSON.parse(raw); } catch { fail('接口没有返回 JSON 结果，请检查是否选择了正确的兼容接口。'); }
+      return { ...answer(config, payload), messages: plan.messages };
+    }
     let payload;
     try { payload = await response.json(); } catch { fail('接口没有返回 JSON 结果，请检查是否选择了正确的兼容接口。'); }
     return { ...answer(config, payload), messages: plan.messages };
   }
-  return { configure, request, answer, execute };
+  return { configure, request, answer, execute, parseEventStream };
 });

@@ -1,3 +1,9 @@
+2026-10-19 配方／工坊升级（本地未发布），同步上游时保留：
+- `custom/views/FamilyWorkspaceView.vue`：工坊 `?item=` 转为内嵌 `#item=`；工坊宿主请求只放行 `kind=image`；两产品都可发起 manage-keys；加载态 `aria-busy` 与转圈。`custom/theme.css` 的 `.mofa-product-workspace-loading`／`-spinner`（含减少动画）。
+- `custom/family/build-products.mjs`：工坊复制清单含 `generate.mjs`、`videos.mjs`、`video-cache.mjs`，并把独立页 `https://ai.mofamilys.com/tools/studio` 改写为 `/tools/studio`；`build-products.test.mjs` 断言计划、脚本、任务号与生成记录不进入产物。
+- `custom/family/products.ts` 与 `FamilyHomeView.vue` 的工坊文案；`Makefile` 关键回归新增 `family-workspace.spec.ts`、`family-workspace-view.spec.ts`（保留已有智力效率两项）。
+- 合并后运行上述 spec、`node --test product-samples/magic-studio`（在该目录）、`product-samples/magic-recipes/site`、`product-samples/family-runtime/host-client.test.cjs` 与 build-products 测试；后端 `go test -tags=embed ./internal/web/`。
+
 2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
 
 2026-10-18认证IP计数补修：保留AuthIPBlacklistView对缺失必要人机凭证计数、已提交但挑战失败不计数的说明，前后端同版本。后端auth_service.go五处[CUSTOM]与custom_auth_captcha_failure.go的结构化标记不可丢失；不能把所有验证码400当攻击。验证与发布状态见HANDOFF和deploy/AUTH_IP_BLACKLIST.md。

@@ -13,8 +13,37 @@
   let login;
   const connector = globalThis.MofaRecipeConnect;
   const host = globalThis.MofaFamilyHost;
+  const markdown = globalThis.MofaMarkdown;
   const imageViewer = byId('generated-image-viewer');
   let imageTrigger;
+  let waitTimer;
+  let live;
+  function flashButton(button, label) {
+    if (!button.dataset.label) button.dataset.label = button.textContent;
+    clearTimeout(button.flashTimer);
+    button.textContent = label;
+    button.classList.add('done');
+    button.flashTimer = setTimeout(() => { button.textContent = button.dataset.label; button.classList.remove('done'); delete button.dataset.label; }, 1600);
+  }
+  async function copyText(text, button, success) {
+    if (await globalThis.MofaClipboard.write(text)) {
+      if (button) flashButton(button, '已复制');
+      byId('model-run-status').textContent = success;
+    } else byId('model-run-status').textContent = '浏览器未允许复制，请选中文字后手动复制。';
+  }
+  function startWaiting(label) {
+    clearInterval(waitTimer);
+    const started = Date.now();
+    const update = () => { byId('model-waiting-text').textContent = label + ' · 已等待 ' + Math.floor((Date.now() - started) / 1000) + ' 秒'; };
+    update();
+    byId('model-waiting').hidden = false;
+    waitTimer = setInterval(update, 1000);
+  }
+  function stopWaiting() {
+    clearInterval(waitTimer);
+    waitTimer = undefined;
+    byId('model-waiting').hidden = true;
+  }
   function clearImagePreview(restoreFocus = true) {
     const trigger = imageTrigger;
     imageTrigger = undefined;
@@ -275,15 +304,25 @@
     byId('stop-model').disabled = Boolean(pending?.controller.signal.aborted);
     byId('model-run').setAttribute('aria-busy', String(Boolean(pending)));
     byId('send-followup').disabled = Boolean(pending);
+    byId('stream-toggle').hidden = video || kind() === 'image';
+    byId('stream-answer').disabled = Boolean(pending);
+    const linked = [...connections.values()];
+    const settings = byId('open-model-settings');
+    settings.dataset.connected = String(linked.length > 0);
+    settings.title = linked.length ? '已设置：' + linked.map(item => (item.kind === 'image' ? '生图 ' : '文字 ') + item.model).join('，') : '尚未设置模型连接';
   }
   function clearAnswer() {
     closeImagePreview(false);
+    stopWaiting();
+    if (live) clearTimeout(live.paintTimer);
+    live = undefined;
     history = [];
     latest = '';
     byId('conversation').replaceChildren();
     byId('generated-images').replaceChildren();
     byId('model-answer').hidden = true;
     byId('copy-answer').hidden = true;
+    byId('export-conversation').hidden = true;
     byId('followup-form').hidden = true;
     byId('followup').value = '';
     byId('model-run-error').hidden = true;
@@ -300,29 +339,89 @@
     clearAnswer();
     refreshConnection();
   }
-  function appendMessage(label, text) {
-    const entry = document.createElement('article');
-    entry.className = 'conversation-entry';
+  // 模型回答按安全 Markdown 渲染（只生成固定元素，不解释 HTML）；“原文”可切回模型返回的纯文本。
+  function entry(role, text) {
+    const article = document.createElement('article');
+    article.className = 'conversation-entry from-' + role;
+    const head = document.createElement('div');
+    head.className = 'entry-head';
     const heading = document.createElement('h4');
-    heading.textContent = label;
-    const content = document.createElement('pre');
-    content.className = 'prose model-text';
-    content.textContent = text;
-    entry.append(heading, content);
-    byId('conversation').append(entry);
+    heading.textContent = role === 'user' ? '你的追问' : '模型回答';
+    head.append(heading);
+    const body = document.createElement('div');
+    body.className = 'entry-body';
+    const node = { article, body, text, raw: false };
+    if (role === 'user') {
+      const content = document.createElement('pre');
+      content.className = 'prose model-text';
+      content.textContent = text;
+      body.append(content);
+    } else {
+      const badge = document.createElement('span');
+      badge.className = 'entry-state';
+      badge.hidden = true;
+      const actions = document.createElement('div');
+      actions.className = 'entry-actions';
+      const rawToggle = document.createElement('button');
+      rawToggle.type = 'button';
+      rawToggle.textContent = '原文';
+      rawToggle.setAttribute('aria-pressed', 'false');
+      rawToggle.addEventListener('click', () => { node.raw = !node.raw; rawToggle.setAttribute('aria-pressed', String(node.raw)); rawToggle.textContent = node.raw ? '排版' : '原文'; paint(node); });
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.textContent = '复制';
+      copy.addEventListener('click', () => copyText(node.text, copy, '这段回答已复制。'));
+      actions.append(rawToggle, copy);
+      head.append(badge, actions);
+      node.badge = badge;
+      paint(node);
+    }
+    article.append(head, body);
+    byId('conversation').append(article);
+    return node;
+  }
+  function paint(node) {
+    clearTimeout(node.paintTimer);
+    node.paintTimer = undefined;
+    if (node.raw) {
+      const content = document.createElement('pre');
+      content.className = 'prose model-text';
+      content.textContent = node.text;
+      node.body.replaceChildren(content);
+    } else {
+      const content = document.createElement('div');
+      content.className = 'md model-text';
+      content.append(markdown.render(node.text, document, { onCopy: (code, button) => copyText(code, button, '代码已复制。') }));
+      node.body.replaceChildren(content);
+    }
+  }
+  function schedulePaint(node) { if (!node.paintTimer) node.paintTimer = setTimeout(() => paint(node), 50); }
+  function settle(node, state) {
+    node.article.classList.remove('streaming');
+    node.article.classList.toggle('incomplete', state === 'incomplete');
+    node.badge.hidden = state !== 'incomplete';
+    node.badge.textContent = '未完成';
+    paint(node);
   }
   function renderAnswer(answer, question, continued) {
     byId('model-answer').hidden = false;
     if (answer.text) {
-      if (continued) appendMessage('你的追问', question);
-      appendMessage('模型回答', answer.text);
+      if (live) { live.text = answer.text; settle(live, 'done'); }
+      else {
+        if (continued) entry('user', question);
+        entry('model', answer.text);
+      }
+      live = undefined;
       history = [...answer.messages, { role: 'assistant', content: answer.text }];
       latest = answer.text;
       byId('copy-answer').hidden = false;
+      byId('export-conversation').hidden = false;
       byId('followup-form').hidden = false;
       byId('followup').value = '';
       byId('model-run-status').textContent = answer.warning || '回答已返回，可以继续追问。';
+      document.dispatchEvent(new CustomEvent('recipe-used'));
     } else {
+      document.dispatchEvent(new CustomEvent('recipe-used'));
       for (const [index, source] of answer.images.entries()) {
         const image = document.createElement('img');
         image.alt = '模型生成的图片 ' + (index + 1);
@@ -336,7 +435,10 @@
         button.setAttribute('aria-controls', 'generated-image-viewer');
         button.textContent = '打开图片 ' + (index + 1);
         button.addEventListener('click', () => openImagePreview(source, index, button));
-        byId('generated-images').append(image, button);
+        const figure = document.createElement('figure');
+        figure.className = 'generated-figure';
+        figure.append(image, button);
+        byId('generated-images').append(figure);
       }
       byId('model-run-status').textContent = '图片已返回。画幅与风格请对照提示词检查。';
     }
@@ -357,21 +459,44 @@
     pending = operation;
     operation.timer = setTimeout(() => { operation.timedOut = true; operation.controller.abort(); }, config.kind === 'image' ? 180000 : 120000);
     refreshConnection();
+    const streaming = config.kind !== 'image' && byId('stream-answer').checked;
     byId('model-run-status').textContent = '请求已发送到 ' + new URL(config.endpoint).host + '，正在等待结果…';
+    startWaiting(config.kind === 'image' ? '正在等待图片生成' : '正在等待模型回答');
+    const onDelta = (_piece, text) => {
+      if (pending !== operation) return;
+      if (!live) {
+        stopWaiting();
+        byId('model-answer').hidden = false;
+        if (continued) entry('user', question);
+        live = entry('model', '');
+        live.article.classList.add('streaming');
+        live.article.scrollIntoView?.({ block: 'nearest' });
+        byId('model-run-status').textContent = '正在接收回答…';
+      }
+      live.text = text;
+      schedulePaint(live);
+    };
     try {
-      const answer = await client.execute(config, question, continued ? history : [], operation.controller.signal);
-      if (pending !== operation || operation.controller.signal.aborted) return;
+      const answer = await client.execute(config, question, continued ? history : [], operation.controller.signal, undefined, streaming ? { onDelta } : {});
+      if (pending !== operation) return;
+      if (operation.controller.signal.aborted) throw new DOMException('Aborted', 'AbortError');
       renderAnswer(answer, question, continued);
     } catch (error) {
       if (pending !== operation) return;
+      const partial = live;
+      live = undefined;
+      if (partial) {
+        if (!partial.text && typeof error.partial === 'string') partial.text = error.partial;
+        settle(partial, 'incomplete');
+      }
       byId('model-run-status').textContent = '';
-      byId('model-run-error').textContent = operation.controller.signal.aborted
+      byId('model-run-error').textContent = (operation.controller.signal.aborted
         ? (operation.timedOut ? '等待超时。' : '已停止等待。') + '服务端可能已开始处理并计费，请先检查服务端记录。'
-        : error.message;
+        : error.message) + (partial ? '已收到的部分保留在上方，标为“未完成”，不会带入后续追问。' : '');
       byId('model-run-error').hidden = false;
     } finally {
       clearTimeout(operation.timer);
-      if (pending === operation) { pending = undefined; refreshConnection(); }
+      if (pending === operation) { stopWaiting(); pending = undefined; refreshConnection(); }
     }
   }
   byId('open-model-settings').addEventListener('click', () => byId('model-settings').hidden ? openSettings() : closeSettings());
@@ -414,17 +539,35 @@
   byId('run-model').addEventListener('click', () => run(byId('output').value));
   byId('stop-model').addEventListener('click', () => { if (pending) { byId('stop-model').disabled = true; pending.controller.abort(); } });
   byId('followup-form').addEventListener('submit', event => { event.preventDefault(); run(byId('followup').value.trim(), true); });
-  byId('copy-answer').addEventListener('click', async () => {
-    if (!latest) return;
-    try {
-      await navigator.clipboard.writeText(latest);
-      byId('model-run-status').textContent = '最新回答已复制。';
-    } catch { byId('model-run-status').textContent = '浏览器未允许复制，请选择最新回答手动复制。'; }
+  byId('copy-answer').addEventListener('click', () => { if (latest) copyText(latest, byId('copy-answer'), '最新回答已复制。'); });
+  byId('export-conversation').addEventListener('click', () => {
+    if (!history.length) return;
+    const lines = ['# ' + (recipe?.title || '魔法配方') + ' · 对话记录', '', '导出时间：' + new Date().toLocaleString('zh-CN'), '本文件包含你的材料与模型回答，请注意脱敏。', ''];
+    history.forEach((message, index) => {
+      lines.push('## ' + (message.role === 'assistant' ? '模型回答' : index === 0 ? '提示词' : '追问'), '', message.content, '');
+    });
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '魔法配方-' + (recipe?.title || '对话') + '-对话.md';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    byId('model-run-status').textContent = '已请求下载对话记录（Markdown），文件含你的材料，请检查浏览器下载列表。';
+  });
+  byId('followup').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      const form = byId('followup-form');
+      if (typeof form.requestSubmit === 'function') form.requestSubmit(); else form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
   });
   document.addEventListener('recipe-reset', event => { recipe = event.detail.recipe; compiled = false; resetRun(); });
   document.addEventListener('recipe-compiled', event => { recipe = event.detail.recipe; compiled = true; resetRun(); });
   byId('connect-magic-api').addEventListener('click', startLogin);
   byId('cancel-magic-connect').addEventListener('click', () => endLogin('已取消接入，不会接收先前窗口的配置。魔法 API 登录状态不受影响。'));
   window.addEventListener('message', receiveLogin);
-  window.addEventListener('pagehide', () => { endLogin(); closeImagePreview(false); });
+  window.addEventListener('pagehide', () => { endLogin(); closeImagePreview(false); stopWaiting(); });
+  refreshConnection();
 })();

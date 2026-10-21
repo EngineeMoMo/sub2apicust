@@ -1605,7 +1605,11 @@ html .mofa-auth .mofa-auth-title {
 /* [CUSTOM] 同源子产品工作区；产品内部保留可独立运行的静态模块。 */
 .mofa-product-workspace { position: relative; margin: 0 -1rem -1rem; height: calc(100dvh - 190px); min-height: 520px; }
 .mofa-product-workspace iframe { width: 100%; height: 100%; border: 0; display: block; background: transparent; }
-.mofa-product-workspace-loading { position: absolute; inset: 0; display: grid; place-content: center; background: #f5f8f8; z-index: 1; }
+.mofa-product-workspace-loading { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgb(var(--brand-page)); color: rgb(var(--brand-muted)); font-size: 14px; }
+/* [CUSTOM] 配方／工坊内嵌加载占位：跟随主站日夜主题，减少动态效果时不旋转。 */
+.mofa-product-workspace-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgb(var(--brand-border)); border-top-color: rgb(var(--brand-action)); animation: mofa-workspace-spin .8s linear infinite; }
+@keyframes mofa-workspace-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .mofa-product-workspace-spinner { animation: none; border-top-color: rgb(var(--brand-border)); border-right-color: rgb(var(--brand-action)); } }
 /* [CUSTOM] 工坊投稿与人工审核工作区，沿用主站主题，不增加独立登录。 */
 .mofa-studio-contribute { max-width: 1400px; margin: 0 auto; color: #25393c; }
 .mofa-studio-contribute-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }

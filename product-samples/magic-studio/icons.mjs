@@ -18,7 +18,13 @@ const paths = {
  sliders: '<path d="M4 7h7m5 0h4M4 17h2m5 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
  back: '<path d="M19 12H5m6-6-6 6 6 6"/>',
  book: '<path d="M3 4h7l2 2 2-2h7v16h-7l-2 2-2-2H3V4Zm9 2v16"/>',
- code: '<path d="m8 5-6 7 6 7m8-14 6 7-6 7M14 3l-4 18"/>'
+ code: '<path d="m8 5-6 7 6 7m8-14 6 7-6 7M14 3l-4 18"/>',
+ shuffle: '<path d="M16 4h4v4M4 18.5 20 4.5M20 16v4h-4M14.5 14.5 20 20M4 5.5l5 5"/>',
+ prev: '<path d="m15 5-7 7 7 7"/>',
+ next: '<path d="m9 5 7 7-7 7"/>',
+ wand: '<path d="m4 20 11-11m-2-2 2-2 4 4-2 2M15 3v2m4 2h2m-3.5-4.5L16 4M9 4l.6 1.4L11 6l-1.4.6L9 8l-.6-1.4L7 6l1.4-.6L9 4Z"/>',
+ stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+ key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-4 4 3 3m-5-1 2 2"/>'
 };
 export function icon(name) {
  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

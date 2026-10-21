@@ -20,6 +20,11 @@ docs/
 !product-samples/magic-recipes/*.md
 product-samples/magic-recipes/site/index.html
 product-samples/magic-studio/.impeccable/
+# [CUSTOM] 工坊本机验收夹具、视频生成脚本及其任务号／旧成片不进入镜像构建上下文；发布只取白名单静态产物。
+product-samples/magic-studio/fixtures/
+product-samples/magic-studio/tools/
+product-samples/magic-studio/.video-jobs.json
+product-samples/magic-studio/.video-archive/
 product-samples/magic-studio/assets/*.png
 !product-samples/magic-studio/assets/mofa-mark-flat.png
 frontend/public/recipes/

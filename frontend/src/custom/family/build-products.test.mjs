@@ -40,6 +40,14 @@ test('打包仅发布运行资源，配方脚本和样式外置，工坊原图 W
   const studio = await readFile(path.join(products.studio, 'index.html'), 'utf8');
   assert.ok(studio.includes('href="/family"'));
   assert.ok(studio.includes('href="/tools/studio/submit"'));
+  assert.ok(studio.includes('id="generate-link" class="generate-link" href="/tools/studio"'));
+  assert.ok(!studio.includes('https://ai.mofamilys.com'));
+  assert.ok((await readdir(products.studio)).includes('generate.mjs'));
+  assert.deepEqual(await readFile(path.join(products.studio, 'generate.mjs')), await readFile(path.join(workspace, 'product-samples/magic-studio/generate.mjs')));
+  // 短视频清单与浏览器缓存模块随页面发布；生成脚本、计划与生成记录只留在源码目录。
+  for (const file of ['videos.mjs', 'video-cache.mjs']) assert.deepEqual(await readFile(path.join(products.studio, file)), await readFile(path.join(workspace, 'product-samples/magic-studio', file)));
+  for (const file of ['video-plan.mjs', 'tools', '.video-jobs.json']) assert.ok(!(await readdir(products.studio)).includes(file), file);
+  assert.ok(!(await readdir(path.join(products.studio, 'assets'))).includes('PROVENANCE-VIDEOS.json'));
   assert.ok(studio.includes('id="style-filters"'));
   for(const id of ['pixel-night','ink-koi','comic-hero','watercolor-island','papercut-tiger','retro-observatory']) assert.ok(assets.includes(id+'.webp')&&assets.includes(id+'-thumb.webp'));
   assert.ok(!assets.includes('PROVENANCE-STYLES-20261001.json'));

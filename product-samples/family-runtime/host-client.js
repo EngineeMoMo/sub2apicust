@@ -2,7 +2,7 @@
   'use strict';
   const embedded = window.parent !== window && new URLSearchParams(location.search).get('embedded') === '1';
   const pending = new Map();
-  let nonce = '', counter = 0;
+  let nonce = '', counter = 0, ended = false;
   function theme(value) {
     const next = value === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.theme = next;
@@ -14,7 +14,7 @@
   theme(savedTheme());
   if (embedded) document.documentElement.classList.add('mofa-embedded');
   function request(action, payload = {}) {
-    if (!embedded || !nonce) return Promise.reject(new Error('控制台连接尚未就绪，请稍后再试。'));
+    if (!embedded || !nonce) return Promise.reject(new Error(ended ? '登录已失效，请重新登录。' : '控制台连接尚未就绪，请稍后再试。'));
     const id = String(++counter);
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(id); reject(new Error('读取配置超时，请重试。')); }, 35000);
@@ -27,7 +27,7 @@
     const data = event.data;
     if (!data || typeof data !== 'object') return;
     if (data.type === 'mofa-host-init' && /^[a-f0-9]{64}$/.test(data.nonce) && (!nonce || nonce === data.nonce)) {
-      nonce = data.nonce;
+      nonce = data.nonce; ended = false;
       theme(data.theme);
       document.dispatchEvent(new CustomEvent('mofa-host-ready'));
     } else if (nonce && data.nonce === nonce) {
@@ -35,7 +35,7 @@
       if (data.type === 'mofa-host-session-ended') {
         for (const entry of pending.values()) { clearTimeout(entry.timer); entry.reject(new Error('登录已失效，请重新登录。')); }
         pending.clear();
-        nonce = '';
+        nonce = ''; ended = true;
         document.dispatchEvent(new CustomEvent('mofa-session-ended'));
       }
       if (data.type === 'mofa-host-response' && pending.has(data.id)) {

@@ -44,7 +44,7 @@
     </section>
     <section v-reveal class="mofa-family-session" aria-labelledby="family-session-title">
       <div><h2 id="family-session-title">一个控制台，随时出发。</h2><p>登录后进入魔法 API 控制台，从顶部打开家族工具。</p></div>
-      <details><summary>登录与模型授权，如何协作？<Icon name="chevronDown" size="sm" aria-hidden="true" /></summary><p>配方和工坊已随本站镜像提供，无需另外托管。本站控制台与配方配置选择共用当前会话，连接模型时仍由你选择已有密钥并明确授权，不会自动创建密钥或产生模型费用。</p><p>工坊是公开创作资源，无需另注册账号。SynaRoute 使用密钥导入，不是桌面账号单点登录；退出本站后，配方内已授权连接需手动清除或刷新页面。</p><RouterLink to="/guide">查看模型接入教程 <Icon name="arrowRight" size="sm" aria-hidden="true" /></RouterLink></details>
+      <details><summary>登录与模型授权，如何协作？<Icon name="chevronDown" size="sm" aria-hidden="true" /></summary><p>配方和工坊已随本站镜像提供，无需另外托管。本站控制台与配方配置选择共用当前会话，连接模型时仍由你选择已有密钥并明确授权，不会自动创建密钥或产生模型费用。</p><p>工坊的作品和提示词公开浏览，无需另注册账号；在控制台里打开时，可以选择自己的生图密钥直接生成，点击生成才会计费。SynaRoute 使用密钥导入，不是桌面账号单点登录。在控制台里打开配方或工坊时，退出本站会清除其中已授权的连接；单独打开的配方页需手动清除或刷新页面。</p><RouterLink to="/guide">查看模型接入教程 <Icon name="arrowRight" size="sm" aria-hidden="true" /></RouterLink></details>
     </section>
   </PublicLayout>
 </template>

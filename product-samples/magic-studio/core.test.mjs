@@ -2,8 +2,34 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { items, plays, artSizes } from './catalog.mjs';
-import { findItems, cleanSaved, makeStore, compile, exportText, itemFromHash, STORE_KEY, communityItem, masonryPositions, VIDEO_CONTENT_ENABLED, isItemAvailable } from './core.mjs';
+import { findItems, cleanSaved, makeStore, compile, exportText, itemFromHash, STORE_KEY, communityItem, masonryPositions, VIDEO_CONTENT_ENABLED, isItemAvailable, clipItem, formatBytes } from './core.mjs';
 import { createAppServer } from './serve.mjs';
+import { videoPlan, VIDEO_DEFAULTS } from './video-plan.mjs';
+import { clips } from './videos.mjs';
+test('图生短视频计划只用已有图片作首帧；清单条目单独开放，不放开封存的视频与分镜', () => {
+ assert.equal(videoPlan.length, 8);assert.deepEqual(VIDEO_DEFAULTS,{model:'grok-imagine-video',duration:5,resolution:'480p'});
+ assert.equal(new Set(videoPlan.map(entry=>entry.id)).size,8);
+ for(const entry of videoPlan){
+  const source=items.find(item=>item.id===entry.source);
+  assert.ok(source&&source.media==='image'&&source.art,entry.id);assert.match(entry.id,/^clip-[a-z0-9-]+$/);
+  assert.ok(entry.prompt.length>80&&entry.prompt.length<1200,entry.id);assert.match(entry.prompt,/No new characters/);assert.ok(entry.motion.length>8);
+ }
+ assert.ok(Array.isArray(clips));
+ const source=items.find(item=>item.id==='ink-koi');
+ const item=clipItem({id:'clip-ink-koi',source:'ink-koi',motion:'锦鲤游动',prompt:'Animate.',file:'assets/clip-ink-koi-0123456789.mp4',bytes:1536000,sha256:'0'.repeat(64),duration:5,model:'grok-imagine-video',resolution:'480p',generatedAt:'2026-10-19T08:00:00Z'},source);
+ assert.equal(item.media,'video');assert.equal(item.type,'prompt');assert.equal(item.art,source.art);assert.equal(item.sourceId,'ink-koi');
+ assert.equal(VIDEO_CONTENT_ENABLED,false);assert.equal(isItemAvailable(item),true);
+ assert.equal(isItemAvailable(items.find(x=>x.id==='cloud-sword')),false,'封存分镜仍不开放');
+ assert.equal(compile(item,{},'zh'),'Animate.');assert.equal(formatBytes(1536000),'1.5 MB');assert.equal(formatBytes(800),'1 KB');
+ for(const file of ['assets/ink-koi.mp4','assets/clip-ink-koi-ABCDEF0123.mp4','../clip-ink-koi-0123456789.mp4'])assert.equal(clipItem({id:'clip-ink-koi',file},source),null,file);
+ assert.equal(clipItem({id:'clip-ink-koi',file:'assets/clip-ink-koi-0123456789.mp4'},undefined),null);
+ // 程序动效：标明不是模型生成，参考提示词不当作生成记录，循环播放。
+ const motion=clipItem({id:'clip-ink-koi',kind:'motion',source:'ink-koi',motion:'墨雾流动，主体不动。',prompt:'Reference prompt.',file:'assets/clip-ink-koi-0123456789.mp4',bytes:900000,duration:5,model:null,resolution:'768×512',recipe:'clip-ink-koi',recipeVersion:1,generatedAt:'2026-10-21T04:00:00Z'},source);
+ assert.equal(motion.motionClip,true);assert.equal(motion.clip.kind,'motion');assert.equal(motion.clip.loop,true);
+ assert.equal(motion.tool,'程序动效');assert.match(motion.status,/程序动效/);assert.equal(motion.rawPrompt,undefined);
+ assert.match(motion.recordNote,/不是视频模型生成/);assert.match(motion.title,/动态版$/);assert.ok(motion.tags.includes('程序动效'));
+ assert.equal(item.clip.loop,false);assert.equal(item.rawPrompt,'Animate.');
+});
 const ids = items.map(x => x.id);
 const state = { section:'discover', media:'all', type:'all', category:'all', query:'', sort:'featured' };
 const saved = { favorites:[], history:[] };
@@ -212,11 +238,14 @@ test('静态服务限制可读文件、方法与联网能力', async () => {
  try {
   const page = await fetch(origin);
   assert.equal(page.status,200);
-  assert.match(page.headers.get('content-security-policy'), /connect-src 'none'/);
+  // 与线上公开页一致：只能连同源（读取并缓存同源短视频），blob: 仅用于播放本机缓存的视频，不允许任何外部来源。
+  const policy = page.headers.get('content-security-policy');
+  assert.match(policy, /connect-src 'self';/); assert.match(policy, /media-src 'self' blob:;/); assert.doesNotMatch(policy, /https?:|\*/);
   assert.ok((await page.text()).includes('魔法工坊'));
   const head = await fetch(origin+'/assets/jade-bottle-thumb.webp',{method:'HEAD'});
-  assert.equal(head.status,200); assert.equal((await head.arrayBuffer()).byteLength,0);
-  for (const path of ['/PLAN.md','/serve.mjs','/assets/PROVENANCE.json','/%2e%2e/HANDOFF.md','/assets/../../HANDOFF.md']) assert.equal((await fetch(origin+path)).status,404);
+  assert.equal(head.status,200); assert.equal((await head.arrayBuffer()).byteLength,0); assert.equal(head.headers.get('cache-control'),'no-store');
+  for (const path of ['/videos.mjs','/video-cache.mjs']) assert.equal((await fetch(origin+path)).status,200,path);
+  for (const path of ['/PLAN.md','/serve.mjs','/assets/PROVENANCE.json','/assets/PROVENANCE-VIDEOS.json','/video-plan.mjs','/tools/generate-videos.mjs','/.video-jobs.json','/%2e%2e/HANDOFF.md','/assets/../../HANDOFF.md']) assert.equal((await fetch(origin+path)).status,404,path);
   assert.equal((await fetch(origin,{method:'POST'})).status,405);
  } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 });

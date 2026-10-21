@@ -7,6 +7,47 @@
   let active = recipes.find(recipe => recipe.id === location.hash.slice(1)) || recipes[0];
   let category = 'all';
   let noticeTimer;
+  let used = false;
+  const markdown = globalThis.MofaMarkdown;
+  const clipboard = globalThis.MofaClipboard;
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 静态图标路径，只插入本文件常量，不拼接用户内容。
+  const icons = {
+    work: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>',
+    university: '<path d="m2.5 9 9.5-4.5L21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V11M21.5 9v5"/>',
+    creative: '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5C21 6.6 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10" cy="7.3" r="1.1"/><circle cx="14.5" cy="7.3" r="1.1"/>'
+  };
+  function icon(name) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = icons[name] || icons.work;
+    return svg;
+  }
+  function flash(button, label) {
+    if (!button.dataset.label) button.dataset.label = button.textContent;
+    clearTimeout(button.flashTimer);
+    button.textContent = label;
+    button.classList.add('done');
+    button.flashTimer = setTimeout(() => {
+      button.textContent = button.dataset.label;
+      button.classList.remove('done');
+      delete button.dataset.label;
+    }, 1600);
+  }
+  async function copySnippet(text, button) {
+    if (await clipboard.write(text)) {
+      flash(button, '已复制');
+      announce('已复制这段内容。');
+    } else announce('浏览器未允许自动复制，请选中文字后手动复制。');
+  }
+  function renderGuide(id, source) {
+    byId(id).replaceChildren(markdown.render(source, document, { onCopy: copySnippet }));
+  }
+  function submitForm(form) {
+    if (typeof form.requestSubmit === 'function') form.requestSubmit();
+    else form.dispatchEvent(new Event('submit', { cancelable: true }));
+  }
   function destinationFor(recipe) {
     if (recipe.target === 'image') return '支持生图的 AI 工具';
     if (recipe.target === 'video') return '支持视频生成的 AI 工具';
@@ -64,8 +105,30 @@
   }
   function announce(message) {
     clearTimeout(noticeTimer);
-    byId('status').textContent = message;
-    noticeTimer = setTimeout(() => { byId('status').textContent = ''; }, 6500);
+    const status = byId('status');
+    status.textContent = message;
+    status.classList.remove('toast-in');
+    void status.offsetWidth;
+    status.classList.add('toast-in');
+    noticeTimer = setTimeout(() => { status.textContent = ''; status.classList.remove('toast-in'); }, 6500);
+  }
+  function renderSteps() {
+    const values = state().values;
+    const filled = active.fields.filter(field => field.required).every(field => String(values[field.id] || '').trim());
+    const compiled = !byId('result').hidden;
+    const done = { fill: filled, compile: compiled, use: compiled && used };
+    let current = false;
+    for (const item of byId('recipe-steps').children) {
+      const finished = done[item.dataset.step];
+      const status = finished ? 'done' : current ? 'todo' : 'current';
+      if (!finished) current = true;
+      item.dataset.state = status;
+      if (status === 'current') item.setAttribute('aria-current', 'step'); else item.removeAttribute('aria-current');
+      item.querySelector('.step-mark').textContent = finished ? '✓' : String([...item.parentElement.children].indexOf(item) + 1);
+      let spoken = item.querySelector('.sr-only');
+      if (!spoken) { spoken = document.createElement('span'); spoken.className = 'sr-only'; item.append(spoken); }
+      spoken.textContent = finished ? '（已完成）' : status === 'current' ? '（当前步骤）' : '';
+    }
   }
   function showView(view) {
     const editing = view === 'edit';
@@ -84,12 +147,20 @@
       button.type = 'button';
       button.className = 'recipe-link';
       button.dataset.recipe = recipe.id;
+      button.dataset.tone = recipe.category;
       button.setAttribute('aria-current', String(active.id === recipe.id));
+      const badge = document.createElement('span');
+      badge.className = 'recipe-icon';
+      badge.append(icon(recipe.category));
+      const text = document.createElement('span');
+      text.className = 'recipe-text';
       const title = document.createElement('strong');
       title.textContent = recipe.title;
       const description = document.createElement('span');
+      description.className = 'recipe-outcome';
       description.textContent = recipe.outcome;
-      button.append(title, description);
+      text.append(title, description);
+      button.append(badge, text);
       button.addEventListener('click', () => {
         activate(recipe);
         if (location.hash !== '#' + recipe.id) location.hash = recipe.id;
@@ -103,7 +174,10 @@
   function invalidate() {
     byId('result').hidden = true;
     byId('output').value = '';
+    byId('output-meta').textContent = '';
+    used = false;
     document.dispatchEvent(new CustomEvent('recipe-reset', { detail: { recipe: active } }));
+    renderSteps();
   }
   function renderFields() {
     byId('fields').replaceChildren();
@@ -117,6 +191,7 @@
       label.append(document.createTextNode(field.label));
       const requirement = document.createElement('span');
       requirement.textContent = field.required ? '必填' : '可选';
+      if (field.required) requirement.className = 'required';
       label.append(requirement);
       const control = document.createElement(field.type === 'text' ? 'input' : 'textarea');
       if (field.type === 'text') control.type = 'text';
@@ -150,26 +225,34 @@
   }
   function activate(recipe) {
     if (confirmation.open) confirmation.close('cancel');
+    const switching = active.id !== recipe.id;
     active = recipe;
     clearTimeout(noticeTimer);
     byId('status').textContent = '';
+    const workspace = byId('workspace');
+    workspace.dataset.tone = recipe.category;
+    if (switching && !reduced()) { workspace.classList.remove('switching'); void workspace.offsetWidth; workspace.classList.add('switching'); }
     byId('category-label').textContent = { work: '工作配方', university: '大学配方', creative: '创作配方' }[recipe.category];
     byId('version').textContent = 'v' + recipe.version + ' · 待实测草稿';
     byId('recipe-title').textContent = recipe.title;
     byId('recipe-description').textContent = recipe.description;
-    byId('outcome').textContent = recipe.outcome;
+    byId('outcome').replaceChildren(...recipe.outcome.split('、').map(part => { const item = document.createElement('li'); item.textContent = part; return item; }));
     byId('result-description').textContent = '已按配方模板组装你的材料，没有调用模型。请复制到' + destinationFor(recipe) + '中使用。';
     byId('result-next').textContent = recipe.target === 'image' || recipe.target === 'video'
       ? '下一步：打开' + destinationFor(recipe) + '，粘贴提示词，并按该工具支持的功能设置画幅、时长或参考素材。本页不会自动设置或上传。'
       : '下一步：到自己的 AI 工具新建对话，粘贴完整提示词并发送。请先检查材料是否已脱敏。';
-    byId('scope').textContent = recipe.scope;
-    byId('example').textContent = recipe.example.replace(/^\S+\n/, '').replace(/^~~~[^\n]*\n?/gm, '');
-    byId('checks').textContent = recipe.checks;
-    byId('repair').textContent = recipe.repair.replace(/^~~~text\n|\n~~~$/g, '');
+    renderGuide('scope', recipe.scope);
+    renderGuide('example', recipe.example.replace(/^\S+\n/, ''));
+    renderGuide('checks', recipe.checks);
+    renderGuide('repair', recipe.repair);
     document.title = recipe.title + ' · 魔法配方';
     showView('edit');
     renderFields();
     renderList();
+    const list = byId('recipe-list'), current = list.querySelector('[aria-current="true"]');
+    if (current && list.scrollWidth > list.clientWidth && typeof list.scrollTo === 'function') {
+      list.scrollTo({ left: Math.max(0, current.offsetLeft - 16), behavior: reduced() ? 'auto' : 'smooth' });
+    }
   }
   function hasValues() { return Object.values(state().values).some(value => value.trim()); }
   byId('load-example').addEventListener('click', async event => {
@@ -217,8 +300,11 @@
     }
     byId('form-error').hidden = true;
     byId('output').value = result.text;
+    byId('output-meta').textContent = '共 ' + result.text.length + ' 字 · 已填入 ' + active.fields.filter(field => String(state().values[field.id] || '').trim()).length + '／' + active.fields.length + ' 项材料';
     byId('result').hidden = false;
+    used = false;
     document.dispatchEvent(new CustomEvent('recipe-compiled', { detail: { recipe: active } }));
+    renderSteps();
     byId('result').scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     byId('copy').focus({ preventScroll: true });
     announce('提示词已整理完成。这一步未调用模型，请复制到' + destinationFor(active) + '中使用。');
@@ -227,16 +313,22 @@
     const text = byId('output').value;
     if (!text) return;
     const destination = destinationFor(active);
-    byId('copy').disabled = true;
+    // 复制期间只防重复点击，不禁用按钮：禁用已聚焦按钮会让焦点掉到页面开头。
+    const button = byId('copy');
+    if (button.dataset.busy) return;
+    button.dataset.busy = 'true'; button.setAttribute('aria-busy', 'true');
     try {
-      if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('Clipboard unavailable');
-      await navigator.clipboard.writeText(text);
-      announce('已复制。请到' + destination + '中粘贴并运行。');
-    } catch {
-      byId('output').focus();
-      byId('output').select();
-      announce('浏览器未允许自动复制。已选中提示词，请按 Ctrl+C，或在手机上长按复制。');
-    } finally { byId('copy').disabled = false; }
+      if (await clipboard.write(text)) {
+        announce('已复制。请到' + destination + '中粘贴并运行。');
+        used = true;
+        renderSteps();
+        flash(button, '已复制 ✓');
+      } else {
+        byId('output').focus();
+        byId('output').select();
+        announce('浏览器未允许自动复制。已选中提示词，请按 Ctrl+C，或在手机上长按复制。');
+      }
+    } finally { delete button.dataset.busy; button.removeAttribute('aria-busy'); }
   });
   byId('download').addEventListener('click', () => {
     if (!byId('output').value) return;
@@ -249,6 +341,8 @@
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     announce('已请求下载明文文件，请检查浏览器下载列表。');
+    used = true;
+    renderSteps();
   });
   for (const button of document.querySelectorAll('[data-category]')) button.addEventListener('click', () => {
     category = button.dataset.category;
@@ -301,5 +395,19 @@
     const recipe = recipes.find(item => item.id === location.hash.slice(1));
     if (recipe && recipe.id !== active.id) activate(recipe);
   });
+  document.addEventListener('recipe-used', () => { used = true; renderSteps(); });
+  document.addEventListener('keydown', event => {
+    const target = event.target;
+    const typing = /INPUT|TEXTAREA|SELECT/.test(target.tagName) || target.isContentEditable;
+    if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey && !document.querySelector('dialog[open]')) {
+      event.preventDefault();
+      byId('search').focus();
+    } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && target.closest?.('#recipe-form')) {
+      event.preventDefault();
+      submitForm(byId('recipe-form'));
+    }
+  });
+  byId('hero-count').textContent = String(recipes.length);
+  if (document.querySelector('meta[name="mofa-api-site"]')?.content === 'same-origin') document.querySelector('.prototype')?.remove();
   activate(active);
 })();

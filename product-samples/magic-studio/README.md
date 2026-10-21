@@ -2,6 +2,41 @@
 
 魔法家族的作品与提示词库：看完整图像，读对应提示词，再替换成自己的内容。默认浅色，内嵌控制台时跟随魔法 API 的当前主题；不新增账号或自动调用生成模型。
 
+## 2026-10-19 升级（本地完成，未提交发布）
+
+- **控制台内直接生图**：在 `/tools/studio` 里选择本人生图 Key 与模型（宿主只允许 image 用途），点“生成一张”才调用 Images API（n=1，尺寸白名单，180 秒上限，可停止）。结果只在页内存，可放大预览、下载 Base64 原图；退出登录清除，退出后再操作提示“登录已失效，请重新登录”。独立页只给控制台入口并带上条目。
+- **浏览体验**：大图左右翻页（按钮／方向键，不新增浏览记录）、随机灵感、筛选条滚轮横滚与渐隐、骨架与入场动效、吸顶栏；大图里“用我的模型生成”“替换内容，做成我的”关闭后焦点与滚动落到目标（修复 Chromium 异步派发 close 后把焦点抢回卡片；旧版“做成我的”是同样写法）。
+- **复制修复（用户反馈“复制提示词等按钮不可用”）**：线上 `/studio/app.mjs` 与 HEAD 一致，`navigator.clipboard` 被拒时只能弹手动复制框。现与主站 `useClipboard` 一致，先用剪贴板接口，被拒改用 `execCommand('copy')`（模态内放临时框），都失败才显示手动框；复制时不再禁用按钮以免焦点掉到页首；主按钮禁用态改为中性底色，深色下可用与不可用不再难分。线上具体失败环境未知，需更新后实测。
+- **图生短视频（播放层已完成，成片待生成）**：`video-plan.mjs` 选 8 张适合动态的作品（像素、水墨、水彩、剪纸、写实动物、二次元、3D 手作、产品），提示词只描述动态并要求保持原图。`videos.mjs` 当前为空，页面仍显示“视频与分镜待开放”、不请求任何视频。生成后：卡片与工作区只显示首帧和时长，不创建 `<video>`；点击才下载，存进浏览器 Cache Storage（上限 80MB／16 段、单段 30MB，先淘汰最久没看的），再看直接本机播放；大图翻页不自动下载；可“清除本机视频缓存”；清单外的旧片段启动时删除；浏览器不支持时直接用原地址。服务端 `clip-<条目>-<10位摘要>.mp4` 长期缓存（immutable＋ETag＋Range）；2026-10-21 起页面脚本与样式按内容摘要 ETag 每次复查并 gzip，图片缓存一天；CSP 只多 `media-src blob:`。封存的分镜与旧视频仍不开放。
+- 测试与证据见根 HANDOFF 及 `output/family-products-upgrade-20261019/`。
+
+### 生成短视频（在你自己的电脑上运行，按秒计费）
+
+脚本默认只预览，不发请求；`--yes` 加 `--only`／`--all` 才提交。Key 只从当前终端的环境变量读取，不写文件、不打印；已提交的任务号记在被 Git 忽略的 `.video-jobs.json`，中断后再运行会继续查询，不重复提交。需要这个 Key 所在分组已开通视频生成（后台有可用的 Grok Imagine 视频账号与视频单价），否则返回 403／404 并给出提示。上游参考价（xAI 文档 2026-09-21）：grok-imagine-video 480p 约 $0.05／秒，8 段×5 秒约 $2；本站实际按分组单价扣费，以用量记录为准。
+
+```bash
+cd product-samples/magic-studio
+node tools/generate-videos.mjs
+```
+
+设置 Key（只对当前终端有效）：PowerShell 用 `$env:MOFA_API_KEY = '你的Key'`，Git Bash 用 `export MOFA_API_KEY='你的Key'`。默认接口 `https://ai.mofamilys.com/v1`，需要时设 `MOFA_API_BASE`。先试一段：
+
+```bash
+node tools/generate-videos.mjs --only clip-pixel-night --yes
+```
+
+满意后生成其余（已完成的自动跳过）：
+
+```bash
+node tools/generate-videos.mjs --all --yes
+```
+
+成片写入 `assets/clip-*.mp4`、`videos.mjs` 与 `assets/PROVENANCE-VIDEOS.json`（含实际提示词、模型、任务号、摘要；不含 Key），三者一起提交。Key 也可放在仓库外的文本文件，用 `MOFA_API_KEY_FILE` 指向（仓库内路径会被拒绝）。
+
+### 程序动效（免费、不用 Key，主体不动）
+
+用户选择先做程序动效样片：`tools/motion/recipes.mjs` 为每段人工标定水面、灯光、星空与月亮区域，`effects.mjs` 按原图 PNG 逐帧计算灯光明暗、水面倒影晃动、星光闪烁与月光呼吸（整数周期，可无缝循环），人物与主体不动，不是视频模型生成。本机夹具（4181）打开 `/motion/record.html?recipe=clip-pixel-night` 录制（窗格须可见），再 `node tools/import-motion-clip.mjs --id clip-pixel-night` 校验配方版本、尺寸、时长与迟到帧后入库，清单与记录标 `kind=motion`。页面标为“程序动效 · 主体不动”，提示词显示为图生视频参考提示词，循环播放。之后用 Key 生成视频模型成片会替换同一段程序动效；已有模型成片时不会被程序动效覆盖。可选 `--model grok-imagine-video-1.5`、`--resolution 720p`、`--duration`、`--image png`。本机验收夹具 `fixtures/host-fixture.mjs` 提供假的视频接口，可用 `MOFA_API_BASE=http://127.0.0.1:4181/v1 MOFA_API_KEY=fixture-fake-key … --root fixtures/.video-run` 演练，样片需先在夹具页录制上传。
+
 ## 2026-10-01 最新内容
 
 当前图库共**47张图像**：撤下“夜幕之后，一点绯红”和“跑进珊瑚色的夏天”，时尚肖像只保留“海风里的丝绸与牛仔”；Cosplay、动物自然、海报社媒、动漫二次元、空间设计各新增两张独立生成图，另补首页同一张窗边人像。视频与分镜继续待开放，4份工具保留。后续素材由用户自行添加与人工审核。

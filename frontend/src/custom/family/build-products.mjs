@@ -29,12 +29,13 @@ export async function buildFamilyProducts(output = path.join(frontend, 'public')
   const studio = path.join(root, 'studio');
   const source = path.join(workspace, 'product-samples/magic-studio');
   await copyFile(path.join(workspace, 'product-samples/family-runtime/host-client.js'), path.join(studio, 'host-client.js'));
-  for (const file of ['index.html', 'theme.css', 'app.mjs', 'core.mjs', 'icons.mjs', 'catalog.mjs', 'new-gallery.mjs']) {
+  for (const file of ['index.html', 'theme.css', 'app.mjs', 'core.mjs', 'icons.mjs', 'catalog.mjs', 'new-gallery.mjs', 'generate.mjs', 'videos.mjs', 'video-cache.mjs']) {
     if (file === 'index.html') {
       const html = (await readFile(path.join(source, file), 'utf8'))
         .replace('<head>', '<head>\n<meta name="mofa-api-site" content="same-origin">')
         .replace('href="https://ai.mofamilys.com/family"', 'href="/family"');
-      const integrated = html.replace('href="https://ai.mofamilys.com/tools/studio/submit"', 'href="/tools/studio/submit"');
+      const integrated = html.replace('href="https://ai.mofamilys.com/tools/studio/submit"', 'href="/tools/studio/submit"')
+        .replace('href="https://ai.mofamilys.com/tools/studio"', 'href="/tools/studio"');
       await writeFile(path.join(studio, file), integrated, 'utf8');
     } else await copyFile(path.join(source, file), path.join(studio, file));
   }
