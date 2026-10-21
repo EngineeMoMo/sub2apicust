@@ -1,7 +1,7 @@
 module github.com/Wei-Shaw/sub2api
 
 // [CUSTOM] 固定已修复安全漏洞的 Go 补丁版本。
-go 1.27.2
+go 1.27.3
 
 require (
 	entgo.io/ent v0.14.5

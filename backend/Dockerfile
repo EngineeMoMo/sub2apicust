@@ -1,5 +1,5 @@
 # [CUSTOM] 独立后端构建同样使用安全补丁工具链。
-FROM golang:1.27.2-alpine
+FROM golang:1.27.3-alpine
 
 WORKDIR /app
 

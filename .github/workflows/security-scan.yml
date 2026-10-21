@@ -24,7 +24,7 @@ jobs:
       - name: Verify Go version
         run: |
           # [CUSTOM] 安全检查与发布均验证修复后的工具链。
-          go version | grep -q 'go1.27.2'
+          go version | grep -q 'go1.27.3'
       - name: Run govulncheck
         working-directory: backend
         run: |

@@ -9,7 +9,7 @@
 
 ARG NODE_IMAGE=node:24-alpine
 # [CUSTOM] 构建工具链与 go.mod 的安全补丁版本保持一致。
-ARG GOLANG_IMAGE=golang:1.27.2-alpine
+ARG GOLANG_IMAGE=golang:1.27.3-alpine
 ARG ALPINE_IMAGE=alpine:3.21
 ARG POSTGRES_IMAGE=postgres:18-alpine
 ARG GOPROXY=https://goproxy.cn,direct
