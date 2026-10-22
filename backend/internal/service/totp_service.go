@@ -127,8 +127,6 @@ func NewTotpService(
 
 // GetStatus returns the TOTP status for a user
 func (s *TotpService) GetStatus(ctx context.Context, userID int64) (*TotpStatus, error) {
-	featureEnabled := s.settingService.IsTotpEnabled(ctx)
-
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
@@ -137,7 +135,7 @@ func (s *TotpService) GetStatus(ctx context.Context, userID int64) (*TotpStatus,
 	return &TotpStatus{
 		Enabled:        user.TotpEnabled,
 		EnabledAt:      user.TotpEnabledAt,
-		FeatureEnabled: featureEnabled,
+		FeatureEnabled: s.settingService.IsTotpAvailableForUser(ctx, user), // [CUSTOM] 管理员独立可用。
 	}, nil
 }
 
@@ -169,17 +167,16 @@ func (s *TotpService) verifyIdentity(ctx context.Context, user *User, emailCode,
 // InitiateSetup starts the TOTP setup process
 // If email verification is enabled, emailCode is required; otherwise password is required
 func (s *TotpService) InitiateSetup(ctx context.Context, userID int64, emailCode, password string) (*TotpSetupResponse, error) {
-	// Check if TOTP feature is enabled globally
-	if !s.settingService.IsTotpEnabled(ctx) {
-		return nil, ErrTotpNotEnabled
-	}
-
 	// Get user and check if TOTP is already enabled
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
 
+	// [CUSTOM] 管理员允许独立绑定，不受普通用户全站开关影响。
+	if !s.settingService.IsTotpAvailableForUser(ctx, user) {
+		return nil, ErrTotpNotEnabled
+	}
 	if user.TotpEnabled {
 		return nil, ErrTotpAlreadyEnabled
 	}
@@ -224,8 +221,12 @@ func (s *TotpService) InitiateSetup(ctx context.Context, userID int64, emailCode
 
 // CompleteSetup completes the TOTP setup by verifying the code
 func (s *TotpService) CompleteSetup(ctx context.Context, userID int64, totpCode, setupToken string) error {
-	// Check if TOTP feature is enabled globally
-	if !s.settingService.IsTotpEnabled(ctx) {
+	// [CUSTOM] 完成绑定时重新核实账号及其功能权限。
+	user, userError := s.userRepo.GetByID(ctx, userID)
+	if userError != nil {
+		return fmt.Errorf("get user: %w", userError)
+	}
+	if !s.settingService.IsTotpAvailableForUser(ctx, user) {
 		return ErrTotpNotEnabled
 	}
 

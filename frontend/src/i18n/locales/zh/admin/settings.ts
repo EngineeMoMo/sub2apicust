@@ -163,6 +163,9 @@ export default {
         emailDomainQuota: '非白名单域名限量注册',
         emailDomainQuotaHint:
           '开启后，白名单非空时，其他可注册主域名各限注册一个账户；关闭时非白名单域名直接拒绝注册。白名单为空时本开关无效果',
+        // [CUSTOM] 注册 IP 限额与实际能力边界。
+        ipLimit: '同一 IP 仅注册一个账号',
+        ipLimitHint: '默认开启，适用于邮箱和第三方注册；共享公网 IP 也受限制。仅记录上线后的注册，删号不恢复名额。网站无法读取真实 MAC 地址，更换公网 IP 仍可能绕过。反向代理须配置可信代理地址，否则可能把所有访客识别为同一 IP。',
         promoCode: '优惠码',
         promoCodeHint: '允许用户在注册时使用优惠码',
         invitationCode: '邀请码注册',
@@ -173,7 +176,8 @@ export default {
         frontendUrlPlaceholder: 'https://example.com',
         frontendUrlHint: '用于生成邮件中的密码重置链接，例如 https://example.com',
         totp: '双因素认证 (2FA)',
-        totpHint: '允许用户使用 Google Authenticator 等应用进行二次验证',
+        // [CUSTOM] 管理员可独立绑定，普通用户保留全站开关。
+        totpHint: '允许普通用户使用验证器应用进行二次验证；管理员可在个人资料中独立启用，不受此开关影响',
         totpKeyNotConfigured:
           '请先在环境变量中配置 TOTP_ENCRYPTION_KEY。使用命令 openssl rand -hex 32 生成密钥。'
       },
@@ -187,7 +191,8 @@ export default {
         passkeyValueNotConfigured: '未配置',
         passkeyDeploymentHint: '请由服务器运维在部署配置中将 webauthn.enabled 设为 true，填写 webauthn.rp_id（仅域名）与 webauthn.rp_origins（完整 HTTPS 来源），然后重启服务。',
         stepUp: '敏感操作二次验证 (step-up 2FA)',
-        stepUpHint: '开启后，账号/代理导出、备份创建与下载、S3 配置修改、提升管理员等敏感操作需要先完成 TOTP 二次验证（15 分钟内有效）。开启前需本人已启用 2FA；关闭该开关本身也需要二次验证。',
+        // [CUSTOM] 支付写操作与系统设置统一保护。
+        stepUpHint: '开启后，支付配置、退款、套餐变更、人工收款处理、系统设置修改，以及账号/代理导出、备份、S3 配置和提升管理员等敏感操作，需要先完成 TOTP 二次验证（15 分钟内有效）。开启前需本人已启用 2FA；关闭该开关同样需要验证。',
         stepUpEnableRequiresTotp: '开启敏感操作二次验证前，请先在个人资料中为当前账号启用 2FA (TOTP)。',
         sessionBinding: '会话 IP/UA 绑定',
         sessionBindingHint: '将登录会话与客户端 IP 和 User-Agent 绑定，任一变化即强制该会话失效并需重新登录（提升被盗凭证的利用门槛）。',

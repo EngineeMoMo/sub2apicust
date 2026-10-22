@@ -1272,6 +1272,15 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 		}
 	}
 
+	// [CUSTOM] 生成前确定库存来源；多套餐必须明确选择。
+	planID := int64(0)
+	if input.Type == RedeemTypeSubscription {
+		var err error
+		planID, err = ResolveCustomRedeemStockPlan(ctx, s.entClient, *input.GroupID, input.PlanID, true)
+		if err != nil {
+			return nil, err
+		}
+	}
 	codes := make([]RedeemCode, 0, input.Count)
 	for i := 0; i < input.Count; i++ {
 		codeValue, err := GenerateRedeemCode()
@@ -1293,7 +1302,8 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 				code.ValidityDays = 30 // 默认30天
 			}
 		}
-		if err := s.redeemCodeRepo.Create(ctx, &code); err != nil {
+		// [CUSTOM] 码与库存来源在同一事务持久化。
+		if err := createCustomRedeemCodeWithStock(ctx, s.redeemCodeRepo, &code, planID); err != nil {
 			return nil, err
 		}
 		codes = append(codes, code)

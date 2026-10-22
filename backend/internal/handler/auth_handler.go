@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"log/slog"
+	"net/http" // [CUSTOM]
 	"strings"
 	"sync"
 
@@ -262,7 +263,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Check if TOTP 2FA is enabled for this user
-	if h.totpService != nil && h.settingSvc.IsTotpEnabled(c.Request.Context()) && user.TotpEnabled {
+	// [CUSTOM] 已绑定管理员不能通过全站开关或缺失验证服务绕过二次验证。
+	if user.TotpEnabled && h.settingSvc.IsTotpAvailableForUser(c.Request.Context(), user) {
+		if h.totpService == nil {
+			response.Error(c, http.StatusServiceUnavailable, "Two-factor authentication unavailable")
+			return
+		}
 		// Create a temporary login session for 2FA
 		tempToken, err := h.totpService.CreateLoginSession(c.Request.Context(), user.ID, user.Email)
 		if err != nil {

@@ -257,6 +257,11 @@ func TestGetPublicOrderByResumeTokenChecksUpstreamForPendingOrder(t *testing.T) 
 	require.NoError(t, err)
 	require.Equal(t, order.ID, got.ID)
 	require.Equal(t, 1, provider.queryCount)
+	// [CUSTOM] 同一有效凭证连续恢复不重复请求支付商。
+	got, err = svc.GetPublicOrderByResumeToken(ctx, token)
+	require.NoError(t, err)
+	require.Equal(t, order.ID, got.ID)
+	require.Equal(t, 1, provider.queryCount)
 }
 
 func TestVerifyOrderPublicDoesNotCheckUpstreamForPendingOrder(t *testing.T) {

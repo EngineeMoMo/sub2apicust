@@ -5,7 +5,12 @@ import { mount } from '@vue/test-utils'
 import PlanEditDialog from '../PlanEditDialog.vue'
 import type { AdminGroup } from '@/types'
 
-vi.mock('vue-i18n', () => ({
+// [CUSTOM] 隔离二次验证对话框与HTTP传输。
+vi.mock('@/api/client', () => ({ apiClient: { post: vi.fn() } }))
+vi.mock('@/components/auth/TotpStepUpDialog.vue', () => ({ default: { template: '<div />' } }))
+
+vi.mock('vue-i18n', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('vue-i18n')>()),
   useI18n: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       if (key === 'payment.admin.subscriptionCnyPayPreview') return `preview ${params?.amount}`

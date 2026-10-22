@@ -252,6 +252,9 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 			return "", nil, ErrEmailExists
 		case errors.Is(err, ErrEmailDomainRegistrationLimit):
 			return "", nil, ErrEmailDomainRegistrationLimit
+		// [CUSTOM] 向注册页保留可识别的来源限额错误。
+		case errors.Is(err, ErrRegistrationIPLimit), errors.Is(err, ErrRegistrationIPUnavailable):
+			return "", nil, err
 		case errors.Is(err, ErrInvitationCodeInvalid):
 			return "", nil, ErrInvitationCodeInvalid
 		default:
@@ -631,6 +634,10 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 			}
 
 			if err := s.userRepo.Create(ctx, newUser); err != nil {
+				// [CUSTOM] 第三方自动建号共用来源限额。
+				if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+					return "", nil, err
+				}
 				if errors.Is(err, ErrEmailExists) {
 					// 并发场景：GetByEmail 与 Create 之间用户被创建。
 					user, err = s.userRepo.GetByEmail(ctx, email)
@@ -789,6 +796,10 @@ func (s *AuthService) loginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 				txCtx := dbent.NewTxContext(ctx, tx)
 
 				if err := s.userRepo.Create(txCtx, newUser); err != nil {
+					// [CUSTOM] 邀请码事务内的第三方建号保留限额错误。
+					if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+						return nil, nil, err
+					}
 					if errors.Is(err, ErrEmailExists) {
 						user, err = s.userRepo.GetByEmail(ctx, email)
 						if err != nil {
@@ -817,6 +828,10 @@ func (s *AuthService) loginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 				}
 			} else {
 				if err := s.userRepo.Create(ctx, newUser); err != nil {
+					// [CUSTOM] 第三方直接建号保留限额错误。
+					if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+						return nil, nil, err
+					}
 					if errors.Is(err, ErrEmailExists) {
 						user, err = s.userRepo.GetByEmail(ctx, email)
 						if err != nil {

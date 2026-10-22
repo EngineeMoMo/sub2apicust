@@ -70,7 +70,9 @@ export async function generate(
   value: number,
   groupId?: number | null,
   validityDays?: number,
-  expiresInDays?: number | null
+  expiresInDays?: number | null,
+  // [CUSTOM] 保留既有参数顺序，追加库存来源。
+  planId?: number | null
 ): Promise<RedeemCode[]> {
   const payload: GenerateRedeemCodesRequest = {
     count,
@@ -80,6 +82,8 @@ export async function generate(
 
   // 订阅类型专用字段
   if (type === 'subscription') {
+    // [CUSTOM] 明确传递用户所选库存来源。
+    if (planId != null) payload.plan_id = planId
     payload.group_id = groupId
     if (validityDays && validityDays > 0) {
       payload.validity_days = validityDays

@@ -163,6 +163,9 @@ export default {
         emailDomainQuota: 'Non-allowlist Domain Quota',
         emailDomainQuotaHint:
           'When enabled and the allowlist is not empty, every other registrable domain can register one account. When disabled, non-allowlist domains are rejected. Has no effect while the allowlist is empty',
+        // [CUSTOM] 注册 IP 限额与实际能力边界。
+        ipLimit: 'One account per IP address',
+        ipLimitHint: 'Enabled by default for email and third-party signup. Shared public IPs are also limited. Only signups after deployment are recorded; deleting an account does not free its IP. Websites cannot read real MAC addresses, and changing public IPs may bypass this limit. Configure trusted proxies behind a reverse proxy to avoid treating all visitors as one IP.',
         promoCode: 'Promo Code',
         promoCodeHint: 'Allow users to use promo codes during registration',
         invitationCode: 'Invitation Code Registration',
@@ -173,7 +176,8 @@ export default {
         frontendUrlPlaceholder: 'https://example.com',
         frontendUrlHint: 'Used to generate password reset links in emails. Example: https://example.com',
         totp: 'Two-Factor Authentication (2FA)',
-        totpHint: 'Allow users to use authenticator apps like Google Authenticator',
+        // [CUSTOM]
+        totpHint: 'Allow regular users to use authenticator apps. Administrators can enable TOTP in their profile independently of this switch.',
         totpKeyNotConfigured:
           'Please configure TOTP_ENCRYPTION_KEY in environment variables first. Generate a key with: openssl rand -hex 32'
       },
@@ -187,7 +191,8 @@ export default {
         passkeyValueNotConfigured: 'Not configured',
         passkeyDeploymentHint: 'Ask the server operator to set webauthn.enabled to true, configure webauthn.rp_id (domain only) and webauthn.rp_origins (full HTTPS origins), then restart the service.',
         stepUp: 'Step-up 2FA for Sensitive Operations',
-        stepUpHint: 'When enabled, sensitive operations (account/proxy export, backup creation and download, S3 config changes, promoting admins) require a recent TOTP verification (valid for 15 minutes). Your own account must have 2FA enabled before turning this on; turning it off also requires step-up verification.',
+        // [CUSTOM]
+        stepUpHint: 'When enabled, payment configuration, refunds, plan changes, manual collection actions, system settings updates, account/proxy exports, backups, S3 configuration, and admin promotion require recent TOTP verification (valid for 15 minutes). Enable 2FA on your own account first. Turning this switch off also requires verification.',
         stepUpEnableRequiresTotp: 'Enable 2FA (TOTP) for your own account in Profile before turning on step-up verification.',
         sessionBinding: 'Session IP/UA Binding',
         sessionBindingHint: 'Bind login sessions to the client IP and User-Agent. Any change immediately invalidates the session and forces re-login, raising the bar for stolen-credential reuse.',

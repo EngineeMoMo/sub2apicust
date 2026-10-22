@@ -575,6 +575,8 @@ func (f *NullableInt64Field) UnmarshalJSON(data []byte) error {
 }
 
 type BatchUpdateRedeemCodeFields struct {
+	// [CUSTOM] 旧订阅码的库存来源修复。
+	PlanID    NullableInt64Field `json:"plan_id,omitempty"`
 	Status    *string            `json:"status,omitempty"`
 	ExpiresAt NullableTimeField  `json:"expires_at,omitempty"`
 	Notes     *string            `json:"notes,omitempty"`

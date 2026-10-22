@@ -344,6 +344,8 @@
                   </template>
                 </Select>
               </div>
+              <!-- [CUSTOM] 生成仅绑定来源，实际兑换才扣库存。 -->
+              <SubscriptionStockPicker v-model="generateForm.plan_id" :group-id="generateForm.group_id" input-id="redeem-generate-stock-plan" hint-key="payment.stock.redeemHint" @available="generationStockAvailable = $event" />
               <div>
                 <label class="input-label">{{ t('admin.redeem.validityDays') }}</label>
                 <input
@@ -491,6 +493,7 @@
             <div class="space-y-2">
               <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <input
+                  data-test="batch-field-group"
                   v-model="batchUpdateForm.update_group_id"
                   type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -503,6 +506,8 @@
                 :options="batchGroupOptions"
                 :placeholder="t('admin.redeem.selectGroupPlaceholder')"
               />
+              <!-- [CUSTOM] 支持修复旧码缺失分组和多套餐来源。 -->
+              <SubscriptionStockPicker v-if="batchUpdateForm.update_group_id && hasSelectedSubscriptionCodes" v-model="batchUpdateForm.plan_id" :group-id="batchUpdateForm.group_id" input-id="redeem-batch-stock-plan" hint-key="payment.stock.redeemHint" @available="batchStockAvailable = $event" />
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -641,6 +646,9 @@ import Select from '@/components/common/Select.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 import Icon from '@/components/icons/Icon.vue'
+// [CUSTOM] 订阅码与管理员分配使用同一库存选择器和错误提取。
+import SubscriptionStockPicker from '@/custom/components/SubscriptionStockPicker.vue'
+import { extractApiErrorMessage } from '@/utils/apiError'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -675,8 +683,9 @@ const subscriptionGroupOptions = computed(() => {
     }))
 })
 
+// [CUSTOM] 选中订阅码时禁止清空其必需分组。
 const batchGroupOptions = computed(() => [
-  { value: null, label: t('admin.redeem.clearGroup') },
+  ...(hasSelectedSubscriptionCodes.value ? [] : [{ value: null, label: t('admin.redeem.clearGroup') }]),
   ...subscriptionGroupOptions.value
 ])
 
@@ -773,6 +782,8 @@ const batchExpiryModeOptions = computed(() => [
 ])
 
 const codes = ref<RedeemCode[]>([])
+// [CUSTOM] 跨页保留选中码类型，避免隐藏订阅码被误判为纯余额选择。
+const knownCodeTypes = ref(new Map<number, RedeemCodeType>())
 const loading = ref(false)
 const generating = ref(false)
 const batchUpdating = ref(false)
@@ -813,7 +824,13 @@ const {
   getId: (code) => code.id
 })
 
+// [CUSTOM] 混合选择也要保护其中的订阅码。
+const hasSelectedSubscriptionCodes = computed(() => Array.from(selectedCodeIds.value).some(id => knownCodeTypes.value.get(id) === 'subscription'))
+const generationStockAvailable = ref(false)
+const batchStockAvailable = ref(false)
+
 const batchUpdateForm = reactive({
+  plan_id: null as number | null,
   update_status: false,
   status: 'disabled' as 'unused' | 'disabled',
   update_expires_at: false,
@@ -836,6 +853,8 @@ const redeemCodeExpiryOptions = computed<{ value: RedeemCodeExpiryOption; label:
 ])
 
 const generateForm = reactive({
+  // [CUSTOM] 生成订阅码必须选择库存来源。
+  plan_id: null as number | null,
   type: 'balance' as RedeemCodeType,
   value: 10,
   count: 1,
@@ -885,6 +904,8 @@ const loadCodes = async () => {
       return
     }
     codes.value = response.items
+    // [CUSTOM] 包含此前页面已选中的码，分组清空限制仍需生效。
+    response.items.forEach(code => knownCodeTypes.value.set(code.id, code.type))
     pagination.total = response.total
     pagination.pages = response.pages
   } catch (error: any) {
@@ -981,6 +1002,8 @@ const resetBatchUpdateForm = () => {
   batchUpdateForm.notes = ''
   batchUpdateForm.update_group_id = false
   batchUpdateForm.group_id = null
+  batchUpdateForm.plan_id = null
+  batchStockAvailable.value = false
 }
 
 const openBatchUpdateDialog = () => {
@@ -1018,6 +1041,12 @@ const buildBatchUpdateFields = (): BatchUpdateRedeemCodeFields | null => {
     fields.notes = batchUpdateForm.notes
   }
   if (batchUpdateForm.update_group_id) {
+    // [CUSTOM] 订阅码分组和来源一起提交，避免清空或错误复用旧来源。
+    if (hasSelectedSubscriptionCodes.value) {
+      if (!batchUpdateForm.group_id) { appStore.showError(t('admin.redeem.groupRequired')); return null }
+      if (!batchUpdateForm.plan_id || !batchStockAvailable.value) { appStore.showError(t('payment.stock.selectAvailable')); return null }
+      fields.plan_id = batchUpdateForm.plan_id
+    }
     fields.group_id =
       batchUpdateForm.group_id == null ? null : Number(batchUpdateForm.group_id)
   }
@@ -1032,6 +1061,11 @@ const handleGenerateCodes = async () => {
     return
   }
 
+  // [CUSTOM] 库存未加载、售罄或未选择时不生成订阅码。
+  if (generateForm.type === 'subscription' && (!generateForm.plan_id || !generationStockAvailable.value)) {
+    appStore.showError(t('payment.stock.selectAvailable'))
+    return
+  }
   const expiresInDays = getRedeemCodeExpiresInDays()
   if (expiresInDays === null) {
     appStore.showError(t('admin.redeem.expiryDaysRequired'))
@@ -1046,19 +1080,23 @@ const handleGenerateCodes = async () => {
       generateForm.value,
       generateForm.type === 'subscription' ? generateForm.group_id : undefined,
       generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
-      expiresInDays
+      expiresInDays,
+      generateForm.type === 'subscription' ? generateForm.plan_id : undefined
     )
     showGenerateDialog.value = false
     generatedCodes.value = result
     showResultDialog.value = true
     // 重置表单
     generateForm.group_id = null
+    generateForm.plan_id = null
+    generationStockAvailable.value = false
     generateForm.validity_days = 30
     generateForm.expiry_option = 'never'
     generateForm.custom_expiry_days = 7
     loadCodes()
-  } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToGenerate'))
+  } catch (error: unknown) {
+    // [CUSTOM] 展示后端来源/库存校验的实际错误。
+    appStore.showError(extractApiErrorMessage(error, t('admin.redeem.failedToGenerate')))
     console.error('Error generating codes:', error)
   } finally {
     generating.value = false
@@ -1167,8 +1205,9 @@ const handleBatchUpdate = async () => {
     showBatchUpdateDialog.value = false
     clearSelectedCodes()
     loadCodes()
-  } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToBatchUpdate'))
+  } catch (error: unknown) {
+    // [CUSTOM] 展示订阅码分组/库存来源的拒绝原因。
+    appStore.showError(extractApiErrorMessage(error, t('admin.redeem.failedToBatchUpdate')))
     console.error('Error batch updating codes:', error)
   } finally {
     batchUpdating.value = false

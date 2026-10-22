@@ -191,6 +191,10 @@ func (s *AuthService) createEmailOAuthUser(ctx context.Context, email, username,
 		SignupSource: providerType,
 	}
 	if err := s.userRepo.Create(ctx, user); err != nil {
+		// [CUSTOM] GitHub／Google 等已验证邮箱自动建号保留来源限额错误。
+		if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+			return nil, err
+		}
 		if errors.Is(err, ErrEmailExists) {
 			existing, loadErr := s.userRepo.GetByEmail(ctx, email)
 			if loadErr != nil {

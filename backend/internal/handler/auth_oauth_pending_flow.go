@@ -1656,7 +1656,12 @@ func (h *AuthHandler) bindPendingOAuthLogin(c *gin.Context, provider string) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	if h.totpService != nil && h.settingSvc.IsTotpEnabled(c.Request.Context()) && user.TotpEnabled {
+	// [CUSTOM] 绑定已有账号同样保留管理员已绑定的TOTP验证。
+	if user.TotpEnabled && h.settingSvc.IsTotpAvailableForUser(c.Request.Context(), user) {
+		if h.totpService == nil {
+			response.Error(c, http.StatusServiceUnavailable, "Two-factor authentication unavailable")
+			return
+		}
 		tempToken, err := h.totpService.CreatePendingOAuthBindLoginSession(
 			c.Request.Context(),
 			user.ID,

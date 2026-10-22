@@ -31,6 +31,8 @@ func RegisterAuthRoutes(
 	auth.Use(servermiddleware.BackendModeAuthGuard(settingService))
 	// 认证事件（登录/注册/2FA/token 刷新失败）入审计
 	auth.Use(gin.HandlerFunc(auditLog))
+	// [CUSTOM] 所有公开认证建号路径共用可信代理链解析，忽略不受信任的转发头。
+	auth.Use(servermiddleware.RegistrationIPContext())
 	// [CUSTOM] 先记录审计，再执行共享 IP 防护及原有单接口限流。
 	auth.Use(customAuthGuards...)
 	{

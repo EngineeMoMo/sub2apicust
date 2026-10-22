@@ -1,3 +1,11 @@
+2026-10-22网站安全补修（本地未发布）：保留custom/usePaymentSecurity.ts及支付安全回归；上游SettingsView支付通道写操作复用既有settingsStepUp，取消停止剩余操作；orders/AdminOrdersView、AdminPaymentPlansView、PlanEditDialog的API包装/验证码弹窗与错误处理接缝带[CUSTOM]。自有PaymentCollectionSettings/Operations使用同一封装；zh/en admin/settings说明管理员独立TOTP与支付/主设置保护范围，相关旧测试接口桩同步。后端支付写门控与前端同版；仍需管理员本人绑定后开启step_up_enabled，不把本地源码当已生效。Go87/199、前端109/类型/i18n/构建，详见根HANDOFF、CUSTOMIZATIONS及deploy/SECURITY_HARDENING_20261022.md。
+
+2026-10-22注册IP限额（本地未发布）：保留api/admin/settings.ts的registration_ip_limit_enabled读写类型、SettingsView.vue安全→注册开关/默认true/保存字段、zh/en admin/settings提示、SettingsView.spec.ts两项真实组件回归，接缝带[CUSTOM]。后端迁移260与前端同版；省略字段保留旧值。共享公网IP／真实MAC不可读／反代可信配置提示不能删除，发布状态见HANDOFF与deploy/REGISTRATION_IP_LIMIT.md。
+
+2026-10-21订阅兑换四项补修（本地未发布，优先于下条仅错误展示阶段）：保留RedeemView管理员页的[CUSTOM]库存选择、跨页选中码类型、必需分组保护与真实message提取；api/admin/redeem.ts追加planId参数，types/index.ts生成/批量plan_id字段，zh/en misc库存提示。自有SubscriptionStockPicker可选hintKey保留默认行为。Makefile保留新增redeem-stock.spec.ts、redeem-stock-api.spec.ts及管理员批量spec，也保留前轮用户错误展示spec。后端新增259来源表并与前端同版；旧码可后台批量选择分组+套餐修复，生成不预占、实际兑换扣库存。验证/发布状态见根HANDOFF与output/subscription-redeem-fix-20261021/FIX_REPORT.md。
+
+2026-10-21订阅兑换错误展示（本地未发布）：保留上游RedeemView.vue的[CUSTOM]错误提取接缝（extractApiErrorMessage，卡片/toast同源），以及Makefile关键回归中的custom/__tests__/redeem-errors.spec.ts和views/user/__tests__/RedeemView.spec.ts。新测试使用真实API函数＋Axios拦截器，勿退回只模拟旧response.data.detail。未修改订阅库存或数据库；用户本次现场失败reason/message仍待，不能宣称订阅兑付已修复。验证49项、类型/lint通过，详情根CUSTOMIZATIONS与HANDOFF。
+
 2026-10-19 配方／工坊升级（本地未发布），同步上游时保留：
 - `custom/views/FamilyWorkspaceView.vue`：工坊 `?item=` 转为内嵌 `#item=`；工坊宿主请求只放行 `kind=image`；两产品都可发起 manage-keys；加载态 `aria-busy` 与转圈。`custom/theme.css` 的 `.mofa-product-workspace-loading`／`-spinner`（含减少动画）。
 - `custom/family/build-products.mjs`：工坊复制清单含 `generate.mjs`、`videos.mjs`、`video-cache.mjs`，并把独立页 `https://ai.mofamilys.com/tools/studio` 改写为 `/tools/studio`；`build-products.test.mjs` 断言计划、脚本、任务号与生成记录不进入产物。

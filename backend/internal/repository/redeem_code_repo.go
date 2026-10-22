@@ -23,7 +23,8 @@ func NewRedeemCodeRepository(client *dbent.Client) service.RedeemCodeRepository 
 }
 
 func (r *redeemCodeRepository) Create(ctx context.Context, code *service.RedeemCode) error {
-	created, err := r.client.RedeemCode.Create().
+	// [CUSTOM] 支持兑换码与库存来源共用事务。
+	created, err := clientFromContext(ctx, r.client).RedeemCode.Create().
 		SetCode(code.Code).
 		SetType(code.Type).
 		SetValue(code.Value).
@@ -68,7 +69,8 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 }
 
 func (r *redeemCodeRepository) GetByID(ctx context.Context, id int64) (*service.RedeemCode, error) {
-	m, err := r.client.RedeemCode.Query().
+	// [CUSTOM] 用码后在原事务读取结果快照。
+	m, err := clientFromContext(ctx, r.client).RedeemCode.Query().
 		Where(redeemcode.IDEQ(id)).
 		Only(ctx)
 	if err != nil {
@@ -289,7 +291,18 @@ func (r *redeemCodeRepository) batchUpdate(ctx context.Context, client *dbent.Cl
 		}
 	}
 
+	// [CUSTOM] 分组与库存来源一起验证，更新后一起提交。
+	bindings, err := r.customValidateBatchStock(ctx, client, existing, fields)
+	if err != nil {
+		return 0, err
+	}
 	up := client.RedeemCode.Update().Where(redeemcode.IDIn(ids...))
+	if fields.TouchesUsedSensitiveFields() {
+		up.Where(redeemcode.StatusNEQ(service.StatusUsed))
+	}
+	if fields.GroupID.Set || fields.PlanID.Set {
+		up.Where(customRedeemBatchPredicates(existing))
+	}
 	if fields.Status != nil {
 		up.SetStatus(*fields.Status)
 	}
@@ -316,7 +329,12 @@ func (r *redeemCodeRepository) batchUpdate(ctx context.Context, client *dbent.Cl
 		return 0, err
 	}
 	if affected != len(ids) {
-		return 0, service.ErrRedeemCodeNotFound
+		return 0, service.ErrRedeemCodeUsed
+	}
+	for codeID, planID := range bindings {
+		if err := r.customSaveStockPlan(ctx, codeID, planID); err != nil {
+			return 0, err
+		}
 	}
 	return int64(affected), nil
 }

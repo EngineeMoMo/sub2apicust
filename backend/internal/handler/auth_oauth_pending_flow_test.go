@@ -2265,10 +2265,21 @@ func TestResolvePendingOAuthTargetUserIDNormalizesLegacySpacingAndCase(t *testin
 }
 
 func TestBindOIDCOAuthLoginReturns2FAChallengeWhenUserHasTotp(t *testing.T) {
+	customRunPendingOAuthTotpChallenge(t, service.RoleUser, "true", false) // [CUSTOM]
+}
+
+// [CUSTOM] 管理员绑定验证不随普通用户开关关闭，缺少服务拒绝发凭证。
+func TestCustomAdminPendingOAuthTotpWithGlobalSwitchOff(t *testing.T) {
+	t.Run("challenge", func(t *testing.T) { customRunPendingOAuthTotpChallenge(t, service.RoleAdmin, "false", false) })
+	t.Run("missing_service", func(t *testing.T) { customRunPendingOAuthTotpChallenge(t, service.RoleAdmin, "false", true) })
+}
+
+func customRunPendingOAuthTotpChallenge(t *testing.T, role, globalSwitch string, missingService bool) {
+	t.Helper()
 	totpCache := &oauthPendingFlowTotpCacheStub{}
 	handler, client := newOAuthPendingFlowTestHandlerWithDependencies(t, oauthPendingFlowTestHandlerOptions{
 		settingValues: map[string]string{
-			service.SettingKeyTotpEnabled: "true",
+			service.SettingKeyTotpEnabled: globalSwitch,
 		},
 		totpCache:     totpCache,
 		totpEncryptor: oauthPendingFlowTotpEncryptorStub{},
@@ -2284,7 +2295,7 @@ func TestBindOIDCOAuthLoginReturns2FAChallengeWhenUserHasTotp(t *testing.T) {
 		SetEmail("owner@example.com").
 		SetUsername("owner-user").
 		SetPasswordHash(passwordHash).
-		SetRole(service.RoleUser).
+		SetRole(role).
 		SetStatus(service.StatusActive).
 		SetTotpEnabled(true).
 		SetTotpSecretEncrypted(secret).
@@ -2319,7 +2330,18 @@ func TestBindOIDCOAuthLoginReturns2FAChallengeWhenUserHasTotp(t *testing.T) {
 	req.AddCookie(&http.Cookie{Name: oauthPendingBrowserCookieName, Value: encodeCookieValue("bind-login-2fa-browser-session-key")})
 	ginCtx.Request = req
 
+	if missingService {
+		handler.totpService = nil
+	} // [CUSTOM]
 	handler.BindOIDCOAuthLogin(ginCtx)
+	if missingService {
+		require.Equal(t, http.StatusServiceUnavailable, recorder.Code)
+		require.NotContains(t, recorder.Body.String(), "access_token")
+		storedSession, getError := client.PendingAuthSession.Get(ctx, session.ID)
+		require.NoError(t, getError)
+		require.Nil(t, storedSession.ConsumedAt)
+		return
+	}
 
 	require.Equal(t, http.StatusOK, recorder.Code)
 	data := decodeJSONResponseData(t, recorder)

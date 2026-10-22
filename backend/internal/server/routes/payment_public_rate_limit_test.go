@@ -30,6 +30,7 @@ func newPaymentRoutesTestRouter(redisClient *redis.Client) *gin.Engine {
 		servermiddleware.JWTAuthMiddleware(noop),
 		servermiddleware.AdminAuthMiddleware(noop),
 		servermiddleware.AuditLogMiddleware(noop),
+		servermiddleware.StepUpAuthMiddleware(noop), // [CUSTOM]
 		nil,
 		nil,
 		redisClient,
@@ -55,7 +56,7 @@ func TestPublicOrderVerifyRateLimitedPerIP(t *testing.T) {
 
 	router := newPaymentRoutesTestRouter(rdb)
 
-	for i := 1; i <= publicOrderVerifyRateLimit; i++ {
+	for i := 1; i <= 20; i++ { // [CUSTOM] 与恢复入口共用额度。
 		w := postPublicOrderVerify(router, "198.51.100.20:1234")
 		require.Equal(t, http.StatusBadRequest, w.Code, "request %d should reach the handler", i)
 	}
@@ -69,7 +70,7 @@ func TestPublicOrderVerifyRateLimitedPerIP(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestPublicOrderVerifyRateLimitFailsOpenWhenRedisUnavailable(t *testing.T) {
+func TestPublicOrderVerifyRateLimitFallbackWhenRedisUnavailable(t *testing.T) { // [CUSTOM]
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         "127.0.0.1:1",
 		DialTimeout:  50 * time.Millisecond,
@@ -81,4 +82,9 @@ func TestPublicOrderVerifyRateLimitFailsOpenWhenRedisUnavailable(t *testing.T) {
 	router := newPaymentRoutesTestRouter(rdb)
 	w := postPublicOrderVerify(router, "203.0.113.30:1234")
 	require.Equal(t, http.StatusBadRequest, w.Code, "users mid-payment must not be blocked by a Redis outage")
+	// [CUSTOM] 故障时仍有限额。
+	for requestIndex := 1; requestIndex < 20; requestIndex++ {
+		require.Equal(t, http.StatusBadRequest, postPublicOrderVerify(router, "203.0.113.30:1234").Code)
+	}
+	require.Equal(t, http.StatusTooManyRequests, postPublicOrderVerify(router, "203.0.113.30:1234").Code)
 }

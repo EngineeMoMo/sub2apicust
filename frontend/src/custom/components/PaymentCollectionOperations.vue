@@ -45,15 +45,19 @@
     <button v-else type="button" class="btn btn-secondary" @click="load">重新加载</button>
     <p v-if="message" :role="failed ? 'alert' : 'status'">{{ message }}</p>
     <p v-if="refreshError" role="alert">{{ refreshError }}</p>
+    <TotpStepUpDialog :controller="paymentSecurity.stepUp" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { adminPaymentAPI } from '@/api/admin/payment'
+import { usePaymentSecurity } from '@/custom/usePaymentSecurity'
+import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 import { apiClient } from '@/api/client'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import { canManuallyRelease, formatCollectionTime, type CollectionHold, type CollectionPolicy } from '@/custom/paymentCollection'
+const paymentSecurity = usePaymentSecurity()
+const adminPaymentAPI = paymentSecurity.api
 
 const policy = ref<CollectionPolicy>({ enabled: false, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [], allow_custom_amount: true, contact_text: '' })
 const usage = ref<{ paid: number; held: number; remaining: number; pending?: CollectionHold[] } | null>(null)
@@ -83,17 +87,17 @@ async function record() {
   if (saving.value || !reference.value || !manualAmount.value || manualAmount.value <= 0) return
   saving.value = true; failed.value = false; message.value = ''
   try {
-    await apiClient.post('/admin/payment/collection/manual', { amount: manualAmount.value, reference: reference.value })
+    await adminPaymentAPI.recordCollection({ amount: manualAmount.value, reference: reference.value })
     reference.value = ''; manualAmount.value = null; message.value = '已登记收款，请另行分配订阅或余额'
-  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '登记失败') }
+  } catch (err) { message.value = paymentSecurity.errorMessage(err, '登记失败'); failed.value = Boolean(message.value) }
   finally { await refreshUsage(); saving.value = false }
 }
 
 async function closeOrder(id: number) {
   if (saving.value) return
   saving.value = true; failed.value = false; message.value = ''
-  try { await apiClient.post(`/admin/payment/collection/${id}/close`); message.value = '已确认渠道关单并释放收款预占' }
-  catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '渠道关单未确认，额度继续保留') }
+  try { await adminPaymentAPI.closeCollection(id); message.value = '已确认渠道关单并释放收款预占' }
+  catch (err) { message.value = paymentSecurity.errorMessage(err, '渠道关单未确认，额度继续保留'); failed.value = Boolean(message.value) }
   finally { await refreshUsage(); saving.value = false }
 }
 
@@ -101,9 +105,9 @@ async function recheckOrders() {
   if (saving.value) return
   saving.value = true; failed.value = false; message.value = ''
   try {
-    const { data } = await apiClient.post<{ released: number }>('/admin/payment/collection/recheck')
+    const { data } = await adminPaymentAPI.recheckCollection()
     message.value = `本次已释放 ${data.released} 笔收款占用，其余订单由后台继续分批复查`
-  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '批量复查未完成，未确认的占用继续保留') }
+  } catch (err) { message.value = paymentSecurity.errorMessage(err, '批量复查未完成，未确认的占用继续保留'); failed.value = Boolean(message.value) }
   finally { await refreshUsage(); saving.value = false }
 }
 
@@ -114,9 +118,9 @@ async function releaseOrder() {
   if (saving.value || !releaseTarget.value || releaseReason.value.length < 3 || !releaseConfirmed.value) return
   saving.value = true; failed.value = false; message.value = ''
   try {
-    await apiClient.post(`/admin/payment/collection/${releaseTarget.value}/release`, { reason: releaseReason.value, confirmed: true })
+    await adminPaymentAPI.releaseCollection(releaseTarget.value, { reason: releaseReason.value, confirmed: true })
     cancelRelease(); message.value = '已人工释放收款占用，并记录审计'
-  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, '人工释放未完成，额度继续保留') }
+  } catch (err) { message.value = paymentSecurity.errorMessage(err, '人工释放未完成，额度继续保留'); failed.value = Boolean(message.value) }
   finally { await refreshUsage(); saving.value = false }
 }
 

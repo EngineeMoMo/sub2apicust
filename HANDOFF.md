@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-19（Asia/Shanghai）。
+> 最后更新：2026-10-22（Asia/Shanghai）。
 
 ---
 
@@ -32,12 +32,26 @@
    - 「代码里存在能产生该症状的路径」≠「用户遇到的就是它」；用户报的现场要在**那台机器**上取证。
    - 写「已核对」必须同时写核对方式，否则别写那三个字。
 2. **定制维护**：优先新增文件；不得不改上游文件时改动尽量小并打 `[CUSTOM]` 注释，且**逐处登记 CUSTOMIZATIONS.md**。配置类定制（.env / override）走 gitignore，不进仓。
-3. **本机无 Go 工具链** → 后端改动**未编译**，靠 CI 验证（`gofmt -w ./...` + `go build -tags embed ./cmd/server` + `go test -tags=unit ./...`）；提交时如实标注「未编译」。
+3. **Go 工具链按当轮证据确认**：历史“本机无 Go”已由2026-10-21实际运行覆盖；现可用GOPATH缓存的Go1.27.3，GOTOOLCHAIN=local、GOPROXY=off完成离线定向测试。每轮分别报告已测试/编译的范围，未执行的全量构建或CI不能宣称通过；正式后端发布仍核验同SHA CI（go build -tags embed、go test -tags=unit）。
 4. **同步上游**：先 `git merge-tree --write-tree main upstream/main` 演算冲突，再真合并；rerere 已开；合并后过 CUSTOMIZATIONS.md 末尾自检清单 + 登录发一个请求冒烟。
 5. **换肤**：品牌主色只改 `frontend/src/custom/theme.css`；上游组件里的 `teal-*` 若是**语义分类色**（deepseek、模型徽标、渠道状态）**刻意不改**（改了会撞色/丢语义）。
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+
+- **2026-10-22 提交发布进行中（用户授权“提交并推送代码，我发布更新下”）**：本轮合并交付已验证的订阅兑换修复（迁移259）、注册IP限额（迁移260）与网站安全补修，目标origin/main；assets/marketing海报素材不纳入。前置本地验证分别见output/subscription-redeem-fix-20261021、output/registration-ip-20261022、output/security-fix-20261022，不能冒充本轮SHA CI。推送后核验同业务SHA的CI、安全扫描、GHCR及固定镜像来源；最终结果随后补记。生产由用户备份后手动更新，须核实可信代理，管理员本人绑定TOTP后开启step-up，Nginx模板需现场合并验证。
+
+- **2026-10-22 网站安全补修（用户授权修复，本地完成未发布；覆盖下条仅审查阶段）**：新增custom管理员TOTP可用性、支付写操作门控/公开查询预算、订单查单冷却与HTTPS头实现。管理员可独立绑定，普通用户全站开关不再跳过已绑定管理员的密码/待绑定OAuth验证；缺验证服务拒绝发凭证。支付后台所有写方法接现有step_up_enabled，主设置保存开启后均要求验证，开关读故障/非法值不静默放行；前端设置/订单/套餐/人工收款统一验证码弹窗、取消不执行、仅重试一次。两匿名查询共用可信IP20/分钟+全局600/分钟Redis预算，故障保留有界进程限额；已验签匹配的恢复查单每进程每订单单在途、结束后5秒冷却，仍返回持久化状态。TLS/可信代理HTTPS响应加HSTS，新增Nginx308/边缘限流模板；未强制本机HTTP跳转。Go离线87顶层/199含子项pass、前端109项/类型/i18n/构建及Windows embed通过，定向lint0错13旧warning；无新依赖/迁移，非全量Go/Linux CI或真实Nginx验收。报告deploy/SECURITY_HARDENING_20261022.md，证据output/security-fix-20261022/verification.json；逐处接缝登记CUSTOMIZATIONS及custom/UPGRADE。管理员须本人绑定后开启step-up，反代须现场nginx-t/合并配置；生产仍未改变，不能声称防护已在线生效。未提交推送部署，注册IP/订阅兑换/营销等原工作保留。
+
+- **2026-10-22 网站防护审查（只审查，未补修/发布）**：生产匿名只读 HTTP 与本地代码核查确认：公开 TOTP 关闭；本地支付退款/通道/配置/人工收款等未挂现有 step-up；HTTPS 抽查缺 HSTS，HTTP /login 为 200 占位 OK、无跳转（不是已证实明文登录）；公开订单恢复路由无单独限流，隔离 60 次空 JSON 均到参数校验，旧查询 Redis 故障放行。现有邮箱验证/Turnstile 开启，邀请码关闭；匿名后台/个人接口401，CSP等安全头存在。本轮 Go 定向54顶层/106含子项pass，加1个隔离复现，合计55/107，零失败跳过；本地生产前端依赖audit全严重度0。未重跑govulncheck/全量Go或本轮CI，不知道生产SHA、私有step-up/代理/WAF/管理员绑定/赠额及服务器状态。建议优先管理员实际绑定TOTP、补支付敏感操作step-up、HTTPS跳转/HSTS和订单查询限流；VPN注册需结合受控邀请码/新账号额度策略，不能承诺一人一号。报告deploy/SECURITY_REVIEW_20261022.md，证据output/security-review-20261022/verification.json及HTTP/JSONL；临时复现已归档移出业务目录。未改业务实现/库/8080/生产、未提交推送，原有工作树保留。
+
+- **2026-10-22 注册 IP 限额（本地完成，未发布）**：用户要求同 IP／MAC 只注册一个账号以防注册机。已实现默认开启的同可信 IP 一个新账号，后台系统设置→安全→注册可开关，旧表单省略保留原值并审计。来源严格用 Gin 可信代理链；邮箱／第三方自动／补全建号共用用户仓储事务，260独立表IP唯一键防重复，普通删号保留名额，失败事务及成功OAuth补偿删除释放。管理员建号和已有登录不占额，不追溯历史IP；普通网页拿不到可信真实MAC，本轮不做伪MAC/指纹防护，不承诺阻止轮换IP。共享公网IP会受限，发布前必须核实私有可信代理配置。Go1.27.3离线定向88个顶层测试／116个含子项pass事件，新增13个顶层／33个叶子场景，零失败跳过；实际auth路由限流回归、前端49项、类型、lint（0错误12旧warning）、前端build与Windows后端embed构建通过。真实PG并发、代理拓扑与OAuth全链路待验；SQLite单连接并发不当作PG多实例证明。新增接缝见CUSTOMIZATIONS，操作deploy/REGISTRATION_IP_LIMIT.md，证据output/registration-ip-20261022/REPORT.md、verification.json。保留原有未提交改动，未提交推送、未改业务库或8080／生产部署。
+
+- **2026-10-21 订阅兑换四项补修（本地完成，未提交／发布；优先于下方审查记录）**：用户已授权“修复”。新增259_custom_redeem_stock_sources，将码与明确库存来源同事务保存；管理员生成/固定码支持plan_id，唯一套餐可自动绑定，无/多套餐未选及售罄在生成前拒绝；生成不预占，兑换仍原子扣库存。旧码无来源继续历史归属/唯一套餐回退，后台批量选择分组+套餐可修复缺分组/多套餐旧码；后端禁止清空订阅组、错组、改已用码，前端含跨页混选保护。用码后在原事务读取结果，读失败回滚，提交后不再因重读误报；正向/缩短/撤销统一由外层提交后清L1/billing并通知其他实例。前轮错误展示保留，管理员生成/批量错误亦显示真实message，固定订阅码允许value=0。后端定向68个pass事件（39顶层，含22个新增pass事件/19具体场景）、1个真实PG依赖项因未配DSN跳过；前端最终416文件3353项全部通过，类型/定向lint/前端构建及含新前端的Go embed编译通过。新增PG并发测试已gofmt，因Testcontainers模块缓存缺失、官方代理下载超时且本机Docker未运行，未完成integration编译/真实PG执行；不能沿用其他任务CI。无新增依赖，未运行完整Go单测/Linux lint，未改本机业务库/8080/生产。证据output/subscription-redeem-fix-20261021/FIX_REPORT.md、verification.json；旧码现场数据及实际故障分支仍未知，其他会话改动保留。
+
+- **2026-10-21 订阅兑换代码审查完成（本地审查，后端未修复／未发布）**：按用户“先审查代码逻辑”完成全链路核查并复现四项：P1生成码无库存套餐来源（新用户在无／多套餐组生成成功但兑付拒绝）；P2批量编辑可清空订阅码必需group_id并直接触发REDEEM_CODE_INVALID；P2提交成功后重读失败误报失败、重试已用；P2提交前清L1被旧值重填、提交后漏清导致续期后仍读旧有效期。库存售罄拒绝是既有保护，不能移除或当作已确认现场根因。使用GOPATH已缓存Go1.27.3离线执行：SQLite真实服务/仓储7个审查场景＋sqlmock/Ristretto受控交错1个，共8场景符合现有行为；既有定向37个pass事件（含父/子项）零失败零跳过。前者证明缺陷/约束存在，不代表已修复；未运行全量构建、全部PG迁移或生产并发。临时测试已从业务树移至output证据目录；本轮只补报告/交接，前轮前端49项修复保留，后端业务及库存规则未改，未提交推送部署。现场reason、部署SHA与实际数据仍未知。详见output/subscription-redeem-20261021/CODE_REVIEW.md、code-review-evidence.json及三个backend日志。
+
+- **2026-10-21 订阅兑换调查与错误展示修复（本地完成，未提交／发布）**：用户补充“显示兑换码无效，余额码可用、订阅码不可用”。源码全文检索无“兑换码无效”字面文案；REDEEM_CODE_INVALID在兑换服务只有订阅码缺group_id这一处，必须取现场reason/message才能与库存拒绝区分。此前查明生成码不绑PlanID、不校验库存，兑换无历史归属时要求分组唯一套餐；分组缺失/非订阅、套餐来源失效及售罄均可拒绝。现RedeemView复用extractApiErrorMessage显示客户端顶层message及旧格式，错误卡与toast一致，带[CUSTOM]；新增custom真实API函数＋Axios拦截器＋Vue组件5项（缺group_id、非订阅组、无法确定套餐、归属失效、售罄），修复前5失败、后与原页面/API/客户端共4文件49项通过，vue-tsc与三文件eslint通过。Makefile关键回归加入新5项和既有RedeemView11项；接缝登记CUSTOMIZATIONS及custom/UPGRADE。Docker/8080未运行，未取现场码状态/部署SHA，订阅实际失败根因仍未知；未改后端库存/数据库、未提交推送或部署。证据output/subscription-redeem-20261021/REPORT.md、FOLLOWUP.md、before-fix.json、after-fix.json；原14项为上轮缺陷复现历史，其他会话工作保留。
 
 - **2026-10-21 魔法配方／工坊发布终态**：用户授权“提交并推送”。业务提交 `e182790f0d3d32cc54d074ddc0b634844973f07d`（72 文件）CI `39572780039`、GHCR `39572779894` 成功，安全扫描 `39572779941` 失败：follow-redirects 1.16.0 的 GHSA-q3jh-wrc6-jgq8／GHSA-8r9p-f939-6h3c 与 Go crypto/x509 GO-2026-6809 均为 2026-10-20 新公布，依赖文件未变，非本轮引入；该候选不作交付。补修 `ce5dda212930a49c6213e6134207c684c1e63791`：Go 1.27.3（go.mod、三个 Dockerfile、CI／安全／发布工作流校验），锁文件只把 follow-redirects 改为 1.16.1（axios ^1.16.0 范围内、元数据一致；未采用 pnpm update 连带的剪枝与范围改写）。本机 go1.27.3 govulncheck 0 可达漏洞、pnpm audit 无 high；两个候选均在干净工作树复验。同 SHA CI `39587015627`（Unit／Integration、golangci-lint、前端关键回归与新增 Family products node tests）、安全 `39587016061`、GHCR `39587015668` 全部成功。固定镜像 `ghcr.io/engineemomo/sub2apicust:sha-ce5dda2`（linux/amd64），index digest `sha256:556fe03e3076ee88fef27287906ba9b25d9387a2082532270110ffea988d9874`，registry revision／source／平台与构建日志（builder golang:1.27.3-alpine）交叉核验。无迁移；生产与 8080 未部署。证据 `output/family-products-upgrade-20261019/verified-release.json` 及同目录 job 日志。下方“本地完成，未提交”为历史阶段。
 
@@ -47,6 +61,20 @@
   - 用户要求按工坊图片与提示词生成简短视频、只在点击时播放并缓存在浏览器：选择“脚本由你本机运行”与“8段×5秒·480p”。已完成 `video-plan.mjs`（8段）、`tools/generate-videos.mjs`（默认只预览；`--yes`＋`--only/--all` 才提交；Key 只读环境变量；任务号续查不重复提交；MP4 校验、摘要命名、清单与生成记录）、`video-cache.mjs`（Cache Storage，80MB／16段、单段30MB、LRU、清单外清理、不支持时用原地址）与工坊播放层。`videos.mjs` 为空，页面视频入口保持待开放，不请求任何视频；**尚未生成任何真实成片**。网关已有 `/v1/videos/generations`（Grok Imagine，按秒计费）；xAI 文档参考价 480p $0.05／秒，本站分组单价未查看。
   - 后端 `custom_family_products.go`：内嵌工坊 CSP 放开 https 图片／连接；两种工坊页 `media-src 'self' blob:`；白名单加 generate/videos/video-cache；`assets/clip-*-<10位>.mp4` immutable＋ETag＋Range，其余 no-store。前端接缝见 CUSTOMIZATIONS 与 custom/UPGRADE 本日条目。
   - 最终本机验证：node 配方86／工坊76／宿主2／打包3；前端 lint 0 错误（26 既有警告）、typecheck、关键57文件883项、生产构建；Go1.27.2 gofmt／vet／embed 与 unit 测试／embed 编译。变异检查：回退复制、禁用按钮、焦点旧写法均使新回归失败。真实 Chromium（4181 夹具）验证生图全流程、退出清除、翻页、深色与390px、内嵌配方流式、受信点击复制成功与强制拒绝回退、禁用态取色；生成脚本对假接口跑通且不落 Key；独立页点击前0请求、点击后1次下载并播放至结束、刷新后从缓存播放0新请求、清除生效。样片为本机录制并已删除。证据 `output/family-products-upgrade-20261019/verification.json`。未验证真实账号／模型／计费／成片、内嵌 iframe 内实际播放、线上与8080。
+
+- **2026-10-19 Gemini API Key获取说明**：用户问如何获取key。本轮尝试web检索及打开官方api-key页面，但工具无可读返回，未核实当前界面、具体免费额度、模型退役或最低充值要求。提供AI Studio常用入口 https://aistudio.google.com/apikey 与常规创建流程：Google登录→接受条款→Create API key→选择／创建项目→复制，在本站新增Gemini APIKey上游账号中填写。当前按钮名称及是否需启用结算以用户实际官方页面为准，创建key不等于批量权限和模型调用已验收；不推荐购买某订阅或承诺免费图片。未创建账号／key、代开账单、读取凭证或触发付费调用。
+
+- **2026-10-19 获取OAuth实际模型路径补充**：用户追问如何获取模型。当前Gemini Code Assist OAuth仍无实时同步入口；本仓CreateAccountModal.vue:139/1107支持新增Antigravity OAuth，EditAccountModal.vue:1416/1430提供“同步上游支持的模型”，4792方法请求syncUpstreamModels，upstream_models.go:1269使用Antigravity FetchAvailableModelsFromURL实时读取。应新增对应平台账号并重新授权，不能直接改现有Gemini账号平台或迁移原令牌；同步成功并不证明该账号能调用全部模型，更不代表可用于Gemini原生批量生图。Google官方政策本轮web查询／open多次仍无可读工具返回，未取得可归档页面；进度中提及个人旧渠道停用不能作已核实证据，最终仅以本地代码及用户许可报文解释，不断言停用日期／推荐购买订阅。生产账号和部署入口未实际点击。
+
+- **2026-10-19 Gemini登录后无模型获取操作（源码已核实）**：用户提出模型可能过期且授权后无拉取操作。AccountTestModal.vue:325/344 在打开测试弹窗时请求本站 getAvailableModels；account_handler.go:2853 的Gemini OAuth分支直接返回 geminicli.GoogleOneModels 或 DefaultModels，模型条目在 pkg/geminicli/models.go 中静态维护，非Google实时授权清单。upstream_models.go:1244–1246 对带project_id的Gemini OAuth明确返回不支持Code Assist模型同步；无project_id的OAuth另有AI Studio Bearer列表路径，不能概括所有OAuth都不支持拉取。截图403/SUBSCRIPTION_REQUIRED明示许可拒绝，不足以证实模型退役，账号active也不证明调用成功。当前生产实际project_id及Google许可仍未访问；官方模型退役页面本轮web未返回内容，不声称Gemini2.5Flash已过期。未改业务或补造刷新按钮。
+
+- **2026-10-19 Gemini OAuth 测试403许可排查**：用户截图账号类型 OAUTH，测试 Gemini 2.5 Flash 返回403／PERMISSION_DENIED／SUBSCRIPTION_REQUIRED，domain=cloudaicompanion.googleapis.com，#3501。报文明确称当前产品许可无效；不能据此宣称封号或断定购买许可即可解决全部调用。本轮尝试检索及打开Google官方许可文档，但web工具未返回可读结果，未核实最新政策或该账号实际许可。本仓 account_test_service.go:2419 按OAuth调用buildGeminiOAuthRequest，2554行方法按project_id选择AI Studio Bearer或Code Assist路径；batch_image_provider_gemini.go:83仅接纳Gemini APIKey，vertex:169仅接纳service_account，当前OAuth账号即使修复普通文本测试仍不满足原生批量账号类型。建议批量使用真实支持对应模型的Gemini API Key上游账号；具体账号权限、生产配置未读取，未改代码／凭证或触发测试扣费。
+
+- **2026-10-19 批量生图模型列表为空（源码取证）**：用户开启全局开关后提示“当前密钥所属分组没有配置可用于批量生图的模型”。BatchImageGuideView.vue:579 在模型请求无错误但结果为空时显示该文案。batch_image_public.go:620 的 ListModels 按 Key 分组取可调度账号，筛服务商支持、账号 GetModelMapping 的请求模型、批量定价可解析及 IsModelSupported；1285 行映射为空返回空，通配按内置图片模型候选展开。GeminiAPI provider 仅支持 Gemini APIKey 且有上游 key；Vertex 支持 Gemini service_account，不能用 ChatGPT OAuth 账号替代。建议后台确认 Key 绑定 Gemini 批量组、同组上游账号、显式配置真实可用图片模型映射及图片定价。仅示例映射不证明上游支持批量；生产分组／账号／模型响应未读取，具体缺失项未知，未改业务或生产配置。
+
+- **2026-10-19 批量开关文件定位补充**：用户追问修改哪个配置文件。UPDATE_GUIDE.md:359 记录服务器部署目录 /sub2api-deploy、base 为 docker-compose.local.yml；update.sh:26–33 显式叠加同目录 docker-compose.override.yml。因此服务器应修改 /sub2api-deploy/docker-compose.override.yml 的 services.sub2api.environment。本机 deploy/docker-compose.override.yml 实际已将 BATCH_IMAGE_ENABLED、BATCH_IMAGE_QUEUE_ENABLED、BATCH_IMAGE_VERTEX_ENABLED 均设为 false；本次仅只读取证，未修改该私有文件或重建容器，服务器实际内容仍待现场确认。
+
+- **2026-10-19 批量生图禁用排查（源码取证）**：用户报告 BATCH_IMAGE_DISABLED，请求 ID c19dd6e1-6e39-46db-9c4f-d9e5a73132c1。batch_image_public.go:203/620 在 enabled() 为 false 时返回该码；1100 行还检查依赖非空，不能仅凭报错断言生产开关必为 false。config.go 的 batch_image.enabled／queue_enabled 默认均 false，支持 BATCH_IMAGE_ENABLED／BATCH_IMAGE_QUEUE_ENABLED 环境变量；worker_runtime.go:65 另受队列开关控制。正式 docker-compose.yml 与 docker-compose.local.yml 未传入这两个变量，开发 compose 才显式传入。需启用时在实际 sub2api 服务 environment／私有 override 加入两开关 true，由用户按原项目和 Compose 文件组合重建应用容器；仅改 .env 或普通 restart 不保证生效。Gemini 分组／批量权限／有效 Key 为独立条件，OpenAI 普通生图不属此入口。未访问生产配置或该 ID 日志，未触发生图、扣费、部署；保留既有并行改动。
 
 - **发布终态优先**：2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
 
@@ -60,11 +88,17 @@
 
 - **2026-10-19 智力效率不可用排查与本地修复**：实时匿名读取源站绑定和 `gpt-6.1-sol/low` 汇总均 HTTP 200，但汇总 schema 已变为 `radar-bench-public-summary-v6-150-details`，原后端只接受 v5。真实响应回放修复前稳定返回 503／`summary version`，修复后 200；已读取源站两个展示模块确认原计分规则、题库、150 满分、费用／耗时聚合未变。自有 handler 精确兼容 v5／v6，保留未知契约拒绝及原校验；新增真实响应 fixture 和七类异常回归，Go 1.27.2 本地后端 15 组／31 子用例、前端 33 项及 `go build -tags embed ./cmd/server` 均通过。证据 `output/intelligence-v6-{before,after,frontend,build}-20261019.log`、`output/intelligence-v6-final-tests-20261019.jsonl`、源站原文 `output/intelligence-summary-live-20261019.json`，变更见 CUSTOMIZATIONS 同日条目。本轮利用已有便携工具链完成真实编译，覆盖历史“无 Go 未编译”判断；embed 编译使用现有静态资源，只证明本轮后端可编译，不作为生产页面已更新的证据。保留其他会话未提交工作；本轮未提交推送或部署，生产运行版本、认证接口返回及日志未取证，不能宣称生产已恢复或唯一根因。
 
+- **2026-10-19 用户更新后仍无图（最新反馈）**：用户报告更新后仍只回复文字，新截图“小猫玩飞盘”请求仅显示生成意图，未展示图片。本轮再次实时执行git ls-remote origin refs/heads/main，远端为7ee076e953506beaa754e066360372f08021bb3c；本地git log确认其父为业务合并5233e9090698a9bd02f645340cd19e85e7e27743，故上游合并已提交并推送。固定业务镜像仍sha-5233e90；用户生产实际运行SHA、客户端名称、请求端点和原始响应尚未取证。正式上游同步不等于无图根因修复，既有CI与28项HTTP验收未包含真实付费生图。保留其他未提交工作，本轮仅更新交接，未新增业务补丁或部署。
+
 - **2026-10-19 上游v0.2.17同步发布终态（优先）**：2026-10-19上游v0.2.17同步发布终态：业务5233e9090698a9bd02f645340cd19e85e7e27743已推origin/main，包含upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084及新增47条上游提交；同SHA CI 39196526010（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端53文件831项）、安全39196525919、GHCR 39196526008全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-5233e90（linux/amd64），index digest sha256:08fe2367c8241ca9b43fe741b1ccd03db65ba5a8a5579f8bbc4a8f4ce6d2c550；registry revision/source/摘要与正式embed构建日志交叉验真，正式镜像隔离28项HTTP检查含真实登录、角色权限及IP防护通过。无新增迁移或依赖；312个自有新增文件内容不变，支付两处冲突保留WAP期限/快捷金额定制，原未提交产品工作不混入。生产由用户备份后手动./update.sh sha-5233e90，未代部署或付费生图。PR8028仍未合并，本轮不包含，不能保证解决截图无图。证据output/upstream-sync-20261019/verified-release.json、release-source-proof.json、formal-smoke.json及job日志；Windows全量5项失败如实保留在backend-unit-summary.json，正式Linux CI通过覆盖本轮发布门禁。后续纯文档skip-ci提交不改变此业务镜像。
 
 - **2026-10-19 同步过程与边界**：先完成merge-tree演算，再隔离合并；payment/types.go保留time导入原[CUSTOM]标记，payment_order.go在上游OrderType白名单balance分支保留快捷金额校验，其余自动合并接缝逐项核验。原42个未提交文件1218177字节备份在output/upstream-sync-20261019/before-main；其中40个业务/产品路径均未进入本轮提交，两份共享交接文件另保留原未提交内容。仅正式上游main，不含开放PR8028。Windows缺sh三项及两项协议/时序断言失败均保留原日志，未为此改无关源码；正式Linux同SHA完整CI已成功。
+- **2026-10-19 上游图片修复只读核查**：用户确认连接本fork并要求查开源最新更新。GitHub官方API实取main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084，稳定v0.2.17于10月16日12:41:43（上海）发布；相对本仓已合入基点9c2cca9e6新增47提交。新版图片修复主要为Antigravity/Gemini tool_result保图；Responses created_at补齐修复反序列化，不能当作截图根因。PR7649限制Codex图片桥接仅OpenAI账号已在HEAD（merge-base祖先检查exit0）。找到更相关但未合并PR8028（open、merged=false）及Issue8027：OAuth流式Images改图收到JSON图片却被direct fallback丢弃，拟转为SSE；本地openai_images.go:1134仍有direct直接return路径。该路径不等于截图现场，需端点/响应取证。未同步合并或应用未合并补丁、未改业务/部署；origin远端HEAD查询因127.0.0.1代理不可达失败，不声称已核对远端fork最新。API原文及汇总在output/upstream-image-check-20261019/verified-summary.json与同目录JSON；已有未提交工作保留。
+
+- **2026-10-19 图片聊天只回复文字咨询（根因未定）**：截图显示切换GPT-Image-2.5-Flare后两次声称生成成功但无图片，不能证明实际生成成功。只读核查openai_images_direct.go:31包含该模型，openai_images_responses.go:472/507读取非空图片结果；缺客户端名称、端点及原始响应，尚不能定位未执行生成、链路输出缺失或展示问题。官方文档工具无可读返回。仅交接，保留已有未提交工作，未改业务或付费生成、推送、部署。
 
 - **2026-10-18 登录400缺失人机凭证漏计修复（已发布sha-117e9a1）**：2026-10-18认证IP缺凭证计数发布终态：业务`117e9a1a08f1a225dbe5b041ae243be29251770b`已推origin/main；同SHA CI `39138612694`（unit／integration、专用PG18／Redis8、Go lint 0 issues、前端53文件830项）、安全`39138612602`、GHCR `39138612579`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-117e9a1`（linux/amd64），index digest `sha256:166ede3f3a5aa77028b4479f754e353442285fa28b466d426a0194c5eb8e6896`；registry revision／source／摘要与正式embed日志交叉验真，IP管理chunk `AuthIPBlacklistView-b89c0411.js`。缺失必要人机凭证的400及包含captcha／TOTP字段名的格式错误现按规则累计，正常挑战失败／腾讯灾备票据／服务故障／成功操作仍不计数；原自动开关／阈值／范围／期限不变，无新迁移、不回灌历史。用户备份后手动`./update.sh sha-117e9a1`并确认自动规则。未代部署、未实际封禁189.24.123.4；生产私有规则／实际版本／历史响应原因仍未核实，复现路径不等于现场唯一根因。证据`output/auth-login-probe-20261018/verified-release.json`、`release-source-proof.json`、`local-verification.json`及job日志。本轮便携Go本地embed通过，覆盖历史无Go未编译判断；后续纯文档skip-ci不改变业务镜像，其他会话工作保留。 截图21:50:43–21:50:51至少5次登录400，详情尝试admin@sub2api.local且没有人机字段；公开settings/public确认Turnstile开启。本地真实Login handler验证前9次400、第10次403/IP_BLOCKED；相关后端631顶层＋321子项、IP页16项、本地类型／lint／embed通过，既有钉钉禁用项跳过。现有审计不保存响应reason，未发送生产登录或自动开启规则。
+
 - **2026-10-18 订单核账菜单发布终态（优先于下方阶段记录）**：2026-10-18订单核账菜单发布终态优先：业务提交`57aad622fa4cdeea90df1d22866b6b514a92e94b`已推送origin/main；同SHA CI `39135534896`（unit／integration、Go lint 0 issues、前端53文件830项）、安全`39135534923`、GHCR `39135534858`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-57aad62`，平台`linux/amd64`，index digest `sha256:f1e11005ea3fbd2f7beeeeff44ad94b2e8794568c8c71be64f6f2ee86515120c`；registry revision／source／平台／摘要与正式构建日志交叉核验，新页面chunk `AdminOrderReconciliationView-T4m7REbz.js`及同提交embed后端均已打包。新入口为管理员“订单管理 → 订单核账”，设置→支付保留限额／自动清理规则／联系方式及跳转；无新增迁移，原付款／等待期／审计保护不变。未代部署生产或处理真实订单，真实管理员／手机视觉／商户核账仍待用户更新验收。证据`output/order-reconciliation-release-20261018/verified-release.json`、`release-final-verification.json`、`release-source-proof.json`及job日志。后续纯文档`[skip ci]`提交不改变此业务镜像，下方未提交／待发布为历史阶段。
 
 - **2026-10-17 独立订单核账菜单（本地完成，未提交发布）**：按用户“人工订单别藏在设置里”的要求，新增管理员“订单管理 → 订单核账”（`/admin/orders/reconciliation`），集中今日收款／占用、最近100条待确认单、立即批量复查、渠道关单、等待期后的人工释放及线下收款登记；设置→支付只保留限额／自动清理规则／联系方式和跳转入口。拆出定制 `PaymentCollectionOperations.vue` 与 `AdminOrderReconciliationView.vue`，实际守卫限制管理员与支付开关；未改后端释放时机、付款保护或审计，不处理真实订单。4文件82项相关回归、typecheck、本轮7个源码／测试文件ESLint及生产构建通过（i18n检查、vue-tsc -b、Vite；仅有既有大包提示），隔离产物与证据在`output/order-reconciliation-20261017/`（verification.json记录源码哈希及命令结果、build.log）。上游仅侧栏两行[CUSTOM]及实际守卫测试接缝，详见CUSTOMIZATIONS新节。尚未提交推送／发布新镜像／部署，浏览器真实登录／手机视觉／商户核账待验；其他会话未提交改动保留，下方sha-16ef917是上一次支付补丁，不含此菜单。
@@ -75,11 +109,80 @@
 
 - **2026-10-17 支付补丁发布授权（进行中）**：用户明确要求“提交并推送代码，我更新下”。本轮仅发布历史支付实例删除保护、缺通道超期占用自动清理及一次批量复查，保留其他聊天的官网／工坊／配方／海报等未提交工作。待发布14个支付源码文件SHA256与本轮104项后端叶子用例、9项前端及构建通过的记录一致；推送前fetch确认HEAD与origin/main均为964bdcd204d8e8f846cd481590fe4534f495e07b。提交后核验该业务SHA的CI／安全／GHCR与固定镜像来源，最终标签和门禁随后补记；不代替用户部署生产。
 
+- **2026-10-17 是否接图片工作台的建议（仅咨询，未实施）**：用户问需不需要工作台、是否只发Key即可。本轮web仍未返回可读正文，依据先前PowerShell实际获取的CookSleep项目README第148、166、406–412行确认网页版IndexedDB与静态dist部署，不能据此保证1核2G具体承载。结合用户小范围开放，建议先向少数会用客户端的用户发Key内测渠道、扣费与资源；面向普通用户正式提供按张生图时，再提供简单网页入口。用户未说明所有受众技术能力，建议按受众分支，不把工作台说成接口必需；也不因只有1核2G就否定静态前端。尚未决定接入哪个前端，不自动安装、改配置、接Key、发布或部署。
+
+- **2026-10-17 自带Gemini批量生图与第三方工作台区别（当前源码核查）**：用户追问项目自带Gemini生图。本轮读`useBatchImageAccess.ts:12`、`i18n/locales/zh/batchImage.ts:138`、`batch_image_provider_gemini.go:90/191`、`batch_image_provider_vertex.go:177`、`batch_image_processor.go:286/338`、`batch_image_download.go:218/231/282`及`BatchImageGuideView.vue:825/2021`。自带页面确实可创建批量任务、提示词与参考图、排队、预览、ZIP下载及失败项重试；菜单条件仍为active Key＋Gemini组＋allow_batch_image_generation=true，Gemini API Key／Vertex账号适用，不是当前GPT会员生图通用入口。生成原图结果由Gemini Files或Vertex的托管GCS保留；本站写任务／明细／上游文件定位／结算信息，浏览器IndexedDB缓存压缩缩略图；下载从上游读取、逐行解析并流式写ZIP，在已读流程未发现本机原图目录或落盘ZIP。不得把它说成原图仅存在浏览器或整个链路零存储；生产代理缓存／实际配置未核实。1核2G无需本地执行生成模型，但任务解析与打包ZIP仍耗内存／CPU，具体并发未压测。仅说明与交接，未变更配置、业务、部署或收费调用。
+
+- **2026-10-17 工作台浏览器存图确认**：用户再次确认“在用户浏览器，不在我们服务器存储”。本轮web未返回可读正文，依据上一轮PowerShell实际获取的CookSleep原版README第148行，网页版记录及图片保存在IndexedDB。答复限定工作台自身的历史存储；本站网关转发资源／代理缓存与异步对象存储须分别看配置，不能承诺整条链路零落盘，也未核实截图站点是否另有定制。仅交接，无业务改动或部署。
+
+- **2026-10-17 用户提供其他站点“图片工作台”截图与CookSleep项目链接**：截图左侧有“图片工作台”，右侧关于弹窗可读GPT Image Playground、@CookSleep及v0.7.0，说明其展示的是该独立生图前端；截图本身不能确定iframe嵌入还是源码集成，更不能据此认定为New API原生功能。本轮只读获取`CookSleep/gpt_image_playground/main/README.md`，第13–14、148、153、166、406–412行明确支持OpenAI兼容Images／Responses、sub2api异步、网页版IndexedDB本地存记录及图片、dist静态部署。建议本站可沿用sub2api并接入类似工作台，无须仅为网页生图更换计费后台；用户最新消息只展示参考，尚未授权本轮安装或接入，未改业务／部署／传Key或付费生成。1核2G仅能据静态前端及上游生成架构判断可采用轻量方案，不能保证具体并发。另读本地`backend/internal/handler/image_task_handler.go:35`与`backend/internal/config/config.go:260`，本站sub2api异步任务以对象存储为启用条件，故“前端历史存浏览器”不等于整条链路无存储；用户要求不占本机硬盘时须按选定同步／异步模式核验代理缓冲及存储配置。本轮网页工具未返回可读正文，PowerShell首次联网失败后按规则提权只读获取README成功，证据为上述行号输出。
+
+- **2026-10-17 New API是否自带网页生图核查（用户继续比较系统）**：用户问“new api有生图的吗”，按其上下文区分接口与登录后的网页操作界面。本轮实际打开New API官方Images文档、QuantumNous/new-api/main的router/relay-router.go、web/src/features/playground/api.ts和constants.ts，以及Issue4503／PR4727。已核实New API支持`/v1/images/generations`与`/v1/images/edits`接口；当前读到的主线`/pg`仅注册chat/completions，前端playground/api.ts也只发送ChatCompletion，没有据此证实原版已提供通用GPT Images网页工作台。文档“绘图设置”只有简略设置说明，不能拿它当作有完整生图前台的证据。
+  - PR4727确实实现过多端点及图片网格，但维护者在2026-05-12以范围过大要求拆分并关闭，状态Closed而非Merged；Issue4503中2026-06-24协作者也澄清当时还不支持Playground绘图。历史评论不能单独代表今天，故同时核对当前main代码，不把“有PR实现”说成已发布。
+  - 实际打开CookSleep/gpt_image_playground主仓README：作者提供OpenAI兼容Images／Responses、sub2api异步等连接方式，网页版记录及图片存浏览器IndexedDB，可静态构建部署；这是可接入网关的独立前端，不属于New API原生页面。符合用户不希望自动归档到应用服务器的方向，但具体代理缓冲／异步对象存储仍依赖部署配置，未承诺服务器零写盘。没有安装、迁移、传Key或付费生图；用户三个模型及会员渠道在New API中未实测。
+  - 证据源：`https://docs.newapi.ai/zh/docs/api/ai-model/images/openai/post-v1-images-generations`、`https://raw.githubusercontent.com/QuantumNous/new-api/main/router/relay-router.go`、`https://raw.githubusercontent.com/QuantumNous/new-api/main/web/src/features/playground/api.ts`、`https://github.com/QuantumNous/new-api/pull/4727`、`https://github.com/QuantumNous/new-api/issues/4503`、`https://raw.githubusercontent.com/CookSleep/gpt_image_playground/main/README.md`。建议不为网页入口先迁移计费后台；本站现有未发布工坊生图功能可另按发布流程验证上线。本轮仅检索和交接，未改业务／费率或部署。
+
+- **2026-10-17 sub2api上游自带生图菜单核查（澄清原生Gemini批量与OpenAI普通生图区别）**：用户追问“sub2api没有自有生图菜单吗”，本轮实际打开Wei-Shaw/sub2api/main的AppSidebar.vue、router/index.ts、useBatchImageAccess.ts、i18n/locales/zh/batchImage.ts原始源码，并读本地BatchImageGuideView.vue。结论：上游确有原生“批量生图”菜单及`/batch-image`页面，支持创建任务、添加提示词、任务状态／预览／下载，并非完全没有网页生图功能。
+  - 上游useBatchImageAccess.ts第11–15行明确要求Key active、group.platform=gemini、allow_batch_image_generation=true；router注册BatchImageGuideView。本站当前同样保留此条件。因此用户当前三个GPT图片模型所属OpenAI组不会因允许普通生图就显示该Gemini批量菜单；原生页面也不是ChatGPT Plus／Pro账号的通用生图广场。此次检查的上游及本地路由未发现独立OpenAI普通生图工作台，不能把后台接口生图支持等同前台菜单已提供。
+  - 在线证据源：`https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/frontend/src/components/layout/AppSidebar.vue`、`https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/frontend/src/router/index.ts`、`https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/frontend/src/composables/useBatchImageAccess.ts`、`https://raw.githubusercontent.com/Wei-Shaw/sub2api/main/frontend/src/i18n/locales/zh/batchImage.ts`。前一轮已核实本站线上工坊无生成面板，本轮未重新部署或更改分组／Key。只补交接，业务／未提交并行改动保留。
+
+- **2026-10-17 用户授权专属生图组并创建Key后找不到生图广场（源码＋线上只读取证）**：分组生图权限控制接口使用，不会自动新增独立广场菜单。现有家族入口叫“魔法工坊”：`custom/routes.ts:33`为`/tools/studio`且只要求登录，`FamilyWorkspaceView.vue:31`加载`/studio/?embedded=1`；`family/products.ts:44`和顶部FamilyProductSwitcher提供工坊入口，不以生图分组自动创建导航。左侧`AppSidebar.vue:742`的“批量生图”受`useBatchImageAccess.ts:12`限制：有效Key＋Gemini平台＋allow_batch_image_generation=true；不能当作三个GPT模型的普通生图入口。
+  - **已实际打开生产公开页核实**：先用web读取`https://ai.mofamilys.com/studio/`遇429，再用隐藏IAB只读打开成功，页面为47条作品／提示词，显示“复制后在目标工具使用，当前页面不调用生成模型。”；“生成一张”和“选择生图模型”按钮数均0。随后按宿主源码直接打开`https://ai.mofamilys.com/studio/?embedded=1`，同一旧提示可见，`#generate-panel`元素数0、“生成一张”按钮数0。无需猜测登录后是否仅隐藏面板：该线上HTML根本没有新版面板。没有登录、读取任何Key或触发生图／扣费。
+  - **本地／发布边界**：HEAD为`964bdcd20`（2026-10-15文档提交），`git show HEAD:product-samples/magic-studio/index.html`仍是旧提示；工作区`index.html:55`已新增generate-panel、77行变为“只有点击生成才调用模型”，`app.mjs`有选择密钥／生成一张流程，但该文件是既有未提交改动，`generate.mjs`为未跟踪文件。由此确认现有生产工坊未包含这套新直接生图界面；不把源码工作区功能当已发布，也未替其他会话提交或修改它。
+  - 用户已完成的组／Key动作不等于已验证真实接口可调用，生产账号、Key绑组及模型调度本轮未验。若要用户在本站选模型直接生成，还需对已有工坊生图改动做专项验证、发布包含它的新版本，由用户手动部署；本轮未改业务、未提交／推送／重启／部署，仅补交接并保留其他工作树改动。
+
+- **2026-10-17 用户要求社区生图额度调查（已检索原帖，不承诺固定月产量）**：本轮用户明确允许查社区，按实际打开的第一手记录区分网页与Codex／OAuth，不能只套ChatGPT网页“每天多少张”。本地`openai_images_direct.go:31,43,125`对当前三模型走Codex Images直调，更接近下列OAuth样本，但生产账号与部署版本未验。
+  - 2026-07-09，note作者Hide《Codexの画像生成は何枚まで？Claude Codeから任せて分かった料金と上限》：自述Plus生成13张专辑封面，消耗约80%五小时额度、12%周额度，作者估计约15张／五小时、100张／周；约400张／4周是该估计的算术折算，不是完整月实测。来源 `https://note.com/hide_works/n/nc54aeb01be40`。
+  - Reddit r/codex《average number of images can be generated in both plus and pro subscription》页面标注约三个月前：一人自述Pro20x约1200张／周；另一个Pro5x用户称五小时超过300张后仍未限额。约4800张／4周只是1200×4；Pro5x该帖子没有周总量，不能按五小时样本强乘整月。未注明完整模型、尺寸与质量。来源 `https://www.reddit.com/r/codex/comments/1uuhj76/average_number_of_images_can_be_generated_in_both/`。
+  - 更接近本站直调路径的GitHub开发者记录：ShalomObongo/codex-imagegen-mcp的docs/BACKEND.md记载2026-09-22–23 Plus账号15张仅下降约5%五小时、1%周额度；若简单线性外推会得出1500张／周，但样本小且百分比精度不足，不作为月产量承诺。原文还列x-image-gen-*独立图片限额响应头，因此不能仅凭共享额度百分比推定全部可用张数。记录称当时端点忽略模型／size而返回约150万像素图片；这是该作者该日期实测，不能断言本站现版本同样忽略参数。**取证更正：本轮进度消息曾称“9月29日97张成功后限额”，最终重开原文并find 97无命中，已向用户撤回，不作证据；此前交接中的相应数字已删除。**来源 `https://github.com/ShalomObongo/codex-imagegen-mcp/blob/main/docs/BACKEND.md`。
+  - 官方交叉核对实际打开 `https://learn.chatgpt.com/zh-Hans/docs/pricing` 与 `https://developers.openai.com/codex/pricing/`：确认当前Plus $20、Pro $100／$200／$500月档及共享额度、尺寸／质量影响消耗，不给这三模型固定原生4K月张数。Pro5x／20x为Reddit用户自报的套餐称呼，本轮不把官方页面未明示的倍率映射写成已核实。社区跨度很大，不能把Plus估400／月和Pro估4800／月写成一般保底，或将不同规格样本当成同条件横评。
+  - 仅条件盈利算例（PowerShell实算）：若Plus真能每4周成功收费400张，均价$0.25，收入$100减$20月费余$80；若$200 Pro达到4800张，则收入$1200减月费余$1000。只说明该产量成立时能覆盖会员费，未计其他成本和充值实收折扣，不代表实际可售出图量、朋友按张结算利润或4K盈利已验证。仅检索和交接，未调用生图／购买点数、改费率或部署。
+
+- **2026-10-17 整个Plus／Pro账号耗尽额度的盈利测算（用户指定新假设）**：用户要求直接假设一个Plus或Pro账号，按$0.20／$0.30／$0.25给用户生图，问用完额度后是否盈利。本轮按用户指定场景，仅将账号订阅费作为成本测算，不再以朋友实际单张报价缺失作为回答阻塞；此前“Plus且每张付朋友”仍为已知实际结算背景，整号测算不等于个人实际净利润。
+  - 已实际打开官方 `https://learn.chatgpt.com/docs/pricing`：当前标准Plus $20/月，Pro有$100／$200／$500月档；官方Codex生图条款说明与其他任务共享额度、尺寸／质量影响消耗、超额可另购点数，未取得这三个指定模型在用户渠道每个账号必定可生成多少张4K图的保证。不能凭Plus／Pro名称承诺用完额度必赚，也不将某一短周期额度耗尽等同整月全部产量。
+  - PowerShell按Math.Ceiling(月费/单张售价)实算：依次按$0.20／$0.30／$0.25，Plus $20回本100／67／80张；Pro $100为500／334／400张；Pro $200为1000／667／800张；Pro $500为2500／1667／2000张。仅覆盖会员费，假设标价等额实收、无赠金／折扣及其他成本。算例平均$0.25、月成功收费200张收入$50，Plus扣月费剩$30；不代表每个账号实际额度可出200张，也不是已扣全部费用的净利润。
+  - 待真实账号完整计费月／可折算周期的成功收费张数、失败／重试消耗、实际套餐支付额与本站实收折扣，才能验证最终盈利。未代跑图片、额外买点数、改费率或部署；只更新交接，文档diff --check通过。
+
+- **2026-10-17 用户确认Plus且按张付朋友（盈利口径修正）**：用户明确朋友套餐为Plus，自己每张付钱给朋友，并希望保留利润。此前按固定会员费分摊成本的建议不适用于已确认的结算方式；真实直接成本应取朋友实际收取的每张金额，不能用同行售价或Plus月费直接替代。当前三模型按图片售价$0.20／$0.30／$0.25保持不变；建议先维持按图片便于与固定进价核账，Token模式每张收入波动，不能无条件保证更赚钱。
+  - 仅条件算例：按当前展示1x、无充值折扣／赠金，若每张先留$0.05供利润和其他开销，朋友进价上限依次$0.15／$0.25／$0.20；这些不是朋友实际报价，也不是净利润承诺。最终还需扣支付／运维等实际成本并核对平台余额兑换和有效倍率。关键缺口为朋友每张收多少及币种、三模型／4K是否同价、失败或重试是否另收费。未修改业务／定价配置、调用生图或部署，本轮仅补交接。
+
+- **2026-10-17 用户澄清生图价格来源／会员渠道（覆盖此前成本假设）**：用户明确最早$0.15／$0.25／$0.20来自参考别的站，且朋友自己订阅GPT会员；因此这些数字是同行售价，不是已知上游成本，不能据此认定本站每张赚$0.05。朋友会员的具体套餐、是否确实作为本站生图凭据、用户分摊费用／是否另按图向朋友付费、实际可售出图数量均未知。若本站实际使用会员额度且以固定费用分摊，可先保持现有按张展示便于核账；平均成本应按分摊会员费＋额外点数／渠道支出等，除以实际成功收费张数计算，不能套官方API单图价格当订阅渠道成本，也不能断言按张天然比Token多赚。
+  - 官方补取证：实际打开 `https://learn.chatgpt.com/docs/pricing` 的“How does image generation count toward usage limits?”，其Codex订阅路径生图消耗共享额度，质量／尺寸影响额度消耗，超过额度后还可能使用购买点数；API Key路径另按API价格。本地会员转发渠道实际额度须看账号现场，不给承诺张数。本轮仅澄清建议和更新交接，未改业务／费率、调用生图或部署。
+
+- **2026-10-17 生图最新售价与按Token／按张盈利核查（未改费率）**：用户最新截图已显示三个模型均“按图片计费”，gpt-image-2为$0.20／张、gpt-image-2.5-sunburst为$0.30／张、gpt-image-2.5-flare为$0.25／张，组展示1x；这覆盖下方“仍显示Token价”的旧截图状态，仅确认展示，未实测生产账单。若最早截图$0.15／$0.25／$0.20确为上游对每张成功图片的真实扣费，且适用于实际尺寸与质量、本站有效倍率也为1x，则三模型单张账面价差均$0.05，未计充值折扣／优惠及运营成本；上游成本身份尚未获用户确认，不能写成实际净利润。
+  - 本地源码：`openai_gateway_usage.go:630` 生图有显式Token规则时走Token计算，否则走图片路径；790行将ImageCount作为计费数量，`billing_service.go:1782` 按单价×数量×有效倍率计算；1700行起区分文本输出与图片输出Token，缺省图片输出价可回退到普通输出价。不能把广场右侧输入$5／输出$10参考价直接当作上游真实成本，切Token也必须核对实际usage与图片输入／输出费率。
+  - 本轮用openai-docs核查并实际打开官方文档 `https://developers.openai.com/api/docs/guides/image-generation` 的Cost and latency及Calculating costs：Sunburst／Flare同Token费率不等于同单图成本，应看模型／质量／尺寸对应usage；当前官方GPT Image 2的1024×1024 high示例仅图片输出$0.211，输入另计。这仅说明固定售价可能低于某些官方成本，不证明用户第三方渠道也如此扣费。建议按上游结算口径选收费：上游固定每张且覆盖4K时按张便于核账；上游Token浮动时需实测后按Token定足价，或按尺寸／质量分别定价，避免未核成本的一口价承诺。
+  - 前一条“哪个是4K模型”补取证：同一官方文档明确列出gpt-image-2的3840×2160／2160×3840；这不等于用户渠道已支持。当前工坊`product-samples/magic-studio/generate.mjs:5`仅默认、1024×1024、1024×1536、1536×1024选项；未新增4K入口、调用付费生图或验证上游4K。仅更新交接，未改业务／生产配置或部署；其他会话工作树改动保留。
+
+- **2026-10-17 生图设置后仍显示Token价（用户截图核查）**：最新截图“生图专用”组带专属标记、1x，左侧实付区gpt-image-2显示输入$5／输出$10，sunburst／flare输入$5／输出$0，均无按次／按图片标记。这证明当前页面仍按Token模式展示，不能当作每张收费$5或已经生成真实账单。`PlazaModelPricingTable.vue:388` 将缺失billing_mode回退token，95行仅非token显示模式标记，184行起才显示每次／每张单价；右侧官方Token参考价可继续保留，不作为按次设置失败依据。`GroupsView.vue:4394` 新增逐模型价格默认token，“允许当前分组生图”也不自动改计费模式；应重新打开分组逐模型定价，分别确认三条精确模型名、按次0.15／按图片0.25／按图片0.20，保存后重开确认并刷新广场。
+  - `model_plaza_service.go:234` 展示路径会匹配分组逐模型规则；当前工作区不是“广场完全不支持分组定价”的实现。仅凭截图无法区分未设／未保存／模型未匹配／旧页面／生产版本差异，不能断定一定是用户配置错误；若已保存且仍Token展示，需要用户提供保存后展开的三条定价配置或核对生产接口返回与版本。未改业务／配置或调用生图，本轮只补交接。
+
+- **2026-10-17 生图截图定价核查（未改配置）**：用户图一显示图片组1x：gpt-image-2按次$0.15、gpt-image-2.5-sunburst按图片$0.25、gpt-image-2.5-flare按图片$0.20；图二生图允许已勾、独立倍率未勾，分辨率价格1K=0.15／2K=0.5／4K=1，白名单已选5/21且截图可见3个已选图片模型。这三格是分辨率统一价，不是3个模型的售价，不能据图一推导0.5与1或证明真实扣费。当前源码同一分组下方支持“分组逐模型定价→添加模型价格”（GroupsView.vue:3132,3147）；按目标售价分别设置三条模型规则、对应按次／按图片模式和默认单价，采用这一路线时分辨率通用价格可在规则完成后清空（不填0），基础有效倍率需为1x才能对应截图原价。若只开放三模型，应复查另外两个已选白名单项。
+  - 代码依据：`model_pricing_resolver.go:73` 优先匹配分组逐模型价，`openai_gateway_usage.go:784` 的图片按次／按图片分组规则优先于通用分辨率单价；无对应规则时，token渠道定价也可能影响实际计费分支，不能只凭图二宣布实际已扣1K/2K/4K价。`image_billing_multiplier.go:3` 独立倍率关闭时沿用有效分组倍率（可能有用户专属覆盖）。额外边界：`openai_gateway_usage.go:790` 将result.ImageCount传给统一计费，`billing_service.go:1782` 按数量乘单价，因此界面“按次”不保证多图请求整次固定$0.15；先按每次单张核账，不以截图标签代替实测。此价格配置不控制图片是否保存，普通同步接口仍不自动归档图片；仅读源码和用户截图，未改业务／配置、未调用生图或部署。
+
 - **2026-10-17 积压收款占用可自动分批清理（最新支付状态，本地已验证，未发布）**：用户截图显示大量CANCELLED旧单仍占用，要求不用逐单点击。已在定制收款配置新增 `missing_provider_auto_release`，默认关闭，管理员保存开启后，原通道实例确实不存在、已取消／过期／失败且未记录付款的订单，在期限＋配置等待（默认24小时）＋10分钟后自动清理；通道仍存在而查询／配置失败、引用缺失／冲突及已付款均保留。事务内重新校验当前绑定／期限／状态／付款，释放与 `COLLECTION_HOLD_AUTO_RELEASED` 审计同事务，失败回滚；只释放占用，不充值或发权益。现有worker每60秒最多20笔，失败保留30分钟退避；新“立即批量复查”按已保存策略立即处理一批、只跳过退避。新增管理员鉴权组内 `/admin/payment/collection/recheck` 的 `[CUSTOM]` 路由接缝，前端仅定制组件和类型变更，登记CUSTOMIZATIONS最新节。最终后端104个叶子用例通过（service80、repository24），0失败0跳过，包含隔离PG18完整迁移、45笔20／20／5／0批次、审计失败回滚、迟到付款状态更新及10轮付款更新并发；前端9项、类型／ESLint／i18n3项／构建和Go1.27.2 Windows最终embed编译通过，证据 `output/payment-auto-release-20261017/verification.json`。首轮夹具未注入loadBalancer导致的失败日志保留，补齐后通过。临时PG按完整ID及挂载核验后清理；未提交推送、发布镜像、启动／更新业务站点或操作生产数据。**订单47真实收款和实例3删除经过仍未知；数据库更新测试不能当作已删通道真实webhook验签证据。下方仅人工释放是前阶段描述，新开关关闭时仍维持原行为；现场启用后可自动处理符合条件的积压，无需逐单。**保留其他聊天当前未提交工作。
+
+- **2026-10-17 仅指定用户生图且不自动保存图片（配置路径核查）**：用户希望仅给部分用户开放，生成图片不保存在应用服务器。已核实门禁按API Key所属分组的allow_image_generation控制（`service/image_generation_intent.go:35`、`handler/openai_images.go:98`），可新建标准（余额）专属生图组，关联支持生图的上游账号，在分组编辑“图片生成计费”勾“允许当前分组生图”但不开批量；用户管理的更多菜单“分组”（`UsersView.vue:697`）打开UserAllowedGroupsModal，逐个勾专属组并保存allowed_groups（该组件351行）。`user.go:86` 及 `api_key_service.go:523` 校验授权，用户仍需新建／改绑到该组的Key才获得能力，原普通组Key不随用户授权自动变成生图Key。其他用户可访问组须关闭生图。重要边界：GroupAllowsImageGeneration(nil)返回true，创建Key接口也允许不传GroupID，虽当前前端1816行要求分组，仍须检查旧／API创建的未分组Key，不能只建专属组就宣布全部入口已隔离。
+  - 普通同步Images返回body而不归档图片（`service/openai_images.go:964,983`）；保持异步存储关闭、分组批量生图关闭。工坊主动投稿是独立落盘入口（`custom_studio_handler.go:254`），如要求任何图片都不在本机保存，应另禁用投稿；本轮未修改或代操作。Nginx官方proxy_buffering文档说明启用缓冲时大响应可能临时写盘，仓内EDGE_SECURITY122行示例关闭缓冲，但生产配置未核对，不能保证反代零临时落盘。1核2GB继续建议对应入口单进程生图并发1、超量reject和单张峰值实测。未改业务／权限／配置／部署，未调用生图；已核实的是源码配置路径，生产镜像是否同版未知。
+
+- **2026-10-17 生图算力与1核2GB澄清**：用户进一步明确服务器为1核2GB／20GB硬盘，询问是否不够。已读 `openai_images.go:669,679` 与 `openai_images_responses.go:1837,1862`：此生图路径构造HTTP请求并调用上游，绘图模型计算不在应用服务器；本机仍承担响应缓冲／JSON处理，`upstream_response_limit.go:34` 的ReadAll会读取完整响应。128MiB为允许的单响应读取上限，不是每次请求固定占用或总内存硬上限。仅据规格无法断言一定不够／一定够；继续建议有余量且单图峰值实测后，按对应入口单进程并发1、单次1张受控试开。生产空闲／同机数据库与Redis用量、CPU峰值均未知；未修改业务或服务器配置。
+
+- **2026-10-17 生图容量补充（用户已明确硬件）**：用户自述为20GB硬盘、2GB运行内存，覆盖下方“20G含义未知”的历史描述；生产可用量／容器限额仍未取证。建议只有在现有服务有余量且单图实测后，才少量开放同步文生图，每次1张、当前支持的入口单进程生图并发1、超量reject，暂不扩展批量／异步或大图编辑。现有OpenAI/Grok专用并发开关默认false、0不限，部署Compose203行起支持 GATEWAY_IMAGE_CONCURRENCY_ENABLED=true／MAX_CONCURRENT_REQUESTS=1／OVERFLOW_MODE=reject；不推定覆盖Gemini原生协议／多实例全站，也不把并发1当总内存硬上限（入参先于占槽读取）。未在生产修改配置／重启或运行付费生成，未给2GB承载保证；需用free -h、df -h、docker stats与一次真实单图过程峰值决定是否开放。
 
 - **2026-10-17 支付通道删除保护已修复（本地已验证，未发布）**：用户后续要求修复。新增 `custom_payment_provider_guard.go`，删除前按订单列或快照绑定检查账本未付款、未释放占用，覆盖已取消／过期／失败订单；有占用返回409及后台核账提示，查账失败拒绝删除。上游 `payment_config_providers.go` 的 `DeleteProviderInstance` 仅增加4行 `[CUSTOM]` 接缝，原进行中保护保留，无迁移／前端变更，登记于CUSTOMIZATIONS最新节。有效旧代码基线13个叶子用例失败（12种终态绑定＋查账失败仍删除），修复后服务专项45个叶子用例通过；该阶段唯一PG跳过已在隔离真实PostgreSQL18阶段补执行，真实PG完整迁移链及既有占用／人工释放回归共19个叶子用例通过、0跳过。Go1.27.2 Windows/amd64 embed编译成功，格式／diff检查通过；证据 `output/payment-provider-guard-20261017/verification.json`，首次SQLite共用夹具并行冲突的无效基线也单独留档。测试PG使用tmpfs、核实完整容器ID后清理，未启动或更新业务应用；未提交推送、发布镜像或部署。**本地删除保护不能恢复生产已删除的实例3；订单47真实付款仍未知，须商户核账后按既有等待期人工释放。**下方“仅源码取证”是前一轮状态，原其他未提交工作保留。
 
+- **2026-10-17 生图存储与20G容量疑问（仅源码取证）**：普通OpenAI Images非流式路径 `backend/internal/service/openai_images.go:963` 读取响应后983行由c.Data返回，没有图片文件归档；`upstream_response_limit.go:34` 在内存读取，默认单响应上限见 `config.go:62`（128MiB），不等于请求总内存。当前未提交工坊前端 `product-samples/magic-studio/generate.mjs:43` 调同步接口，`app.mjs:292` 的结果只留当前页面，不能据此声称生产已上线。
+  - 异步默认关闭（`config.go:2289`）；正常启用须对象存储凭证齐全，`image_storage.go:89,98` 上传后删除base64并改链接，`repository/image_storage_s3.go:56` 为S3 PutObject，Redis任务默认24小时（`image_task.go:22`）。对象存储可外置，同机MinIO仍占本机磁盘；任务TTL及签名过期不等于对象删除，本路径未实现定时删对象。发现源码边界：`image_task.go:194` 完成时重新取uploader，执行中关闭存储会跳过转存，203／228行可把含base64原始JSON存入Redis；仅源码推导，未运行复现／未修复。
+  - 工坊主动投稿才写 `<dataDir>/studio-submissions`；`custom_studio_handler.go:33` 起有效素材配额单图12MiB、全站512MiB、每人20条、待审5条、上传并发4；退回删除素材，撤回／管理员删除记录与素材。旧孤儿文件及删除失败不受有效配额统计保证，不能称目录绝不会超过512MiB。
+  - 专用生图并发默认关闭／0不限（`config.go:2520`）；调用点为OpenAI Images／Responses与Grok（`handler/openai_images.go:106`、`openai_gateway_handler.go:562`、`grok_media.go:142`），不能推定覆盖Gemini原生协议。建议少量同步生图起步、按实际入口限制并发并观测峰值。用户20G指RAM还是磁盘、生产镜像／配置、容器限额及可用量均未知，未给承载人数保证。未连接生产、未调用付费生图、未改业务／配置／部署，保留其他会话已有未提交改动。
+
 - **2026-10-17 订单47收款预占复查报错排查（仅源码取证）**：用户日志为 `resolve collection hold provider failed error=load order provider instance: order 47 provider snapshot instance 3 is missing`。本地 `payment_order_provider_snapshot.go:101` 按订单历史绑定直接 Get 支付通道实例，只有记录不存在分支才生成该 missing 文案（104行），不检查 enabled；`payment_order_lifecycle.go:410` 包装后由 `custom_payment_collection_release.go:247` 在后台预占复查中记录并跳过该单。筛选条件为已过期／取消／失败、未付款且预占未释放（261行），失败先记复查时间，正常按30分钟退避；因此该次不释放占用，不能从日志断定真实收付款。已确认代码存在删除保护覆盖缺口：`payment_config_providers.go:100,164,524` 仅检查 PENDING／PAID／RECHARGING 后硬删除，没有检查已结束但仍有预占的订单；这条路径可以造成历史绑定失效，但未连接报错服务器，不能认定实例3实际由谁／何时删除，也未核实报错部署SHA。已有后台设置→支付的 `PaymentCollectionSettings.vue:26`「检查待确认订单／人工释放」入口，须先在商户侧核实未收款、经过等待期并填写原因确认，后端 `CustomForceReleaseCollection` 写审计；当前配置默认等待24小时另加10分钟，实际以后台显示为准。读取了 missing 拒绝回退与人工释放既有测试，本轮未执行测试；未修改业务源码、数据库、配置，未提交／推送／部署，保留工作树其他未提交工作。
+
+- **2026-10-16 宣传海报双二维码修正（当前素材终态）**：用户明确官网扫码入口不能遗漏；上一版误将官网码替换成客服码，现已改为两张海报底部并排「官网 · 扫码访问」「客服微信 · 扫码添加」，域名文字及客服品牌图标保留。最终1800×2400 PNG／JPG、两类独立二维码、预览／HTML及打包在`output/brand-posters-20261016-dual/`；旧版保留。47项本地解码检查全部通过，原图微信内容不变，原尺寸／缩小／压缩／预览均同时解出官网及微信，另核对标签位置，证据`qr-verification.json`；已人工看图。源码扩展--dual导出与双码验证，未改站点或提交推送部署；微信实际添加仍未手机实测。下方单客服码版为历史阶段。
+
+- **2026-10-16 宣传海报追加客服微信（当前素材终态）**：用户提供微信二维码，要求改色／图标、保证可用并加在海报下面；原图经本地ZXing-C++成功解码为微信链接，按完全相同内容用H纠错重编码，雾钛青`#096b68`、四模块静区、中心狮冠M。两张1800×2400海报底部已替换为客服码，标注「客服微信／扫码添加」，网站域名保留为文字。客服版PNG／JPG、独立980×980客服码、预览／HTML与证据在`output/brand-posters-20261016-wechat/`，旧版保留。原码／新码／海报原图与900／1080宽缩小、1080宽质量80压缩及预览共29项本地解码验证，全部内容一致，证据`qr-verification.json`；已看图。微信内实际加好友与账号状态未进行手机实测，不据本地解码承诺账号可添加。原图与解码内容仅在Git忽略的输出目录，源码新增`verify_qr.py`并扩展既有render；未改站点、未提交推送或部署。
+
+- **2026-10-16 品牌宣传海报**：按用户「根据本站主题做两张、不要敏感话语」要求，制作浅色品牌款「让每个想法，都有新可能。」与深色灵感款「把灵感，变成进行时。」；沿用theme.css雾钛青／日夜色表、现有狮冠M和魔法家族名称。新增排版与导出源文件`assets/marketing/2026-10-16/`；最终1800×2400 PNG／JPG、双图预览和内嵌素材HTML在`output/brand-posters-20261016/`（沿用现有Git忽略）。本地Chrome排版，无模型生图调用；两张字体／图片加载、文字边界、尺寸和预设排除词检查通过，导出图已人工查看，证据`verification.json`。文案仅含品牌与创作方向，未放模型厂商、价格、促销或服务效果保证；二维码编码本站域名，不代表平台审核或线上服务验收。未改站点业务／主题／配置，未提交推送或部署；原业务发布状态仍以下方2026-10-15记录为准。
 
 - **2026-10-15本轮分组补修发布终态（优先于下方阶段记录）**：最终业务提交`0e99748ba82575442aae95bda1f6358a43c46ddf`已推送origin/main；同SHA CI `38750224990`（unit／integration、专用PG18、Go lint 0 issues、前端53文件821项）、安全`38750225143`、GHCR `38750224942`全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-0e99748`，平台`linux/amd64`，index digest `sha256:9b3b82a8daeb04fa7d0816825f2401e9732c027746ec0ea62d25e2f876525251`；registry revision／source／平台／摘要与构建日志交叉验真。含R1–R4、管理员当前活动倍率及基础说明、分组到期事务平移后软删除与迁移258；福利时段结束仍只恢复基础倍率，沿用原计费逻辑。**新版启动会补处理已有到期规则，用户须先备份数据库／配置／app_data并审阅源组及平移目标，再执行`./update.sh sha-0e99748`。**生产由用户手动更新，真实收费与到期平移现场验收仍待；20:30历史故障根因未知。证据在`output/group-access-fix-20261015/verified-release.json`、`release-source-proof.json`及同目录job日志；首轮c4fa7fd的ineffassign失败已补修，旧候选不作交付。后续`[skip ci]`纯文档提交不改变镜像业务版本。
 
@@ -645,32 +748,102 @@
 
 ## 五、待办 / 下一步
 
+- [ ] **2026-10-22本轮发布门禁**：用户已授权提交推送订阅兑换、注册IP限额及安全补修；核验同业务SHA的CI、安全扫描、GHCR与镜像revision/摘要，给出固定sha标签。生产仍由用户备份后更新；可信代理配置、管理员本人绑定TOTP并开启step-up、Nginx合并与现场业务验收待执行。assets/marketing留在工作树。
+
+- [ ] **2026-10-22 安全补修发布/启用验收**：源码及定向验证完成，替代下方“待实施”的代码部分；发布须后续提交/推送授权、同业务SHA CI/安全/GHCR核验。按deploy/SECURITY_HARDENING_20261022.md管理员本人绑定验证器，再开启step_up_enabled；其他需写操作管理员也先绑定，机器凭证不能完成门控。反代合并nginx-security.conf.example并现场nginx-t，核实308/HSTS、真实IP、边缘及应用查询预算、正常退款/人工记账取消与验证后单次执行。生产代理/WAF/赠额/备份恢复仍未知；不开启邀请码/不改赠额、不代部署。
+
+- [ ] **2026-10-22 网站安全加固待实施**：本轮检查完成，报告deploy/SECURITY_REVIEW_20261022.md。优先管理员实际绑定TOTP并核实私有step-up开关、退款/支付通道及人工收款操作接入现有二次验证；反代补HTTP→HTTPS及HSTS；公开订单恢复/查询补限流和Redis故障边缘兜底。防VPN注册先评估已有一次性邀请码及新账号权益额度，依日志设阈值；核实可信代理/源站防护/真实赠额/备份恢复，未知不能写已安全。用户当前只要求检查，尚未实施上述补修或改生产配置。
+
+- [ ] **2026-10-22 注册 IP 限额发布／验收**：本地验证后，发布需本轮提交授权及同SHA CI／安全／GHCR核验；用户备份后手动升级前后端同版并迁移260。先核实实际直连代理IP与转发头清洗，配置server.trusted_proxies／SERVER_TRUSTED_PROXIES；未配置可能全站共用代理IP名额，旧版信任转发头开关不能替代。用独立测试账号验同IP二次拒绝／异IP成功／已有登录／管理员共享网络建号／OAuth／开关保存；真实PG多连接并发和线上代理链仍待，不拿SQLite或本地构建当部署。真实MAC限制不在本轮可交付范围，更换公网IP可绕过；如仍有批量注册需另评估验证码／邀请码策略，不自行加设备指纹。
+
+- [x] **订阅兑换代码审查（2026-10-21）**：四项逻辑缺口已核查并隔离复现；8个具体审查场景、既有定向37个pass事件，无失败/跳过。报告output/subscription-redeem-20261021/CODE_REVIEW.md；测试通过是证实现有问题，后端尚未修复。
+- [x] **订阅兑换四项补修（2026-10-21，本地完成）**：已接通明确库存来源及生成校验、禁止批量清空/错组并支持旧码补绑定、将结果快照读取纳入原事务、提交后统一失效订阅缓存；前端跨页混选保护与固定码零金额亦覆盖。后端68个pass事件/1项PG跳过，前端416文件3353项及类型/lint/前后端构建通过。详见output/subscription-redeem-fix-20261021/FIX_REPORT.md；尚未提交推送或发布。
+- [ ] **订阅兑换发布与PG门禁**：新迁移259须与前后端同版。新增PG并发/级联测试本机因Testcontainers缺缓存及网络超时未编译执行，Docker也未运行；正式发布须核验本轮SHA的Linux unit/integration、专用PG、lint及镜像。用户本次仅授权修复，未提交/推送/部署。
+
+- [ ] **订阅兑换发布后现场验收（2026-10-21）**：本地四项补修及错误展示已完成，生产尚未生效。发布后用新订阅码、唯一套餐旧码及后台重新绑定的旧码分别验收；已缺group_id或多套餐无归属的旧码须管理员明确选择分组和库存套餐，不猜测回填。现场失败分支仍需部署SHA与POST /api/v1/redeem的HTTP状态、reason/message对照（无需完整兑换码/Token）；代码修复不等于已确认现场根因。见output/subscription-redeem-fix-20261021/FIX_REPORT.md。
+
 - [ ] **视频暂缓（用户 2026-10-21 明确“视频的先不做”）**：播放层、生成脚本与程序动效工具保留但不启用，`videos.mjs` 为空；恢复时再按下方两条之一继续。
 - [ ] **程序动效样片：用户反馈“效果和图片一样不明显”（2026-10-21），暂不入库**；用户追问是否有自带视频模型，已答复本会话没有任何生图／视频模型工具，明显动态需走本站 Grok Imagine 视频接口（需 Grok 平台分组 Key）。原决定项保留备查：用户看过像素港口样片后决定：是否入库（`node tools/import-motion-clip.mjs --id clip-pixel-night`，默认写入产品目录），其余 7 段是否同样做（每段需人工标定区域；锦鲤游动、小熊猫走路等主体动作程序动效做不到，只能做水墨晕染、海浪、雨滴、蒸汽、光扫等局部）。入库后需重跑工坊 node 测试与前端构建，再随本轮一起提交。
 - [ ] **工坊图生短视频成片（用户本机运行）**：在 `product-samples/magic-studio` 下先 `node tools/generate-videos.mjs` 预览，设置当前终端 `MOFA_API_KEY` 后 `--only clip-pixel-night --yes` 试一段，满意再 `--all --yes`。需 Key 所在分组已开通视频生成并配置视频单价。完成后核对 `videos.mjs`、`assets/clip-*.mp4`、`assets/PROVENANCE-VIDEOS.json`（不含 Key），再跑工坊 node 测试与前端构建，三者一起提交；成片画质与体积、镜像增量待实测。
 - [ ] **生产更新 sha-ce5dda2（用户手动）**：备份数据库／配置／app_data 后执行 `./update.sh sha-ce5dda2`（无迁移）；更新后在控制台工坊／配方点复制、在工坊用自己的生图 Key 试生成一张，并按下一条核对缓存与压缩。不要使用 sha-e182790（安全扫描未过）。
 - [ ] **线上复制复测**：更新后在线上控制台的工坊与配方点“复制完整提示词／复制提示词”，应提示“已复制”而非“自动复制不可用”；仍失败时记录浏览器、是否内嵌和完整提示文字。
 - [ ] **发布后核对缓存与压缩**：线上用浏览器开发者工具看 `/studio/app.mjs`、`/recipes/bundle.js` 第二次访问是否 304、首访是否 `Content-Encoding: gzip`、图片是否命中缓存；若 Nginx 另开 gzip 或 CDN 改写 ETag，记录实际响应头再调整。（原“CI 不跑 node 测试／webp 为 no-store”两项已于 2026-10-21 完成。）
+
+- [ ] **Gemini APIKey接入验收**：用户自行在AIStudio创建key并核实图片模型项目计费权限；在后台新增Gemini APIKey上游并绑原批量组，配置实际支持的图片模型与定价，按响应验收。不索要明文key，不凭未取得的官方资料断言模型退役日期；成功创建key不标记批量任务已通过。
+
+- [ ] **用户获取实时模型**：若接受另建Antigravity OAuth，按后台新增账号→登录授权→编辑账号模型限制→同步上游支持的模型→保存→测试顺序操作；保留现有Gemini账号。若必须保持现有Code Assist账号，需要现场许可及该渠道真实发现能力证据，不能将静态列表冒充同步结果。原生批量服务仍不接纳Antigravity平台。
+
+- [ ] **Gemini模型列表与403后续**：按实际OAuth模式确认project_id是否存在（无需令牌或项目明文）；Code Assist现有同步明确不支持，先确认许可错误再评估真实模型发现能力。若改功能，应区分静态候选和上游实时可用模型，未获取成功不能展示成已同步；模型退役状态需要Google官方可读文档或实际错误佐证。
+
+- [ ] **Gemini OAuth许可及批量渠道分开确认**：普通调用按实际账号身份核实产品许可、授权项目及重新登录结果，不承诺买订阅必恢复；批量需配置支持模型的Gemini APIKey（或另配Vertex service_account＋GCS），保留现有账号且不索要明文密钥。官方最新政策本轮未获取有效页面，不能作为已核实结论。
+
+- [ ] **批量模型空列表现场确认**：检查当前 Key 所属组与关联上游账号平台／类型／调度状态、模型映射及图片定价；以实际模型列表响应及账号配置判定具体过滤原因。可先提供账号模型设置截图（遮蔽 key）定位，不盲目填入上游不支持的模型，也不以 ChatGPT 普通图片账号替代 Gemini 批量账号。
+
+- [ ] **批量生图配置文件现场生效**：按本轮已定位的服务器 /sub2api-deploy/docker-compose.override.yml 修改前两个批量开关；由用户按原 Compose 组合重建应用并验收。Vertex 按实际渠道另配，不照抄本机 build／image／端口设置。
+
+- [ ] **2026-10-19 批量生图禁用现场确认**：在实际报错实例核实上述请求 ID 日志、镜像及两个 BATCH_IMAGE 开关／config.yaml 对应键，只筛选相关配置。需启用时由用户修改实际配置并重建应用容器，验证模型列表和队列 worker；Vertex 另需 GCS 配置。真实付费提交按用户授权，源码诊断不等于生产根因已证实。
+
 - [x] **2026-10-19 智力效率 v6 与可用性补强发布门禁**：业务 e8cec341f16900e9057397325668a0914e8e2361 已推 origin/main，同 SHA CI／安全／GHCR 全成功；固定 sha-e8cec34 的 registry revision／source／摘要及正式构建日志已核验，见第四节和 output/intelligence-release-20261019/verified-release.json。
 - [ ] **智力效率生产更新与现场验收**：用户备份后手动 `./update.sh sha-e8cec34`，前后端同版，确认 `pricing.data_dir` 所在卷保留且可写（默认 `/app/data`），成功读取一次后核实 `intelligence-cache/last-success.json` 落盘。登录检查 `/api/v1/intelligence` 200、历史提示／原读取时间、自动恢复及矩阵费用／耗时；生产重启或故障演练需用户授权，不用模拟测试冒充现场。若仍失败，收集实际镜像 SHA、接口响应及 `intelligence source refresh failed`／`intelligence snapshot load/save failed` 日志。本轮未部署生产或执行正式镜像 HTTP 验收。
 
 - [x] **2026-10-19 上游v0.2.17发布门禁**：业务5233e9090698a9bd02f645340cd19e85e7e27743已推送；同SHA CI/安全/GHCR全成功，固定sha-5233e90及registry/source/embed/隔离登录验收通过，见第四节及output/upstream-sync-20261019/verified-release.json。
 - [ ] **2026-10-19 上游v0.2.17生产验收**：用户备份数据库、配置及app_data后，在服务器部署目录执行./update.sh sha-5233e90，检查真实登录、业务请求与支付/退款流程；生产未代部署。PR8028不在此版本，截图无图仍须实际请求取证。
+- [ ] **2026-10-19 图片无图后续**：用户报告更新后仍无图；正式上游同步已提交推送，先核实生产运行SHA、客户端、该次端点及原始响应，再确认是否OAuth加流式/v1/images/edits及502截断；若符合再评估PR8028。上次查询该PR未合并，本次同步未包含，不能声称升级已解决生图问题。
+
+- [ ] **2026-10-19 图片聊天只回复文字取证**：确认截图客户端及渠道，再查该次端点、模型、调用记录与图片结果。
 
 - [x] **2026-10-18 连续登录400漏计源码修复与本地验证**：缺失必要人机凭证标记计数，含验证码字段名的格式错误不再误排除，覆盖三服务商及故障/正常挑战/关闭规则；详见第四节及deploy/AUTH_IP_BLACKLIST.md。
 - [x] **2026-10-18 连续登录400修复发布**：业务117e9a1a08f1a225dbe5b041ae243be29251770b已推origin/main；同SHA CI／安全／GHCR成功，固定sha-117e9a1及摘要、来源、embed均已核验，见第四节与output/auth-login-probe-20261018/verified-release.json。
 - [ ] **2026-10-18 连续登录400生产验收**：用户备份后手动`./update.sh sha-117e9a1`，确认IP黑名单自动开关／阈值／范围和真实客户端IP；截图5次不能证明达到默认10次，历史请求不回灌。未实际封禁189.24.123.4、不代部署；需立即处理历史IP可由管理员按现有手动名单功能操作。
+
 - [x] **独立订单核账入口**：新增“订单管理 → 订单核账”，人工处理迁出设置；限额与自动清理配置保留设置→支付，权限及操作回归已覆盖，详见第四节。
 - [x] **核账菜单发布门禁**：业务提交57aad622fa4cdeea90df1d22866b6b514a92e94b已推送origin/main；同SHA CI39135534896／安全39135534923／GHCR39135534858全部成功，固定sha-57aad62及registry来源已核验，详见第四节。
 - [ ] **核账菜单真实验收**：用户备份后执行`./update.sh sha-57aad62`，验收“订单管理 → 订单核账”、手机操作与真实商户核账；生产由用户更新，未代部署或处理真实订单，其他任务工作保留。
 
 - [x] **本轮支付补丁发布门禁**：业务提交16ef9172cf666e6361f17161aa83a53178ee0f3f已推送origin/main，同SHA CI39029645317／安全39029645211／GHCR39029645261全部通过，固定sha-16ef917和registry来源已验真，详见第四节发布终态。
+
+- [x] **是否需要工作台的阶段建议**：小范围Key内测优先；会用客户端的用户可只用Key，普通生图用户建议提供网页入口。README已核实支持静态部署与本地历史；具体接入及性能验证待用户确定，不自动实施。
+
+- [x] **原生Gemini批量页面与存储边界核查**：当前源码已核实可直接网页提交与下载，不需为该页面另装GPT Image Playground；原图在上游Files／GCS，本地DB保存任务索引，浏览器缓存缩略图，下载流式ZIP。当前GPT分组不能仅凭普通生图开关获得Gemini批量菜单；生产配置与1核2G承载量仍未实测。
+
+- [x] **浏览器存图边界说明**：原版GPT Image Playground网页版历史图片为用户IndexedDB；不把前端本地保存等同于网关零内存占用或异步无对象存储。证据沿用上一轮已获取的README第148行，本轮web无可读返回；未运行付费接口。
+
+- [x] **其他站点图片工作台来源核验**：用户截图为GPT Image Playground／CookSleep；项目README确认OpenAI兼容、sub2api异步与IndexedDB／静态部署。已说明可接本站、无需因界面迁移后台；截图的具体嵌入方式未知。本轮只说明与交接，未安装／部署或调用付费接口。若后续要求接入，应先确定权限入口、用户自己的Key传递与同步／异步存储方案，再验证1核2G资源占用，不承诺浏览器存历史即服务器零缓存。
+
+- [x] **New API生图接口与原生前台核查**：官方接口支持生图／编辑；当前主线游乐场仅核实聊天路径，历史图片端点PR4727已关闭未合并。另找到支持网关接口和浏览器本地存图的独立GPT Image Playground，不把独立前端当New API原生功能或承诺用户会员渠道已兼容。
+
+- [x] **上游原生生图菜单核查**：已实际打开上游main原始路由、侧栏、Key资格判断与批量页面文案，确认原生Gemini批量生图存在；当前GPT会员生图不适用此菜单，不能回答“sub2api完全没有生图菜单”。
+
+- [x] **专属生图用户看不到广场的原因取证**：已读路由／导航／批量门禁，并实际核实生产`/studio/`和`/studio/?embedded=1`仍为提示词展示，无generate-panel，见第四节；分组授权不自动创建生图页面。
+- [ ] **站内直接生图界面发布验收**：当前工坊生成面板、密钥／模型选择和generate.mjs是既有未提交工作区改动，生产未包含。后续按用户发布要求先审查并验证该改动及鉴权／计费／只保留当前页结果，再发布新业务SHA与镜像、由用户手动更新；不得只让用户反复改分组来解决旧页面无生图功能。指定用户的真实Key绑组、可调度模型和成功单图扣费仍须现场验证。
+
+- [x] **生图Token展示复核**：2026-10-17最新截图已显示三模型均按图片计费，当前售价依次$0.20／$0.30／$0.25每张；旧Token展示截图及旧目标价格仅保留为历史，不擅自改回。展示正常不等于真实账单已验收。
+- [x] **生图会员社区额度检索**：已实际打开Plus第一手耗量文章、Pro20x／5x Reddit原帖与9月OAuth直调开发者记录，见第四节；可给有来源的样本及条件折算，尚无统一Plus／Pro三模型原生4K月张数或保证。
+- [ ] **生图真实成本与4K盈利核账**：实际背景仍是朋友Plus、用户按张付钱，同行价不能当进价；用户另要求按整号月费测算，已给四档套餐在现售价的回本张数，见第四节最新记录。仍需真实账号成功收费出图量与共享额度消耗、质量／尺寸、失败／重试结算、实际套餐或朋友报价及币种、充值折扣／赠金／兑换和有效倍率，分别验证整号回本与用户实际利润。不得承诺一个Plus／Pro耗尽额度必盈利；未调用付费API或代改费率。
+
+- [x] **生图截图与定价字段核查**：已区分三模型售价与通用1K／2K／4K价，确认同组逐模型定价入口、优先级、白名单5选项及多图计费数量边界，见第四节。
+- [ ] **生图逐模型价格验收**：以最新截图三条按图片规则$0.20／$0.30／$0.25为当前显示值，核实生产实际保存配置、1x有效倍率及仅三模型白名单；后续经用户授权用成功单图核对实际扣费。最早截图已确认是同行售价，不能证明会员渠道成本／可用4K额度或所有分辨率收益；未代修改配置或调用付费API。
+
 - [x] **积压占用自动清理与一次批量复查**：2026-10-17已补默认关闭的历史通道缺失超期清理策略及管理员批量入口；后端104个叶子用例0失败0跳过、前端9项及类型／lint／构建、最终embed编译通过，详见第四节最新支付状态和 `output/payment-auto-release-20261017/verification.json`。
 - [ ] **支付补丁发布和旧单现场处理**：代码与固定镜像sha-16ef917已发布；由用户备份后在实际部署目录运行`./update.sh sha-16ef917`，更新后保存开启缺通道自动清理，可点一次立即批量复查。现场核对实际等待期、审计和占用下降，已收未入账仍须商户核账；订单47及截图旧单尚未代处理。
+
+- [x] **指定用户生图配置路径核查**：已确认标准专属分组＋逐用户授权＋Key绑组＋普通同步接口；不把用户授权当作所有旧Key自动开启，门禁和界面证据见第四节。
+- [ ] **指定用户生图上线前核验**：用户选定生图平台及名单后，核实生产版本、上游账号与模型、其他可访问组生图开关、旧及API新建的未分组Key、单实例并发1。补充取证：`handler/api_key_handler.go:36,182` 的HTTP创建入口允许group_id为空，handler／service校验均未要求非空；未分组Key的生图门禁默认放行，但普通标准模式下实际调度还依赖可调度的未分组账号（`gateway_scheduling.go:1067,1110`），本轮未运行复现绕过或查生产。严格白名单建议另补未分组Key拒绝生图的门禁，再用无权限Key验证403、授权绑组Key验证实际单图。无自动归档应单独验；若要求任何图片不得落盘，另处理投稿入口及反代临时文件。生产配置与权限本轮未代操作。
+
 - [x] **支付通道删除保护修复与回归**：2026-10-17用户要求修复后已完成源码，原有订单状态保护之外新增未结清收款占用保护；45项服务叶子用例＋19项真实PG叶子用例、Go1.27.2 embed编译通过，详见最新第四节和 `output/payment-provider-guard-20261017/verification.json`。未提交推送、发布镜像或部署。
 - [x] **支付通道保护补丁发布**：删除保护与自动清理已一并进入16ef9172c；以本轮同SHA三项门禁及固定镜像为准，不借用旧sha-0e99748结果。生产部署和实际订单处理仍待用户执行。
+
+- [x] **生图存储路径核查**：2026-10-17已区分同步内存转发、异步对象存储与Redis任务、工坊主动投稿落盘，源码依据及边界见第四节；本轮只追加交接记录。
+- [ ] **开放生图前容量核实**：用户已明确1核／2GB RAM／20GB硬盘；在生产只读核对实际镜像、free -h／df -h／docker stats --no-stream及容器限额、对应协议／生图并发配置，观察一次真实单图的过程峰值，再决定是否以单进程并发1试开。若启用异步，另处理执行中关闭存储后原始响应进入Redis的边界及对象存储生命周期；本轮未授权改业务／上线。
+
 - [x] **订单47通道实例3缺失的源码定位**：2026-10-17已核对完整报错链、删除保护范围、30分钟复查退避及现成人工释放入口，详情见第四节；仅证明代码触发条件，不将本地源码取证当生产数据库查询。
 - [ ] **订单47现场核实与处理**：在报错服务器只读核对 `payment_orders.id=47` 的状态／provider_instance_id／provider_snapshot、`payment_provider_instances.id=3` 是否存在，以及 `custom_payment_collection_ledger.order_id=47` 的 paid_at／released／release_checked_at；结合管理审计／备份确认删除历史和商户账单核实收款。最新代码已支持管理员开启后自动分批清理缺通道的超期占用，关闭时仍走既有人工释放；不重建已删实例、不换绑历史订单，当前尚未代处理生产。删除保护无新增数据库级约束，不能将源码测试等同生产已处理。
+
+- [x] **保留官网和客服两个扫码入口**：2026-10-16按用户纠正导出双码版两张海报，文件在`output/brand-posters-20261016-dual/`；47项二维码及标签对应检查通过，预览已看图，旧单码版保留为历史。
+
+- [x] **客服微信海报补充**：已将用户二维码换为雾钛青及狮冠M，并加到两张海报底部；客服版在`output/brand-posters-20261016-wechat/`，29项图片解码及内容一致性检查通过。微信内实际添加好友仍需手机确认，未将本地解码等同实际加好友成功。
+
+- [x] **两张品牌宣传海报素材**：2026-10-16浅色／深色两款已产出并看图，1800×2400 PNG／JPG及预览／可编辑源文件见`output/brand-posters-20261016/`，源码见`assets/marketing/2026-10-16/`；文案排除词与排版检查证据见该输出目录`verification.json`。用户未要求发布或改站，后续调整依其反馈。
 
 - [x] **本轮新镜像发布（用户已授权）**：最终业务0e99748ba已推送；同SHA CI38750224990／安全38750225143／GHCR38750224942全部成功，固定sha-0e99748的revision、source、linux/amd64及digest和embed构建日志交叉验真。完整证据output/group-access-fix-20261015/verified-release.json；未代部署生产。
 - [x] **分组到期持久平移后删除源码与真实PG专项**：原实现只在请求中切组的缺口已补齐；新增258及后台到期任务、旧认证快照兜底、目标自指兜底清理、事务回滚与并发保护。福利时段结束仍只恢复基础倍率。订阅／包号权益不自动合并；用户收到的最终验证以output/group-access-fix-20261015/verification.json为准。

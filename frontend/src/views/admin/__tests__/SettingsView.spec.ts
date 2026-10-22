@@ -81,6 +81,12 @@ const {
 
 const localeRef = vi.hoisted(() => ({ value: "zh-CN" }));
 
+// [CUSTOM] 支付验证封装与设置页共用接口桩。
+vi.mock("@/api/admin/payment", () => {
+  const paymentAPI = { getProviders, updateProvider, createProvider, deleteProvider };
+  return { default: paymentAPI, adminPaymentAPI: paymentAPI };
+});
+
 vi.mock("@/api", () => ({
   adminAPI: {
     settings: {
@@ -128,6 +134,9 @@ vi.mock("@/stores", () => ({
     fetchPublicSettings,
   }),
 }));
+
+// [CUSTOM] 支付验证使用同一应用提示桩。
+vi.mock("@/stores/app", () => ({ useAppStore: () => ({ showError, showSuccess }) }));
 
 vi.mock("@/stores/adminSettings", () => ({
   useAdminSettingsStore: () => ({
@@ -746,6 +755,35 @@ describe("admin SettingsView payment visible method controls", () => {
         { ...menuItems[1], hide_open_button: false },
       ],
     }));
+    wrapper.unmount();
+  });
+
+  // [CUSTOM] 从真实设置组件验证默认、回显和保存，避免保存其他配置误关注册防护。
+  it("defaults registration IP limit on and submits an explicit disable", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+    const toggle = wrapper.get('[data-testid="registration-ip-limit-toggle"]');
+    expect((toggle.element as HTMLInputElement).checked).toBe(true);
+    await toggle.setValue(false);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ registration_ip_limit_enabled: false }),
+    );
+    wrapper.unmount();
+  });
+
+  it("preserves a disabled registration IP limit when saving other settings", async () => {
+    getSettings.mockResolvedValueOnce({ ...baseSettingsResponse, registration_ip_limit_enabled: false });
+    const wrapper = mountView();
+    await flushPromises();
+    const toggle = wrapper.get('[data-testid="registration-ip-limit-toggle"]');
+    expect((toggle.element as HTMLInputElement).checked).toBe(false);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ registration_ip_limit_enabled: false }),
+    );
     wrapper.unmount();
   });
 

@@ -189,6 +189,7 @@ type TopUsersByCurrency map[string][]TopUserStat
 
 type PaymentService struct {
 	providerMu               sync.Mutex
+	customPublicQueryGate    customPaymentQueryGate // [CUSTOM] 公共恢复查单按订单限频。
 	providersLoaded          bool
 	entClient                *dbent.Client
 	registry                 *payment.Registry

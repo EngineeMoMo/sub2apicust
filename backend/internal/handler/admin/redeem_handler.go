@@ -34,6 +34,8 @@ func NewRedeemHandler(adminService service.AdminService, redeemService *service.
 
 // GenerateRedeemCodesRequest represents generate redeem codes request
 type GenerateRedeemCodesRequest struct {
+	// [CUSTOM] 订阅库存套餐来源。
+	PlanID        int64      `json:"plan_id"`
 	Count         int        `json:"count" binding:"required,min=1,max=100"`
 	Type          string     `json:"type" binding:"required,oneof=balance concurrency subscription invitation"`
 	Value         float64    `json:"value"`
@@ -46,9 +48,11 @@ type GenerateRedeemCodesRequest struct {
 // CreateAndRedeemCodeRequest represents creating a fixed code and redeeming it for a target user.
 // Type 为 omitempty 而非 required 是为了向后兼容旧版调用方（不传 type 时默认 balance）。
 type CreateAndRedeemCodeRequest struct {
+	// [CUSTOM] 固定订阅码使用相同的库存来源选择。
+	PlanID        int64      `json:"plan_id"`
 	Code          string     `json:"code" binding:"required,min=3,max=128"`
 	Type          string     `json:"type" binding:"omitempty,oneof=balance concurrency subscription invitation"` // 不传时默认 balance（向后兼容）
-	Value         float64    `json:"value" binding:"required"`
+	Value         float64    `json:"value"`
 	UserID        int64      `json:"user_id" binding:"required,gt=0"`
 	GroupID       *int64     `json:"group_id"`      // subscription 类型必填
 	ValidityDays  int        `json:"validity_days"` // subscription 类型：正数增加，负数退款扣减
@@ -144,6 +148,8 @@ func (h *RedeemHandler) Generate(c *gin.Context) {
 
 	executeAdminIdempotentJSON(c, "admin.redeem_codes.generate", req, service.DefaultWriteIdempotencyTTL(), func(ctx context.Context) (any, error) {
 		codes, execErr := h.adminService.GenerateRedeemCodes(ctx, &service.GenerateRedeemCodesInput{
+			// [CUSTOM] 透传订阅库存来源。
+			PlanID:       req.PlanID,
 			Count:        req.Count,
 			Type:         req.Type,
 			Value:        req.Value,
@@ -209,7 +215,8 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 			return nil, err
 		}
 
-		createErr := h.redeemService.CreateCode(ctx, &service.RedeemCode{
+		// [CUSTOM] 固定码也持久化指定套餐。
+		createErr := h.redeemService.CreateCodeWithStockPlan(ctx, &service.RedeemCode{
 			Code:         req.Code,
 			Type:         req.Type,
 			Value:        req.Value,
@@ -218,7 +225,7 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 			GroupID:      req.GroupID,
 			ValidityDays: req.ValidityDays,
 			ExpiresAt:    expiresAt,
-		})
+		}, req.PlanID)
 		if createErr != nil {
 			// Unique code race: if code now exists, use idempotent semantics by used_by.
 			existingAfterCreateErr, getErr := h.redeemService.GetByCode(ctx, req.Code)
@@ -348,6 +355,10 @@ func redeemBatchUpdateFieldsFromDTO(in dto.BatchUpdateRedeemCodeFields) service.
 	}
 	if in.GroupID.Set {
 		out.GroupID = service.NullableInt64Update{Set: true, Value: in.GroupID.Value}
+	}
+	// [CUSTOM] 允许为旧码补绑定明确库存来源。
+	if in.PlanID.Set {
+		out.PlanID = service.NullableInt64Update{Set: true, Value: in.PlanID.Value}
 	}
 	return out
 }

@@ -12,7 +12,7 @@ import type { SubscriptionPlan } from '@/types/payment'
 
 const api = vi.hoisted(() => ({ createPlan: vi.fn(), updatePlan: vi.fn(), getPlans: vi.fn(), push: vi.fn(), fetchPublicPlans: vi.fn(), showError: vi.fn() }))
 vi.mock('vue-router', async importOriginal => ({ ...await importOriginal<typeof import('vue-router')>(), useRouter: () => ({ push: api.push }) }))
-vi.mock('@/api/admin/payment', () => ({ adminPaymentAPI: api }))
+vi.mock('@/api/admin/payment', () => ({ default: api, adminPaymentAPI: api }))
 vi.mock('@/custom/guest/api', () => ({ fetchPublicPlans: api.fetchPublicPlans }))
 vi.mock('@/custom/components/PublicLayout.vue', () => ({ default: { template: '<div><slot /></div>' } }))
 vi.mock('@/custom/components/GuestAction.vue', () => ({ default: { template: '<button data-guest><slot /></button>' } }))

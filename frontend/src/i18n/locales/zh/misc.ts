@@ -496,6 +496,8 @@ export default {
       assignmentPlan: '扣库存的套餐',
       selectPlan: '请选择套餐',
       assignmentHint: '每位实际新开通或续期的用户扣 1 份，已有订阅的幂等复用不重复扣减。',
+      // [CUSTOM] 兑换码绑定来源与兑现扣库存分开。
+      redeemHint: '生成或修改兑换码仅绑定套餐，不预占库存；实际兑换时扣 1 份，库存不足时兑换失败。',
       createPlanFirst: '此分组尚无套餐，请先在订单管理中创建套餐并配置库存。',
       selectAvailable: '请选择有库存的套餐',
       renewalStock: '可续订套餐库存',

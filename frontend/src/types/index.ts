@@ -1910,6 +1910,8 @@ export interface RedeemCode {
 }
 
 export interface GenerateRedeemCodesRequest {
+  // [CUSTOM] 订阅兑换码的库存来源。
+  plan_id?: number
   count: number
   type: RedeemCodeType
   value: number
@@ -1920,6 +1922,8 @@ export interface GenerateRedeemCodesRequest {
 }
 
 export interface BatchUpdateRedeemCodeFields {
+  // [CUSTOM] 为旧订阅码补绑定套餐。
+  plan_id?: number
   status?: 'unused' | 'disabled'
   expires_at?: string | null
   notes?: string

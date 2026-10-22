@@ -77,6 +77,8 @@
     <PlanEditDialog :show="showPlanDialog" :plan="editingPlan" :groups="groups" :payment-config="paymentConfig" @close="showPlanDialog = false" @saved="loadPlans" />
 
     <ConfirmDialog :show="showDeletePlanDialog" :title="t('payment.admin.deletePlan')" :message="t('payment.admin.deletePlanConfirm')" :confirm-text="t('common.delete')" danger @confirm="handleDeletePlan" @cancel="showDeletePlanDialog = false" />
+    <!-- [CUSTOM] 支付敏感操作二次验证。 -->
+    <TotpStepUpDialog :controller="paymentSecurity.stepUp" />
   </AppLayout>
 </template>
 
@@ -84,9 +86,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
-import { adminPaymentAPI } from '@/api/admin/payment'
+import { usePaymentSecurity } from '@/custom/usePaymentSecurity' // [CUSTOM]
+import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 import type { AdminPaymentConfig } from '@/api/admin/payment'
-import { extractI18nErrorMessage } from '@/utils/apiError'
 import adminAPI from '@/api/admin'
 import type { SubscriptionPlan } from '@/types/payment'
 import type { AdminGroup } from '@/types'
@@ -102,6 +104,8 @@ import { platformTextClass } from '@/utils/platformColors'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const paymentSecurity = usePaymentSecurity() // [CUSTOM]
+const adminPaymentAPI = paymentSecurity.api
 
 function planCurrencySymbol(currency?: string): string {
   return currencySymbol(currency || 'USD')
@@ -173,7 +177,7 @@ async function loadPlans() {
         : (p.features || []),
     }))
   }
-  catch (err: unknown) { appStore.showError(extractI18nErrorMessage(err, t, 'payment.errors', t('common.error'))) }
+  catch (err: unknown) { paymentSecurity.showError(err) }
   finally { plansLoading.value = false }
 }
 
@@ -189,7 +193,7 @@ async function toggleForSale(plan: SubscriptionPlan) {
     await adminPaymentAPI.updatePlan(plan.id, { for_sale: !plan.for_sale })
     plan.for_sale = !plan.for_sale
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, 'payment.errors', t('common.error')))
+    paymentSecurity.showError(err)
   }
 }
 
@@ -197,7 +201,7 @@ function confirmDeletePlan(plan: SubscriptionPlan) { deletingPlanId.value = plan
 async function handleDeletePlan() {
   if (!deletingPlanId.value) return
   try { await adminPaymentAPI.deletePlan(deletingPlanId.value); appStore.showSuccess(t('common.deleted')); showDeletePlanDialog.value = false; loadPlans() }
-  catch (err: unknown) { appStore.showError(extractI18nErrorMessage(err, t, 'payment.errors', t('common.error'))) }
+  catch (err: unknown) { paymentSecurity.showError(err) }
 }
 
 // ==================== Lifecycle ====================

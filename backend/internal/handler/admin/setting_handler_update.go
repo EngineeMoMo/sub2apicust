@@ -27,6 +27,7 @@ type UpdateSettingsRequest struct {
 	EmailVerifyEnabled                  bool                         `json:"email_verify_enabled"`
 	RegistrationEmailSuffixWhitelist    []string                     `json:"registration_email_suffix_whitelist"`
 	RegistrationEmailDomainQuotaEnabled *bool                        `json:"registration_email_domain_quota_enabled"` // 非白名单域名限量注册开关（省略=保持现值）
+	RegistrationIPLimitEnabled          *bool                        `json:"registration_ip_limit_enabled"`           // [CUSTOM] 省略保留现值。
 	PromoCodeEnabled                    bool                         `json:"promo_code_enabled"`
 	PasswordResetEnabled                bool                         `json:"password_reset_enabled"`
 	FrontendURL                         string                       `json:"frontend_url"`
@@ -532,6 +533,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if req.PasskeyEnabled != nil {
 		passkeyEnabled = *req.PasskeyEnabled
 	}
+	// [CUSTOM] 兼容旧版设置表单省略注册 IP 限额。
+	registrationIPLimitEnabled := previousSettings.RegistrationIPLimitEnabled
+	if req.RegistrationIPLimitEnabled != nil {
+		registrationIPLimitEnabled = *req.RegistrationIPLimitEnabled
+	}
 	registrationEmailDomainQuotaEnabled := previousSettings.RegistrationEmailDomainQuotaEnabled
 	if req.RegistrationEmailDomainQuotaEnabled != nil {
 		registrationEmailDomainQuotaEnabled = *req.RegistrationEmailDomainQuotaEnabled
@@ -559,7 +565,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	// 关闭 step-up 门控本身就是敏感操作：防止拿到管理员会话的攻击者先关闸再执行导出/备份。
 	// previousSettings 已证实开关处于开启状态，使用无条件门控变体，
 	// 避免门控内部二次读取开关时因存储故障 fail-open（前端捕获 STEP_UP_REQUIRED 弹码重试）。
-	if !stepUpEnabled && previousSettings.StepUpEnabled {
+	// [CUSTOM] 已开启保护后，每次设置写入均验证，覆盖密钥变更与关闭保护的请求。
+	if previousSettings.StepUpEnabled {
 		if !middleware.EnforceStepUpAlways(c, h.totpService, h.userService) {
 			return
 		}
@@ -1529,6 +1536,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		DefaultPlatformQuotas:       req.DefaultPlatformQuotas,
 		AccountSchedulingThresholds: req.AccountSchedulingThresholds,
 
+		RegistrationIPLimitEnabled:          registrationIPLimitEnabled, // [CUSTOM]
 		RegistrationEnabled:                 req.RegistrationEnabled,
 		EmailVerifyEnabled:                  req.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:    req.RegistrationEmailSuffixWhitelist,
@@ -2196,6 +2204,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	passkeyConfigured, passkeyRPID, passkeyRPOrigins := h.settingService.PasskeyConfiguration()
 
 	payload := dto.SystemSettings{
+		RegistrationIPLimitEnabled:                             updatedSettings.RegistrationIPLimitEnabled, // [CUSTOM]
 		RegistrationEnabled:                                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                                     updatedSettings.EmailVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:                       updatedSettings.RegistrationEmailSuffixWhitelist,

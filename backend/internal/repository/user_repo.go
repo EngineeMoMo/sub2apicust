@@ -97,6 +97,11 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		}
 	}
 
+	// [CUSTOM] 认证入口注入可信来源，所有建号方式复用同一事务占额。
+	registrationIP, err := prepareRegistrationIP(txCtx, txClient)
+	if err != nil {
+		return err
+	}
 	lockKeys := []string{normalizedEmailUniquenessLockKey(userIn.Email)}
 	if guardEmailAlias {
 		// 别名变体的字面量不同，唯一索引无法兜底；用收件箱身份锁把同一收件箱的并发注册串行化。
@@ -159,6 +164,10 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		return translatePersistenceError(err, nil, service.ErrEmailExists)
 	}
 
+	// [CUSTOM] 唯一键拒绝跨实例并发重复来源，失败由建号事务整体回滚。
+	if err := claimRegistrationIP(txCtx, txClient, registrationIP, created.ID); err != nil {
+		return err
+	}
 	if err := r.syncUserAllowedGroupsWithClient(txCtx, txClient, created.ID, userIn.AllowedGroups); err != nil {
 		return err
 	}
@@ -509,6 +518,10 @@ func (r *userRepository) deleteUser(ctx context.Context, exec *dbent.Client, id 
 		}
 	}
 
+	// [CUSTOM] 仅显式 OAuth 补偿回滚释放注册来源；普通删号不释放。
+	if err := releaseRolledBackRegistrationIP(ctx, exec, id); err != nil {
+		return err
+	}
 	affected, err := exec.User.Delete().Where(dbuser.IDEQ(id)).Exec(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrUserNotFound, nil)

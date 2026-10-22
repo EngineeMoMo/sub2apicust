@@ -1,25 +1,13 @@
 package routes
 
 import (
-	"time"
-
 	"github.com/Wei-Shaw/sub2api/internal/handler"
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
-	ratelimit "github.com/Wei-Shaw/sub2api/internal/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-)
-
-// publicOrderVerifyRateLimit caps anonymous legacy out_trade_no lookups per
-// client IP. The payment result page polls at most a handful of times per
-// order, so this leaves ample headroom for real users while making
-// out_trade_no enumeration impractical.
-const (
-	publicOrderVerifyRateLimit       = 20
-	publicOrderVerifyRateLimitWindow = time.Minute
 )
 
 // RegisterPaymentRoutes registers all payment-related routes:
@@ -32,6 +20,7 @@ func RegisterPaymentRoutes(
 	jwtAuth middleware.JWTAuthMiddleware,
 	adminAuth middleware.AdminAuthMiddleware,
 	auditLog middleware.AuditLogMiddleware,
+	stepUpAuth middleware.StepUpAuthMiddleware, // [CUSTOM] 支付写操作复用敏感操作验证。
 	settingService *service.SettingService,
 	panelRateLimiter *middleware.PanelRateLimiter,
 	redisClient *redis.Client,
@@ -64,10 +53,8 @@ func RegisterPaymentRoutes(
 	// Signed resume-token recovery is the preferred public lookup path.
 	// The legacy anonymous out_trade_no verify endpoint remains available as a
 	// persisted-state compatibility path for staggered upgrades.
-	// The anonymous verify endpoint is IP rate-limited to prevent out_trade_no
-	// enumeration. It fails open on Redis errors so an outage never blocks a
-	// user who is mid-payment from seeing their result.
-	publicRateLimiter := ratelimit.NewRateLimiter(redisClient)
+	// [CUSTOM] 查询共用可信IP/全局限额，Redis故障时保留进程内有界保护。
+	publicQueryLimiter := middleware.CustomPaymentPublicQueryLimiter(redisClient)
 	public := v1.Group("/payment/public")
 	{
 		// [CUSTOM] 扫码令牌授权，手机免登录；按公开 IP 限流，无支付写入。
@@ -75,9 +62,9 @@ func RegisterPaymentRoutes(
 		// [CUSTOM] 游客套餐目录仅返回展示字段，不开放结账或账户接口；匿名访问按公网 IP 限流。
 		public.GET("/plans", panelRateLimiter.PublicIP(), paymentHandler.GetPublicPlans(settingService))
 		public.POST("/orders/verify",
-			publicRateLimiter.Limit("payment-public-order-verify", publicOrderVerifyRateLimit, publicOrderVerifyRateLimitWindow),
+			publicQueryLimiter,
 			paymentHandler.VerifyOrderPublic)
-		public.POST("/orders/resolve", paymentHandler.ResolveOrderPublicByResumeToken)
+		public.POST("/orders/resolve", publicQueryLimiter, paymentHandler.ResolveOrderPublicByResumeToken)
 	}
 
 	// --- Webhook endpoints (no auth) ---
@@ -97,6 +84,7 @@ func RegisterPaymentRoutes(
 	adminGroup.Use(gin.HandlerFunc(adminAuth))
 	adminGroup.Use(gin.HandlerFunc(auditLog))
 	adminGroup.Use(middleware.AdminComplianceGuard(settingService))
+	adminGroup.Use(middleware.CustomPaymentAdminStepUp(stepUpAuth)) // [CUSTOM]
 	{
 		// Dashboard
 		adminGroup.GET("/dashboard", adminPaymentHandler.GetDashboard)

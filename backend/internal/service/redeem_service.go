@@ -104,6 +104,8 @@ type RedeemCodeBatchUpdateFields struct {
 	ExpiresAt NullableTimeUpdate
 	Notes     *string
 	GroupID   NullableInt64Update
+	// [CUSTOM] 批量修复旧订阅码的库存来源。
+	PlanID NullableInt64Update
 
 	// Core fields are intentionally modeled only so service validation can
 	// reject payloads that try to mutate redemption value semantics in bulk.
@@ -115,7 +117,7 @@ func (f RedeemCodeBatchUpdateFields) HasChanges() bool {
 	return f.Status != nil ||
 		f.ExpiresAt.Set ||
 		f.Notes != nil ||
-		f.GroupID.Set ||
+		f.GroupID.Set || f.PlanID.Set ||
 		f.Type != nil ||
 		f.Value != nil
 }
@@ -125,7 +127,7 @@ func (f RedeemCodeBatchUpdateFields) HasCoreFieldChanges() bool {
 }
 
 func (f RedeemCodeBatchUpdateFields) TouchesUsedSensitiveFields() bool {
-	return f.Status != nil || f.ExpiresAt.Set || f.GroupID.Set
+	return f.Status != nil || f.ExpiresAt.Set || f.GroupID.Set || f.PlanID.Set
 }
 
 type RedeemCodeBatchUpdateInput struct {
@@ -249,7 +251,12 @@ func (s *RedeemService) GenerateCodes(ctx context.Context, req GenerateCodesRequ
 // CreateCode creates a redeem code with caller-provided code value.
 // It is primarily used by admin integrations that require an external order ID
 // to be mapped to a deterministic redeem code.
+// [CUSTOM] 固定码与批量生成共用库存来源校验。
 func (s *RedeemService) CreateCode(ctx context.Context, code *RedeemCode) error {
+	return s.CreateCodeWithStockPlan(ctx, code, 0)
+}
+
+func (s *RedeemService) CreateCodeWithStockPlan(ctx context.Context, code *RedeemCode, requestedPlanID int64) error {
 	if code == nil {
 		return errors.New("redeem code is required")
 	}
@@ -260,7 +267,7 @@ func (s *RedeemService) CreateCode(ctx context.Context, code *RedeemCode) error 
 	if code.Type == "" {
 		code.Type = RedeemTypeBalance
 	}
-	if code.Type != RedeemTypeInvitation && code.Value == 0 {
+	if code.Type != RedeemTypeInvitation && code.Type != RedeemTypeSubscription && code.Value == 0 {
 		return errors.New("value must not be zero")
 	}
 	if code.Status == "" {
@@ -270,7 +277,19 @@ func (s *RedeemService) CreateCode(ctx context.Context, code *RedeemCode) error 
 		return ErrRedeemCodeExpired
 	}
 
-	if err := s.redeemRepo.Create(ctx, code); err != nil {
+	// [CUSTOM] 订阅按有效天数发放，生成时明确绑定库存来源。
+	planID := int64(0)
+	if code.Type == RedeemTypeSubscription {
+		if code.GroupID == nil {
+			return infraerrors.BadRequest("REDEEM_CODE_GROUP_ID_REQUIRED", "订阅兑换码必须选择分组")
+		}
+		var err error
+		planID, err = ResolveCustomRedeemStockPlan(ctx, s.entClient, *code.GroupID, requestedPlanID, code.ValidityDays >= 0)
+		if err != nil {
+			return err
+		}
+	}
+	if err := createCustomRedeemCodeWithStock(ctx, s.redeemRepo, code, planID); err != nil {
 		return fmt.Errorf("create redeem code: %w", err)
 	}
 	return nil
@@ -324,6 +343,10 @@ func (s *RedeemService) BatchUpdate(ctx context.Context, input *RedeemCodeBatchU
 		return nil, infraerrors.BadRequest("REDEEM_CODE_GROUP_ID_INVALID", "group_id must be positive")
 	}
 
+	// [CUSTOM] 来源字段不能清空或使用非正数。
+	if input.Fields.PlanID.Set && (input.Fields.PlanID.Value == nil || *input.Fields.PlanID.Value <= 0) {
+		return nil, infraerrors.BadRequest("SUBSCRIPTION_STOCK_PLAN_REQUIRED", "请选择有效的库存套餐")
+	}
 	updated, err := s.redeemRepo.BatchUpdate(ctx, ids, input.Fields)
 	if err != nil {
 		return nil, err
@@ -486,6 +509,14 @@ func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, r
 		return nil, fmt.Errorf("mark code as used: %w", err)
 	}
 
+	// [CUSTOM] 锁定用码后在同一事务读快照；读失败全部回滚，提交后不再重读。
+	redeemCode, err = s.redeemRepo.GetByID(txCtx, redeemCode.ID)
+	if err != nil {
+		return nil, fmt.Errorf("get updated redeem code: %w", err)
+	}
+	if redeemCode.Type == RedeemTypeSubscription && redeemCode.GroupID == nil {
+		return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
+	}
 	// 执行兑换逻辑（兑换码已被锁定，此时可安全操作）
 	switch redeemCode.Type {
 	case RedeemTypeBalance:
@@ -525,13 +556,19 @@ func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, r
 			if validityDays == 0 {
 				validityDays = 30
 			}
-			_, _, err := s.subscriptionService.AssignOrExtendSubscription(txCtx, &AssignSubscriptionInput{
+			// [CUSTOM] 明确来源优先于用户历史归属；缓存由外层提交后统一失效。
+			planID, err := s.customRedeemStockPlanID(txCtx, redeemCode.ID)
+			if err != nil {
+				return nil, fmt.Errorf("read redeem stock plan: %w", err)
+			}
+			_, _, err = s.subscriptionService.assignOrExtendSubscription(txCtx, &AssignSubscriptionInput{
+				PlanID:       planID,
 				UserID:       userID,
 				GroupID:      *redeemCode.GroupID,
 				ValidityDays: validityDays,
 				AssignedBy:   0, // 系统分配
 				Notes:        fmt.Sprintf("通过兑换码 %s 兑换", redeemCode.Code),
-			})
+			}, true)
 			if err != nil {
 				return nil, fmt.Errorf("assign or extend subscription: %w", err)
 			}
@@ -552,12 +589,6 @@ func (s *RedeemService) redeem(ctx context.Context, userID int64, code string, r
 	// 余额类正数兑换码触发邀请返利（best-effort，失败不影响兑换结果）
 	if redeemCode.Type == RedeemTypeBalance && redeemCode.Value > 0 {
 		s.tryAccrueAffiliateRebateForRedeem(ctx, userID, redeemCode.Value)
-	}
-
-	// 重新获取更新后的兑换码
-	redeemCode, err = s.redeemRepo.GetByID(ctx, redeemCode.ID)
-	if err != nil {
-		return nil, fmt.Errorf("get updated redeem code: %w", err)
 	}
 
 	return redeemCode, nil
@@ -586,6 +617,12 @@ func (s *RedeemService) invalidateRedeemCaches(ctx context.Context, userID int64
 			return
 		}
 	case RedeemTypeSubscription:
+		// [CUSTOM] 事务提交后同步清本地缓存并通知其他实例。
+		if s.subscriptionService != nil && redeemCode.GroupID != nil {
+			if err := s.subscriptionService.invalidateSubscriptionCaches(userID, *redeemCode.GroupID); err != nil {
+				logger.LegacyPrintf("service.redeem", "invalidate committed subscription caches: %v", err)
+			}
+		}
 		if s.authCacheInvalidator != nil {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 		}
@@ -745,8 +782,7 @@ func (s *RedeemService) reduceOrCancelSubscription(ctx context.Context, userID, 
 		return fmt.Errorf("update subscription notes: %w", err)
 	}
 
-	// 失效缓存
-	s.subscriptionService.InvalidateSubCache(userID, groupID)
+	// [CUSTOM] 缩短与撤销同样由兑换外层在提交后失效缓存。
 
 	return nil
 }

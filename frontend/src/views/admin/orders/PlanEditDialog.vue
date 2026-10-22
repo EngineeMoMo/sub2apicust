@@ -97,15 +97,17 @@
       </div>
     </template>
   </BaseDialog>
+  <!-- [CUSTOM] 支付敏感操作二次验证。 -->
+  <TotpStepUpDialog :controller="paymentSecurity.stepUp" />
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
-import { adminPaymentAPI } from '@/api/admin/payment'
+import { usePaymentSecurity } from '@/custom/usePaymentSecurity' // [CUSTOM]
+import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 import type { AdminPaymentConfig } from '@/api/admin/payment'
-import { extractApiErrorMessage } from '@/utils/apiError'
 import { formatPaymentAmount } from '@/components/payment/currency'
 import type { SubscriptionPlan } from '@/types/payment'
 import type { AdminGroup } from '@/types'
@@ -129,6 +131,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const paymentSecurity = usePaymentSecurity() // [CUSTOM]
+const adminPaymentAPI = paymentSecurity.api
 
 const saving = ref(false)
 // [CUSTOM] 默认不限量，避免旧套餐升级后被误停售。
@@ -240,7 +244,7 @@ async function handleSavePlan() {
     appStore.showSuccess(t('common.saved'))
     emit('close')
     emit('saved')
-  } catch (err: unknown) { appStore.showError(extractApiErrorMessage(err, t('common.error'))) }
+  } catch (err: unknown) { paymentSecurity.showError(err) }
   finally { saving.value = false }
 }
 </script>

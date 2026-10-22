@@ -12,6 +12,7 @@ func firstNonEmpty(values ...string) string {
 }
 
 type SystemSettings struct {
+	RegistrationIPLimitEnabled          bool // [CUSTOM] 同一可信 IP 限注册一个账号，默认开启。
 	RegistrationEnabled                 bool
 	EmailVerifyEnabled                  bool
 	RegistrationEmailSuffixWhitelist    []string

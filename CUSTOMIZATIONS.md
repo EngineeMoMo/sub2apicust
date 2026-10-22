@@ -1,5 +1,60 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-22发布说明：用户已授权将下列安全补修、注册IP限额与订阅兑换修复一起提交推送到origin/main，核验同业务SHA发布门禁；各节“未提交/未发布”保留为实现阶段记录，最终交付状态见HANDOFF四/五。新增迁移259/260须随同版应用启动执行，生产配置与管理员TOTP绑定由用户完成。
+
+## 2026-10-22 网站安全补修（本地完成，未发布）
+
+- 根 `Makefile` 的已有 `[CUSTOM]` 前端关键回归列表追加 `payment-security.spec.ts` 与 `useStepUp.spec.ts`，保留此前订阅兑换等列表改动；`custom/__tests__/plan-stock.spec.ts` 补齐支付API默认导出桩，相关库存回归一并通过。
+
+- 新增 `backend/internal/server/middleware/custom_payment_security.go`：支付写方法转入现有step-up，缺装配拒绝写入；公开订单两个入口共享可信Gin IP/全局Redis限额并始终保留有界进程预算，no-store/Retry-After/正文上限。上游 `server/routes/payment.go` 的 `[CUSTOM]` 接缝传入stepUpAuth、管理组追加门控、替换两个公开查询限流；`server/router.go` 传参同步；路由原限流/支付宝测试调用同步。
+- 新增 `backend/internal/service/custom_payment_query_gate.go`：有界进程内每订单单在途/完成后5秒冷却；上游 `payment_service.go` 新增 `[CUSTOM]` gate字段，`payment_resume_lookup.go` 完整校验凭证匹配后进入冷却，冷却中返回数据库状态。`payment_resume_lookup_test.go` 增加同凭证连续恢复不重复查商户验证。支付回调/金额/幂等逻辑未改。
+- 新增 `backend/internal/service/custom_admin_totp.go`：管理员独立可用。上游 `totp_service.go` 的status/setup/complete用 `[CUSTOM]` 可用性判定；`handler/auth_handler.go` 与 `auth_oauth_pending_flow.go` 的 `[CUSTOM]` 管理员密码/待绑定OAuth挑战不随普通用户开关关闭，缺验证服务503且不发登录凭证；待绑定OAuth原测试抽出共用夹具覆盖管理员开关关闭/服务缺失。
+- 上游 `service/setting_features.go` 的 `[CUSTOM]` step-up配置读取仅确实缺省/false关闭，故障/非法值保留门控；`handler/admin/setting_handler_update.go` 的 `[CUSTOM]` 主设置写入在原开关已开启时统一EnforceStepUpAlways，不只保护关闭开关。对应旧设置测试已改为验证保持/省略开关也不能跳过门控。
+- 新增 `backend/internal/server/middleware/custom_https_headers.go`：直接TLS/可信直连代理的单值HTTPS头才下发HSTS；`server/router.go` 在CORS前追加 `[CUSTOM]` middleware，普通本机HTTP不跳转。新增 `deploy/nginx-security.conf.example` 供现场合并308/HSTS/边缘限流/覆写来源头及流式/WebSocket配置，不含真实证书/私有配置。
+- 新增 `frontend/src/custom/usePaymentSecurity.ts`，包装支付写API并复用现有useStepUp、阻止取消后重试、统一错误；自有 `PaymentCollectionSettings.vue`/`PaymentCollectionOperations.vue` 接弹窗及保护API。上游 `SettingsView.vue` 的 `[CUSTOM]` 支付通道操作复用既有settingsStepUp，取消后停止剩余通道操作；`orders/AdminOrdersView.vue`、`AdminPaymentPlansView.vue`、`PlanEditDialog.vue` 的 `[CUSTOM]` API/弹窗接缝保护退款/重试/套餐写入。zh/en `admin/settings.ts` 的 `[CUSTOM]` 提示同步管理员独立可用及支付/主设置范围。
+- 新增后端middleware/services/routes/handler的custom安全测试共6文件，以及前端 `custom/__tests__/payment-security.spec.ts`；收款、SettingsView和PlanEditDialog旧测试仅补齐新封装的接口/Pinia/i18n桩。Go87顶层/199含子项、前端109项、类型/i18n/生产构建、Windows embed通过，lint0错13旧提示。证据 `output/security-fix-20261022/verification.json`，报告 `deploy/SECURITY_HARDENING_20261022.md`。
+- 沿用现有step_up_enabled开关，不自动打开生产开关或绑定验证器，不改变普通用户策略/赠额/邀请码，无本次新增依赖或迁移。Redis故障预算和主动查单冷却为每进程，不能标成跨实例全局；实际Nginx配置/代理/用户绑定与正式SHA CI待验。本轮不提交推送部署，保留同日注册IP及订阅兑换等工作。
+
+## 2026-10-22 网站防护审查记录（仅文档）
+
+- 新增 `deploy/SECURITY_REVIEW_20261022.md`，记录生产匿名只读取证、本地认证/权限/支付审查、55个顶层/107个含子项pass事件与本地前端生产依赖audit全0，以及优先加固项/未知边界。临时订单恢复路由复现已归档至本地output并移出业务目录。
+- 本次未修改业务源码、生产配置或依赖，没有新增上游运行时接缝。安全补修及实际部署仍待后续，不覆盖同日尚未发布的注册IP限额和订阅兑换工作。
+
+## 2026-10-22 同 IP 限注册一个账号（本地实现，未发布）
+
+- 新增 `backend/internal/service/custom_registration_ip.go`（设置键、IP 归一化、请求上下文与专用错误）、`backend/internal/server/middleware/custom_registration_ip.go`（仅 Gin 可信代理链来源）、`backend/internal/repository/custom_registration_ip.go`（同事务唯一占额与 OAuth 补偿释放），以及迁移 `260_custom_registration_ips.sql`。不改 Ent schema／生成文件／既有迁移，IP 记录普通删号后保留。
+- 上游 `backend/internal/server/routes/auth.go` 的公开认证组追加 `[CUSTOM]` 来源上下文；所有认证建号经 `backend/internal/repository/user_repo.go` 的 create 接缝 prepare／claim，同事务失败回滚；deleteUser 的 `[CUSTOM]` 接缝仅显式补偿删除释放，管理员普通建号／删号不受该上下文影响。
+- 上游 `backend/internal/service/auth_service.go`、`auth_oauth_email_flow.go`、`auth_email_oauth_auto.go` 保留注册限额错误并通过 HTTP 响应传回；OAuth 失败补偿优先调用仓储 `RollbackRegistration`，与账号删除同事务释放名额。以上新增接缝均标 `[CUSTOM]`。
+- 上游 `backend/internal/service/settings_view.go`、`setting_parse.go`、`setting_update.go` 增加默认开启的管理员设置；`backend/internal/handler/dto/settings.go`、`admin/setting_handler.go`、`setting_handler_update.go` 追加设置读取／更新／回显，省略保持原值；`setting_handler_audit.go` 记录开关变更。接缝均标 `[CUSTOM]`，不公开额外用户信息。
+- 上游 `frontend/src/api/admin/settings.ts`、`views/admin/SettingsView.vue` 增加设置类型、默认值、开关和保存字段；`i18n/locales/{zh,en}/admin/settings.ts` 增加共享公网 IP／历史账号／真实 MAC／代理配置边界文案，均带 `[CUSTOM]`。无换肤。
+- 新增后端 `repository/custom_registration_ip_test.go`、`server/middleware/custom_registration_ip_test.go`、`service/custom_registration_ip_test.go`、`handler/admin/custom_registration_ip_test.go`；上游 `frontend/src/views/admin/__tests__/SettingsView.spec.ts` 追加带 `[CUSTOM]` 的默认／回显／保存回归，已在 Makefile 关键回归清单中，无需重复登记。
+- 真实 MAC 限制未实现：普通网页无法获取可信网卡 MAC，不把 Cookie／浏览器指纹当 MAC。IP 规则只能约束同一来源，共享 NAT 会影响多人，换 IP 仍可绕过。Go定向88个顶层／116个含子项pass事件、注册新增33个叶子场景、路由限流回归、前端49项／类型／lint／前后端构建通过；真实PG并发与线上代理链未验。运维与精确证据见 `deploy/REGISTRATION_IP_LIMIT.md`、`output/registration-ip-20261022/REPORT.md`、`verification.json`；发布状态以 HANDOFF 四／五最新记录为准。原有订阅兑换与其他会话修改保留，未提交推送部署。
+
+## 2026-10-21 订阅兑换库存来源／事务／缓存补修（本地完成，未发布）
+
+- 新增 `backend/migrations/259_custom_redeem_stock_sources.sql`：独立来源表，redeem_code_id 唯一并随码删除级联；不回填无法判断来源的旧码，不在生成时扣库存。现有 Ent schema 与生成文件未改，现有245/246等迁移不改。
+- 新增 `backend/internal/service/custom_redeem_stock.go` 与 `backend/internal/repository/custom_redeem_stock.go`：校验有效订阅组、明确来源/唯一套餐及余量；码与来源同事务创建，兑换事务读取来源。旧码无映射保留既有归属/唯一套餐回退；多套餐旧码可通过批量plan_id修复。
+- 上游 `backend/internal/service/admin_service.go`、`admin_user.go`：GenerateRedeemCodesInput追加PlanID，生成前校验并持久化来源，不预占库存。带[CUSTOM]。
+- 上游 `backend/internal/service/redeem_service.go`：批量字段追加PlanID及敏感字段校验；CreateCodeWithStockPlan让固定码共用来源校验，订阅value=0合法；Use后在tx读取当前快照并使用该快照发权益，读取失败回滚；提交后删除原重读。订阅输入传PlanID、延迟内层缓存失效，外层提交后清L1/billing及发布通知，缩短/取消也由外层处理。保留库存与用码原子性、余额返利及失败限流，接缝带[CUSTOM]。
+- 上游 `backend/internal/repository/redeem_code_repo.go`：Create/GetByID使用tx context；批量事务验证所有订阅码必需分组和来源，禁止清空/错组/已用码改绑，更新对原分组/类型及未使用状态做条件匹配，来源写入失败整体回滚。带[CUSTOM]。
+- 上游 `backend/internal/handler/admin/redeem_handler.go`、`backend/internal/handler/dto/types.go`：生成、固定码、批量plan_id透传；固定码value的非零要求交给服务按类型校验，订阅按有效天数发放，余额仍拒绝零值。带[CUSTOM]。
+- 上游 `frontend/src/views/admin/RedeemView.vue`：生成与批量修复复用SubscriptionStockPicker；订阅选择必须有来源，缺组/售罄/加载失败阻止提交；跨页缓存选中码类型，混选含订阅时不提供清空分组。生成与批量catch复用extractApiErrorMessage。带[CUSTOM]。
+- 上游 `frontend/src/api/admin/redeem.ts` 末尾追加可选planId，保留既有参数顺序；`frontend/src/types/index.ts`追加生成/批量plan_id；`frontend/src/i18n/locales/{zh,en}/misc.ts`新增生成不预占提示；接缝带[CUSTOM]。
+- 自有 `frontend/src/custom/components/SubscriptionStockPicker.vue`增加可选hintKey，默认原提示不变。新增custom的redeem-stock.spec.ts（含跨页）与redeem-stock-api.spec.ts；Makefile既有[CUSTOM]关键回归追加两项及管理员原批量spec，保留前轮错误提取两项。
+- 新增后端custom_redeem_stock_test.go（repository/admin）、custom_redeem_cache_test.go及custom_redeem_stock_integration_test.go；SQLite夹具续期使用顺序读适配，不能称为真实行锁并发验证。新增19具体场景共22个pass事件；整组Go68个pass事件，1项既有PG依赖测试跳过。前端最终416文件3353项、类型/定向lint/前端构建及Go embed通过；PG integration未编译执行（Testcontainers缓存缺失、官方代理超时、Docker未运行），发布待同SHA CI。
+- 本轮无新依赖，未提交推送部署。操作/兼容及证据见 `deploy/SUBSCRIPTION_PLAN_STOCK.md`、`output/subscription-redeem-fix-20261021/FIX_REPORT.md`；旧码缺组或多套餐来源不能自动猜测，管理员在后台批量编辑选择分组+套餐后再兑。
+
+## 2026-10-21 订阅兑换错误展示（本地完成，未发布）
+
+- 后续代码审查（2026-10-21，后端未改）：四项逻辑缺口及8个隔离场景、37个既有pass事件证据见 `output/subscription-redeem-20261021/CODE_REVIEW.md`；后续补修见HANDOFF五。本条不新增后端定制或迁移，前端错误展示不能视为订阅兑换已修复。
+
+- 用户反馈余额码可用、订阅码显示“兑换码无效”；本轮现场 reason/message 未取得，不能把库存拒绝当作已确认根因。
+- 上游接缝 `frontend/src/views/user/RedeemView.vue`：导入现有 `extractApiErrorMessage`，兑换 catch 改为 unknown，按客户端顶层 message 或旧 response.data.detail/message 提取具体原因，卡片和错误 toast 使用同一结果；catch 带 [CUSTOM] 标记。
+- 上游测试 `frontend/src/views/user/__tests__/RedeemView.spec.ts`：原旧格式失败用例同步断言 toast 显示 Invalid code；既有余额/并发/订阅成功及刷新失败不误报流程保留。
+- 新增 `frontend/src/custom/__tests__/redeem-errors.spec.ts`：真实 redeem API 函数＋Axios 拦截器＋Vue 组件，覆盖缺 group_id、分组不是订阅、无法确定套餐、库存归属失效、售罄五种错误，并检查保留输入、恢复按钮、不刷新权益或误报成功。
+- 上游 `Makefile` 的既有 [CUSTOM] 前端关键回归表新增这两份兑换 spec，由已有 `test-frontend` CI 路径执行。合并后保留两项及错误提取接缝。
+- 验证：新增5项修复前失败、后通过；四文件49项通过，vue-tsc 与三文件 eslint 通过。未改后端库存策略或 schema，无新迁移/依赖；未提交推送、未部署，不能宣称真实订阅兑换已修好。证据 `output/subscription-redeem-20261021/{before-fix,after-fix}.json` 与 FOLLOWUP.md。
+
 ## 2026-10-19 魔法配方／魔法工坊升级（本地完成，未提交发布）
 
 - **发布终态（2026-10-21）**：业务 `e182790f0`＋安全补修 `ce5dda212930a49c6213e6134207c684c1e63791` 已推 origin/main，同 SHA CI／安全／GHCR 全部成功，固定镜像 `sha-ce5dda2`（digest `sha256:556fe03e3076ee88fef27287906ba9b25d9387a2082532270110ffea988d9874`）。补修把 Go 固定到 1.27.3（`backend/go.mod` 原 [CUSTOM] 注释沿用，`Dockerfile`／`deploy/Dockerfile`／`backend/Dockerfile` 与 `backend-ci.yml`／`release.yml`／`security-scan.yml` 的版本校验同步），`frontend/pnpm-lock.yaml` 仅 follow-redirects 1.16.0→1.16.1。同步上游时保留 Go 1.27.3 及以上与 follow-redirects ≥1.16.1，不能退回。
@@ -60,6 +115,16 @@
 - **回归**：新增 `backend/internal/service/custom_payment_provider_guard_test.go`，覆盖三类终态×订单列／快照／二者／快照空格的12种绑定、已结清／无关占用允许删除、原进行中保护、查账失败不删除，以及通道已缺失时自动复查仍保留占用、核账确认后人工释放并写审计。有效旧代码基线有13个叶子用例失败，修复后全部通过；首次共用SQLite夹具并行冲突已改为顺序执行，该次日志单独保留，不作为缺陷证据。
 - 新增 `backend/internal/repository/custom_payment_provider_guard_postgres_test.go`，在隔离 PostgreSQL 18 的完整迁移链上验证同样12种历史绑定，并确认释放后可删；与原真实收款占用／人工释放回归合跑。服务专项45个叶子用例通过，1个PG专项在该阶段跳过后已在真实PG阶段实际执行；真实PG阶段19个叶子用例全部通过、0跳过。Go1.27.2 Windows/amd64 `go build -tags embed ./cmd/server` 成功，格式与差异检查通过；证据 `output/payment-provider-guard-20261017/verification.json` 及同目录日志。
 - **边界**：删除保护适用于后台服务删除时检查到的占用；不新增数据库级约束。已被删除的实例不会由补丁重建，不自动给旧订单换绑新通道。生产订单47仍需现场核对商户账单、等待期和账本，再使用既有人工释放入口。本轮未提交／推送／发布镜像或部署；隔离PG容器使用tmpfs，按完整ID核验后已清理。同步上游时保留本接缝与上述回归，不能将本地Windows编译等同Linux CI或生产验收。
+
+## 2026-10-16 品牌宣传海报（本地素材）
+
+- 当前双码版：用户纠正官网扫码入口不能省略，两张海报底部并排官网访问码和客服微信码，两个标签各自对应；render.cjs新增--dual保存到独立`output/brand-posters-20261016-dual/`。verify_qr.py对海报要求同时解出两类码，并验证标签位置，原尺寸／缩放／压缩及预览等47项全部通过；原图和微信解码内容仍只在Git忽略的输出目录，旧版保留。无站点代码、配置或部署变化。
+
+- 客服微信补充：用户提供的二维码本地解码后保留同一内容，以H纠错、四模块静区重编码为雾钛青并添加既有狮冠M；两张海报底部二维码改标「客服微信／扫码添加」，新增独立客服码。扩展render.cjs与posters.html，新增`verify_qr.py`；客服版产物及原图／解码内容只在Git忽略的`output/brand-posters-20261016-wechat/`，旧版保留。原码、新码、PNG／JPG海报及缩放／压缩／预览29项解码内容一致，证据`qr-verification.json`；微信内真实添加未手机实测。无站点运行接缝。
+
+- 用户要求两张符合站点主题且避免敏感话语的宣传海报；新增`assets/marketing/2026-10-16/{posters.html,render.cjs,README.md}`，独立于站点运行代码。
+- 沿用现有`mofa-mark-flat.png`狮冠M及theme.css色表，导出浅色品牌款／深色灵感款，1800×2400、PNG与JPG；域名及访问二维码来自HANDOFF登记的本站地址。标识仅提取底色并着色，没有重新设计。
+- 产物、双图预览、可编辑完整HTML及检查证据在Git忽略的`output/brand-posters-20261016/`。已检查可见文案排除词、字体、图像加载、文字边界和尺寸，并人工查看导出图；不代表任何发布平台审核结论。未改上游文件、站点主题／配置／业务逻辑，未提交推送或部署。
 
 ## 2026-10-15 分组活动显示与审查补修（已发布sha-0e99748）
 

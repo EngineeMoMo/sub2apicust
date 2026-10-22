@@ -1552,6 +1552,19 @@
                 />
               </div>
 
+              <!-- [CUSTOM] 同一可信 IP 限注册一个账号。 -->
+              <div class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700">
+                <div>
+                  <label class="font-medium text-gray-900 dark:text-white">{{
+                    t("admin.settings.registration.ipLimit")
+                  }}</label>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ t("admin.settings.registration.ipLimitHint") }}
+                  </p>
+                </div>
+                <Toggle v-model="form.registration_ip_limit_enabled" data-testid="registration-ip-limit-toggle" />
+              </div>
+
               <!-- Promo Code -->
               <div
                 class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
@@ -9071,8 +9084,9 @@ import {
   stepUpBlockReason,
 } from "@/composables/useStepUp";
 import TotpStepUpDialog from "@/components/auth/TotpStepUpDialog.vue";
+import { usePaymentSecurity } from "@/custom/usePaymentSecurity"; // [CUSTOM]
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
-import { extractApiErrorMessage, extractI18nErrorMessage } from "@/utils/apiError";
+import { extractApiErrorMessage } from "@/utils/apiError";
 import { useAppStore } from "@/stores";
 import { useAdminSettingsStore } from "@/stores/adminSettings";
 import { normalizeVisibleMethod } from "@/components/payment/paymentFlow";
@@ -9093,6 +9107,7 @@ const { t, locale } = useI18n();
 const appStore = useAppStore();
 // 关闭 step-up 开关是敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 码重试
 const settingsStepUp = useStepUp();
+const paymentSecurity = usePaymentSecurity(settingsStepUp); // [CUSTOM]
 const adminSettingsStore = useAdminSettingsStore();
 const isZhLocale = computed(() => locale.value.startsWith("zh"));
 
@@ -9800,6 +9815,7 @@ const form = reactive<SettingsForm>({
   email_verify_enabled: false,
   registration_email_suffix_whitelist: [],
   registration_email_domain_quota_enabled: false,
+  registration_ip_limit_enabled: true, // [CUSTOM]
   promo_code_enabled: true,
   invitation_code_enabled: false,
   password_reset_enabled: false,
@@ -11500,6 +11516,7 @@ async function saveSettings() {
     }
 
     const payload: UpdateSettingsRequest = {
+      registration_ip_limit_enabled: form.registration_ip_limit_enabled, // [CUSTOM]
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
       registration_email_suffix_whitelist:
@@ -12618,9 +12635,10 @@ async function disableProvidersByType(type: string) {
   );
   for (const p of matching) {
     try {
-      await adminAPI.payment.updateProvider(p.id, { enabled: false });
+      await paymentSecurity.api.updateProvider(p.id, { enabled: false }); // [CUSTOM]
       p.enabled = false;
     } catch (err: unknown) {
+      if (isStepUpCancelled(err)) return; // [CUSTOM] 取消后停止剩余通道操作。
       slog("disable provider failed", p.id, err);
     }
   }
@@ -12788,7 +12806,7 @@ async function loadProviders() {
         : [],
     }));
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
   } finally {
     providersLoading.value = false;
   }
@@ -12827,9 +12845,9 @@ async function handleSaveProvider(payload: Partial<ProviderInstance>) {
     }
 
     if (editingProvider.value) {
-      await adminAPI.payment.updateProvider(editingProvider.value.id, payload);
+      await paymentSecurity.api.updateProvider(editingProvider.value.id, payload); // [CUSTOM]
     } else {
-      await adminAPI.payment.createProvider(payload);
+      await paymentSecurity.api.createProvider(payload); // [CUSTOM]
     }
     showProviderDialog.value = false;
     // Reload full list (API returns decrypted/formatted data with correct sort order)
@@ -12837,7 +12855,7 @@ async function handleSaveProvider(payload: Partial<ProviderInstance>) {
     // Auto-save settings so provider changes take effect immediately
     await saveSettings();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
   } finally {
     providerSaving.value = false;
   }
@@ -12872,10 +12890,10 @@ async function handleToggleField(
     payload.allow_user_refund = false;
   }
   try {
-    await adminAPI.payment.updateProvider(provider.id, payload);
+    await paymentSecurity.api.updateProvider(provider.id, payload); // [CUSTOM]
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
   }
 }
 
@@ -12898,12 +12916,12 @@ async function handleToggleType(provider: ProviderInstance, type: string) {
     return;
   }
   try {
-    await adminAPI.payment.updateProvider(provider.id, {
+    await paymentSecurity.api.updateProvider(provider.id, { // [CUSTOM]
       supported_types: updated,
     } as any);
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
   }
 }
 
@@ -12918,14 +12936,14 @@ async function handleReorderProviders(
   try {
     await Promise.all(
       updates.map((u) =>
-        adminAPI.payment.updateProvider(u.id, {
+        paymentSecurity.api.updateProvider(u.id, { // [CUSTOM]
           sort_order: u.sort_order,
         } as Partial<ProviderInstance>),
       ),
     );
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
     loadProviders();
   }
 }
@@ -12933,12 +12951,12 @@ async function handleReorderProviders(
 async function handleDeleteProvider() {
   if (!deletingProviderId.value) return;
   try {
-    await adminAPI.payment.deleteProvider(deletingProviderId.value);
+    await paymentSecurity.api.deleteProvider(deletingProviderId.value); // [CUSTOM]
     appStore.showSuccess(t("common.deleted"));
     showDeleteProviderDialog.value = false;
     loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    paymentSecurity.showError(err);
   }
 }
 

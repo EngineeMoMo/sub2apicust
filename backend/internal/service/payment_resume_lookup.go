@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time" // [CUSTOM]
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
@@ -45,7 +46,9 @@ func (s *PaymentService) GetPublicOrderByResumeToken(ctx context.Context, token 
 	if claims.PaymentType != "" && NormalizeVisibleMethod(order.PaymentType) != NormalizeVisibleMethod(claims.PaymentType) {
 		return nil, invalidResumeTokenMatchError()
 	}
-	if order.Status == OrderStatusPending || order.Status == OrderStatusExpired {
+	// [CUSTOM] 先完整校验凭证匹配，再限制每订单主动查单；冷却中仍返回持久化状态。
+	if (order.Status == OrderStatusPending || order.Status == OrderStatusExpired) && s.customPublicQueryGate.begin(order.ID, time.Now()) {
+		defer func() { s.customPublicQueryGate.finish(order.ID, time.Now()) }()
 		result := s.reconcilePaid(ctx, order)
 		if result == checkPaidResultAlreadyPaid {
 			order, err = s.entClient.PaymentOrder.Get(ctx, order.ID)

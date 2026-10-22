@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { adminPaymentAPI } from '@/api/admin/payment'
 import type { SubscriptionPlan } from '@/types/payment'
 
-const props = defineProps<{ groupId: number | null; modelValue: number | null; inputId?: string }>()
+const props = defineProps<{ groupId: number | null; modelValue: number | null; inputId?: string; hintKey?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [number | null]; available: [boolean] }>()
 const { t } = useI18n()
 const plans = ref<SubscriptionPlan[]>([])
@@ -43,7 +43,7 @@ onMounted(load)
       <option value="">{{ t('payment.stock.selectPlan') }}</option>
       <option v-for="plan in options" :key="plan.id" :value="plan.id" :disabled="plan.stock_remaining == null || plan.stock_remaining === 0">{{ plan.name }} · {{ stock(plan) }}</option>
     </select>
-    <p class="mofa-stock-help">{{ t('payment.stock.assignmentHint') }}</p>
+    <p class="mofa-stock-help">{{ t(hintKey || 'payment.stock.assignmentHint') }}</p>
     <p v-if="loading" role="status">{{ t('common.loading') }}</p>
     <p v-else-if="failed" role="alert">{{ t('payment.stock.loadFailed') }}</p>
     <p v-else-if="groupId && !options.length" role="status">{{ t('payment.stock.createPlanFirst') }}</p>

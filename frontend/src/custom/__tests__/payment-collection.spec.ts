@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import PaymentCollectionSettings from '@/custom/components/PaymentCollectionSettings.vue'
 import AdminOrderReconciliationView from '@/custom/views/AdminOrderReconciliationView.vue'
@@ -10,9 +12,11 @@ const api = vi.hoisted(() => ({ getConfig: vi.fn(), updateConfig: vi.fn(), get: 
 vi.mock('@/api/admin/payment', () => ({ adminPaymentAPI: api }))
 vi.mock('@/api/client', () => ({ apiClient: api }))
 vi.mock('@/components/layout/AppLayout.vue', () => ({ default: { template: '<main><slot /></main>' } }))
+vi.mock('@/components/auth/TotpStepUpDialog.vue', () => ({ default: { template: '<div />' } }))
 const policy = (): CollectionPolicy => ({ enabled: true, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [10,20,40], allow_custom_amount: false, contact_text: '联系管理员' })
-const renderSettings = () => mount(PaymentCollectionSettings, { global: { stubs: { RouterLink: RouterLinkStub } } })
-const renderOperations = () => mount(AdminOrderReconciliationView, { global: { stubs: { RouterLink: RouterLinkStub } } })
+const securityPlugins = () => [createPinia(), createI18n({ legacy: false, locale: 'zh', messages: { zh: {} } })]
+const renderSettings = () => mount(PaymentCollectionSettings, { global: { plugins: securityPlugins(), stubs: { RouterLink: RouterLinkStub } } })
+const renderOperations = () => mount(AdminOrderReconciliationView, { global: { plugins: securityPlugins(), stubs: { RouterLink: RouterLinkStub } } })
 
 beforeEach(() => {
   vi.clearAllMocks()

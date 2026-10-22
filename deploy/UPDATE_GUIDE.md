@@ -1,5 +1,17 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-22本轮发布进行中：用户已授权提交推送订阅兑换（259）、注册IP限额（260）与网站安全补修；待核验同业务SHA的CI/安全/GHCR后使用固定镜像标签更新。新功能启用顺序见[SECURITY_HARDENING_20261022.md](SECURITY_HARDENING_20261022.md)，IP限制默认开启，上线前须按[REGISTRATION_IP_LIMIT.md](REGISTRATION_IP_LIMIT.md)核实可信代理；先备份数据库并记录旧镜像。生产由用户操作，最终门禁及标签见HANDOFF四/五。
+
+2026-10-22安全补修（本地完成，尚无新发布标签）：详见SECURITY_HARDENING_20261022.md。发布后管理员本人先在个人资料绑定验证器，再开启敏感操作二次验证；支付写入及主设置保存受保护。合并nginx-security.conf.example后现场nginx-t，确认公网308/HSTS、可信代理及公开查询预算。应用新增HSTS只信任直接TLS/可信HTTPS代理；保留本机HTTP。Go87顶层/199含子项、前端109及前后端构建通过，不代替实际Nginx/生产/同SHA CI验收，未代部署或改管理员开关。
+
+2026-10-22网站防护检查（无新发布）：见SECURITY_REVIEW_20261022.md；建议核实管理员TOTP实际绑定、支付敏感操作二次验证、HTTP跳转/HSTS和订单查询限流。仅完成检查及隔离复现，未修改生产配置或业务实现，没有对应新镜像标签，不能以更新现有镜像代替待补修项。
+
+2026-10-22注册IP限额（本地未发布）：新增迁移260，默认同一可信IP一个新账号，后台安全→注册开关可关闭。反代／Docker升级前必须核实并配置server.trusted_proxies／SERVER_TRUSTED_PROXIES；否则可能全部访客共用代理IP名额。操作与边界见REGISTRATION_IP_LIMIT.md，不支持真实MAC限制。本轮没有已核验的新镜像标签，发布须前后端同版、先备份、查本轮SHA CI，不使用历史标签代替。
+
+2026-10-21订阅兑换补修（本地完成未发布）：新增259_custom_redeem_stock_sources，发布时前后端与迁移同版。新码明确库存套餐，生成不预占；旧码缺分组/多套餐来源可在后台批量选择分组+套餐修复，已用码禁止改绑。事务结果与提交后缓存时序已修复，本地验证见output/subscription-redeem-fix-20261021/FIX_REPORT.md；真实PG/本轮CI仍待。当前没有新镜像或可执行的新更新标签，历史标签不包含此修复。
+
+2026-10-21订阅兑换审查状态：四项代码逻辑缺口已有本地隔离复现，详见HANDOFF四/五及output/subscription-redeem-20261021/CODE_REVIEW.md；后端尚未补修，前轮前端错误展示也尚未发布。本轮没有新镜像/迁移，不应将现有更新标签视为已包含这些订阅兑换修复。
+
 ## 2026-10-19 智力效率 v6 与故障恢复（当前可更新版）
 
 2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。

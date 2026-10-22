@@ -1,5 +1,17 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-22用户授权发布：订阅兑换修复（259）、注册IP限额（260）与网站安全补修一起提交推送origin/main，核验本轮业务SHA的CI/安全/GHCR。生产由用户备份后更新，先核实可信代理，管理员本人绑定TOTP再启用step-up；Nginx模板须现场验证。最终状态与固定标签见HANDOFF四/五最新记录，下方本地未发布为历史阶段。
+
+2026-10-22安全补修本地完成未发布（覆盖下条仅审查）：合并须保留CUSTOMIZATIONS登记的支付stepUp传参/管理写方法门控、两公共查询共享限额、PaymentService订单冷却、管理员TOTP角色可用性/登录挑战、主设置验证及HTTPS头接缝，前端custom验证封装和弹窗同步。启用及边界见deploy/SECURITY_HARDENING_20261022.md，Go87/199、前端109及构建证据output/security-fix-20261022/verification.json。未启用生产step-up或反代308，不拿本地测试当正式SHA CI或线上生效。
+
+2026-10-22网站防护审查仅文档：结论/取证/未知边界见deploy/SECURITY_REVIEW_20261022.md。支付敏感操作step-up与公开订单恢复限流为本地待补修项，HTTP跳转/HSTS为生产抽查加固项；当前未实施，不得在同步/发布时写已上线。55顶层/107含子项pass含缺口复现，不替代正式SHA CI或私有代理配置核验。
+
+2026-10-22注册IP限额（本地未发布）：合并保留260独立来源表、三个custom_registration_ip实现及测试，公开auth组来源上下文、user_repo建号/补偿删除、三条auth service错误透传、管理员设置/审计与前端安全页开关接缝逐项见CUSTOMIZATIONS。默认开启，升级前必须核实server.trusted_proxies实际代理链；旧版直接信任转发头开关不替代该配置。测试/状态见HANDOFF及output/registration-ip-20261022/，运维见deploy/REGISTRATION_IP_LIMIT.md；不能用历史CI或镜像标签宣称已发布。
+
+2026-10-21订阅兑换补修（本地完成未发布，优先于下方审查）：保留259自有来源表及两个custom_redeem_stock实现，旧迁移/Ent生成不改；上游生成/固定码/批量接口plan_id、事务内结果快照、提交后L1/billing/通知接缝，以及管理员库存选择/跨页保护/真实错误提取/关键回归须按CUSTOMIZATIONS逐处合并。前端最终416文件3353项、Go定向68个pass事件/1项PG跳过、类型/lint/前后端构建通过；PG integration未编译执行，待本轮正式CI。尚未提交推送部署，无新镜像标签。
+
+2026-10-21订阅兑换审查（未发布）：本轮仅审查，后端业务未改；四项来源/分组编辑/提交后响应/L1时序缺口及8场景、37个既有pass事件证据见HANDOFF四/五与output/subscription-redeem-20261021/CODE_REVIEW.md。前轮RedeemView错误展示接缝仍待发布，合并上游时保留extractApiErrorMessage和Makefile两份兑换测试；本条不产生新镜像或更新标签。
+
 2026-10-19智力效率修复发布终态：最终业务提交e8cec341f16900e9057397325668a0914e8e2361已推origin/main；同SHA CI 39227215012（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端55文件869项，含本功能38项）、安全39227215861、GHCR 39227214939全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-e8cec34（linux/amd64），index digest sha256:ff9a2b459a140be26ee36612a6b696dd053e4cf7c55f8dff0cabb30093b4378b；registry revision/source/平台/摘要与正式构建日志交叉验真，智力页面chunk IntelligenceView-DdBVl4B1.js。包含v6兼容、成功快照持久化、故障一分钟复查、200组合及前端CI门禁；无新迁移或依赖，前后端同版。现有pricing.data_dir须可写并保留（Docker默认/app/data），至少成功落盘一次才有跨重启回退，未知计分规则继续拒绝。用户备份数据库/配置/app_data后手动./update.sh sha-e8cec34；生产未部署，真实缓存留存、浏览器及生产故障恢复仍待现场验收，本轮未做正式镜像HTTP验收。证据output/intelligence-release-20261019/verified-release.json、final-source-proof.json及job日志。后续纯文档[skip ci]提交不改变此业务镜像；其他会话改动保留，下方未发布/旧标签为历史阶段。
 
 2026-10-19上游v0.2.17同步发布终态：业务5233e9090698a9bd02f645340cd19e85e7e27743已推origin/main，包含upstream/main=b0a02a3304a0a78cdd003ddda1dd23ba02c03084及新增47条上游提交；同SHA CI 39196526010（Linux unit/integration、专用PG18/Redis8、Go lint 0 issues、前端53文件831项）、安全39196525919、GHCR 39196526008全部成功。固定镜像ghcr.io/engineemomo/sub2apicust:sha-5233e90（linux/amd64），index digest sha256:08fe2367c8241ca9b43fe741b1ccd03db65ba5a8a5579f8bbc4a8f4ce6d2c550；registry revision/source/摘要与正式embed构建日志交叉验真，正式镜像隔离28项HTTP检查含真实登录、角色权限及IP防护通过。无新增迁移或依赖；312个自有新增文件内容不变，支付两处冲突保留WAP期限/快捷金额定制，原未提交产品工作不混入。生产由用户备份后手动./update.sh sha-5233e90，未代部署或付费生图。PR8028仍未合并，本轮不包含，不能保证解决截图无图。证据output/upstream-sync-20261019/verified-release.json、release-source-proof.json、formal-smoke.json及job日志；Windows全量5项失败如实保留在backend-unit-summary.json，正式Linux CI通过覆盖本轮发布门禁。后续纯文档skip-ci提交不改变此业务镜像。

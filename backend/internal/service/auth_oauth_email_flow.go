@@ -170,6 +170,10 @@ func (s *AuthService) RegisterOAuthEmailAccount(
 		case errors.Is(err, ErrEmailDomainRegistrationLimit):
 			return nil, nil, ErrEmailDomainRegistrationLimit
 		default:
+			// [CUSTOM] 邮箱补全注册不把来源限额吞成通用错误。
+			if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+				return nil, nil, err
+			}
 			slog.Error("oauth email register: userRepo.Create failed", "email", email, "signup_source", signupSource, "error", err.Error())
 			return nil, nil, ErrServiceUnavailable
 		}
@@ -257,6 +261,10 @@ func (s *AuthService) RegisterVerifiedOAuthEmailAccount(
 		case errors.Is(err, ErrEmailDomainRegistrationLimit):
 			return nil, nil, ErrEmailDomainRegistrationLimit
 		default:
+			// [CUSTOM] 暂存第三方账号也受相同来源限额约束。
+			if errors.Is(err, ErrRegistrationIPLimit) || errors.Is(err, ErrRegistrationIPUnavailable) {
+				return nil, nil, err
+			}
 			return nil, nil, ErrServiceUnavailable
 		}
 	}
@@ -311,7 +319,14 @@ func (s *AuthService) RollbackOAuthEmailAccountCreation(ctx context.Context, use
 	if err := s.restoreOAuthRegistrationInvitation(ctx, invitationCode, userID); err != nil {
 		return err
 	}
-	if err := s.userRepo.Delete(ctx, userID); err != nil {
+	// [CUSTOM] 失败的第三方建号补偿删除与 IP 名额释放必须同事务。
+	deleteUser := s.userRepo.Delete
+	if rollbackRepo, ok := s.userRepo.(interface {
+		RollbackRegistration(context.Context, int64) error
+	}); ok {
+		deleteUser = rollbackRepo.RollbackRegistration
+	}
+	if err := deleteUser(ctx, userID); err != nil {
 		return fmt.Errorf("delete created oauth user: %w", err)
 	}
 	return nil

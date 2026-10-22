@@ -26,14 +26,18 @@
     </template>
     <button v-else type="button" class="btn btn-secondary" @click="load">重新加载</button>
     <p v-if="message" :role="failed ? 'alert' : 'status'">{{ message }}</p>
+    <TotpStepUpDialog :controller="paymentSecurity.stepUp" />
   </section>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { adminPaymentAPI } from '@/api/admin/payment'
+import { usePaymentSecurity } from '@/custom/usePaymentSecurity'
+import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import type { CollectionPolicy } from '@/custom/paymentCollection'
+const paymentSecurity = usePaymentSecurity()
+const adminPaymentAPI = paymentSecurity.api
 const policy = ref<CollectionPolicy>({ enabled: false, single_max: 50, daily_max: 1000, timezone: 'Asia/Shanghai', quick_amounts: [10,20,30,40], allow_custom_amount: true, contact_text: '' })
 const quickText = ref('10,20,30,40')
 const loading = ref(true), loaded = ref(false), saving = ref(false), failed = ref(false), message = ref('')
@@ -53,7 +57,7 @@ async function save() {
     if (!values.length || values.some(v => !Number.isFinite(v) || v <= 0)) throw new Error('请输入有效的快捷充值金额')
     await adminPaymentAPI.updateConfig({ collection: { ...policy.value, quick_amounts: values, user_hold_max: optionalNumber(policy.value.user_hold_max), unproven_release_hours: optionalNumber(policy.value.unproven_release_hours) } }); policy.value.quick_amounts = values
     message.value = '收款配置已保存'
-  } catch (err) { failed.value = true; message.value = extractApiErrorMessage(err, err instanceof Error ? err.message : '保存失败') }
+  } catch (err) { message.value = paymentSecurity.errorMessage(err, err instanceof Error ? err.message : '保存失败'); failed.value = Boolean(message.value) }
   finally { saving.value = false }
 }
 onMounted(load)

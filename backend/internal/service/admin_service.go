@@ -555,6 +555,8 @@ type UpdateProxyInput struct {
 }
 
 type GenerateRedeemCodesInput struct {
+	// [CUSTOM] 订阅兑换码指定库存来源，不在生成时预占。
+	PlanID       int64
 	Count        int
 	Type         string
 	Value        float64
