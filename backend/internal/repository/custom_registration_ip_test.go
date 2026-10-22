@@ -131,7 +131,9 @@ func TestRegistrationIPInvalidSourceOrSettingFailsClosed(t *testing.T) {
 
 func TestRegistrationIPConcurrentRequestsOneAccount(t *testing.T) {
 	repo, client := newRegistrationIPRepo(t)
-	repo.sql.(*sql.DB).SetMaxOpenConns(1)
+	sqlDB, ok := repo.sql.(*sql.DB)
+	require.True(t, ok)
+	sqlDB.SetMaxOpenConns(1)
 	ctx := service.WithRegistrationIP(context.Background(), "192.0.2.1")
 	results := make(chan error, 12)
 	var workers sync.WaitGroup

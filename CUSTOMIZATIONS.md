@@ -2,6 +2,8 @@
 
 2026-10-22发布说明：用户已授权将下列安全补修、注册IP限额与订阅兑换修复一起提交推送到origin/main，核验同业务SHA发布门禁；各节“未提交/未发布”保留为实现阶段记录，最终交付状态见HANDOFF四/五。新增迁移259/260须随同版应用启动执行，生产配置与管理员TOTP绑定由用户完成。
 
+2026-10-22首轮CI门禁补修：b8ed02440的golangci-lint发现两处errcheck，新增custom_redeem_stock.go统一显式丢弃defer Close清理错误（查询错误仍返回），custom_registration_ip_test.go先断言底层SQL连接类型再设置并发池。仅调整新增定制文件，不增加上游接缝；首轮不作正式交付，后续重新核验最终业务SHA。部署文档补充持久TOTP_ENCRYPTION_KEY前置条件，沿用既有值，避免临时随机密钥重启后失效。
+
 ## 2026-10-22 网站安全补修（本地完成，未发布）
 
 - 根 `Makefile` 的已有 `[CUSTOM]` 前端关键回归列表追加 `payment-security.spec.ts` 与 `useStepUp.spec.ts`，保留此前订阅兑换等列表改动；`custom/__tests__/plan-stock.spec.ts` 补齐支付API默认导出桩，相关库存回归一并通过。

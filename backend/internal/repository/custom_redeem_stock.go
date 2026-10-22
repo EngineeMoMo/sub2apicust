@@ -15,7 +15,7 @@ func (r *redeemCodeRepository) GetStockPlanID(ctx context.Context, codeID int64)
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var planID int64
 	if rows.Next() {
 		if err := rows.Scan(&planID); err != nil {
