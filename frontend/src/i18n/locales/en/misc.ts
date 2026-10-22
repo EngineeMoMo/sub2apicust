@@ -472,6 +472,8 @@ export default {
       assignmentPlan: 'Plan to charge stock to',
       selectPlan: 'Select a plan',
       assignmentHint: 'Each new assignment or renewal uses one unit. Reusing an existing assignment does not charge again.',
+      // [CUSTOM] Single-user grants explicitly renew existing subscriptions.
+      singleAssignmentHint: 'Single-user assignment creates a subscription or adds the entered days to its expiry. Expired subscriptions restart now. Each grant uses one unit. Restore suspended subscriptions first.',
       // [CUSTOM] Redemption stock is charged when the code is used.
       redeemHint: 'Creating or editing a code binds its plan without reserving stock. Redemption uses one unit and requires available stock.',
       createPlanFirst: 'Create a plan for this group in order management and configure its stock first.',

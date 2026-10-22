@@ -113,8 +113,11 @@ export async function getProgress(id: number): Promise<SubscriptionProgress> {
  * @param request - Assignment request
  * @returns Created subscription
  */
-export async function assign(request: AssignSubscriptionRequest): Promise<UserSubscription> {
-  const { data } = await apiClient.post<UserSubscription>('/admin/subscriptions/assign', request)
+// [CUSTOM] 单用户续期沿用同一个操作键重试，避免重复发放和扣库存。
+export async function assign(request: AssignSubscriptionRequest, idempotencyKey: string): Promise<UserSubscription> {
+  const { data } = await apiClient.post<UserSubscription>('/admin/subscriptions/assign', request, {
+    headers: { 'Idempotency-Key': idempotencyKey }
+  })
   return data
 }
 

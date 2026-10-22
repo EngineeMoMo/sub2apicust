@@ -39,6 +39,11 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-22 单用户分配409发布进行中（本轮用户已授权提交并推送，优先于下方本地未发布记录）**：已通过可用的本机7897代理fetch origin，main与origin/main同为1c820e796476a550e7f2025d92617c3576f95efb；15个源码SHA256与已通过测试/构建的verification.json一致。本轮仅显式暂存分配409补丁及交接文档，不纳入assets/marketing和output。接下来推送origin/main，必须核验本次业务SHA的CI/安全/GHCR与镜像revision/source/digest后才能报发布成功；生产不代部署。
+
+- 2026-10-22 管理员单用户分配409补修（本地完成，未提交/推送/部署；区别于上次sha-9ed83f3发布）：使用30天已有订阅请求追加3天，接口回归先复现与用户一致的SUBSCRIPTION_ASSIGN_CONFLICT/validity_days_mismatch。修复限定单用户管理员入口：无订阅则创建，有效订阅累加所填天数，实际过期从现在起算；暂停订阅在行锁内拒绝，不隐式恢复。接既有按管理员与请求键隔离的幂等协调器，前端保留未确认操作键供同会话/刷新后重试，成功才清除；批量与原通用AssignSubscription语义保持。订阅、扣库存和结果读取在同事务，缓存提交后失效。Go三包42顶层/69含子项通过、1项专用PG跳过；前端9文件51项、类型/相关ESLint/生产构建及Windows Go embed编译通过。真实PG、Linux lint及本轮新SHA CI未执行，未操作业务库。完整证据和编译终态见output/subscription-assignment-fix-20261022/FIX_REPORT.md与verification.json。
+
+
 - **2026-10-22 注册/支付安全与订阅兑换发布终态（优先于下方所有进行中记录）**：最终业务提交`9ed83f32de6dd98711e1725b3002affb03a88557`已推origin/main；同SHA CI `39719304361`（Linux unit/integration、真实PostgreSQL/Redis、Go lint 0 issues、前端64文件931项及配方/工坊node测试）、安全`39719304355`、GHCR `39719304369`全部success。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-9ed83f3`，平台`linux/amd64`，index digest `sha256:c80dbcb47d08d8538578aa22582847827b3f99ffafe2f41ebfe50da5af5b46d5`；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source及正式embed构建日志交叉核验。包含订阅兑换迁移259、注册IP限制迁移260、管理员独立TOTP/支付step-up/订单查询限流与冷却/HSTS及Nginx模板；首轮errcheck/快照/测试全局状态污染已补修，本地23顶层67含子项回归通过。不使用b8ed02440或dcb2386中间标签。证据`output/security-release-20261022/final/verified-release.json`、`release-final-verification.json`、`source-manifest.json`及job日志；首轮失败证据保留父目录。生产/业务库/本机8080未改，由用户备份后更新；上线前核实可信代理和固定TOTP_ENCRYPTION_KEY（沿用原值），管理员本人绑定再开step-up，Nginx需现场验证。assets/marketing保留未提交，后续纯文档[skip ci]提交不改变本业务镜像。
 
 - **2026-10-22 完整单测门禁补修**：首轮CI另发现管理设置精确契约未补registration_ip_limit_enabled，以及新增注册设置测试调用parseSettings后没有恢复Grok全局模型映射。已补两处快照并更新[CUSTOM]登记；在新增测试Cleanup恢复原全局状态，两个用例联跑先红后绿，不改既有调度生产逻辑。dcb2386f27b95f3e482a90a1cfa4ebce5dce11ac已推，仅为中间提交；最终业务SHA须重新核验三套门禁。GitHub直连重置/超时后核实本机7897代理可用，本轮Git命令使用临时http.proxy参数，不改全局配置。
@@ -753,6 +758,11 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] **2026-10-22 单用户分配409源码补修**：管理员单用户支持追加3天；请求键重放/新操作、库存与读取失败回滚、暂停并发保护和前端错误展示已回归，证据见第四节本轮记录。
+- [ ] **分配409补丁发布门禁（本轮用户已授权提交/推送）**：推送origin/main后验证新业务SHA的CI、安全、GHCR、Linux lint与专用PostgreSQL，并核验镜像来源/提交/摘要。本地专用PG因无DSN跳过，不把本地测试或sha-9ed83f3当作本轮发布通过。
+- [ ] **分配409补丁现场验收（用户操作）**：本轮不代部署；用户备份后更新本次核验完成的新固定标签，前后端同版。验已有30天用户追加3天/库存一次扣减及同键重放，暂停账号不被自动恢复。
+
 
 - [x] **2026-10-22本轮发布门禁**：最终业务9ed83f32d已推origin/main，CI39719304361/安全39719304355/GHCR39719304369全部成功，registry revision/source/平台/摘要与embed日志核验通过；交付固定sha-9ed83f3，首轮失败记录保留。assets/marketing未纳入。
 - [ ] **2026-10-22生产更新与启用（用户操作）**：先备份数据库、配置、数据目录并记录旧镜像；核实可信代理，防止默认开启的IP限额把所有访客视为同一代理。部署sha-9ed83f3及259/260迁移；TOTP_ENCRYPTION_KEY须固定且沿用原值，管理员本人绑定后测试新会话登录，再开启敏感操作二次验证。Nginx模板现场合并/nginx-t/重载后核验HTTPS跳转/HSTS，真实注册、订阅兑换与支付业务待验；不自动部署生产或处理真实退款。

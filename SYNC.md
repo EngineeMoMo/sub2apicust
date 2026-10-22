@@ -1,5 +1,8 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-22 新增单用户分配409本地补丁，尚未提交/推送/部署，上次sha-9ed83f3不含此补丁。合并保留custom_admin_subscription_assignment.go与handler/admin/subscription_handler.go的[CUSTOM]按请求键续期接缝；通用AssignSubscription与批量幂等保护保持。前端subscriptionAssignment.ts、管理API的Idempotency-Key、SubscriptionsView接线与中英文单用户提示须与后端同版；无新迁移或依赖变更。保留Makefile三份关键回归。测试/构建及PG缺口以HANDOFF四/五和output/subscription-assignment-fix-20261022为准，发布前重新核验本轮SHA门禁，不沿用上一版CI。
+
+
 2026-10-22发布终态：业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main；CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）/安全39719304355/GHCR39719304369全部success，固定sha-9ed83f3（linux/amd64），registry revision/source/摘要与正式embed构建日志已核验。交付259/260、注册与支付安全、管理员独立TOTP及订阅兑换修复；生产由用户备份后更新，核实可信代理及固定TOTP_ENCRYPTION_KEY，管理员本人绑定再启step-up、Nginx现场合并。证据output/security-release-20261022/final/；下方进行中为历史，纯文档[skip ci]不改变业务镜像。
 
 2026-10-22用户授权发布：订阅兑换修复（259）、注册IP限额（260）与网站安全补修一起提交推送origin/main，核验本轮业务SHA的CI/安全/GHCR。生产由用户备份后更新，先核实可信代理，管理员本人绑定TOTP再启用step-up；Nginx模板须现场验证。最终状态与固定标签见HANDOFF四/五最新记录，下方本地未发布为历史阶段。

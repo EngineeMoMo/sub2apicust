@@ -1,5 +1,8 @@
 # 日常更新操作手册（定制版 sub2api）
 
+**2026-10-22 新增分配409补丁尚未发布**：本地已修复管理员单用户已有订阅追加不同天数时的validity_days_mismatch，并补请求键重试、库存回滚和暂停保护。下面sha-9ed83f3是上一次已发布版本，不包含这次单用户分配补丁。本轮没有新镜像标签；前后端须同版，发布后由用户手动更新，先验证新SHA CI/真实PG/Linux lint。验收方法见SUBSCRIPTION_PLAN_STOCK.md，证据见HANDOFF本轮记录。
+
+
 2026-10-22发布终态：最终业务`9ed83f32de6dd98711e1725b3002affb03a88557`已推origin/main，同SHA CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）、安全39719304355、GHCR39719304369全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-9ed83f3`（linux/amd64），index digest `sha256:c80dbcb47d08d8538578aa22582847827b3f99ffafe2f41ebfe50da5af5b46d5`；registry来源/提交/摘要与正式embed日志已核验。包含订阅兑换259、注册IP限制260与安全加固；后续纯文档[skip ci]不产生新业务镜像。
 
 生产先备份数据库、配置及数据目录，记录旧镜像；核实`SERVER_TRUSTED_PROXIES`（IP限制默认开启），并确认`TOTP_ENCRYPTION_KEY`持久配置且沿用原值。在实际部署目录执行：

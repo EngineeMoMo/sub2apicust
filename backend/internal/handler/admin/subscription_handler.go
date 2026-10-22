@@ -151,20 +151,21 @@ func (h *SubscriptionHandler) Assign(c *gin.Context) {
 	// Get admin user ID from context
 	adminID := getAdminIDFromContext(c)
 
-	subscription, err := h.subscriptionService.AssignSubscription(c.Request.Context(), &service.AssignSubscriptionInput{
-		PlanID:       req.PlanID, // [CUSTOM] 管理员分配扣指定套餐库存。
-		UserID:       req.UserID,
-		GroupID:      req.GroupID,
-		ValidityDays: req.ValidityDays,
-		AssignedBy:   adminID,
-		Notes:        req.Notes,
+	// [CUSTOM] 单用户明确发放或续期；按请求键防重，权益、库存和结果读取同事务。
+	executeAdminIdempotentJSONWithTimeout(c, "admin.subscriptions.assign", req, service.DefaultWriteIdempotencyTTL(), 2*time.Minute, func(ctx context.Context) (any, error) {
+		subscription, err := h.subscriptionService.AssignAdminSubscription(ctx, &service.AssignSubscriptionInput{
+			PlanID:       req.PlanID,
+			UserID:       req.UserID,
+			GroupID:      req.GroupID,
+			ValidityDays: req.ValidityDays,
+			AssignedBy:   adminID,
+			Notes:        req.Notes,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return dto.UserSubscriptionFromServiceAdmin(subscription), nil
 	})
-	if err != nil {
-		response.ErrorFrom(c, err)
-		return
-	}
-
-	response.Success(c, dto.UserSubscriptionFromServiceAdmin(subscription))
 }
 
 // BulkAssign handles bulk assigning subscriptions to multiple users

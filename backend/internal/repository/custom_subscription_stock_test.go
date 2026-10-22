@@ -166,6 +166,24 @@ func TestCustomSubscriptionStockPostgres(t *testing.T) {
 		require.NoError(t, db.QueryRow("SELECT count(*) FROM custom_subscription_stock_allocations WHERE subscription_id=$1", legacy.ID).Scan(&count))
 		require.Equal(t, 1, count)
 	})
+	t.Run("管理员单用户三天续期与库存回滚", func(t *testing.T) {
+		assignmentGroup := client.Group.Create().SetName("single assignment").SetSubscriptionType("subscription").SaveX(ctx)
+		assignmentPlan := client.SubscriptionPlan.Create().SetName("single assignment plan").SetGroupID(assignmentGroup.ID).SetPrice(10).SetStockLimit(2).SaveX(ctx)
+		request := &service.AssignSubscriptionInput{UserID: user().ID, GroupID: assignmentGroup.ID, PlanID: assignmentPlan.ID, ValidityDays: 30}
+		first, assignmentErr := svc.AssignAdminSubscription(ctx, request)
+		require.NoError(t, assignmentErr)
+		require.Equal(t, 1, client.SubscriptionPlan.GetX(ctx, assignmentPlan.ID).StockUsed)
+		before := client.UserSubscription.GetX(ctx, first.ID)
+		request.ValidityDays = 3
+		renewed, assignmentErr := svc.AssignAdminSubscription(ctx, request)
+		require.NoError(t, assignmentErr)
+		require.True(t, before.ExpiresAt.AddDate(0, 0, 3).Equal(renewed.ExpiresAt))
+		require.Equal(t, 2, client.SubscriptionPlan.GetX(ctx, assignmentPlan.ID).StockUsed)
+		_, assignmentErr = svc.AssignAdminSubscription(ctx, request)
+		require.Error(t, assignmentErr)
+		require.True(t, renewed.ExpiresAt.Equal(client.UserSubscription.GetX(ctx, first.ID).ExpiresAt))
+		require.Equal(t, 2, client.SubscriptionPlan.GetX(ctx, assignmentPlan.ID).StockUsed)
+	})
 	t.Run("并发重复分配过期订阅只续期扣减一次", func(t *testing.T) {
 		n := used()
 		client.SubscriptionPlan.UpdateOneID(plan.ID).SetStockLimit(n + 1).ExecX(ctx)

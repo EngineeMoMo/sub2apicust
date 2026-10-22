@@ -607,7 +607,7 @@
           <p class="input-hint">{{ t('admin.subscriptions.groupHint') }}</p>
         </div>
         <!-- [CUSTOM] 单次与批量共用指定商品库存。 -->
-        <SubscriptionStockPicker v-if="showAssignModal" v-model="assignForm.plan_id" :group-id="assignForm.group_id" @available="assignmentStockAvailable = $event" />
+        <SubscriptionStockPicker v-if="showAssignModal" v-model="assignForm.plan_id" :group-id="assignForm.group_id" :hint-key="batchAssignEnabled ? 'payment.stock.assignmentHint' : 'payment.stock.singleAssignmentHint'" @available="assignmentStockAvailable = $event" />
         <div>
           <label class="input-label">{{ t('admin.subscriptions.form.validityDays') }}</label>
           <input v-model.number="assignForm.validity_days" type="number" min="1" max="36500" step="1" :disabled="submitting" class="input" />
@@ -852,6 +852,9 @@ import type { AdminUser, UserSubscription, Group, GroupPlatform, SubscriptionTyp
 import type { SimpleUser } from '@/api/admin/usage'
 // [CUSTOM] 套餐选择与库存提示在自有组件维护。
 import SubscriptionStockPicker from '@/custom/components/SubscriptionStockPicker.vue'
+// [CUSTOM] 失败或响应丢失时保留操作键；成功后下一次明确分配使用新键。
+import { prepareSubscriptionAssignment, completeSubscriptionAssignment } from '@/custom/subscriptionAssignment'
+import { extractApiErrorMessage } from '@/utils/apiError'
 import type { SubscriptionBulkAction, SubscriptionBulkActionResult, BulkAssignSubscriptionResult } from '@/api/admin/subscriptions'
 import { useTableSelection } from '@/composables/useTableSelection'
 import BulkSubscriptionActionDialog from '@/components/admin/subscription/BulkSubscriptionActionDialog.vue'
@@ -1388,18 +1391,21 @@ const handleAssignSubscription = async () => {
       }
       return
     }
-    await adminAPI.subscriptions.assign({
+    const operation = prepareSubscriptionAssignment({
       user_id: assignForm.user_id!,
       plan_id: assignForm.plan_id, // [CUSTOM] 单次同样扣库存。
       group_id: assignForm.group_id,
       validity_days: assignForm.validity_days
     })
+    await adminAPI.subscriptions.assign(operation.request, operation.key)
+    completeSubscriptionAssignment(operation)
     appStore.showSuccess(t('admin.subscriptions.subscriptionAssigned'))
     submitting.value = false
     closeAssignModal()
     loadSubscriptions()
-  } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || error.response?.data?.message || t('admin.subscriptions.failedToAssign'))
+  } catch (error: unknown) {
+    // [CUSTOM] 兼容拦截器返回的扁平错误，显示实际失败原因。
+    appStore.showError(extractApiErrorMessage(error, t('admin.subscriptions.failedToAssign')))
     console.error('Error assigning subscription:', error)
   } finally {
     submitting.value = false

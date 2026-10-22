@@ -4,13 +4,13 @@ import SubscriptionsView from '../SubscriptionsView.vue'
 // [CUSTOM] 测试真实库存选择交互。
 vi.mock('@/api/admin/payment', () => ({ adminPaymentAPI: { getPlans: vi.fn().mockResolvedValue({ data: [{ id: 71, group_id: 7, name: '套餐', stock_remaining: 5 }] }) } }))
 
-const { list, bulkAction, bulkAssign, listUsers, showError } = vi.hoisted(() => ({
-  list: vi.fn(), bulkAction: vi.fn(), bulkAssign: vi.fn(), listUsers: vi.fn(), showError: vi.fn()
+const { list, bulkAction, bulkAssign, assign, listUsers, showError } = vi.hoisted(() => ({
+  list: vi.fn(), bulkAction: vi.fn(), bulkAssign: vi.fn(), assign: vi.fn(), listUsers: vi.fn(), showError: vi.fn()
 }))
 
 vi.mock('@/api/admin', () => ({
   adminAPI: {
-    subscriptions: { list, bulkAction, bulkAssign },
+    subscriptions: { list, bulkAction, bulkAssign, assign },
     groups: { getAll: vi.fn().mockResolvedValue([]) },
     users: { list: listUsers }
   }
@@ -64,6 +64,40 @@ async function select(ids: number[]) {
 }
 
 describe('subscription bulk operations', () => {
+  // [CUSTOM] 真实单用户弹窗的三天续期、失败重试和操作键回归。
+  it('retries single-user assignment with the same key and displays the actual error', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    await wrapper.findAll('button').find(button => button.text() === 'admin.subscriptions.assignSubscription')!.trigger('click')
+    const form = wrapper.get('#assign-subscription-form')
+    form.getComponent({ name: 'Select' }).vm.$emit('update:modelValue', 7)
+    const search = form.get('[data-assign-user-search] input')
+    listUsers.mockResolvedValue({ items: [{ id: 11, email: 'user11@example.com' }] })
+    await search.trigger('focus')
+    await search.setValue('user11')
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+    await form.get('[data-assign-user-search] button').trigger('click')
+    await form.get('#subscription-stock-plan').setValue('71')
+    await form.get('input[type="number"]').setValue(3)
+    expect(form.text()).toContain('payment.stock.singleAssignmentHint')
+    let resolveAssign!: (result: unknown) => void
+    assign.mockRejectedValueOnce({ status: 503, message: '库存读取暂时失败' })
+      .mockImplementationOnce(() => new Promise(resolve => { resolveAssign = resolve }))
+    await form.trigger('submit')
+    await flushPromises()
+    expect(showError).toHaveBeenCalledWith('库存读取暂时失败')
+    const key = assign.mock.calls[0][1]
+    expect(assign).toHaveBeenCalledWith(expect.objectContaining({ user_id: 11, group_id: 7, plan_id: 71, validity_days: 3 }), expect.any(String))
+    await form.trigger('submit')
+    await form.trigger('submit')
+    expect(assign).toHaveBeenCalledTimes(2)
+    resolveAssign({ id: 1 })
+    await flushPromises()
+    expect(assign).toHaveBeenLastCalledWith(expect.any(Object), key)
+    expect(assign).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('#assign-subscription-form').exists()).toBe(false)
+  })
+
   it('uses eligible selected rows and retains failures and untouched selections after a partial result', async () => {
     bulkAction.mockResolvedValue({ success_count: 1, failed_count: 1, results: [
       { subscription_id: 1, success: true },

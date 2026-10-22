@@ -1,5 +1,8 @@
 2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361（前端64文件931项、Linux unit/integration、Go lint0）、安全39719304355、GHCR39719304369全部成功，固定sha-9ed83f3，registry来源与摘要已核验。保留下列安全/注册IP/兑换定制接缝及259/260同版迁移；生产由用户备份后更新，可信代理与固定TOTP_ENCRYPTION_KEY须核实，管理员本人绑定再启用step-up。下方未发布为实现阶段历史，最终状态见HANDOFF四/五及output/security-release-20261022/final/。
 
+2026-10-22 管理员单用户分配409补丁（本地未发布，优先于上述旧发布状态）：保留custom/subscriptionAssignment.ts及两份custom回归；SubscriptionsView的[CUSTOM]操作键准备/成功清理、真实错误提取、单用户库存提示接缝，api/admin/subscriptions.ts的Idempotency-Key参数，zh/en misc的singleAssignmentHint与管理员页面回归。Makefile新增两份custom spec和SubscriptionsView.bulkActions.spec.ts。后台单用户新增/续期用同一个未确认操作键重试，批量仍幂等复用；前后端同版，无新迁移。验证/未完成PG与发布边界见根HANDOFF和output/subscription-assignment-fix-20261022。
+
+
 2026-10-22网站安全补修（本地未发布）：保留custom/usePaymentSecurity.ts及支付安全回归；上游SettingsView支付通道写操作复用既有settingsStepUp，取消停止剩余操作；orders/AdminOrdersView、AdminPaymentPlansView、PlanEditDialog的API包装/验证码弹窗与错误处理接缝带[CUSTOM]。自有PaymentCollectionSettings/Operations使用同一封装；zh/en admin/settings说明管理员独立TOTP与支付/主设置保护范围，相关旧测试接口桩同步。后端支付写门控与前端同版；仍需管理员本人绑定后开启step_up_enabled，不把本地源码当已生效。Go87/199、前端109/类型/i18n/构建，详见根HANDOFF、CUSTOMIZATIONS及deploy/SECURITY_HARDENING_20261022.md。
 
 2026-10-22注册IP限额（本地未发布）：保留api/admin/settings.ts的registration_ip_limit_enabled读写类型、SettingsView.vue安全→注册开关/默认true/保存字段、zh/en admin/settings提示、SettingsView.spec.ts两项真实组件回归，接缝带[CUSTOM]。后端迁移260与前端同版；省略字段保留旧值。共享公网IP／真实MAC不可读／反代可信配置提示不能删除，发布状态见HANDOFF与deploy/REGISTRATION_IP_LIMIT.md。

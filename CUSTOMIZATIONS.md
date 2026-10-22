@@ -1,5 +1,15 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-22 管理员单用户分配409（本地补丁，未发布）
+
+- 新增 `backend/internal/service/custom_admin_subscription_assignment.go`：管理员独立入口复用已有续期实现；先读及行锁校验暂停状态，订阅、库存与返回快照同事务，提交后同步清L1/billing并通知其他实例；缓存故障记录日志。原通用分配/批量/兑换/付款服务语义不改。
+- 上游 `backend/internal/handler/admin/subscription_handler.go` 的 `Assign` 用 `[CUSTOM]` 接缝调用独立入口；复用 `admin.subscriptions.assign` 幂等协调器与2分钟独立执行期限，按管理员/请求键重放，同键不同参数冲突。旧无键客户端仍受原observe_only策略，不宣称所有无键请求有防重能力。
+- 新增 `frontend/src/custom/subscriptionAssignment.ts`：按管理员和完整当前表单参数保留内存/sessionStorage未确认操作键，刷新/失败后沿用，成功清理；上游 `api/admin/subscriptions.ts` 的 `[CUSTOM]` assign第二参数传Idempotency-Key，`views/admin/SubscriptionsView.vue` 的 `[CUSTOM]` 接线准备/完成操作，并复用extractApiErrorMessage显示拦截器扁平message。
+- 上游 `SubscriptionsView.vue` 的原库存选择器接缝用hintKey区分单用户续期和批量复用；上游 `i18n/locales/{zh,en}/misc.ts` 的 `[CUSTOM]` singleAssignmentHint说明实际扣份与暂停保护，样式未动。
+- 新增service暂停锁竞态、handler同键重放/新操作及repository隔离SQLite七类事务回归；自有 `custom_subscription_stock_test.go` 增加真实PG三天续期/售罄回滚场景（本轮缺DSN跳过）。上游 `views/admin/__tests__/SubscriptionsView.bulkActions.spec.ts` 的 `[CUSTOM]` 扩展单用户三天/真实错误/重试键/防双击，新增两份custom前端spec。根 `Makefile` 的 `[CUSTOM]` 关键回归登记这三份spec。
+- 已验证：三包Go42顶层/69含子项pass、1项PG跳过；前端9文件51项、类型/ESLint/生产构建通过。无新增迁移/依赖；真实PG并发、Linux lint、新SHA CI与生产现场未验，未提交/推送/部署。补丁和上次发布sha-9ed83f3须区别；证据/编译终态见 `output/subscription-assignment-fix-20261022/` 与HANDOFF四/五。
+
+
 2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361/安全39719304355/GHCR39719304369全部成功；固定sha-9ed83f3，linux/amd64，registry原始manifest/config及OCI来源与构建日志核验通过。包含下列安全、注册IP及订阅兑换接缝与259/260迁移，首轮CI问题已补修；详情及证据见HANDOFF四/五、output/security-release-20261022/final/。下方“未发布”保留为实现阶段历史，生产尚未更新，配置/本人绑定与业务验收待用户完成。
 
 2026-10-22发布说明：用户已授权将下列安全补修、注册IP限额与订阅兑换修复一起提交推送到origin/main，核验同业务SHA发布门禁；各节“未提交/未发布”保留为实现阶段记录，最终交付状态见HANDOFF四/五。新增迁移259/260须随同版应用启动执行，生产配置与管理员TOTP绑定由用户完成。
