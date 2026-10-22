@@ -1,11 +1,13 @@
 # 订阅套餐库存（2026-10-08，已发布待生产验收）
 
-## 2026-10-22 单用户分配不同天数冲突补修（本地未发布）
+## 2026-10-22 单用户分配不同天数冲突补修（已发布 sha-c8310ae）
+
+2026-10-22 单用户分配409发布终态（覆盖本轮下方未发布记录）：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。
 
 - 单用户「分配订阅」可新增或明确续期：已有有效订阅追加所填天数，例如原30天再填3天，结束时间增加3天；实际过期从现在重新起算。每次实际发放扣所选套餐1份；暂停订阅先恢复，不由分配操作隐式激活。
 - 单用户页面失败或响应丢失后，相同管理员/用户/组/套餐/天数沿用操作键；成功确认后再次分配是新操作。直接API调用请携带稳定Idempotency-Key，同键不同请求参数会冲突；不应在未核实结果时任意换键重发。
 - 批量仍保留已有订阅幂等复用与原语义冲突校验；要为有效订阅续期，使用单用户分配或原调整功能。库存不足、来源错组和返回快照读取失败整笔回滚；缓存提交后失效。
-- 此补丁无新迁移，当前未提交/推送/部署；下方sha-9ed83f3不包含它，前后端须随新版本发布。已完成本地回归与前端构建，真实PG/Linux lint/本轮新SHA CI及真实账号现场验收仍待，证据见output/subscription-assignment-fix-20261022。
+- 此补丁无新迁移，前后端随上方固定镜像同版发布；本地回归、构建与最终同SHA CI/真实PG/Linux lint已通过。真实账号现场验收仍待用户部署后完成，证据见output/subscription-assignment-fix-20261022/release/。
 
 
 2026-10-22兑换补修发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361（含Linux unit/integration与真实PG仓储测试）、安全39719304355、GHCR39719304369全部成功；固定sha-9ed83f3，来源/摘要已核验。迁移259与本轮注册260、安全补修一并发布，生产由用户备份后更新、实际旧码/库存业务验收仍待。下方本地未发布为历史阶段；证据output/security-release-20261022/final/，操作见UPDATE_GUIDE与SECURITY_HARDENING_20261022。

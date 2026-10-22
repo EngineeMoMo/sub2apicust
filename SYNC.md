@@ -1,6 +1,8 @@
 # 同步上游 & 构建部署 Runbook
 
-2026-10-22 新增单用户分配409本地补丁，尚未提交/推送/部署，上次sha-9ed83f3不含此补丁。合并保留custom_admin_subscription_assignment.go与handler/admin/subscription_handler.go的[CUSTOM]按请求键续期接缝；通用AssignSubscription与批量幂等保护保持。前端subscriptionAssignment.ts、管理API的Idempotency-Key、SubscriptionsView接线与中英文单用户提示须与后端同版；无新迁移或依赖变更。保留Makefile三份关键回归。测试/构建及PG缺口以HANDOFF四/五和output/subscription-assignment-fix-20261022为准，发布前重新核验本轮SHA门禁，不沿用上一版CI。
+2026-10-22 单用户分配409发布终态（覆盖本轮下方未发布记录）：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。
+
+同步保留custom_admin_subscription_assignment.go、handler的[CUSTOM]幂等单用户续期接缝、前端subscriptionAssignment.ts/sessionStorage重试键、API的Idempotency-Key、SubscriptionsView接线及中英文单用户库存提示；Makefile三份关键回归不得遗漏。原AssignSubscription及批量语义保持。
 
 
 2026-10-22发布终态：业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main；CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）/安全39719304355/GHCR39719304369全部success，固定sha-9ed83f3（linux/amd64），registry revision/source/摘要与正式embed构建日志已核验。交付259/260、注册与支付安全、管理员独立TOTP及订阅兑换修复；生产由用户备份后更新，核实可信代理及固定TOTP_ENCRYPTION_KEY，管理员本人绑定再启step-up、Nginx现场合并。证据output/security-release-20261022/final/；下方进行中为历史，纯文档[skip ci]不改变业务镜像。
