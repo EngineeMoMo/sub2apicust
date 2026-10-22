@@ -6,6 +6,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/xai"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,6 +38,8 @@ func TestRegistrationIPErrorsSurviveAuthFlows(t *testing.T) {
 }
 
 func TestRegistrationIPSettingDefaultsAndStoredOverride(t *testing.T) {
+	originalMapping := xai.RuntimeModelMappingOptions()
+	t.Cleanup(func() { xai.SetRuntimeModelMappingOptions(originalMapping) })
 	svc := newAuthService(&userRepoStub{}, map[string]string{}, nil, nil)
 	for _, scenario := range []struct {
 		name   string

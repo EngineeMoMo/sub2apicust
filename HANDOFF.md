@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-22 完整单测门禁补修**：首轮CI另发现管理设置精确契约未补registration_ip_limit_enabled，以及新增注册设置测试调用parseSettings后没有恢复Grok全局模型映射。已补两处快照并更新[CUSTOM]登记；在新增测试Cleanup恢复原全局状态，两个用例联跑先红后绿，不改既有调度生产逻辑。dcb2386f27b95f3e482a90a1cfa4ebce5dce11ac已推，仅为中间提交；最终业务SHA须重新核验三套门禁。GitHub直连重置/超时后核实本机7897代理可用，本轮Git命令使用临时http.proxy参数，不改全局配置。
+
 - **2026-10-22 首轮CI补修**：业务提交b8ed024406da444e83f955de5fa73a842d396618已推origin/main，安全39718166610成功、前端64文件931项成功；CI39718166662的golangci-lint任务119625183564发现新增定制文件两处errcheck（Rows.Close与测试连接类型断言）。已按既有清理风格和require断言修复，离线定向仓储测试通过；首轮不是正式交付标签，等待补修后新业务SHA的全部门禁。失败日志保留output/security-release-20261022/job-119625183564.log；部署说明补充TOTP固定加密密钥前置条件，不改生产配置。
 
 - **2026-10-22 提交发布进行中（用户授权“提交并推送代码，我发布更新下”）**：本轮合并交付已验证的订阅兑换修复（迁移259）、注册IP限额（迁移260）与网站安全补修，目标origin/main；assets/marketing海报素材不纳入。前置本地验证分别见output/subscription-redeem-fix-20261021、output/registration-ip-20261022、output/security-fix-20261022，不能冒充本轮SHA CI。推送后核验同业务SHA的CI、安全扫描、GHCR及固定镜像来源；最终结果随后补记。生产由用户备份后手动更新，须核实可信代理，管理员本人绑定TOTP后开启step-up，Nginx模板需现场合并验证。

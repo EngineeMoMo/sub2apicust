@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// [CUSTOM] 管理员设置 JSON 快照包含默认关闭的 payment_alipay_desktop_wap_qrcode。
+// [CUSTOM] 管理员设置 JSON 快照包含支付二维码开关与默认开启的注册IP限制。
 func TestAPIContracts(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -716,6 +716,7 @@ func TestAPIContracts(t *testing.T) {
 				"message": "success",
 				"data": {
 					"registration_enabled": true,
+					"registration_ip_limit_enabled": true,
 					"email_verify_enabled": false,
 					"registration_email_suffix_whitelist": [],
 					"registration_email_domain_quota_enabled": false,
@@ -1076,6 +1077,7 @@ func TestAPIContracts(t *testing.T) {
 				"message": "success",
 				"data": {
 					"registration_enabled": true,
+					"registration_ip_limit_enabled": true,
 					"email_verify_enabled": false,
 					"registration_email_suffix_whitelist": [],
 					"registration_email_domain_quota_enabled": false,
