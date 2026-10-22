@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-22发布终态（覆盖下方进行中/未发布）：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main；同SHA CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）、安全39719304355、GHCR39719304369全部成功。固定镜像sha-9ed83f3（linux/amd64），registry revision/source/摘要及正式embed日志已核验，证据output/security-release-20261022/final/。包含259/260与安全补修；首轮失败已修复并保留记录。生产由用户备份后更新，可信代理与固定TOTP_ENCRYPTION_KEY须核实，管理员本人绑定后开启step-up、Nginx现场合并验证；assets/marketing未提交。后续纯文档[skip ci]不改变业务镜像，待办以HANDOFF五为准。
+
 2026-10-22用户已授权提交并推送：本轮一起交付订阅兑换（259）、注册IP限额（260）和网站安全补修，推送origin/main并核验同业务SHA的CI/安全/GHCR；assets/marketing不纳入，生产由用户手动更新。最终发布证据以HANDOFF四/五最新记录为准，下方“未提交推送”为历史阶段。
 
 2026-10-22网站安全补修本地完成未发布（优先于下条仅审查）：管理员TOTP独立可用并保留密码/待绑定OAuth挑战；支付写操作与主设置保存接现有step-up，配置读故障不放行；两公开订单查询共享可信IP20/分钟+全局600/分钟，Redis故障有界降级，主动恢复查单每订单单在途+5秒冷却；TLS/可信HTTPS代理加HSTS并附Nginx308/边缘限流模板。Go87顶层/199含子项、前端109项/类型/i18n/构建、Windows embed通过，lint0错13旧warning；具体范围与限制见deploy/SECURITY_HARDENING_20261022.md、output/security-fix-20261022/verification.json及HANDOFF四/五。管理员仍需本人绑定并开启step-up，反代需现场测试/应用；生产未改，未提交推送部署，原有工作保留。

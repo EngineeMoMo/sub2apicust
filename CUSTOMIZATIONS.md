@@ -1,5 +1,7 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361/安全39719304355/GHCR39719304369全部成功；固定sha-9ed83f3，linux/amd64，registry原始manifest/config及OCI来源与构建日志核验通过。包含下列安全、注册IP及订阅兑换接缝与259/260迁移，首轮CI问题已补修；详情及证据见HANDOFF四/五、output/security-release-20261022/final/。下方“未发布”保留为实现阶段历史，生产尚未更新，配置/本人绑定与业务验收待用户完成。
+
 2026-10-22发布说明：用户已授权将下列安全补修、注册IP限额与订阅兑换修复一起提交推送到origin/main，核验同业务SHA发布门禁；各节“未提交/未发布”保留为实现阶段记录，最终交付状态见HANDOFF四/五。新增迁移259/260须随同版应用启动执行，生产配置与管理员TOTP绑定由用户完成。
 
 2026-10-22首轮CI门禁补修：b8ed02440的golangci-lint发现两处errcheck，新增custom_redeem_stock.go统一显式丢弃defer Close清理错误（查询错误仍返回），custom_registration_ip_test.go先断言底层SQL连接类型再设置并发池。仅调整新增定制文件，不增加上游接缝；首轮不作正式交付，后续重新核验最终业务SHA。部署文档补充持久TOTP_ENCRYPTION_KEY前置条件，沿用既有值，避免临时随机密钥重启后失效。

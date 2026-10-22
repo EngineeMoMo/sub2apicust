@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-22 注册/支付安全与订阅兑换发布终态（优先于下方所有进行中记录）**：最终业务提交`9ed83f32de6dd98711e1725b3002affb03a88557`已推origin/main；同SHA CI `39719304361`（Linux unit/integration、真实PostgreSQL/Redis、Go lint 0 issues、前端64文件931项及配方/工坊node测试）、安全`39719304355`、GHCR `39719304369`全部success。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-9ed83f3`，平台`linux/amd64`，index digest `sha256:c80dbcb47d08d8538578aa22582847827b3f99ffafe2f41ebfe50da5af5b46d5`；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source及正式embed构建日志交叉核验。包含订阅兑换迁移259、注册IP限制迁移260、管理员独立TOTP/支付step-up/订单查询限流与冷却/HSTS及Nginx模板；首轮errcheck/快照/测试全局状态污染已补修，本地23顶层67含子项回归通过。不使用b8ed02440或dcb2386中间标签。证据`output/security-release-20261022/final/verified-release.json`、`release-final-verification.json`、`source-manifest.json`及job日志；首轮失败证据保留父目录。生产/业务库/本机8080未改，由用户备份后更新；上线前核实可信代理和固定TOTP_ENCRYPTION_KEY（沿用原值），管理员本人绑定再开step-up，Nginx需现场验证。assets/marketing保留未提交，后续纯文档[skip ci]提交不改变本业务镜像。
+
 - **2026-10-22 完整单测门禁补修**：首轮CI另发现管理设置精确契约未补registration_ip_limit_enabled，以及新增注册设置测试调用parseSettings后没有恢复Grok全局模型映射。已补两处快照并更新[CUSTOM]登记；在新增测试Cleanup恢复原全局状态，两个用例联跑先红后绿，不改既有调度生产逻辑。dcb2386f27b95f3e482a90a1cfa4ebce5dce11ac已推，仅为中间提交；最终业务SHA须重新核验三套门禁。GitHub直连重置/超时后核实本机7897代理可用，本轮Git命令使用临时http.proxy参数，不改全局配置。
 
 - **2026-10-22 首轮CI补修**：业务提交b8ed024406da444e83f955de5fa73a842d396618已推origin/main，安全39718166610成功、前端64文件931项成功；CI39718166662的golangci-lint任务119625183564发现新增定制文件两处errcheck（Rows.Close与测试连接类型断言）。已按既有清理风格和require断言修复，离线定向仓储测试通过；首轮不是正式交付标签，等待补修后新业务SHA的全部门禁。失败日志保留output/security-release-20261022/job-119625183564.log；部署说明补充TOTP固定加密密钥前置条件，不改生产配置。
@@ -752,7 +754,8 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **2026-10-22本轮发布门禁**：用户已授权提交推送订阅兑换、注册IP限额及安全补修；核验同业务SHA的CI、安全扫描、GHCR与镜像revision/摘要，给出固定sha标签。生产仍由用户备份后更新；可信代理配置、管理员本人绑定TOTP并开启step-up、Nginx合并与现场业务验收待执行。assets/marketing留在工作树。
+- [x] **2026-10-22本轮发布门禁**：最终业务9ed83f32d已推origin/main，CI39719304361/安全39719304355/GHCR39719304369全部成功，registry revision/source/平台/摘要与embed日志核验通过；交付固定sha-9ed83f3，首轮失败记录保留。assets/marketing未纳入。
+- [ ] **2026-10-22生产更新与启用（用户操作）**：先备份数据库、配置、数据目录并记录旧镜像；核实可信代理，防止默认开启的IP限额把所有访客视为同一代理。部署sha-9ed83f3及259/260迁移；TOTP_ENCRYPTION_KEY须固定且沿用原值，管理员本人绑定后测试新会话登录，再开启敏感操作二次验证。Nginx模板现场合并/nginx-t/重载后核验HTTPS跳转/HSTS，真实注册、订阅兑换与支付业务待验；不自动部署生产或处理真实退款。
 
 - [ ] **2026-10-22 安全补修发布/启用验收**：源码及定向验证完成，替代下方“待实施”的代码部分；发布须后续提交/推送授权、同业务SHA CI/安全/GHCR核验。按deploy/SECURITY_HARDENING_20261022.md管理员本人绑定验证器，再开启step_up_enabled；其他需写操作管理员也先绑定，机器凭证不能完成门控。反代合并nginx-security.conf.example并现场nginx-t，核实308/HSTS、真实IP、边缘及应用查询预算、正常退款/人工记账取消与验证后单次执行。生产代理/WAF/赠额/备份恢复仍未知；不开启邀请码/不改赠额、不代部署。
 

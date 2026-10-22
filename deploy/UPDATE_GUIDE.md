@@ -1,5 +1,15 @@
 # 日常更新操作手册（定制版 sub2api）
 
+2026-10-22发布终态：最终业务`9ed83f32de6dd98711e1725b3002affb03a88557`已推origin/main，同SHA CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）、安全39719304355、GHCR39719304369全部成功。固定镜像`ghcr.io/engineemomo/sub2apicust:sha-9ed83f3`（linux/amd64），index digest `sha256:c80dbcb47d08d8538578aa22582847827b3f99ffafe2f41ebfe50da5af5b46d5`；registry来源/提交/摘要与正式embed日志已核验。包含订阅兑换259、注册IP限制260与安全加固；后续纯文档[skip ci]不产生新业务镜像。
+
+生产先备份数据库、配置及数据目录，记录旧镜像；核实`SERVER_TRUSTED_PROXIES`（IP限制默认开启），并确认`TOTP_ENCRYPTION_KEY`持久配置且沿用原值。在实际部署目录执行：
+
+```bash
+./update.sh sha-9ed83f3
+```
+
+更新后按[安全启用步骤](SECURITY_HARDENING_20261022.md)由管理员本人绑定TOTP，再开启敏感操作二次验证；Nginx模板须现场合并测试。生产未代部署，真实注册/兑换/支付业务待用户验收；证据在本机`output/security-release-20261022/final/`。下方未发布/进行中为历史阶段。
+
 2026-10-22本轮发布进行中：用户已授权提交推送订阅兑换（259）、注册IP限额（260）与网站安全补修；待核验同业务SHA的CI/安全/GHCR后使用固定镜像标签更新。新功能启用顺序见[SECURITY_HARDENING_20261022.md](SECURITY_HARDENING_20261022.md)，IP限制默认开启，上线前须按[REGISTRATION_IP_LIMIT.md](REGISTRATION_IP_LIMIT.md)核实可信代理；先备份数据库并记录旧镜像。生产由用户操作，最终门禁及标签见HANDOFF四/五。
 
 2026-10-22安全补修（本地完成，尚无新发布标签）：详见SECURITY_HARDENING_20261022.md。发布后管理员本人先在个人资料绑定验证器，再开启敏感操作二次验证；支付写入及主设置保存受保护。合并nginx-security.conf.example后现场nginx-t，确认公网308/HSTS、可信代理及公开查询预算。应用新增HSTS只信任直接TLS/可信HTTPS代理；保留本机HTTP。Go87顶层/199含子项、前端109及前后端构建通过，不代替实际Nginx/生产/同SHA CI验收，未代部署或改管理员开关。

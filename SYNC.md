@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-22发布终态：业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main；CI39719304361（Linux unit/integration、Go lint0、前端64文件931项）/安全39719304355/GHCR39719304369全部success，固定sha-9ed83f3（linux/amd64），registry revision/source/摘要与正式embed构建日志已核验。交付259/260、注册与支付安全、管理员独立TOTP及订阅兑换修复；生产由用户备份后更新，核实可信代理及固定TOTP_ENCRYPTION_KEY，管理员本人绑定再启step-up、Nginx现场合并。证据output/security-release-20261022/final/；下方进行中为历史，纯文档[skip ci]不改变业务镜像。
+
 2026-10-22用户授权发布：订阅兑换修复（259）、注册IP限额（260）与网站安全补修一起提交推送origin/main，核验本轮业务SHA的CI/安全/GHCR。生产由用户备份后更新，先核实可信代理，管理员本人绑定TOTP再启用step-up；Nginx模板须现场验证。最终状态与固定标签见HANDOFF四/五最新记录，下方本地未发布为历史阶段。
 
 2026-10-22安全补修本地完成未发布（覆盖下条仅审查）：合并须保留CUSTOMIZATIONS登记的支付stepUp传参/管理写方法门控、两公共查询共享限额、PaymentService订单冷却、管理员TOTP角色可用性/登录挑战、主设置验证及HTTPS头接缝，前端custom验证封装和弹窗同步。启用及边界见deploy/SECURITY_HARDENING_20261022.md，Go87/199、前端109及构建证据output/security-fix-20261022/verification.json。未启用生产step-up或反代308，不拿本地测试当正式SHA CI或线上生效。

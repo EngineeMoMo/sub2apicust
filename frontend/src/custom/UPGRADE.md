@@ -281,3 +281,5 @@ git diff --check
 ## 2026-10-07 订阅开通周期与官方直码
 
 后端244迁移与服务代码同版：周／月窗口从开通初始化，列表和progress投影当前周期，前端仍只用服务器resets_at；不伪造等待首次使用的时间。支付宝新订单qr_code是校验后的官方签名WAP地址，pay_url与之相同，payment_mode仍qrcode；保留扫码等待、状态轮询和恢复原订单。旧短码只兼容存量，不能恢复为默认新码；新增2300字节编码容量回归与签名实付金额回归。
+2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361（前端64文件931项、Linux unit/integration、Go lint0）、安全39719304355、GHCR39719304369全部成功，固定sha-9ed83f3，registry来源与摘要已核验。保留下列安全/注册IP/兑换定制接缝及259/260同版迁移；生产由用户备份后更新，可信代理与固定TOTP_ENCRYPTION_KEY须核实，管理员本人绑定再启用step-up。下方未发布为实现阶段历史，最终状态见HANDOFF四/五及output/security-release-20261022/final/。
+
