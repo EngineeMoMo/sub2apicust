@@ -1,3 +1,5 @@
+2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361（前端64文件931项、Linux unit/integration、Go lint0）、安全39719304355、GHCR39719304369全部成功，固定sha-9ed83f3，registry来源与摘要已核验。保留下列安全/注册IP/兑换定制接缝及259/260同版迁移；生产由用户备份后更新，可信代理与固定TOTP_ENCRYPTION_KEY须核实，管理员本人绑定再启用step-up。下方未发布为实现阶段历史，最终状态见HANDOFF四/五及output/security-release-20261022/final/。
+
 2026-10-22网站安全补修（本地未发布）：保留custom/usePaymentSecurity.ts及支付安全回归；上游SettingsView支付通道写操作复用既有settingsStepUp，取消停止剩余操作；orders/AdminOrdersView、AdminPaymentPlansView、PlanEditDialog的API包装/验证码弹窗与错误处理接缝带[CUSTOM]。自有PaymentCollectionSettings/Operations使用同一封装；zh/en admin/settings说明管理员独立TOTP与支付/主设置保护范围，相关旧测试接口桩同步。后端支付写门控与前端同版；仍需管理员本人绑定后开启step_up_enabled，不把本地源码当已生效。Go87/199、前端109/类型/i18n/构建，详见根HANDOFF、CUSTOMIZATIONS及deploy/SECURITY_HARDENING_20261022.md。
 
 2026-10-22注册IP限额（本地未发布）：保留api/admin/settings.ts的registration_ip_limit_enabled读写类型、SettingsView.vue安全→注册开关/默认true/保存字段、zh/en admin/settings提示、SettingsView.spec.ts两项真实组件回归，接缝带[CUSTOM]。后端迁移260与前端同版；省略字段保留旧值。共享公网IP／真实MAC不可读／反代可信配置提示不能删除，发布状态见HANDOFF与deploy/REGISTRATION_IP_LIMIT.md。
@@ -281,5 +283,3 @@ git diff --check
 ## 2026-10-07 订阅开通周期与官方直码
 
 后端244迁移与服务代码同版：周／月窗口从开通初始化，列表和progress投影当前周期，前端仍只用服务器resets_at；不伪造等待首次使用的时间。支付宝新订单qr_code是校验后的官方签名WAP地址，pay_url与之相同，payment_mode仍qrcode；保留扫码等待、状态轮询和恢复原订单。旧短码只兼容存量，不能恢复为默认新码；新增2300字节编码容量回归与签名实付金额回归。
-2026-10-22发布终态：最终业务9ed83f32de6dd98711e1725b3002affb03a88557已推origin/main，同SHA CI39719304361（前端64文件931项、Linux unit/integration、Go lint0）、安全39719304355、GHCR39719304369全部成功，固定sha-9ed83f3，registry来源与摘要已核验。保留下列安全/注册IP/兑换定制接缝及259/260同版迁移；生产由用户备份后更新，可信代理与固定TOTP_ENCRYPTION_KEY须核实，管理员本人绑定再启用step-up。下方未发布为实现阶段历史，最终状态见HANDOFF四/五及output/security-release-20261022/final/。
-
