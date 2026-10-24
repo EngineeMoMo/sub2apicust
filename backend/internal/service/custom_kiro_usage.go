@@ -14,17 +14,17 @@ import (
 
 func resolveCustomKiroUsage(ctx context.Context, account *Account, body []byte, model string, response *kiro.Response) error {
 	if response == nil {
-		return errors.New("Kiro 响应内容为空")
+		return errors.New("kiro 响应内容为空")
 	}
 	if response.HasUsage {
 		return nil
 	}
 	if account == nil || account.GetCredential("usage_mode") != "estimated" {
-		return errors.New("Kiro 已生成内容但未提供可核实的 Token 用量；当前为精确计量模式。只有显式启用估算计费后才能按估算用量完成请求")
+		return errors.New("kiro 已生成内容但未提供可核实的 Token 用量；当前为精确计量模式。只有显式启用估算计费后才能按估算用量完成请求")
 	}
 	var request map[string]any
 	if err := json.Unmarshal(body, &request); err != nil {
-		return errors.New("Kiro 无法估算请求用量")
+		return errors.New("kiro 无法估算请求用量")
 	}
 	request["model"] = model
 	normalized, err := json.Marshal(request)
@@ -33,30 +33,30 @@ func resolveCustomKiroUsage(ctx context.Context, account *Account, body []byte, 
 	}
 	inputTokens, err := estimateAnthropicCountTokensLocally(normalized)
 	if err != nil {
-		return errors.New("Kiro 输入 Token 估算失败")
+		return errors.New("kiro 输入 Token 估算失败")
 	}
 	codec, err := tokenizer.Get(tokenizer.Cl100kBase)
 	if err != nil {
-		return errors.New("Kiro 输出 Token 估算器不可用")
+		return errors.New("kiro 输出 Token 估算器不可用")
 	}
 	var output strings.Builder
 	for _, block := range response.Blocks {
 		switch block.Type {
 		case "text":
-			output.WriteString(block.Text)
+			_, _ = output.WriteString(block.Text)
 		case "thinking":
-			output.WriteString(block.Thinking)
+			_, _ = output.WriteString(block.Thinking)
 		case "tool_use":
-			output.WriteString(block.Name)
-			output.Write(block.Input)
+			_, _ = output.WriteString(block.Name)
+			_, _ = output.Write(block.Input)
 		case "redacted_thinking":
-			return errors.New("Kiro 无法估算已隐藏的思考用量，请使用精确计量模式")
+			return errors.New("kiro 无法估算已隐藏的思考用量，请使用精确计量模式")
 		}
-		output.WriteByte('\n')
+		_ = output.WriteByte('\n')
 	}
 	outputTokens, err := codec.Count(output.String())
 	if err != nil {
-		return errors.New("Kiro 输出 Token 估算失败")
+		return errors.New("kiro 输出 Token 估算失败")
 	}
 	response.Usage = kiro.Usage{InputTokens: max(1, inputTokens), OutputTokens: max(1, outputTokens)}
 	response.HasUsage = true

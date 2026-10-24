@@ -41,7 +41,7 @@ func CanonicalFields(values map[string]any) (map[string]any, error) {
 		for _, name := range names {
 			if value, exists := out[name]; exists {
 				if existing, present := out[key]; present && fmt.Sprint(existing) != fmt.Sprint(value) {
-					return nil, fmt.Errorf("Kiro 字段 %s 与 %s 冲突", key, name)
+					return nil, fmt.Errorf("kiro 字段 %s 与 %s 冲突", key, name)
 				}
 				out[key] = value
 				delete(out, name)
@@ -53,7 +53,7 @@ func CanonicalFields(values map[string]any) (map[string]any, error) {
 
 func Normalize(accountType string, values map[string]any) (map[string]any, error) {
 	if accountType != "oauth" && accountType != "apikey" {
-		return nil, fmt.Errorf("Kiro 仅支持 OAuth 凭据导入或 API Key")
+		return nil, fmt.Errorf("kiro 仅支持 OAuth 凭据导入或 API Key")
 	}
 	out, err := CanonicalFields(values)
 	if err != nil {
@@ -62,18 +62,18 @@ func Normalize(accountType string, values map[string]any) (map[string]any, error
 	if value, exists := out["usage_mode"]; exists {
 		mode, valid := value.(string)
 		if !valid || (mode != "verified" && mode != "estimated") {
-			return nil, fmt.Errorf("Kiro usage_mode 仅支持 verified 或 estimated；estimated 会按估算 Token 计费")
+			return nil, fmt.Errorf("kiro usage_mode 仅支持 verified 或 estimated；estimated 会按估算 Token 计费")
 		}
 	}
 	for _, key := range []string{"access_token", "refresh_token", "api_key", "client_id", "client_secret", "profile_arn", "auth_region", "runtime_region", "auth_method"} {
 		if input, exists := out[key]; exists {
 			value, ok := input.(string)
 			if !ok {
-				return nil, fmt.Errorf("Kiro 字段 %s 必须为字符串", key)
+				return nil, fmt.Errorf("kiro 字段 %s 必须为字符串", key)
 			}
 			value = strings.TrimSpace(value)
 			if len(value) > 65536 || strings.ContainsAny(value, "\r\n") {
-				return nil, fmt.Errorf("Kiro 字段 %s 格式无效", key)
+				return nil, fmt.Errorf("kiro 字段 %s 格式无效", key)
 			}
 			out[key] = value
 		}
@@ -86,7 +86,7 @@ func Normalize(accountType string, values map[string]any) (map[string]any, error
 	}
 	for _, key := range []string{"auth_region", "runtime_region"} {
 		if !regionPattern.MatchString(stringValue(out, key)) {
-			return nil, fmt.Errorf("Kiro 字段 %s 不是有效 AWS 地区", key)
+			return nil, fmt.Errorf("kiro 字段 %s 不是有效 AWS 地区", key)
 		}
 	}
 	method := strings.ToLower(stringValue(out, "auth_method"))
@@ -100,7 +100,7 @@ func Normalize(accountType string, values map[string]any) (map[string]any, error
 	case "idc", "oidc", "builderid", "builder-id", "iam":
 		method = "idc"
 	default:
-		return nil, fmt.Errorf("Kiro auth_method 必须为 social 或 idc")
+		return nil, fmt.Errorf("kiro auth_method 必须为 social 或 idc")
 	}
 	out["auth_method"] = method
 	if input, exists := out["expires_at"]; exists && input != nil && fmt.Sprint(input) != "" {
@@ -112,7 +112,7 @@ func Normalize(accountType string, values map[string]any) (map[string]any, error
 	}
 	if accountType == "apikey" {
 		if stringValue(out, "api_key") == "" {
-			return nil, fmt.Errorf("Kiro API Key 不能为空")
+			return nil, fmt.Errorf("kiro API Key 不能为空")
 		}
 		for _, key := range []string{"access_token", "refresh_token", "client_id", "client_secret"} {
 			delete(out, key)
@@ -179,5 +179,5 @@ func parseExpiry(input any) (time.Time, error) {
 	if timestamp, err := time.Parse(time.RFC3339, value); err == nil {
 		return timestamp, nil
 	}
-	return time.Time{}, fmt.Errorf("Kiro expires_at 必须为 Unix 秒/毫秒或 RFC3339 时间")
+	return time.Time{}, fmt.Errorf("kiro expires_at 必须为 Unix 秒/毫秒或 RFC3339 时间")
 }

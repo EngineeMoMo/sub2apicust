@@ -120,7 +120,7 @@ func ResolveModel(model string) (string, error) {
 	undated := datedModelPattern.ReplaceAllString(model, "")
 	if !claudeModelPattern.MatchString(undated) {
 		if oneMillion || !modelPattern.MatchString(original) {
-			return "", fmt.Errorf("Kiro 模型标识无效或不支持该模型的 [1m] 后缀")
+			return "", fmt.Errorf("kiro 模型标识无效或不支持该模型的 [1m] 后缀")
 		}
 		return original, nil
 	}
@@ -136,12 +136,12 @@ func ResolveModel(model string) (string, error) {
 	}
 	if oneMillion {
 		if model != "claude-sonnet-4.5" && model != "claude-sonnet-4.6" {
-			return "", fmt.Errorf("Kiro 该模型不支持 [1m] 后缀")
+			return "", fmt.Errorf("kiro 该模型不支持 [1m] 后缀")
 		}
 		model += "-1m"
 	}
 	if !modelPattern.MatchString(model) {
-		return "", fmt.Errorf("Kiro 模型标识无效")
+		return "", fmt.Errorf("kiro 模型标识无效")
 	}
 	return model, nil
 }
@@ -149,19 +149,19 @@ func ResolveModel(model string) (string, error) {
 func BuildPayload(body []byte, model, profile, conversationID string) (*Payload, error) {
 	var request Request
 	if err := json.Unmarshal(body, &request); err != nil {
-		return nil, fmt.Errorf("Kiro 请求 JSON 无效")
+		return nil, fmt.Errorf("kiro 请求 JSON 无效")
 	}
 	if len(request.Messages) == 0 {
-		return nil, fmt.Errorf("Kiro messages 不能为空")
+		return nil, fmt.Errorf("kiro messages 不能为空")
 	}
 	if len(request.StopSequences) > 0 {
-		return nil, fmt.Errorf("Kiro 尚不支持 stop_sequences")
+		return nil, fmt.Errorf("kiro 尚不支持 stop_sequences")
 	}
 	if len(request.OutputConfig.Format) > 0 && string(request.OutputConfig.Format) != "null" {
-		return nil, fmt.Errorf("Kiro 尚不支持结构化输出约束")
+		return nil, fmt.Errorf("kiro 尚不支持结构化输出约束")
 	}
 	if request.ToolChoice.Type != "" && request.ToolChoice.Type != "auto" && request.ToolChoice.Type != "none" {
-		return nil, fmt.Errorf("Kiro 仅支持 auto/none 工具选择")
+		return nil, fmt.Errorf("kiro 仅支持 auto/none 工具选择")
 	}
 	modelID, err := ResolveModel(model)
 	if err != nil {
@@ -169,25 +169,25 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 	}
 	system, systemBlocks, err := textBlocks(request.System)
 	if err != nil {
-		return nil, fmt.Errorf("Kiro system: %w", err)
+		return nil, fmt.Errorf("kiro system: %w", err)
 	}
 	for _, block := range systemBlocks {
 		if block.Type != "text" {
-			return nil, fmt.Errorf("Kiro system 仅支持文本内容")
+			return nil, fmt.Errorf("kiro system 仅支持文本内容")
 		}
 	}
 	tools := make([]map[string]any, 0, len(request.Tools))
 	knownTools := make(map[string]bool)
 	for _, tool := range request.Tools {
 		if tool.Type != "" && tool.Type != "custom" {
-			return nil, fmt.Errorf("Kiro 不支持内置工具 %s", tool.Type)
+			return nil, fmt.Errorf("kiro 不支持内置工具 %s", tool.Type)
 		}
 		if !toolPattern.MatchString(tool.Name) || knownTools[tool.Name] || tool.Name == "thinking" {
-			return nil, fmt.Errorf("Kiro 工具名称无效、重复或保留")
+			return nil, fmt.Errorf("kiro 工具名称无效、重复或保留")
 		}
 		knownTools[tool.Name] = true
 		if tool.InputSchema == nil {
-			return nil, fmt.Errorf("Kiro 工具 %s 缺少 input_schema", tool.Name)
+			return nil, fmt.Errorf("kiro 工具 %s 缺少 input_schema", tool.Name)
 		}
 		tools = append(tools, map[string]any{"toolSpecification": map[string]any{"name": tool.Name, "description": tool.Description, "inputSchema": map[string]any{"json": tool.InputSchema}}})
 	}
@@ -200,9 +200,10 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 	for messageIndex, message := range request.Messages {
 		text, blocks, err := textBlocks(message.Content)
 		if err != nil {
-			return nil, fmt.Errorf("Kiro message %d: %w", messageIndex, err)
+			return nil, fmt.Errorf("kiro message %d: %w", messageIndex, err)
 		}
-		if message.Role == "user" {
+		switch message.Role {
+		case "user":
 			user := &UserInput{Content: text, Model: modelID, Origin: "KIRO_CLI"}
 			inputContext := &InputContext{}
 			for _, block := range blocks {
@@ -213,28 +214,28 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 					}
 				case "image":
 					if block.Source.Type != "base64" {
-						return nil, fmt.Errorf("Kiro 仅支持 base64 图片")
+						return nil, fmt.Errorf("kiro 仅支持 base64 图片")
 					}
 					format := strings.TrimPrefix(block.Source.MediaType, "image/")
 					if format != "png" && format != "jpeg" && format != "gif" && format != "webp" {
-						return nil, fmt.Errorf("Kiro 图片格式不支持")
+						return nil, fmt.Errorf("kiro 图片格式不支持")
 					}
 					decoded, err := base64.StdEncoding.DecodeString(block.Source.Data)
 					if err != nil || len(decoded) == 0 || len(decoded) > 4<<20 {
-						return nil, fmt.Errorf("Kiro 图片数据无效或超过4MiB")
+						return nil, fmt.Errorf("kiro 图片数据无效或超过4MiB")
 					}
 					user.Images = append(user.Images, Image{Format: format, Source: map[string]string{"bytes": block.Source.Data}})
 				case "tool_result":
 					if !pendingTools[block.ToolUseID] {
-						return nil, fmt.Errorf("Kiro tool_result 没有匹配的工具调用")
+						return nil, fmt.Errorf("kiro tool_result 没有匹配的工具调用")
 					}
 					resultText, resultBlocks, err := textBlocks(block.Content)
 					if err != nil {
-						return nil, fmt.Errorf("Kiro tool_result 无效")
+						return nil, fmt.Errorf("kiro tool_result 无效")
 					}
 					for _, resultBlock := range resultBlocks {
 						if resultBlock.Type != "text" {
-							return nil, fmt.Errorf("Kiro tool_result 仅支持文本")
+							return nil, fmt.Errorf("kiro tool_result 仅支持文本")
 						}
 					}
 					status := "success"
@@ -244,7 +245,7 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 					inputContext.Results = append(inputContext.Results, ToolResult{ID: block.ToolUseID, Status: status, Content: []map[string]string{{"text": resultText}}})
 					delete(pendingTools, block.ToolUseID)
 				default:
-					return nil, fmt.Errorf("Kiro 用户内容类型 %s 不支持", block.Type)
+					return nil, fmt.Errorf("kiro 用户内容类型 %s 不支持", block.Type)
 				}
 			}
 			if len(inputContext.Results) > 0 {
@@ -269,9 +270,9 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 			} else {
 				entries = append(entries, HistoryEntry{User: user})
 			}
-		} else if message.Role == "assistant" {
+		case "assistant":
 			if len(pendingTools) > 0 && (len(entries) == 0 || entries[len(entries)-1].Assistant == nil) {
-				return nil, fmt.Errorf("Kiro 工具结果未全部返回")
+				return nil, fmt.Errorf("kiro 工具结果未全部返回")
 			}
 			assistant := &AssistantInput{Content: text}
 			for _, block := range blocks {
@@ -281,16 +282,16 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 					assistant.Reasoning = map[string]string{"redactedContent": block.Data}
 				case "tool_use":
 					if block.ID == "" || usedIDs[block.ID] || !toolPattern.MatchString(block.Name) {
-						return nil, fmt.Errorf("Kiro 工具调用ID或名称无效")
+						return nil, fmt.Errorf("kiro 工具调用ID或名称无效")
 					}
 					if !isJSONObject(block.Input) {
-						return nil, fmt.Errorf("Kiro 工具输入必须为 JSON 对象")
+						return nil, fmt.Errorf("kiro 工具输入必须为 JSON 对象")
 					}
 					usedIDs[block.ID] = true
 					pendingTools[block.ID] = true
 					assistant.Tools = append(assistant.Tools, HistoryTool{ID: block.ID, Name: block.Name, Input: block.Input})
 				default:
-					return nil, fmt.Errorf("Kiro 助手内容类型 %s 不支持", block.Type)
+					return nil, fmt.Errorf("kiro 助手内容类型 %s 不支持", block.Type)
 				}
 			}
 			if len(entries) > 0 && entries[len(entries)-1].Assistant != nil {
@@ -303,20 +304,20 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 			} else {
 				entries = append(entries, HistoryEntry{Assistant: assistant})
 			}
-		} else {
-			return nil, fmt.Errorf("Kiro 消息角色必须为 user/assistant")
+		default:
+			return nil, fmt.Errorf("kiro 消息角色必须为 user/assistant")
 		}
 	}
 	if len(pendingTools) > 0 {
-		return nil, fmt.Errorf("Kiro 工具结果未全部返回")
+		return nil, fmt.Errorf("kiro 工具结果未全部返回")
 	}
 	if len(entries) == 0 || entries[0].User == nil || entries[len(entries)-1].User == nil {
-		return nil, fmt.Errorf("Kiro 会话须由用户消息开始和结束，暂不支持助手预填")
+		return nil, fmt.Errorf("kiro 会话须由用户消息开始和结束，暂不支持助手预填")
 	}
 	entries[0].User.Content = joinText(system, entries[0].User.Content)
 	current := entries[len(entries)-1].User
 	if current.Content == "" && (current.Context == nil || len(current.Context.Results) == 0) {
-		return nil, fmt.Errorf("Kiro 当前消息不能为空")
+		return nil, fmt.Errorf("kiro 当前消息不能为空")
 	}
 	if len(tools) > 0 {
 		if current.Context == nil {
@@ -329,7 +330,7 @@ func BuildPayload(body []byte, model, profile, conversationID string) (*Payload,
 		switch effort {
 		case "low", "medium", "high", "xhigh", "max":
 		default:
-			return nil, fmt.Errorf("Kiro reasoning effort 无效")
+			return nil, fmt.Errorf("kiro reasoning effort 无效")
 		}
 		key := "output_config"
 		if strings.HasPrefix(modelID, "gpt-") {

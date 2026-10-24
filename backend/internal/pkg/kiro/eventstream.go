@@ -28,38 +28,38 @@ func ReadEvents(ctx context.Context, reader io.Reader, consume func(Event) error
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("Kiro EventStream prelude: %w", err)
+			return fmt.Errorf("kiro EventStream prelude: %w", err)
 		}
 		if crc32.ChecksumIEEE(prelude[:8]) != binary.BigEndian.Uint32(prelude[8:]) {
-			return fmt.Errorf("Kiro EventStream prelude CRC 无效")
+			return fmt.Errorf("kiro EventStream prelude CRC 无效")
 		}
 		length := int(binary.BigEndian.Uint32(prelude[:4]))
 		headerLength := int(binary.BigEndian.Uint32(prelude[4:8]))
 		if length < 16 || length > maxFrameSize || headerLength > length-16 {
-			return fmt.Errorf("Kiro EventStream 帧长度无效")
+			return fmt.Errorf("kiro EventStream 帧长度无效")
 		}
 		total += length
 		if total > MaxResponseSize {
-			return fmt.Errorf("Kiro 响应超过大小上限")
+			return fmt.Errorf("kiro 响应超过大小上限")
 		}
 		frame := make([]byte, length)
 		copy(frame, prelude[:])
 		if _, err := io.ReadFull(reader, frame[12:]); err != nil {
-			return fmt.Errorf("Kiro EventStream 截断: %w", err)
+			return fmt.Errorf("kiro EventStream 截断: %w", err)
 		}
 		if crc32.ChecksumIEEE(frame[:length-4]) != binary.BigEndian.Uint32(frame[length-4:]) {
-			return fmt.Errorf("Kiro EventStream message CRC 无效")
+			return fmt.Errorf("kiro EventStream message CRC 无效")
 		}
 		headers, err := decodeHeaders(frame[12 : 12+headerLength])
 		if err != nil {
 			return err
 		}
 		if headers[":message-type"] == "exception" || headers[":message-type"] == "error" {
-			return fmt.Errorf("Kiro 上游事件异常: %s", headers[":exception-type"]+headers[":error-code"])
+			return fmt.Errorf("kiro 上游事件异常: %s", headers[":exception-type"]+headers[":error-code"])
 		}
 		eventType := headers[":event-type"]
 		if eventType == "" {
-			return fmt.Errorf("Kiro EventStream 缺少事件类型")
+			return fmt.Errorf("kiro EventStream 缺少事件类型")
 		}
 		if err := consume(Event{Type: eventType, Payload: frame[12+headerLength : length-4]}); err != nil {
 			return err
@@ -73,7 +73,7 @@ func decodeHeaders(input []byte) (map[string]string, error) {
 		nameLength := int(input[0])
 		input = input[1:]
 		if nameLength == 0 || len(input) < nameLength+1 {
-			return nil, fmt.Errorf("Kiro EventStream 头截断")
+			return nil, fmt.Errorf("kiro EventStream 头截断")
 		}
 		name := string(input[:nameLength])
 		valueType := input[nameLength]
@@ -94,19 +94,19 @@ func decodeHeaders(input []byte) (map[string]string, error) {
 			size = 16
 		case 6, 7:
 			if len(input) < 2 {
-				return nil, fmt.Errorf("Kiro EventStream 头长度截断")
+				return nil, fmt.Errorf("kiro EventStream 头长度截断")
 			}
 			size = int(binary.BigEndian.Uint16(input[:2]))
 			input = input[2:]
 		default:
-			return nil, fmt.Errorf("Kiro EventStream 未知头类型")
+			return nil, fmt.Errorf("kiro EventStream 未知头类型")
 		}
 		if len(input) < size {
-			return nil, fmt.Errorf("Kiro EventStream 头值截断")
+			return nil, fmt.Errorf("kiro EventStream 头值截断")
 		}
 		if valueType == 7 {
 			if _, exists := values[name]; exists {
-				return nil, fmt.Errorf("Kiro EventStream 重复头")
+				return nil, fmt.Errorf("kiro EventStream 重复头")
 			}
 			values[name] = string(input[:size])
 		}

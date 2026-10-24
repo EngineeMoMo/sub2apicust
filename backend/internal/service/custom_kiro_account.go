@@ -45,7 +45,7 @@ func (s *AccountTestService) RefreshCustomKiroAccount(ctx context.Context, accou
 	rejected := account.GetCredential("access_token")
 	executor := customKiroRejectedTokenRefresher{CustomKiroService: s.customKiro, rejected: rejected}
 	if s.customKiro.refreshAPI == nil {
-		return nil, errors.New("Kiro 统一刷新服务未配置")
+		return nil, errors.New("kiro 统一刷新服务未配置")
 	}
 	for attempt := 0; attempt < 40; attempt++ {
 		result, err := s.customKiro.refreshAPI.RefreshIfNeeded(ctx, account, executor, time.Minute)
@@ -63,7 +63,7 @@ func (s *AccountTestService) RefreshCustomKiroAccount(ctx context.Context, accou
 		case <-timer.C:
 		}
 	}
-	return nil, errors.New("Kiro 刷新等待超时")
+	return nil, errors.New("kiro 刷新等待超时")
 }
 
 func (s *AccountTestService) testCustomKiroConnection(c *gin.Context, account *Account, model, prompt string) error {

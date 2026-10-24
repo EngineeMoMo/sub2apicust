@@ -46,11 +46,11 @@ func (s *CustomKiroService) proxyURL(ctx context.Context, account *Account) (str
 		return "", nil
 	}
 	if s.proxies == nil {
-		return "", errors.New("Kiro 账号代理仓库不可用")
+		return "", errors.New("kiro 账号代理仓库不可用")
 	}
 	proxy, err := s.proxies.GetByID(ctx, *account.ProxyID)
 	if err != nil || proxy == nil || !proxy.IsActive() || proxy.IsExpired(time.Now()) {
-		return "", errors.New("Kiro 账号代理不可用，请检查代理配置")
+		return "", errors.New("kiro 账号代理不可用，请检查代理配置")
 	}
 	return proxy.URL(), nil
 }
@@ -61,7 +61,7 @@ func (s *CustomKiroService) Refresh(ctx context.Context, account *Account) (map[
 		return nil, err
 	}
 	if credentials.RefreshToken == "" {
-		return nil, errors.New("Kiro 缺少 refresh_token")
+		return nil, errors.New("kiro 缺少 refresh_token")
 	}
 	proxy, err := s.proxyURL(ctx, account)
 	if err != nil {
@@ -80,19 +80,19 @@ func (s *CustomKiroService) Refresh(ctx context.Context, account *Account) (map[
 	}
 	request.Header.Set("Content-Type", "application/json")
 	if s.upstream == nil {
-		return nil, errors.New("Kiro HTTP 服务不可用")
+		return nil, errors.New("kiro HTTP 服务不可用")
 	}
 	response, err := s.upstream.Do(request, proxy, account.ID, account.Concurrency)
 	if err != nil {
 		if response != nil && response.Body != nil {
 			_ = response.Body.Close()
 		}
-		return nil, errors.New("Kiro 刷新请求失败，请检查账号代理及认证地区")
+		return nil, errors.New("kiro 刷新请求失败，请检查账号代理及认证地区")
 	}
 	defer func() { _ = response.Body.Close() }()
 	responseBody, err := io.ReadAll(io.LimitReader(response.Body, (1<<20)+1))
 	if err != nil || len(responseBody) > 1<<20 {
-		return nil, errors.New("Kiro 刷新响应读取失败")
+		return nil, errors.New("kiro 刷新响应读取失败")
 	}
 	if response.StatusCode != http.StatusOK {
 		var failure struct {
@@ -102,7 +102,7 @@ func (s *CustomKiroService) Refresh(ctx context.Context, account *Account) (map[
 		if failure.Code == "invalid_grant" {
 			return nil, errors.New("invalid_grant: Kiro 刷新凭据已失效")
 		}
-		return nil, fmt.Errorf("Kiro 刷新失败，HTTP %d", response.StatusCode)
+		return nil, fmt.Errorf("kiro 刷新失败，HTTP %d", response.StatusCode)
 	}
 	var tokens struct {
 		AccessToken  string `json:"accessToken"`
@@ -111,7 +111,7 @@ func (s *CustomKiroService) Refresh(ctx context.Context, account *Account) (map[
 		ProfileARN   string `json:"profileArn"`
 	}
 	if json.Unmarshal(responseBody, &tokens) != nil || strings.TrimSpace(tokens.AccessToken) == "" || tokens.ExpiresIn <= 0 || tokens.ExpiresIn > 366*24*3600 {
-		return nil, errors.New("Kiro 刷新响应缺少有效 token/有效期")
+		return nil, errors.New("kiro 刷新响应缺少有效 token/有效期")
 	}
 	updated := MergeCredentials(account.Credentials, map[string]any{"access_token": tokens.AccessToken, "expires_at": strconv.FormatInt(time.Now().Unix()+tokens.ExpiresIn, 10)})
 	if tokens.RefreshToken != "" {
@@ -132,11 +132,11 @@ type customKiroProbeContextKey struct{}
 
 func customKiroAccountEligibility(ctx context.Context, account *Account) error {
 	if account == nil || account.Platform != PlatformKiro || (account.Type != AccountTypeOAuth && account.Type != AccountTypeAPIKey) {
-		return errors.New("Kiro 账号平台或凭据类型已改变")
+		return errors.New("kiro 账号平台或凭据类型已改变")
 	}
 	probe, _ := ctx.Value(customKiroProbeContextKey{}).(bool)
 	if !probe && (!account.IsSchedulable() || (account.ExpiresAt != nil && !account.ExpiresAt.After(time.Now()))) {
-		return errors.New("Kiro 账号已停用、到期或处于调度冷却期")
+		return errors.New("kiro 账号已停用、到期或处于调度冷却期")
 	}
 	return nil
 }
@@ -147,12 +147,12 @@ func (s customKiroRejectedTokenRefresher) NeedsRefresh(account *Account, window 
 
 func (s *CustomKiroService) prepare(ctx context.Context, account *Account, rejected string) (*Account, kiro.Credentials, error) {
 	if s == nil || s.accounts == nil || account == nil {
-		return nil, kiro.Credentials{}, errors.New("Kiro 服务未配置")
+		return nil, kiro.Credentials{}, errors.New("kiro 服务未配置")
 	}
 	for attempt := 0; attempt < 40; attempt++ {
 		latest, err := s.accounts.GetByID(ctx, account.ID)
 		if err != nil || latest == nil {
-			return nil, kiro.Credentials{}, errors.New("Kiro 账号读取失败")
+			return nil, kiro.Credentials{}, errors.New("kiro 账号读取失败")
 		}
 		if err := customKiroAccountEligibility(ctx, latest); err != nil {
 			return nil, kiro.Credentials{}, err
@@ -167,7 +167,7 @@ func (s *CustomKiroService) prepare(ctx context.Context, account *Account, rejec
 		needsRefresh := s.NeedsRefresh(latest, time.Minute) || (rejected != "" && credentials.AccessToken == rejected)
 		if needsRefresh && s.CanRefresh(latest) {
 			if s.refreshAPI == nil {
-				return nil, kiro.Credentials{}, errors.New("Kiro 统一刷新服务未配置")
+				return nil, kiro.Credentials{}, errors.New("kiro 统一刷新服务未配置")
 			}
 			var executor OAuthRefreshExecutor = s
 			if rejected != "" {
@@ -178,7 +178,7 @@ func (s *CustomKiroService) prepare(ctx context.Context, account *Account, rejec
 				return nil, kiro.Credentials{}, err
 			}
 			if result == nil {
-				return nil, kiro.Credentials{}, errors.New("Kiro 刷新未返回账号")
+				return nil, kiro.Credentials{}, errors.New("kiro 刷新未返回账号")
 			}
 			if result.LockHeld {
 				timer := time.NewTimer(250 * time.Millisecond)
@@ -199,17 +199,17 @@ func (s *CustomKiroService) prepare(ctx context.Context, account *Account, rejec
 			}
 		}
 		if latest.Type != AccountTypeOAuth {
-			return nil, kiro.Credentials{}, errors.New("Kiro 账号在刷新期间发生变化")
+			return nil, kiro.Credentials{}, errors.New("kiro 账号在刷新期间发生变化")
 		}
 		if err := customKiroAccountEligibility(ctx, latest); err != nil {
 			return nil, kiro.Credentials{}, err
 		}
 		if credentials.AccessToken == "" || credentials.ExpiresAt.IsZero() || time.Until(credentials.ExpiresAt) <= 0 || credentials.ProfileARN == "" || (rejected != "" && credentials.AccessToken == rejected) {
-			return nil, kiro.Credentials{}, errors.New("Kiro 访问凭据无效，请重新导入包含 profile_arn 的凭据")
+			return nil, kiro.Credentials{}, errors.New("kiro 访问凭据无效，请重新导入包含 profile_arn 的凭据")
 		}
 		return latest, credentials, nil
 	}
-	return nil, kiro.Credentials{}, errors.New("Kiro 正在刷新，请稍后重试")
+	return nil, kiro.Credentials{}, errors.New("kiro 正在刷新，请稍后重试")
 }
 
 type customKiroRequestError struct{ err error }
@@ -265,14 +265,14 @@ func (s *CustomKiroService) call(ctx context.Context, account *Account, body []b
 		request.Header.Set("amz-sdk-invocation-id", conversationID)
 		request.Header.Set("amz-sdk-request", fmt.Sprintf("attempt=%d; max=2", attempt+1))
 		if s.upstream == nil {
-			return nil, errors.New("Kiro HTTP 服务未配置")
+			return nil, errors.New("kiro HTTP 服务未配置")
 		}
 		response, err := s.upstream.Do(request, proxy, latest.ID, latest.Concurrency)
 		if err != nil {
 			if response != nil && response.Body != nil {
 				_ = response.Body.Close()
 			}
-			return nil, errors.New("Kiro 上游连接失败，请检查账号代理及运行地区")
+			return nil, errors.New("kiro 上游连接失败，请检查账号代理及运行地区")
 		}
 		if attempt == 0 && (response.StatusCode == 401 || response.StatusCode == 403) && s.CanRefresh(latest) {
 			_ = response.Body.Close()
@@ -285,5 +285,5 @@ func (s *CustomKiroService) call(ctx context.Context, account *Account, body []b
 		nativeModel, _ := kiro.ResolveModel(mappedModel)
 		return &customKiroCall{Response: response, Account: latest, Model: nativeModel}, nil
 	}
-	return nil, errors.New("Kiro 重试耗尽")
+	return nil, errors.New("kiro 重试耗尽")
 }

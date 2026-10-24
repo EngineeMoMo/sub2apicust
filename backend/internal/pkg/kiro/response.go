@@ -65,14 +65,14 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 			return nil
 		}
 		if pending.Name == "" || completed[pending.ID] {
-			return fmt.Errorf("Kiro 工具事件缺少名称或ID重复")
+			return fmt.Errorf("kiro 工具事件缺少名称或ID重复")
 		}
 		input := pending.Input.String()
 		if input == "" {
 			input = "{}"
 		}
 		if !isJSONObject([]byte(input)) {
-			return fmt.Errorf("Kiro 工具输入 JSON 不完整")
+			return fmt.Errorf("kiro 工具输入 JSON 不完整")
 		}
 		completed[pending.ID] = true
 		if pending.Name == "thinking" {
@@ -80,7 +80,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				Thought string `json:"thought"`
 			}
 			if err := json.Unmarshal([]byte(input), &thought); err != nil {
-				return fmt.Errorf("Kiro thinking 工具数据无效")
+				return fmt.Errorf("kiro thinking 工具数据无效")
 			}
 			if err := appendBlock(ResponseBlock{Type: "thinking", Thinking: thought.Thought}); err != nil {
 				return err
@@ -96,7 +96,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 	}
 	err := ReadEvents(ctx, reader, func(event Event) error {
 		if !json.Valid(event.Payload) {
-			return fmt.Errorf("Kiro %s 事件 JSON 无效", event.Type)
+			return fmt.Errorf("kiro %s 事件 JSON 无效", event.Type)
 		}
 		switch event.Type {
 		case "contextUsageEvent":
@@ -107,7 +107,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				Content string `json:"content"`
 			}
 			if err := json.Unmarshal(event.Payload, &payload); err != nil {
-				return fmt.Errorf("Kiro 文本事件无效")
+				return fmt.Errorf("kiro 文本事件无效")
 			}
 			if payload.Content != "" {
 				if err := flushTool(); err != nil {
@@ -122,7 +122,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				RedactedContent string `json:"redactedContent"`
 			}
 			if err := json.Unmarshal(event.Payload, &payload); err != nil {
-				return fmt.Errorf("Kiro 思考事件无效")
+				return fmt.Errorf("kiro 思考事件无效")
 			}
 			if err := flushTool(); err != nil {
 				return err
@@ -141,7 +141,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				Stop  bool            `json:"stop"`
 			}
 			if err := json.Unmarshal(event.Payload, &payload); err != nil {
-				return fmt.Errorf("Kiro 工具事件无效")
+				return fmt.Errorf("kiro 工具事件无效")
 			}
 			if payload.ID != "" && payload.ID != pending.ID {
 				if err := flushTool(); err != nil {
@@ -150,11 +150,11 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				pending.ID = payload.ID
 			}
 			if pending.ID == "" {
-				return fmt.Errorf("Kiro 工具事件缺少 toolUseId")
+				return fmt.Errorf("kiro 工具事件缺少 toolUseId")
 			}
 			if payload.Name != "" {
 				if pending.Name != "" && pending.Name != payload.Name {
-					return fmt.Errorf("Kiro 工具名称在分片间变化")
+					return fmt.Errorf("kiro 工具名称在分片间变化")
 				}
 				pending.Name = payload.Name
 			}
@@ -164,13 +164,13 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 					if err := json.Unmarshal(payload.Input, &fragment); err != nil {
 						return err
 					}
-					pending.Input.WriteString(fragment)
+					_, _ = pending.Input.WriteString(fragment)
 				} else {
 					pending.Input.Reset()
-					pending.Input.Write(payload.Input)
+					_, _ = pending.Input.Write(payload.Input)
 				}
 				if pending.Input.Len() > 1<<20 {
-					return fmt.Errorf("Kiro 工具输入超过1MiB")
+					return fmt.Errorf("kiro 工具输入超过1MiB")
 				}
 			}
 			if payload.Stop {
@@ -187,16 +187,16 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				} `json:"tokenUsage"`
 			}
 			if err := json.Unmarshal(event.Payload, &payload); err != nil {
-				return fmt.Errorf("Kiro 用量事件无效")
+				return fmt.Errorf("kiro 用量事件无效")
 			}
 			if payload.TokenUsage != nil {
 				usage := payload.TokenUsage
 				if usage.Input == nil || usage.Output == nil {
-					return fmt.Errorf("Kiro 用量缺少 uncachedInputTokens/outputTokens")
+					return fmt.Errorf("kiro 用量缺少 uncachedInputTokens/outputTokens")
 				}
 				for _, count := range []int{*usage.Input, *usage.Output, usage.CacheRead, usage.CacheWrite} {
 					if count < 0 || count > 1000000000 {
-						return fmt.Errorf("Kiro 用量计数超出范围")
+						return fmt.Errorf("kiro 用量计数超出范围")
 					}
 				}
 				if *usage.Input > 0 || *usage.Output > 0 || usage.CacheRead > 0 || usage.CacheWrite > 0 {
@@ -212,11 +212,11 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				Output *int `json:"outputTokens"`
 			}
 			if err := json.Unmarshal(event.Payload, &payload); err != nil {
-				return fmt.Errorf("Kiro metering 用量事件无效")
+				return fmt.Errorf("kiro metering 用量事件无效")
 			}
 			for _, count := range []*int{payload.Input, payload.Output} {
 				if count != nil && (*count < 0 || *count > 1000000000) {
-					return fmt.Errorf("Kiro 用量计数超出范围")
+					return fmt.Errorf("kiro 用量计数超出范围")
 				}
 			}
 			if response.UsageSource != "metadata" && payload.Input != nil && payload.Output != nil && (*payload.Input > 0 || *payload.Output > 0) {
@@ -225,7 +225,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 				response.UsageSource = "metering"
 			}
 		case "invalidStateEvent":
-			return fmt.Errorf("Kiro 返回 invalidStateEvent")
+			return fmt.Errorf("kiro 返回 invalidStateEvent")
 		}
 		return nil
 	})
@@ -236,7 +236,7 @@ func DecodeResponse(ctx context.Context, reader io.Reader, emit func(ResponseBlo
 		return response, err
 	}
 	if len(response.Blocks) == 0 {
-		return response, fmt.Errorf("Kiro 响应内容为空")
+		return response, fmt.Errorf("kiro 响应内容为空")
 	}
 	return response, nil
 }

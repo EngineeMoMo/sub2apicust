@@ -34,19 +34,19 @@ type customKiroOutput struct {
 
 func validateCustomKiroIngress(body []byte, format string) error {
 	if format == "responses" && (gjson.GetBytes(body, "previous_response_id").String() != "" || gjson.GetBytes(body, "conversation").Exists() || gjson.GetBytes(body, "background").Bool() || gjson.GetBytes(body, "store").Bool()) {
-		return errors.New("Kiro 仅支持无状态 Responses，请提交完整历史并关闭 store/background")
+		return errors.New("kiro 仅支持无状态 Responses，请提交完整历史并关闭 store/background")
 	}
 	if format == "responses" {
 		if responseFormat := gjson.GetBytes(body, "text.format.type").String(); responseFormat != "" && responseFormat != "text" {
-			return errors.New("Kiro 尚不支持结构化输出约束")
+			return errors.New("kiro 尚不支持结构化输出约束")
 		}
 	}
 	if format == "chat" {
 		if gjson.GetBytes(body, "n").Int() > 1 {
-			return errors.New("Kiro 每次仅支持一个候选回复")
+			return errors.New("kiro 每次仅支持一个候选回复")
 		}
 		if responseFormat := gjson.GetBytes(body, "response_format.type").String(); responseFormat != "" && responseFormat != "text" {
-			return errors.New("Kiro 尚不支持结构化输出约束")
+			return errors.New("kiro 尚不支持结构化输出约束")
 		}
 	}
 	return nil
@@ -262,7 +262,7 @@ func (output *customKiroOutput) failure(message string) {
 func (s *GatewayService) forwardCustomKiro(ctx context.Context, c *gin.Context, account *Account, body []byte, model string, stream bool, format string, includeUsage bool, mapping *apicompat.ResponsesClientToolMapping) (*ForwardResult, error) {
 	started := time.Now()
 	if s.customKiro == nil {
-		return nil, errors.New("Kiro 服务未配置")
+		return nil, errors.New("kiro 服务未配置")
 	}
 	upstreamCtx, release := detachStreamUpstreamContext(ctx, stream)
 	defer release()
@@ -296,11 +296,11 @@ func (s *GatewayService) forwardCustomKiro(ctx context.Context, c *gin.Context, 
 			return nil, &UpstreamFailoverError{StatusCode: response.StatusCode, ResponseBody: safeBody}
 		}
 		customKiroWriteError(c, format, http.StatusBadGateway, fmt.Sprintf("Kiro 上游返回 HTTP %d", response.StatusCode))
-		return nil, fmt.Errorf("Kiro HTTP %d", response.StatusCode)
+		return nil, fmt.Errorf("kiro HTTP %d", response.StatusCode)
 	}
 	if !strings.HasPrefix(strings.ToLower(response.Header.Get("Content-Type")), "application/vnd.amazon.eventstream") {
 		customKiroWriteError(c, format, http.StatusBadGateway, "Kiro 上游未返回 EventStream")
-		return nil, errors.New("Kiro 上游响应类型无效")
+		return nil, errors.New("kiro 上游响应类型无效")
 	}
 	output := newCustomKiroOutput(c, format, model, includeUsage, mapping)
 	usageMode := call.Account.GetCredential("usage_mode")
