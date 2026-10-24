@@ -1,5 +1,7 @@
 # Kiro 接入参考与更新追踪
 
+2026-10-24发布回执：Kiro实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，固定参考SHA及局部移植范围保持，两份ports台账已回填本仓提交。完整门禁/镜像及未验边界见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)；安全门禁因原有DOMPurify漏洞失败，当前不建议生产升级。下方未提交/未发布为历史记录；本机含261镜像与此发布提交须区分。参考更新仅人工巡检。
+
 ## 2026-10-24 人工巡检与计量修复（最新）
 
 2026-10-24 14:53（Asia/Shanghai）六仓检查全部成功，均与下表锁定SHA identical、无新提交或Release变化；报告output/kiro-usage-fix-20261024/reference-watch/latest.json。kirocc等在这些既有版本已提供用量回退，不能称本轮发现新的上游修复。局部适配新增[ports-20261024.json](../tools/kiro/ports-20261024.json)，保留完整来源SHA、文件、许可证、差异和测试；sources.lock.json的reviewedCommit/portedCommit未改变。

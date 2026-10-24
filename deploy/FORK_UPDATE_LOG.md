@@ -9,7 +9,7 @@
 | 本仓 origin | https://github.com/EngineeMoMo/sub2apicust ，默认main，公开仓库 | git remote -v及GitHub仓库API |
 | 派生关系 | 代码为sub2api定制派生仓；GitHub API的fork=false，没有GitHub parent字段，不能写成已加入官方fork网络 | output/kiro-release-20261024/repository.json |
 | 官方 upstream | https://github.com/Wei-Shaw/sub2api ，禁止向该remote推送 | git remote -v |
-| 本轮提交前origin/main | cafcd2bac1af98d533b45e19fb3660fb058b940b，与本机HEAD相同 | 2026-10-24实际git fetch origin main后rev-parse/rev-list |
+| 本轮提交前origin/main | cafcd2bac1af98d533b45e19fb3660fb058b940b，与当时本机HEAD相同 | 2026-10-24实际git fetch origin main后rev-parse/rev-list |
 | 当前已同步的官方基线 | b0a02a3304a0a78cdd003ddda1dd23ba02c03084，源码VERSION=0.2.17 | git merge-base HEAD upstream/main及git show HEAD:backend/cmd/server/VERSION |
 | 本次看到的官方main | 37067e8e340e9440d173a92b4faa05e8ce58368f，源码VERSION=0.2.18 | 2026-10-24实际git fetch upstream main及git show upstream/main:backend/cmd/server/VERSION |
 | 尚未同步的官方差异 | 47个提交，含合并/依赖/文档提交，不等于47项独立修复 | git rev-list --count HEAD..upstream/main，发布前记录于output/kiro-release-20261024 |
@@ -18,13 +18,25 @@
 
 ## 2026-10-24 Kiro接入发布
 
-用户已授权提交、推送本轮代码并维护文档。业务提交SHA及远程检查终态在推送核验后补录；提交前本地验证不等于远程门禁成功。
+代码已推送origin/main：首个功能提交3e19f039162515b2a89e0f5cfcea3ed99d4d1dd4，两次静态检查补修后的实际业务提交4b44237acb7a7a1da38b9e0cee5a5f29875d5e48。补修仅调整新增Kiro文件的错误前缀、字符串构建器返回值处理和等价角色switch。下方早期“未提交/未发布”属于历史状态，最新发布状态以本节为准；代码推送不代表生产门禁全部通过。
+
+| 同一业务SHA的检查 | 运行ID | 当前结果 |
+| --- | --- | --- |
+| CI | [40079131558](https://github.com/EngineeMoMo/sub2apicust/actions/runs/40079131558) | success；完整Linux unit/integration、专用PostgreSQL/Redis、Go lint 0问题、前端71文件1003项、Family产品node 176项、shell及release-helpers通过 |
+| Security Scan | [40079131565](https://github.com/EngineeMoMo/sub2apicust/actions/runs/40079131565) | failure；backend-security成功，frontend-security被两项DOMPurify漏洞阻塞 |
+| Build custom image (GHCR) | [40079131591](https://github.com/EngineeMoMo/sub2apicust/actions/runs/40079131591) | success；固定SHA镜像、平台/摘要及OCI来源已验真 |
+
+候选镜像ghcr.io/engineemomo/sub2apicust:sha-4b44237，平台linux/amd64，构建VERSION=0.2.17-custom.4b44237ac。index摘要sha256:15fcefd2bd4b3a6f1065782174797566b894a17098a93d0490656a852b74a9eb；平台manifest摘要sha256:9805dc9a8b6212b7005f2ad50cc9f36d73c69d11e72dbe2a5c8dae42ee23bb7d；config摘要sha256:67ebb631e3a00df271d8d757e206f885805268e7e0d0d6cb25369b4960bc0e0d。GHCR原始三层SHA256及OCI revision/source与实际业务SHA匹配，构建日志同时确认前端生产构建、i18n/Family嵌入回归及Linux go build -tags embed成功。证据output/kiro-release-20261024/verified-release.json及business-image-build.log。安全失败仍保留，候选镜像成功不能写成所有发布门禁通过。
+
+提交范围验证来自索引独立快照：前端71文件1003项、类型检查和ESLint（0错误/26警告）通过；后端7包524个定向测试节点通过，独立PostgreSQL CAS含子项10节点通过。静态补修后独立快照再过523节点，并单独补验前后端平台清单一致性1项；没有把缺少前端源码引起的首次跳过当作通过。最后一处仓储错误前缀补修后重新运行独立PostgreSQL CAS，10节点通过、零跳过，测试容器已按ID/名称/标签核实后清理；前端内容与首个功能提交相同。离线参考工具24/24通过；首个功能SHA的远程巡检工作流40077750397仅运行离线测试，远程watch因非人工触发而跳过。
+
+安全阻塞为现有DOMPurify3.4.16：GHSA-cg2g-xh64-v4q7（critical）、GHSA-mrv2-3pqr-j5jr（high）。本轮业务提交前后package.json和pnpm-lock.yaml的Git blob分别相同，未新增审计例外；官方修复828626804已在待同步清单中，本轮尚未迁入。证据output/kiro-release-20261024/business-frontend-security.log（实际最终业务SHA）。生产升级前先处理门禁，当前不提供直接升级命令。
 
 本次范围为原生Kiro OAuth/API Key凭据导入、代理/刷新/CAS/outbox、三协议流式/非流式、后台测试/图标/来源帮助、计量兼容和显式estimated选项，以及参考来源/许可证/人工巡检工具。默认verified不变；不会通过发布代码自动修改实号计量设置。新状态提示的AccountTestModal测试纳入根Makefile关键回归。
 
 日净充值门槛及迁移261、营销素材保留在本地工作树，不纳入本次Kiro业务提交。2026-10-24本地Docker版本0.2.17-custom.kiro-usage-20261024-1092d0243ba0来自含这些并行代码的工作树，不能把它的源码清单当作本次发布提交的完整字节清单。发布前从暂存区导出独立源码快照验证，远程CI和GHCR继续按实际业务SHA核验。
 
-已取得的实号证据仅为testkiro/Sonnet4.5最小生成OK.；billing_ready=false、usage_source=missing，原账号仍verified。estimated的三协议隔离回归已通过，但实号估算收费、精确Token/账单、其他模型权限及图片/工具多轮尚未验收。使用限制见[KIRO_NATIVE.md](KIRO_NATIVE.md)。生产仍由用户自行部署。
+已取得的实号证据仅为testkiro/Sonnet4.5最小生成OK.；billing_ready=false、usage_source=missing，原账号仍verified。estimated的三协议隔离回归已通过，但实号估算收费、精确Token/账单、其他模型权限及图片/工具多轮尚未验收。使用限制见[KIRO_NATIVE.md](KIRO_NATIVE.md)。生产仍由用户自行部署。后续仅文档/来源记录回执使用[skip ci]，不产生新业务镜像；核验对象始终是4b44237acb7a7a1da38b9e0cee5a5f29875d5e48，不把回执SHA的跳过检查当作通过。
 
 ## 官方待同步项（按提交主题初筛）
 
@@ -37,7 +49,7 @@
 - e445cc3e2：按操作及资源范围授权的管理员API Key，需要检查本仓管理员认证/IP/step-up接缝。
 - 53002f677、89654873f、67dca9687：调度/模型映射/配额累加性能路径，需要核对本仓平台清单与缓存定制。
 
-完整提交列表和来源SHA保存在本轮output目录；此清单只表示本次观察到的官方状态，下一次须重新fetch。
+完整47个提交SHA/主题及观察状态已持久保存到[官方更新快照](../tools/upstream/sub2api-20261024.json)，全部ported=false；原始取证另存本轮output目录。此清单只表示本次观察到的官方状态，下一次须重新fetch，新增带日期快照并保留历史。
 
 ## 下次人工更新流程
 

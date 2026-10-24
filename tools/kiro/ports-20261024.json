@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "recordedOn": "2026-10-24",
   "localBaseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
-  "localImplementationCommit": null,
-  "status": "本轮局部适配已通过定向回归；本机镜像与实号验证结果见HANDOFF最新状态及output/kiro-usage-fix-20261024/verification.json",
+  "localImplementationCommit": "4b44237acb7a7a1da38b9e0cee5a5f29875d5e48",
+  "status": "代码已推送origin/main；本机与正式提交范围不同，完整门禁/镜像及计费限制见deploy/FORK_UPDATE_LOG.md和HANDOFF最新状态",
   "policy": "仅记录下列固定SHA的局部设计适配，不整仓合并，不推进sources.lock.json的reviewedCommit或portedCommit；参考巡检仅人工触发。",
   "manualWatch": {
     "checkedAt": "2026-10-24T06:53:15.040Z",
@@ -80,7 +80,7 @@
         "暂不估算redacted_thinking，CRC/截断/非法计量不能回退成功",
         "没有精确缓存读写用量时不模拟缓存折扣",
         "实号工具多轮和其他模型权限/地区仍须单独验收",
-        "未提交推送或部署生产，未运行同SHA远程CI"
+        "已推送4b44237acb7a7a1da38b9e0cee5a5f29875d5e48，生产未部署；同SHA远程门禁及已知阻塞见deploy/FORK_UPDATE_LOG.md"
       ]
     }
   ]

@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-24",
+  "observedAt": "2026-10-24T08:21:40.120Z",
+  "timezone": "Asia/Shanghai",
+  "origin": {
+    "repository": "EngineeMoMo/sub2apicust",
+    "defaultBranch": "main",
+    "githubFork": false,
+    "preReleaseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
+    "businessCommit": "4b44237acb7a7a1da38b9e0cee5a5f29875d5e48"
+  },
+  "upstream": {
+    "repository": "Wei-Shaw/sub2api",
+    "branch": "main",
+    "integratedBaseCommit": "b0a02a3304a0a78cdd003ddda1dd23ba02c03084",
+    "integratedSourceVersion": "0.2.17",
+    "observedCommit": "37067e8e340e9440d173a92b4faa05e8ce58368f",
+    "observedSourceVersion": "0.2.18"
+  },
+  "status": "observed_only_not_merged",
+  "policy": "仅在用户人工提出时巡检/同步；本记录不推进已集成基线，不代表已逐项移植或测试。后续更新另存带日期的记录，保留本次观察。",
+  "commitCount": 47,
+  "commitCountMeaning": "包括合并、依赖及文档提交，不等于独立修复数量",
+  "prioritySecurityReview": {
+    "commitPrefix": "828626804",
+    "reason": "最终业务SHA安全门禁实际检测到DOMPurify两项critical/high通告，官方已有3.4.17补丁",
+    "advisories": [
+      "GHSA-cg2g-xh64-v4q7",
+      "GHSA-mrv2-3pqr-j5jr"
+    ],
+    "ported": false
+  },
+  "commits": [
+    {
+      "commit": "e068c3d02ff8664c1142d5f7c51a05a82f75ad3d",
+      "subject": "fix(openai): preserve overload retries after queued and metadata events",
+      "ported": false
+    },
+    {
+      "commit": "7fcaa32db4940ff9ca42b961b00c453b496d8d25",
+      "subject": "fix(accounts): persist platform and status filters",
+      "ported": false
+    },
+    {
+      "commit": "2b1f129385f4475ffddf8a91b44feceef5101fb6",
+      "subject": "fix(gemini): 流式中途客户端断开时按已收集用量计费",
+      "ported": false
+    },
+    {
+      "commit": "1cdecf4a88f016115392033bdbe0662d7ff92e81",
+      "subject": "fix(billing): Grok 4.7 Fast 按官方 Fast 价卡计费 (#8119)",
+      "ported": false
+    },
+    {
+      "commit": "9c41b32695c4aa5d2673f228097762cba14e64f0",
+      "subject": "fix(gemini): prompt 被拦截只报缓存命中时 input_tokens 不再为负",
+      "ported": false
+    },
+    {
+      "commit": "c7bfcd93aa206065238b67757d5d8fae81cf697b",
+      "subject": "fix(tools): normalize parameter constants and annotations",
+      "ported": false
+    },
+    {
+      "commit": "94c7d6b025a4074efe34b444e7ea218c85409dd6",
+      "subject": "fix(gateway): Anthropic 账号 chat/responses 兼容流式客户端断开后读完上游再计费",
+      "ported": false
+    },
+    {
+      "commit": "ab71e12ec46c532839023c013daeca48e9f3e099",
+      "subject": "fix(images): 异步生图转存的图片下载与同步回填策略对齐",
+      "ported": false
+    },
+    {
+      "commit": "378984d87f2b68db15626ae8f18b9e923ab82b85",
+      "subject": "Merge pull request #8223 from Wei-Shaw/fix/async-image-download-policy",
+      "ported": false
+    },
+    {
+      "commit": "afbef7c8cca571660d6ca66a211d36ad83ea46ff",
+      "subject": "fix(deepseek): avoid duplicate image payloads",
+      "ported": false
+    },
+    {
+      "commit": "0fa02816afcaea3610171dd229dd910c058c47e4",
+      "subject": "Merge pull request #8168 from feeeei/fix/gemini-stream-client-disconnect-billing",
+      "ported": false
+    },
+    {
+      "commit": "8f2cbb53d9d1c40e1865b07ac460571f7d4c48de",
+      "subject": "Merge pull request #8177 from feeeei/fix/gemini-negative-input-tokens",
+      "ported": false
+    },
+    {
+      "commit": "d6120b5d8e05fe4edf54f1575c4dd6e5c7beb856",
+      "subject": "feat(account): Vertex 账号支持配额上限",
+      "ported": false
+    },
+    {
+      "commit": "47cb84b8b047ff883d3ab6214151c96ff8b93584",
+      "subject": "fix(gemini): 分组「允许当前分组生图」开关对 Gemini 系入口生效",
+      "ported": false
+    },
+    {
+      "commit": "4355236e00230de65226ad6ba710cffd1a512473",
+      "subject": "fix(gateway): 兼容流上游未正常结束时报错并对齐原生收尾",
+      "ported": false
+    },
+    {
+      "commit": "89654873ff4b8d586e333a1dd21d194aa82facf0",
+      "subject": "perf(account): 模型映射签名改为与遍历顺序无关、零分配",
+      "ported": false
+    },
+    {
+      "commit": "38b72d734e0aa92ce7547a5ea8618abb7290cf98",
+      "subject": "fix(ratelimit): 模型限流快照写入改为写时复制",
+      "ported": false
+    },
+    {
+      "commit": "d5dbb5c36be3e2b76e7f0197e6ef7f3f214df6fc",
+      "subject": "perf(gateway): 单 antigravity 账号分组判定改为按需求值",
+      "ported": false
+    },
+    {
+      "commit": "53002f677c3d8e182ba11858e00b301079107f6e",
+      "subject": "perf(scheduler): 调度快照解码结果常驻进程内存",
+      "ported": false
+    },
+    {
+      "commit": "e0fa4b94f9b962949da039c09e63968358324e26",
+      "subject": "fix(ratelimit): avoid penalizing Cloudflare 1010 blocks",
+      "ported": false
+    },
+    {
+      "commit": "cacc80b8620e11e9655ab307471f71eb9ee31a0e",
+      "subject": "fix(security): clear dependency security scan failures",
+      "ported": false
+    },
+    {
+      "commit": "4c940c3cb7069d23cd304fc378f29ffae1ceb80f",
+      "subject": "fix(ci): synchronize Go patch version checks",
+      "ported": false
+    },
+    {
+      "commit": "4942b2afc70be7291df28bce594eeef21b71e336",
+      "subject": "Merge pull request #8139 from zenggang/contribute/openai-preoutput-metadata-20261016",
+      "ported": false
+    },
+    {
+      "commit": "d744c22016f15f37191d90fe8850a66ccb730399",
+      "subject": "Merge pull request #8142 from qhmhyp/fix/account-filter-persistence",
+      "ported": false
+    },
+    {
+      "commit": "9a1680042a2315df7fcfa925f9235bfead528ad6",
+      "subject": "Merge pull request #8267 from wucm667/fix/issue-8266-security-scan",
+      "ported": false
+    },
+    {
+      "commit": "4c7e9b5b6b0664e12fbc5a69efffc06e7a363c6c",
+      "subject": "Merge pull request #8166 from feeeei/feat/vertex-account-quota",
+      "ported": false
+    },
+    {
+      "commit": "98f83b7263227cea945652e29759a5b7df9f92fb",
+      "subject": "Merge pull request #8167 from feeeei/fix/gemini-group-image-generation-gate",
+      "ported": false
+    },
+    {
+      "commit": "b7512305123aff307d3ab92840f2077eabc2529f",
+      "subject": "Merge pull request #8210 from feeeei/fix/anthropic-compat-stream-disconnect-billing",
+      "ported": false
+    },
+    {
+      "commit": "b6c366380bd2639c939871a2cc8663cb4f5db32e",
+      "subject": "Merge pull request #8249 from feeeei/perf/lazy-single-antigravity-probe",
+      "ported": false
+    },
+    {
+      "commit": "b3e66f79a81400c729dbea78183f150509478343",
+      "subject": "Merge pull request #8250 from feeeei/perf/model-mapping-signature",
+      "ported": false
+    },
+    {
+      "commit": "a34f373973bf547ccec301c7405eb45194e1f28a",
+      "subject": "Merge pull request #8251 from feeeei/perf/scheduler-snapshot-memo",
+      "ported": false
+    },
+    {
+      "commit": "67dca9687eddcd4a21d44b354c2afe2d921942a6",
+      "subject": "perf(billing): 账号配额累加按已设置的周期维度选择语句",
+      "ported": false
+    },
+    {
+      "commit": "624874b313241c46a34c68eb843c021c7dbdacaf",
+      "subject": "Merge pull request #8269 from feeeei/perf/account-quota-increment-variants",
+      "ported": false
+    },
+    {
+      "commit": "5e45fa482b186145b84ddb2d79bc93a509dba1d2",
+      "subject": "Merge pull request #8224 from wucm667/fix/issue-8222-deepseek-image-size",
+      "ported": false
+    },
+    {
+      "commit": "888c6057333e011b8cfeb81a867f445d229d1432",
+      "subject": "Merge pull request #8188 from wucm667/fix/issue-8187-tool-schema-constants",
+      "ported": false
+    },
+    {
+      "commit": "aa48a8bbd80c6ac956dbcbaba651f417b3cf78e3",
+      "subject": "Merge pull request #8255 from wucm667/fix/issue-8248-cloudflare-json-403",
+      "ported": false
+    },
+    {
+      "commit": "7da09cab4e875463baa79fc150adde700c5438df",
+      "subject": "chore: update sponsors",
+      "ported": false
+    },
+    {
+      "commit": "59100d324e9fafa6776182b3d3ea2b36e3edaf14",
+      "subject": "fix(build): 对齐上游 Go 1.27.3 镜像版本",
+      "ported": false
+    },
+    {
+      "commit": "21cc926933163e015d2b632be07055759c983541",
+      "subject": "Merge pull request #8275 from apple050620312/fix/docker-go-1.27.3",
+      "ported": false
+    },
+    {
+      "commit": "dba770d56a0ee0ae5bad1b3dc5e11614d323163c",
+      "subject": "Merge pull request #8170 from StarryKira/fix/issue-8119-grok-fast-pricing",
+      "ported": false
+    },
+    {
+      "commit": "c591412c42ab195dacdede9eb19f9cbfee221144",
+      "subject": "fix(openai): 合并 Codex overload 身份与空流安全重试修复",
+      "ported": false
+    },
+    {
+      "commit": "c5b811284aea2c4922561da2f0a78256334b23df",
+      "subject": "Merge pull request #8305 from apple050620312/fix/openai-overload-recovery-20261023",
+      "ported": false
+    },
+    {
+      "commit": "8286268047cbbca4e7f5fbb63ff0890c1ea37cf5",
+      "subject": "fix(deps): bump dompurify to 3.4.17 for GHSA-cg2g-xh64-v4q7 / GHSA-mrv2-3pqr-j5jr",
+      "ported": false
+    },
+    {
+      "commit": "ac1b8f1271be0d674fa6f074403c1410f30a3a81",
+      "subject": "chore: update sponsors",
+      "ported": false
+    },
+    {
+      "commit": "5c185c5c5d4f5e409e2139806e0964ae944e03e8",
+      "subject": "chore: sync VERSION to 0.2.18 [skip ci]",
+      "ported": false
+    },
+    {
+      "commit": "e445cc3e2d9c9f330f2af069d6693bfdeb2245ad",
+      "subject": "新增按操作与资源范围授权的管理员 API 密钥",
+      "ported": false
+    },
+    {
+      "commit": "37067e8e340e9440d173a92b4faa05e8ce58368f",
+      "subject": "Merge pull request #8319 from lyen1688/feat/scoped-admin-api-keys",
+      "ported": false
+    }
+  ],
+  "evidence": {
+    "git": "git fetch upstream main; git merge-base HEAD upstream/main; git log --format=%H %s --reverse HEAD..upstream/main（在本轮业务提交前执行）",
+    "repositoryApi": "GitHub GET repos/EngineeMoMo/sub2apicust",
+    "rawDirectory": "output/kiro-release-20261024"
+  },
+  "limitations": [
+    "GitHub fork=false，本仓为独立定制派生仓，未创建GitHub parent关联",
+    "官方v0.2.18未合并，所有ported均为false",
+    "生产未部署，不把候选镜像构建成功当所有门禁通过"
+  ]
+}

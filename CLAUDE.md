@@ -1,6 +1,6 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
-2026-10-24用户已授权提交推送Kiro并要求记录派生仓更新：仅Kiro相关代码/工具/文档入本次发布，日净充值/261与营销素材保留本地。官方已至v0.2.18/37067e8e3，当前已同步基线仍v0.2.17/b0a02a330，47个新提交仅记录未合并；GitHub仓库API fork=false，不能虚称已有parent关联。新增deploy/FORK_UPDATE_LOG.md追踪来源、范围、待同步项和人工更新流程。暂存快照及实际业务SHA远程CI/安全/GHCR待本轮核验，最终以HANDOFF最新发布回执为准。
+2026-10-24 Kiro已推送origin/main，实际业务提交4b44237acb7a7a1da38b9e0cee5a5f29875d5e48（功能初提交3e19f0391）；索引独立快照前端1003、后端定向524节点和PG CAS10节点通过，静态补修后后端523+平台清单1项通过。同SHA CI40079131558完整成功，含Linux全量unit/integration、专用PG/Redis、lint0、前端1003与Family176；GHCR40079131591/sha-4b44237成功，原始三层摘要及OCI来源已验真，安全40079131565因原有DOMPurify3.4.16两项critical/high通告失败，依赖文件本轮未变，无新增例外；当前不建议生产升级。最新回执以HANDOFF及deploy/FORK_UPDATE_LOG.md为准，下方未提交状态为历史。日门槛/261及营销素材保留本地，原实号保持verified，不自动估算收费、不部署生产、无定时巡检。官方仅fetch至v0.2.18/37067e8e3，当前共同基线仍v0.2.17/b0a02a330、47提交未合并；GitHub API fork=false，不虚称parent关联。
 
 
 2026-10-24 Kiro计量兼容本机修复已交付，覆盖下方仅诊断/旧版本：六仓人工巡检均无新增提交/Release变化；参考固定SHA的metering与回退设计，新增来源tools/kiro/ports-20261024.json，不推进整仓portedCommit。默认verified仍拒绝正式请求缺精确量，管理员显式estimated才按本站价格/倍率估算，缓存读写0，响应/日志标记来源；连接成功单独显示计量未就绪警告。Go41顶层/128含子项、前端152、eslint/类型及Docker内前端/i18n/Family/Linux embed通过。8080运行0.2.17-custom.kiro-usage-20261024-1092d0243ba0，Image dd27a780e6af，三服务healthy；原PG/Redis/卷、281设置、317迁移、数据计数及配置保持。实号testkiro/Sonnet4.5单次OK./success=true，但billing_ready=false/source=missing，原账号verified未改；这不证明精确计费或其他模型通过。备份698665字节已校验，回退before-kiro-usage-20261024；完整证据output/kiro-usage-fix-20261024/verification.json。未提交推送/同SHA远程CI/生产部署，无定时任务；详细待办以HANDOFF五为准。

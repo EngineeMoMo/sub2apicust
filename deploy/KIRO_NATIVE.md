@@ -1,5 +1,7 @@
 # Kiro 原生接入（本地Docker，精确计量/账单待验收）
 
+2026-10-24发布回执：Kiro实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，固定参考SHA及局部移植范围保持，两份ports台账已回填本仓提交。完整门禁/镜像及未验边界见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)；安全门禁因原有DOMPurify漏洞失败，当前不建议生产升级。下方未提交/未发布为历史记录；本机含261镜像与此发布提交须区分。参考更新仅人工巡检。
+
 ## 2026-10-24 计量兼容修复（当前状态）
 
 六个参考仓人工巡检均与锁定SHA相同，没有新提交/Release变化；既有kirocc已经提供metering及估算回退设计，本轮局部适配见[来源台账](../tools/kiro/ports-20261024.json)。当前本机版本0.2.17-custom.kiro-usage-20261024-1092d0243ba0，镜像/运行Image dd27a780e6af，三服务healthy。

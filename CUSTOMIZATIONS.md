@@ -2,7 +2,9 @@
 
 ## 2026-10-24 Kiro发布入口与派生仓更新台账
 
-新增deploy/FORK_UPDATE_LOG.md记录origin/upstream、实际共同基线、官方待同步提交、发布范围和人工流程；2026-10-24只获取官方v0.2.18引用，未合并。本次Kiro提交排除日门槛/261和营销素材，不能用混合工作树的本地镜像替代正式业务SHA验收。根Makefile的[CUSTOM]Kiro关键回归列表补AccountTestModal.spec.ts，确保计量warning分支在CI执行；原Kiro来源锁定及许可证保持，远程结果按新业务SHA记录。
+新增tools/upstream/sub2api-20261024.json，持久记录官方观察HEAD/共同基线/版本与完整47个提交，全部ported=false；用于后续人工巡检比对，不自动合并或定时运行。
+
+新增deploy/FORK_UPDATE_LOG.md记录origin/upstream、实际共同基线、官方待同步提交、发布范围和人工流程；2026-10-24只获取官方v0.2.18引用，未合并。本次Kiro提交排除日门槛/261和营销素材，不能用混合工作树的本地镜像替代正式业务SHA验收。根Makefile的[CUSTOM]Kiro关键回归列表补AccountTestModal.spec.ts，确保计量warning分支在CI执行；原Kiro来源锁定及许可证保持，远程结果按新业务SHA记录。 本轮功能3e19f0391及静态补修4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main；补修仅涉及新增Kiro文件的错误前缀、strings.Builder返回值和等价switch。来源ports两份台账回填该实际提交；本轮远程门禁/候选镜像证据以FORK_UPDATE_LOG为准，安全失败不得写全绿。下方未提交状态为历史。
 
 
 ## 2026-10-24 Kiro计量兼容及显式估算（本地Docker已更新）

@@ -1,7 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
 <!-- [CUSTOM] 本仓派生来源、官方更新与逐次发布的持久台账。 -->
-[派生仓更新台账](deploy/FORK_UPDATE_LOG.md)记录本次实际fetch结果：官方main=37067e8e340e9440d173a92b4faa05e8ce58368f/VERSION0.2.18，已同步基线仍b0a02a330/VERSION0.2.17，47个未纳入提交。本轮不合并，只提交用户授权的Kiro相关改动；日门槛/261及营销工作留本地。发布须独立验证暂存区和实际业务SHA的CI/安全/GHCR，不能套用含并行代码的本机镜像。后续同步按台账及本页merge-tree/定制自检流程，仍由用户人工提出。
+[派生仓更新台账](deploy/FORK_UPDATE_LOG.md)记录官方main=37067e8e340e9440d173a92b4faa05e8ce58368f/VERSION0.2.18；已同步基线仍b0a02a330/VERSION0.2.17，47个未纳入提交。Kiro功能及静态补修已推origin/main，实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48；同SHA CI40079131558完整success，含Linux全量unit/integration、专用PG/Redis、lint0、前端1003和Family176；候选镜像sha-4b44237（linux/amd64）/GHCR40079131591及摘要/OCI来源已验真，安全40079131565因原有DOMPurify漏洞失败，当前不建议生产升级。日门槛/261及营销工作留本地，不用含并行代码的本机镜像替代正式SHA证明。后续同步按台账及本页merge-tree/定制自检流程，由用户人工提出；下方未提交推送为历史状态。
 
 
 <!-- [CUSTOM] 2026-10-24 Kiro计量兼容的最新本机终态。 -->

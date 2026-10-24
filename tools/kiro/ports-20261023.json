@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "recordedOn": "2026-10-23",
-  "status": "本地代码已实现；未提交、未推送、未部署、未用真实Kiro账号验收",
+  "status": "代码已推送origin/main；本机与正式提交范围不同，完整门禁/镜像及计费限制见deploy/FORK_UPDATE_LOG.md和HANDOFF最新状态",
   "localBaseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
-  "localImplementationCommit": null,
+  "localImplementationCommit": "4b44237acb7a7a1da38b9e0cee5a5f29875d5e48",
   "policy": "仅记录下列固定版本文件的局部协议/设计适配，未整仓合并，sources.lock.json 的 portedCommit 不推进整仓 HEAD。人工触发巡检，不创建定时任务。",
   "ports": [
     {
@@ -155,7 +155,7 @@
   "verification": "output/kiro-native-20261023/verification.json",
   "remaining": [
     "真实账号、地区/profile、工具多轮和用量账单验收",
-    "Linux同业务SHA CI与embed构建/正式发布",
+    "同业务SHA完整门禁终态见deploy/FORK_UPDATE_LOG.md；安全阻塞修复后才能建议生产发布",
     "参考项目后续差异仅在用户人工提出时检查"
   ]
 }

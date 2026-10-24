@@ -39,7 +39,7 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **2026-10-24 Kiro提交/推送进行中（用户已授权）**：本轮只发布Kiro接入/计量修复/来源工具与文档，日净充值门槛/261及营销素材保留本地。origin/main实取仍cafcd2bac，与提交前HEAD一致；官方upstream/main已至37067e8e340e9440d173a92b4faa05e8ce58368f、VERSION0.2.18，相比已同步基线b0a02a330有47个未纳入提交，本轮仅记录不合并。来源、GitHub fork=false事实、待同步主题和后续人工流程新增deploy/FORK_UPDATE_LOG.md。发布前验证暂存区独立快照，发布后查实际业务SHA的CI/安全/GHCR；不能沿用本地含261的1092d0243ba0镜像当正式提交验收。AccountTestModal新警告回归纳入Makefile关键列表；证据output/kiro-release-20261024。推送/远程门禁终态待后续回执覆盖，生产不部署。
+- **2026-10-24 Kiro代码/候选镜像已推送验真，安全门禁未过**：origin/main实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48，功能初提交3e19f0391。独立索引快照前端1003项、后端定向524节点及专用PG CAS10节点通过；补修后独立后端523+平台清单1项通过。同SHA CI40079131558完整成功：Linux全量unit/integration、专用PG/Redis、lint0、前端1003、Family176、shell/release-helpers；镜像40079131591成功，固定sha-4b44237（linux/amd64）及原始index/platform/config/OCI来源验真，index摘要15fcefd2bd4b3a6f1065782174797566b894a17098a93d0490656a852b74a9eb；安全40079131565已失败，原有DOMPurify3.4.16的critical/high通告阻塞，依赖锁文件本轮未变、无新增例外。官方v0.2.18/37067e8e3只fetch，47个差异提交未合并。持久记录deploy/FORK_UPDATE_LOG.md，来源固定SHA回填两份ports台账；日门槛/261及营销工作保留本地。当前本机1092d0243ba0含并行261，与发布提交不是完整源码一致；生产未部署，不自动启用估算收费，不设定时任务。下方“未提交推送”为历史，最新以本条及台账为准。
 
 
 - **2026-10-24 Kiro计量兼容已修复并更新本机（覆盖下方仅诊断/旧镜像状态）**：人工巡检六仓全部成功，与锁定SHA均identical、无新增提交/Release变化；参考kirocc既有metadata/metering优先与估算回退，本轮逐项适配，来源tools/kiro/ports-20261024.json。补metering输入/输出Token、metadata优先与快照覆盖；解码与计费分离，连接测试独立报告billing_ready/usage_source及有限事件计数。默认verified继续拒绝正式请求缺用量；只有管理员在编辑账号中显式选择estimated才按本站价格/倍率估算计费，缓存读写0，响应/日志标记来源。未自动修改实号设置。Go41顶层/128含子项、前端5文件152项、变更eslint/类型检查通过；镜像构建含i18n3项、Family3顶层/25含子项、Linux amd64 embed。新版本0.2.17-custom.kiro-usage-20261024-1092d0243ba0，镜像/运行Image均dd27a780e6afd5d367149111324cdf064bf9e21b0ecd6a9191f26e7409880846，三服务healthy；PG/Redis容器、三个卷、281设置摘要、317迁移、业务计数与.env/compose均保持。15:18本机实号testkiro/Sonnet4.5单次返回OK.且test_complete.success=true，同时billing_ready=false、usage_source=missing；有2个正文及各1个context/metadata/metering事件，但未取得可识别的精确Token，原始payload未留存，不推断其他模型/所有Kiro响应。账号仍verified，估算模式真实计费、工具多轮及其他模型权限仍待验收。数据库备份698665字节/pg_restore目录校验通过，回退sub2apicust:before-kiro-usage-20261024保留9c12017f8197；证据output/kiro-usage-fix-20261024/verification.json。未提交推送、同SHA远程CI或生产部署；只人工巡检。
@@ -781,7 +781,9 @@
 
 ## 五、待办 / 下一步
 
-- [ ] **2026-10-24 Kiro发布收口（已获用户提交/推送授权）**：白名单暂存Kiro代码与文档，保留日门槛/261及营销工作，验证独立暂存快照后推origin/main，核验本轮业务SHA的CI/安全/GHCR并记录镜像来源/摘要，补齐发布回执。
+- [x] **2026-10-24 Kiro代码提交推送**：功能3e19f0391、静态补修4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，独立索引快照验证通过；范围排除日门槛/261与营销工作，参考巡检仅人工。
+- [x] **Kiro发布取证与文档回执**：业务SHA4b44237的CI40079131558完整success，GHCR40079131591及固定sha-4b44237的摘要/来源验真；FORK_UPDATE_LOG、官方47提交快照、来源ports与交接已更新，不把文档回执SHA当镜像业务SHA。
+- [ ] **生产升级前修复现有DOMPurify安全阻塞**：安全40079131565的backend成功、frontend因GHSA-cg2g-xh64-v4q7（critical）/GHSA-mrv2-3pqr-j5jr（high）失败；优先审阅/迁入官方828626804的3.4.17补丁并重跑同业务SHA安全/CI/GHCR。当前不建议生产升级，无新增例外、未部署生产。
 - [ ] **官方v0.2.18后续同步**：本次只fetch/记录47个差异提交，未合并；优先审阅安全依赖、流断开计费、管理员Key与本仓认证接缝，按deploy/FORK_UPDATE_LOG.md及SYNC的人工流程执行，不自动定时同步。
 
 
@@ -796,7 +798,7 @@
 - [x] **2026-10-23 Kiro核心参考审阅与来源追踪**：6仓固定SHA、3仓核心路径/34份来源文件摘要及24项巡检离线回归已记录；本轮局部适配见tools/kiro/ports-20261023.json，未整仓迁入参考HEAD。原本本地/云端定时安排已由用户取消，仅人工巡检。
 - [x] **Kiro巡检改为人工执行（2026-10-23用户明确要求）**：已删除Codex自动化kiro、移除工作流schedule。用户提出巡检时运行tools/kiro/check-updates.mjs并保存报告；可手动workflow_dispatch，push/PR仅离线测试，不启用任何周期巡检。
 - [x] **Kiro本地接入代码及回归**：JSON/文件导入、OAuth/API Key、统一刷新与账号代理、真实PG CAS/outbox、三协议流式/非流式、DTO脱敏和管理入口已接线；Go46顶层/119含子项、PG9组、前端70文件998项、类型/构建/embed及离线巡检24项通过。全量后端两项基线可复现失败另留证据，不称全量通过。
-- [ ] **Kiro原生接入发布与真实账号验收**：工作树已完成OAuth/API Key导入、刷新/代理/CAS、三协议与前端接线，并已本机Docker部署；本地Linux embed通过，同业务SHA远程CI、真实账号与账单仍待。验证范围及保留失败见两轮verification.json。下一步在用户授权发布后核验同业务SHA Linux CI/embed/镜像；用隔离的真实Kiro账号确认地区/profile、文本/图片/工具多轮及四项Token与上游账单。没有真实证据前不宣称可商用或全部兼容；参考项目只按用户人工要求巡检，逐项审阅修复，不整仓合并。
+- [x] **Kiro原生接入代码发布与Linux验证**：原生OAuth/API Key、刷新/代理/CAS/outbox、三协议及前端已推origin/main，业务4b44237同SHA完整CI和embed镜像成功。早先Windows两项基线失败保留历史证据，不能覆盖本次Linux成功；安全阻塞与实号计费/其他模型验收分别见本节待办，未宣称可商用或全部兼容。
 
 - [x] **2026-10-23 其他Kiro代理维护检索**：已核验近期提交/发布并整理五个原生代理候选，区分CLI单账号方案、较久未更新的默认分支及机器人横幅提交；证据见本轮RESEARCH.md与verified-summary.json。尚无真实账号兼容、计费和生产可用性结论，本轮未实施接入。
 
