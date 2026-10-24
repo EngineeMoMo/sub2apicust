@@ -1,5 +1,106 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-24 Kiro发布入口与派生仓更新台账
+
+新增deploy/FORK_UPDATE_LOG.md记录origin/upstream、实际共同基线、官方待同步提交、发布范围和人工流程；2026-10-24只获取官方v0.2.18引用，未合并。本次Kiro提交排除日门槛/261和营销素材，不能用混合工作树的本地镜像替代正式业务SHA验收。根Makefile的[CUSTOM]Kiro关键回归列表补AccountTestModal.spec.ts，确保计量warning分支在CI执行；原Kiro来源锁定及许可证保持，远程结果按新业务SHA记录。
+
+
+## 2026-10-24 Kiro计量兼容及显式估算（本地Docker已更新）
+
+- 自有协议包`backend/internal/pkg/kiro/response.go`增加metering输入/输出字段、metadata优先快照、全零/credits-only辨识及四种事件计数；生成解码不再承担正式计费政策，损坏帧/非法计量仍报错。credentials.go验证usage_mode枚举，省略不自动改旧账号。
+- 新增`backend/internal/service/custom_kiro_usage.go`及对应custom_kiro_usage_test.go；复用本仓输入tiktoken估算，输出覆盖可见文本/思考/工具，拒绝redacted_thinking。默认verified缺量仍失败，仅显式estimated回退；不模拟缓存或将credits换美元。JSON标记使用RawMessage避免工具大整数精度损失。
+- 自有custom_kiro_gateway/account服务接入来源标记、policy/非流式source头和估算结构化日志；连接测试的成功与billing_ready分别返回，非200补HTTP状态，安全诊断只留四种事件计数。
+- 自有`frontend/src/custom/kiro/`凭据解析/组件/中英文文案新增计量选择及费用提示；编辑默认保留原设置，可只更新usage_mode而保留服务端秘密，JSON不完整时禁用选择。
+- **本轮上游接缝**：`frontend/src/components/account/AccountTestModal.vue`的TestEvent.status与status事件黄色警告分支均有`[CUSTOM]`；对应AccountTestModal.spec.ts新增Kiro警告保留回归及`[CUSTOM]`。其余本轮运行代码均属前轮新增的自有Kiro文件。升级时保留这两处接缝，不能把所有status一律显示为成功说明。
+- 41顶层/128含子项Go及152项前端、变更eslint/类型、Linux embed及前端构建通过；实号Sonnet4.5单次OK.，精确用量仍缺，原verified账号未改。镜像、数据保全与未验边界见HANDOFF及output/kiro-usage-fix-20261024/verification.json。
+- 参考记录[ports-20261024.json](tools/kiro/ports-20261024.json)固定来源SHA/路径/许可证/测试；六仓人工巡检无新增变化，不创建定时任务、不推进整仓移植基线。未提交推送或生产部署。
+
+
+## 2026-10-24 Kiro实号用量缺失诊断（无代码变更）
+
+用户真实测试已生成OK.，随后被现有严格Token用量检查拒绝；本机原日志与response.go/custom_kiro_account.go/custom_kiro_gateway.go一致。参考估算回退未移植，不能将原离线夹具回归等同真实计量兼容。本轮只补诊断/交接说明，不改接缝、凭据或收费规则，不重试生成/部署。原始事件结构未录，缺失或字段不兼容原因仍待取证；证据output/kiro-usage-diagnosis-20261024/diagnosis.json，后续以HANDOFF四/五为准。
+
+## 2026-10-23 Kiro图标与凭据获取指引
+
+新增 `frontend/src/custom/kiro/assets/kiro.svg`，来源为 Kiro 官网 favicon，下载 SHA256 与官方认证/API Keys/缓存参考链接登记在 `tools/kiro/ui-sources-20261023.json`，只人工核查。上游 `frontend/src/components/common/PlatformIcon.vue` 的 Kiro 分支及本地图标导入均有 `[CUSTOM]`，账号/分组共用图标；`frontend/src/components/account/CreateAccountModal.vue` 既有 `[CUSTOM]` Kiro 按钮补用该图标。
+
+自有 `KiroCredentialsFields.vue` / `messages.ts` 新增中英文获取帮助：API Key 官方入口、适用套餐与仅创建时显示；OAuth 先客户端登录、常见缓存路径、IDC 注册字段与版本差异。新建默认展开、编辑默认折叠；继续导入 JSON，明确上游 Kiro Key 与本站 Key 区别。未改主题/后端/依赖/迁移；定向5文件144项及变更范围lint通过，部署最终证据见 `HANDOFF.md` 四/五与 `output/kiro-ui-help-20261023/verification.json`。
+
+## 2026-10-23 本地 Docker 构建上下文
+
+上游 `.dockerignore` 新增 `[CUSTOM]` 排除 `**/.gocache/` 与 `**/.pnpm-store/`。本轮部署预检实测 `backend/.gocache` 为 16061 个文件、11011839130 字节；首次构建在上下文传输阶段主动中止，排除后再构建。Go / pnpm 继续使用 Dockerfile 既有 BuildKit 缓存挂载，不改业务代码、依赖或运行数据。修正后上下文96.15MB，Linux镜像已构建并完成本机8080部署；前端构建/类型、i18n3项及Family3顶层/25含子项通过，三服务healthy。终态和证据见 HANDOFF 四/五及 `output/kiro-local-docker-20261023/verification.json`。
+
+## 2026-10-23 Kiro原生账号与网关接入（工作树实现，未发布）
+
+新增独立backend/internal/pkg/kiro/{credentials,eventstream,request,response}.go及协议回归；backend/internal/service/custom_kiro_{service,refresh,gateway,account,wiring}.go和两份服务回归；backend/internal/repository/custom_kiro_refresh.go及真实PostgreSQL CAS回归；backend/internal/handler/dto/custom_kiro_credentials_test.go。前端新增frontend/src/custom/kiro/凭据组件、解析、双语提示及两份测试。没有新增Kiro迁移或依赖，没有修改主题。
+
+源版本与局部适配在tools/kiro/ports-20261023.json，两份原许可证在tools/kiro/licenses；不是整仓移植，portedCommit保持null。使用/限制见deploy/KIRO_NATIVE.md。只以metadata四项真实Token快照结算，缺量报错；max_tokens/采样不是上游硬约束，无状态Responses和工具文本限制不可删。真实账号/地区/profile/账单尚未验收；后续已按用户授权完成本机Docker部署，版本及证据见HANDOFF最新状态和output/kiro-local-docker-20261023/verification.json。未提交推送或部署生产，既有日净充值门槛261随同应用，其他原工作保留。
+
+以下上游接缝逐处带[CUSTOM]，严格JSON条目采用本清单和相邻测试标识：
+
+| 文件 | 定制接缝/同步核查 |
+| --- | --- |
+| `backend/internal/domain/constants.go` | 新增PlatformKiro常量 |
+| `backend/internal/domain/platforms.go` | Kiro登记到末尾，网关Anthropic、独立平台身份 |
+| `backend/internal/domain/platforms_test.go` | 平台列表/网关预期增加Kiro |
+| `backend/internal/service/domain_constants.go` | 引用domain常量，未启用Kiro套餐阈值 |
+| `backend/internal/service/gateway_service.go` | 仅新增原生Kiro服务字段，保留旧构造器兼容 |
+| `backend/internal/service/gateway_forward.go` | Messages在Claude OAuth伪装前转入Kiro |
+| `backend/internal/service/gateway_forward_as_chat_completions.go` | Kiro入站语义校验；完成通用转换后调用原生服务 |
+| `backend/internal/service/gateway_forward_as_responses.go` | 无状态/输出约束校验；保留Responses客户端工具适配 |
+| `backend/internal/service/gateway_upstream_request.go` | 禁止任何Kiro凭据进入通用Anthropic请求构造器 |
+| `backend/internal/service/gateway_count_tokens.go` | Kiro返回明确unsupported，不向Claude发送凭据 |
+| `backend/internal/service/oauth_refresh_api.go` | Kiro轮换走独立CAS持久化并重读最新账号状态 |
+| `backend/internal/service/account_credentials_redact.go` | client_secret及camelCase令牌别名加入敏感键清单 |
+| `backend/internal/service/admin_account.go` | 创建/复制规范化；编辑先规范化别名后合并，轮换refresh清理旧访问身份 |
+| `backend/internal/service/account_service.go` | 注册平台校验及仅OAuth分组检查允许Kiro |
+| `backend/internal/service/account_test_service.go` | 注入原生服务，连接测试/手动刷新专用分流 |
+| `backend/internal/service/upstream_models.go` | 明确拒绝通用在线模型同步，不误发原生凭据 |
+| `backend/internal/service/upstream_billing_probe.go` | Kiro身份排除在通用账单探测之外 |
+| `backend/internal/service/wire.go` | 注册统一Kiro服务、包装Gateway provider、后台刷新与测试服务注入 |
+| `backend/cmd/server/wire_gen.go` | 同步上述依赖注入，离线wire工具缺subcommands校验未生成，已手动同步且embed编译通过 |
+| `backend/internal/handler/admin/account_handler.go` | 手动/批量刷新分流；模型目录用Kiro默认/账号映射 |
+| `backend/internal/handler/gateway_handler.go` | Kiro客户端模型列表用独立默认/映射目录 |
+| `backend/internal/service/platform_list_test.go` | 配额/快照预期增加Kiro，其他通用能力仍逐项限制 |
+| `backend/internal/service/channel_service_test.go` | 组合匹配平台预期末尾增加Kiro |
+| `backend/internal/service/composite_platform_test.go` | 组合调度桶预期覆盖Kiro |
+| `backend/internal/model/error_passthrough_rule_test.go` | 错误规则平台清单预期增加Kiro |
+| `backend/internal/server/api_contract_test.go` | 两份管理员设置响应快照增加Kiro默认配额 |
+| `frontend/src/components/account/CreateAccountModal.vue` | 原生平台行新增Kiro，独立凭据组件/提交分支，保留既有分组代理配置 |
+| `frontend/src/components/account/EditAccountModal.vue` | Kiro独立表单与留空保留密钥，不提交通用base_url/账单探测 |
+| `frontend/src/components/account/__tests__/CreateAccountModal.spec.ts` | 新增Kiro创建表单与实际提交回归 |
+| `frontend/src/components/account/__tests__/EditAccountModal.spec.ts` | 新增编辑不回显/不覆盖密钥和更新提交回归 |
+| `frontend/src/constants/platformCatalog.builtin.json` | 严格JSON无法添加注释；Kiro条目登记于本表，并在platforms.spec.ts加[CUSTOM]标识 |
+| `frontend/src/constants/__tests__/platforms.spec.ts` | 内置平台清单/顺序和展示名预期增加Kiro |
+| `frontend/src/api/__tests__/settings.authSourceDefaults.spec.ts` | 默认平台配额快照增加Kiro |
+| `frontend/src/components/admin/user/__tests__/UserPlatformQuotaModal.spec.ts` | 第14个平台及42个窗口控件、Kiro额度编辑/完整提交回归 |
+| `frontend/src/types/index.ts` | KnownAccountPlatform联合类型增加kiro |
+| `frontend/src/components/keys/UseKeyModal.vue` | Kiro接入示例默认模型及真实平台标签 |
+| `frontend/src/utils/keyGroupProviders.ts` | Kiro作为独立上游归入other供应商分组 |
+| `Makefile` | 两份Kiro组件/解析spec及UseKeyModal进入关键回归 |
+| `.github/workflows/backend-ci.yml` | 独立kiro_native_test服务与DSN，实际CAS回归不得在CI静默跳过 |
+
+同步自检：Kiro凭据不能进入Anthropic/通用模型同步/账单探测；CAS必须同时比较完整旧凭据和代理ID，并与outbox原子提交；刷新后重读账号调度状态；三协议流式缺量/损坏流不得发假成功；不对原生工具名执行未应用的Claude伪装还原。运行协议/服务/DTO/平台/契约回归、专用PG CAS、前端关键回归/类型/构建及embed。已通过Go定向46顶层/119含子项（含PG9组）、前端70文件998项、类型/构建/embed及巡检离线24项；全量两项失败在cafcd2bac基线复现。全部命令、失败边界和源码哈希见tools/kiro/native-verification-20261023.json与output/kiro-native-20261023/verification.json，远程同SHA CI尚待发布后核验。
+
+参考更新按用户最新要求只人工巡检：已删除本地自动化kiro，独立工作流无schedule，远程仅workflow_dispatch，push/PR仅离线工具回归；不要恢复任何周期任务。
+
+## 2026-10-23 Kiro参考审阅阶段（后续原生接入及人工巡检状态见上节）
+
+- 新增 `tools/kiro/sources.lock.json`：6个参考仓库的用途、许可证证据、默认分支、完整观察/审阅/移植SHA和发布摘要；已审阅3个来源的核心路径，所有portedCommit仍为空。新增 `review-20261023.json` 固定34个取证文件的SHA256/Git blob SHA1及两份归档摘要，ports为空，后续部分移植须逐项登记来源/本仓文件/测试。
+- 新增 `tools/kiro/check-updates.mjs` 及同名测试：Node内置模块配合curl，只读检查GitHub提交/公开Release、重命名/分支/归档和分叉回退，分页与300文件上限明确标不完整；失败来源游标不变，纯文档/横幅单列，报告及观察状态走忽略的output。Token从环境读取并经stdin传curl，不写命令行或报告；不自动推进人工审阅/移植基线。
+- 新增 `.github/workflows/custom-kiro-reference-watch.yml`：用户最新要求仅人工巡检，schedule已移除；push/PR仅离线回归，远程只接受workflow_dispatch，只读contents权限、缓存游标/保留报告。Codex自动化kiro已删除，删除返回deleted。本轮未提交推送或运行CI，不能宣称云端已运行。
+- 新增 `deploy/KIRO_REFERENCE_TRACKING.md` 记录审阅结论、人工巡检、fork/移植台账和真实账号验收边界；`tools/kiro/verification-20261023.json`保留最初审阅快照，原生接入另有本轮验证。HANDOFF/CLAUDE/SYNC/UPDATE_GUIDE维护入口已更新；实施前“未迁入”仅是历史范围，后续业务接缝见上节，日净充值门槛等原工作保留。
+- 验证：24项离线Node回归全通过、零跳过，含真实文件报告/游标落盘及2/0/1状态；最终6仓GitHub实查全成功、无新增更新；隔离旧基线实查compare发现代码变化，YAML可解析、34份来源摘要一致。未运行参考项目构建、Kiro真实账号或本仓全量业务测试，未提交推送/部署。
+
+## 2026-10-23 分组日净充值门槛（本地完成，未发布）
+
+- 用户明确要求日充值资格门槛；日／月／余额独立开关，全部已开启条件采用 AND。金额与月门槛一致，按 USD 在线余额充值本金，剔除赠送／手续费、扣除已退款比例，退款处理中订单不计入；以付款时间所在北京时间自然日统计。
+- 新增迁移 `261_custom_group_daily_recharge.sql`，旧规则默认 `daily_recharge_enabled=false`、金额0；不修改已发布的257。新增 `service/custom_group_access_daily.go` 实现 UTC+8 自然日边界；现有自有 `custom_group_access.go`／`_store.go`／`_cache.go` 接通字段、金额校验、持久化、绑定／可选组／实际请求资格、按日聚合与缓存。通用期间事实改用 `customGroupRechargeFacts.NetRecharge`，避免把月充值误用于日条件。
+- 缓存按用户＋日初时间隔离，过期不晚于当日零点；日门槛单开不聚合月充值。既有支付事务 `monthly` 通知同时失效日／月缓存，继续覆盖充值、退款与订单付款时间变化；不修改旧触发器。仅余额消费不重算充值；通知失联回源、回源失败拒绝的原保护保留。
+- **上游接缝**：`backend/internal/repository/group_repo.go` 的既有 `[CUSTOM]` 事务复制查询增加两列，复制分组保留日门槛；本轮未新增其他上游业务接缝。原认证、模型广场、WebSocket、兜底组及到期平移复用现有服务入口。
+- 前端只改自有 `custom/groupAccess/`：API类型、日门槛开关／金额输入及校验、中英文说明；可关闭月门槛单独开启日门槛，关闭开关保留金额。未改主题。新增自有日门槛 service／真实PG／middleware测试；既有自有测试夹具兼容261与新扫描列，双实例缓存测试同时验证日／月两种模式，旧兜底保护增加日门槛场景。
+- 本地 Go1.27.3 定向测试47个顶层、含子项164个通过，零跳过，含专用PG18迁移、付款边界、部分／全额／处理中退款、双实例提交／回滚／恢复；前端4文件39项、i18n3项、类型／eslint／生产构建及Windows embed编译通过。命令及原始日志见 `output/group-daily-recharge-20261023/verification.json`。未跑全量unit／Linux CI，未提交推送或部署；生产业务验收待。操作语义见 `deploy/GROUP_ACCESS_RULES.md`。
+
 ## 2026-10-22 管理员单用户分配409（已发布 sha-c8310ae）
 
 2026-10-22 单用户分配409发布终态（覆盖本轮下方未发布记录）：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。

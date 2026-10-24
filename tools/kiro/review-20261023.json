@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-10-23",
+  "scope": "固定提交的核心代码路径审阅；文件摘要用于复核来源，不代表全项目审计或真实账号验收。未复制业务实现，未运行参考项目。",
+  "method": "两个 codeload 固定 SHA 压缩包及原参考下载文件；记录归档 SHA256、文件 SHA256 和本地计算 Git blob SHA1。xiangking 另有38/38文件与GitHub提交树相符的验证，见 output/kiro-reference-20261023/source-verification.json。",
+  "sources": [
+    {
+      "repository": "d-kuro/kirocc",
+      "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+      "sourceUrl": "https://github.com/d-kuro/kirocc/tree/7a2ba670286ca16ae89fe792ea935b3751179421",
+      "archiveSha256": "ef23f6090bdb8690c232c5447c72bc99841517aca5e456aeacff1a5836408436",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 11357,
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "gitBlobSha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+        },
+        {
+          "path": "go.mod",
+          "bytes": 1834,
+          "sha256": "4236a9ce16f0437c6f959a99d8d7e7e6f3f3d9d54ae0e6684648feeaf6e8c8ba",
+          "gitBlobSha1": "64ccbdde30dd3f8f5c000d12016bc9ea9cd03c90"
+        },
+        {
+          "path": "internal/auth/refresh.go",
+          "bytes": 10594,
+          "sha256": "8b1b9eeb4aee836f6da017ae43ca5d8ad645ff0a7b67b10a855da62e534468f7",
+          "gitBlobSha1": "eb5109ab5e4840b37cc33a0359cc7f17eb465fe3"
+        },
+        {
+          "path": "internal/auth/credentials_parser.go",
+          "bytes": 2734,
+          "sha256": "3b58fbabb781261492b6b08bad0ed62ed08155c9199c173f0c3bd2fdff5089c0",
+          "gitBlobSha1": "875d8339848afc72b97e24611755b03384083d7a"
+        },
+        {
+          "path": "internal/kiroclient/client.go",
+          "bytes": 13637,
+          "sha256": "f92357341cf4d31787dcc2d36f778ad29580d11ce76c7fc84899f0513b93943a",
+          "gitBlobSha1": "2bf8dc18aa33341cddcff08e4ba80368f75bbad0"
+        },
+        {
+          "path": "internal/kiroproto/frame.go",
+          "bytes": 4153,
+          "sha256": "48e41f7d0da7775a1a5d669cf3f14821acfd6ef431126dab6760bc7313a7c6e9",
+          "gitBlobSha1": "60eeef0fcbf8f238d8476dfd93b1c0b6440fad0b"
+        },
+        {
+          "path": "internal/kiroproto/eventstream.go",
+          "bytes": 7586,
+          "sha256": "7a9f03de8ccb773ed1a25992adab2195747ac05041e4d8c8f1179894a88b6a65",
+          "gitBlobSha1": "1e900a675c1e823882621ab88559333c782d4ad8"
+        },
+        {
+          "path": "internal/reqconv/build_payload.go",
+          "bytes": 8279,
+          "sha256": "d89dac8d3e4e1bfcd6e437438d2557e30bf59467a85dddb632792649ac010279",
+          "gitBlobSha1": "32b78056651af8a5fcc6a23de93ec8243d8504c7"
+        },
+        {
+          "path": "internal/reqconv/content_text.go",
+          "bytes": 2267,
+          "sha256": "e7952e998e4c62550fcaf60f788e91cd62b7f33afef34e752d5debd8d7cc6cbc",
+          "gitBlobSha1": "3d7a91dade3af0f0c4cdfc53ce03ea78d2d0098f"
+        },
+        {
+          "path": "internal/reqconv/cache_points.go",
+          "bytes": 875,
+          "sha256": "d73724bcacd2e8aab394b53d659208ec725ca48b2a0887183f5f08c4702821e6",
+          "gitBlobSha1": "3a6fb6421baf0088615ee9f4012d7a8549df63db"
+        },
+        {
+          "path": "internal/respconv/accumulator.go",
+          "bytes": 6386,
+          "sha256": "72cad219edf74eefe3d7ae79b348483ede6b322a3705aa337f8fd3e04e097791",
+          "gitBlobSha1": "b5da8039d7756a87f7df673fd9bfee3e2965ea3e"
+        },
+        {
+          "path": "internal/respconv/event_processor.go",
+          "bytes": 4720,
+          "sha256": "bc2d79b3648bb17f07c493e902102642fc35bef74c4ae555520c06bbe741ef18",
+          "gitBlobSha1": "c78c02907b0f771cb90c02b0ca3721b3606f919d"
+        },
+        {
+          "path": "internal/respconv/usage.go",
+          "bytes": 1911,
+          "sha256": "d15f140f5a721462b845e9d949ae88cdf15dbd8207de54b7fdb8f75544468698",
+          "gitBlobSha1": "c41bdb82c9a77fc35a49fc1f53c4a026d8ecdd07"
+        },
+        {
+          "path": "internal/respconv/streaming.go",
+          "bytes": 17010,
+          "sha256": "4d4b029e8a9f229646895738e7469a499751052cd3a65799357619c6b61e1667",
+          "gitBlobSha1": "dc7db0eec0920f816571d1d6e570058631a6a74a"
+        },
+        {
+          "path": "internal/respconv/nonstreaming.go",
+          "bytes": 6466,
+          "sha256": "f7a4bdf42b6670beb90d945fd5dfb6b3a693f3720c0ad2788f9a83959e7a2573",
+          "gitBlobSha1": "76e73736ed9178b67c18d5beb64078d9be79e95e"
+        }
+      ]
+    },
+    {
+      "repository": "ZyphrZero/kiro.rs",
+      "commit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+      "sourceUrl": "https://github.com/ZyphrZero/kiro.rs/tree/4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+      "archiveSha256": "01bb816aca7be593e48ebb3d44e4f45246a615a8702fbc762f9fb57979c6ac62",
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 1065,
+          "sha256": "4b39e6283544cb1f4d8848d610a5e4874d4ddc52e6d4ec134b1b27e789849dd3",
+          "gitBlobSha1": "7a8fd00f12fe493731a4c159fc394ae86a986cf4"
+        },
+        {
+          "path": "src/kiro/token_manager.rs",
+          "bytes": 318876,
+          "sha256": "0f2954047703d8dd5c13ce4de7924463a7ce48b7c48e62f9c17c710500ab651e",
+          "gitBlobSha1": "5763f4b11b35fd316c2fff6276ac065b9d8dfefe"
+        },
+        {
+          "path": "src/kiro/provider.rs",
+          "bytes": 62728,
+          "sha256": "2b0fb20b13972b5d257d399a0fa52212d151e080f78bd0ae20e8e4a39442bb1b",
+          "gitBlobSha1": "d3262827bb2ce6c63e46010007d68568afd54691"
+        },
+        {
+          "path": "src/kiro/session_affinity.rs",
+          "bytes": 10021,
+          "sha256": "26dd31b341b3d0480b42e76a0b7b6b3b0303138d2ddefedcf84250e787878bea",
+          "gitBlobSha1": "2b3febf27b903b28517884314baedb099d006356"
+        },
+        {
+          "path": "src/kiro/endpoint/cli.rs",
+          "bytes": 6222,
+          "sha256": "8ad3b4ad4cd8084c559c2ff7e70b3b10128f9310fe239e956deb6daf6bec0ce7",
+          "gitBlobSha1": "bef454b57a8e39c99cbc91316509b7232c82f2c7"
+        },
+        {
+          "path": "src/kiro/endpoint/ide.rs",
+          "bytes": 5941,
+          "sha256": "916137401172e4935a6edd06fdbecad3ba3cf68496699fc2b1e6e53b47e5f59d",
+          "gitBlobSha1": "3aaa93efec8451c1f29a424498f756d74b5e69ee"
+        },
+        {
+          "path": "src/kiro/parser/decoder.rs",
+          "bytes": 11142,
+          "sha256": "2022bbeef9fa23faaf33ea02aa91c2633e955b573f870be948751a007624c82f",
+          "gitBlobSha1": "59e21dc32dfaae133684464ce98ee5bfe712cd76"
+        },
+        {
+          "path": "src/kiro/model/events/metadata.rs",
+          "bytes": 7983,
+          "sha256": "7480a692ee517510057987a6a97fef66e6d6c38373022c8d40082ba33b7068a0",
+          "gitBlobSha1": "e27ac6671e3a2f774b05824352c346d8e3f623cb"
+        },
+        {
+          "path": "src/kiro/model/events/metering.rs",
+          "bytes": 2370,
+          "sha256": "0663106d351e3eaf45ee0e30fdc3cffaba95c35d4a76558a2ae6f5721cd7621b",
+          "gitBlobSha1": "e351e2558e2891442f7fa4e74f5ce855efc539f3"
+        },
+        {
+          "path": "src/anthropic/stream.rs",
+          "bytes": 226913,
+          "sha256": "443051206b1f833e98a634a1c99d06672e7b27439a84442ced1189226fa6c332",
+          "gitBlobSha1": "70744b02c4455d825ae9e2a6f6a409fe8243c1d8"
+        },
+        {
+          "path": "src/anthropic/cache_metering.rs",
+          "bytes": 169506,
+          "sha256": "850073dc149082278332503dcf75a0c648dbf75abf8e8ebbb787a033f1301acd",
+          "gitBlobSha1": "b5449d668918ac5ea10a6b8b62836c5d74c1b7f0"
+        },
+        {
+          "path": "src/anthropic/gateway_tests.rs",
+          "bytes": 29012,
+          "sha256": "61654edc74b1e1ec43d0a12e6e8bc59105aa15de0cb4bc7ca24d632c39a3a1a2",
+          "gitBlobSha1": "0858fa0887dd53be361029344a96344cdd867ca0"
+        }
+      ]
+    },
+    {
+      "repository": "xiangking/sub2api-kiro",
+      "commit": "9541e0e9fb64718c15581985c84807232536d39b",
+      "sourceUrl": "https://github.com/xiangking/sub2api-kiro/tree/9541e0e9fb64718c15581985c84807232536d39b",
+      "archiveSha256": null,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 7651,
+          "sha256": "a5681bf9b05db14d86776930017c647ad9e6e56ff6bbcfdf21e5848288dfaf1b",
+          "gitBlobSha1": "153d416dc8d2d60076698ec3cbfce34d91436a03"
+        },
+        {
+          "path": "backend/internal/pkg/kiro/client.go",
+          "bytes": 13898,
+          "sha256": "4b5a1924aeb12817a1fbc972941c0e31514340935d35d6e316f51cd808fd4009",
+          "gitBlobSha1": "49f9eed7e6e972f5a028e6d4e987a30d9cf5c38e"
+        },
+        {
+          "path": "backend/internal/pkg/kiro/oauth.go",
+          "bytes": 24932,
+          "sha256": "e29f5e3419460fff06565c53c7137a2930b6296f9fe65f905c18d20527363afc",
+          "gitBlobSha1": "26397ba098aeada7b1a2a9c05b16e73434bbdedf"
+        },
+        {
+          "path": "backend/internal/pkg/kiro/parse.go",
+          "bytes": 8812,
+          "sha256": "9beb8a5a7782b54697c48fd768434fc2c683ae2880fe091fda69469960080fca",
+          "gitBlobSha1": "d9155a869004da16266a7d5adf41f659032b490f"
+        },
+        {
+          "path": "backend/internal/service/kiro_gateway.go",
+          "bytes": 21869,
+          "sha256": "38d8896994cba9c88cd2d2ec431706f723d033d2700a1f9abf9a140b70009ad8",
+          "gitBlobSha1": "7d85a81a39bfcc6c87eb8873b0002033d21626f8"
+        },
+        {
+          "path": "backend/internal/service/kiro_oauth_service.go",
+          "bytes": 12779,
+          "sha256": "a071cbf286025e04cd8ceb88dd7b9eef65253d99e3bcfe1c3ee898d4e30da1fd",
+          "gitBlobSha1": "c15af91ef6db3e1dfd31b34785e1f05bbc6d6bc9"
+        },
+        {
+          "path": "backend/internal/service/account_usage_service.go",
+          "bytes": 53122,
+          "sha256": "17e34b5b6390ba27ec656a6f19af9a96169255a39c895fe492d7c4b71ef88d20",
+          "gitBlobSha1": "259103cd74edf1a633e5773dde110551194c750c"
+        }
+      ]
+    }
+  ],
+  "ports": []
+}

@@ -54,6 +54,9 @@ node_modules/
 
 # Go build cache (will be built in container)
 backend/vendor/
+# [CUSTOM] 本机 Go / pnpm 缓存由容器缓存挂载替代，避免把离线验证缓存传入构建。
+**/.gocache/
+**/.pnpm-store/
 
 # Test files
 *_test.go

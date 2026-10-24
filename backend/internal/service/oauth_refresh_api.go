@@ -293,7 +293,17 @@ func (api *OAuthRefreshAPI) RefreshIfNeeded(
 	// 5. 设置版本号 + 更新 DB
 	if newCredentials != nil {
 		newCredentials["_token_version"] = time.Now().UnixMilli()
-		if freshAccount.IsGrokOAuth() {
+		// [CUSTOM] Kiro 轮换同样要求凭据/代理 CAS 和事务内调度失效。
+		if freshAccount.Platform == PlatformKiro {
+			durable, applied, persistErr := api.persistCustomKiroRotation(ctx, attemptedAccount, newCredentials)
+			if persistErr != nil {
+				return nil, persistErr
+			}
+			freshAccount = durable
+			if !applied {
+				return &OAuthRefreshResult{Account: durable}, nil
+			}
+		} else if freshAccount.IsGrokOAuth() {
 			conditionalRepo, ok := api.accountRepo.(GrokOAuthRefreshSuccessRepository)
 			if !ok {
 				return nil, &providerConfigurationRefreshError{

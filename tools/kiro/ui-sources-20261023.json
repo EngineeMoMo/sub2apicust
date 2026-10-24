@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-23T14:49:16.229Z",
+  "purpose": "Kiro图标及凭据获取提示的人工核查，不启用周期巡检",
+  "sources": [
+    {
+      "url": "https://kiro.dev/icon.svg?fe599162bb293ea0",
+      "role": "官网favicon，随前端打包的平台图标",
+      "downloadSha256": "774cbc1c7ecec8c935a6091595583d7a92fc8289d6f1db3f071c0f50c61c369f",
+      "destination": "frontend/src/custom/kiro/assets/kiro.svg"
+    },
+    {
+      "url": "https://kiro.dev/docs/getting-started/authentication/",
+      "role": "官方登录、付费套餐API Key、ksk_格式、仅创建时显示"
+    },
+    {
+      "url": "https://aws.amazon.com/blogs/devops/accelerating-development-workflows-with-kiro-cli-as-a-pre-commit-and-git-hook-agent/",
+      "role": "官方Account → Settings → API Keys入口"
+    },
+    {
+      "url": "https://app.kiro.dev/settings/api-keys",
+      "role": "表单中的官方API Key入口"
+    },
+    {
+      "url": "https://github.com/jwadow/kiro-gateway/blob/main/README.md",
+      "role": "Kiro IDE常见SSO缓存位置及分离的客户端注册凭据；位置不是所有版本的保证"
+    }
+  ]
+}

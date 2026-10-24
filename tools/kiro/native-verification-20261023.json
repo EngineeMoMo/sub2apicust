@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-23",
+  "timezone": "Asia/Shanghai",
+  "workspace": "D:/ccfile/sub2apicust",
+  "baseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
+  "implementationCommit": null,
+  "status": "本地接入及定向回归完成；未发布、未验收真实账号",
+  "scope": [
+    "OAuth Social/IDC与静态API Key JSON/文件导入和编辑",
+    "原生runtime/刷新、账号代理、统一互斥与PostgreSQL CAS/outbox",
+    "Messages、Chat Completions、Responses流式/非流式输出及管理员入口",
+    "平台/配额/模型目录、DTO脱敏与通用上游凭据隔离"
+  ],
+  "manualReferenceWatch": {
+    "onlyOnHumanRequest": true,
+    "localAutomationId": "kiro",
+    "localAutomationStatus": "DELETED",
+    "automationFileAbsent": true,
+    "workflowSchedule": false,
+    "remoteTrigger": "workflow_dispatch",
+    "pushAndPullRequest": "offline regression only",
+    "verification": "output/kiro-native-20261023/workflows-validation.json",
+    "newRemote巡检DuringFinalization": false
+  },
+  "backendFocused": {
+    "command": "GOTOOLCHAIN=local GOPROXY=off go test -tags=unit -count=1 -timeout=120s -json ./internal/pkg/kiro ./internal/service ./internal/domain ./internal/handler/dto ./internal/model ./internal/server ./internal/repository -run 'Test(Kiro|CustomKiro|PlatformList|PlatformsReturns|FrontendBuiltinPlatform|AllPlatformsIncludes|MatchingPlatforms|CompositeGroupScheduler|APIContracts|BuildPlatformCatalog)'",
+    "postgresEnvironmentVariable": "CUSTOM_KIRO_TEST_DSN (dedicated kiro_native_test)",
+    "exitCode": 0,
+    "topLevelTests": 46,
+    "testsIncludingSubtests": 119,
+    "kiroTopLevelTests": 33,
+    "failed": 0,
+    "skipped": 0,
+    "packages": 7,
+    "log": "output/kiro-native-20261023/backend-final-focused.jsonl"
+  },
+  "postgres": {
+    "image": "postgres:18-alpine (local cached image)",
+    "actualVersion": "PostgreSQL 18.6, x86_64-pc-linux-musl",
+    "database": "kiro_native_test",
+    "bind": "127.0.0.1 dynamic port",
+    "scope": "真实数据库上运行仓库CAS方法；最小隔离schema，不代表全应用迁移/真实账号验收",
+    "cases": 9,
+    "coverage": [
+      "完整旧凭据与空代理匹配",
+      "管理员替换刷新凭据",
+      "代理变化",
+      "平台变化",
+      "凭据类型变化",
+      "软删除",
+      "指定代理匹配",
+      "12并发调用仅一次轮换",
+      "outbox失败回滚凭据"
+    ],
+    "testSchemaCountAfterCleanup": 0,
+    "container": "codex-kiro-test-20261023",
+    "containerStoppedAndAutoRemoved": true,
+    "logs": [
+      "output/kiro-native-20261023/postgres-cas.jsonl",
+      "output/kiro-native-20261023/postgres-final.log",
+      "output/kiro-native-20261023/postgres-cleanup.log"
+    ]
+  },
+  "frontend": {
+    "criticalCommand": "pnpm exec vitest run <FRONTEND_CRITICAL_VITEST from root Makefile>",
+    "criticalFiles": 70,
+    "criticalTests": 998,
+    "criticalFailed": 0,
+    "criticalLog": "output/kiro-native-20261023/frontend-critical.log",
+    "typecheck": {
+      "command": "pnpm run typecheck",
+      "exitCode": 0,
+      "log": "output/kiro-native-20261023/frontend-typecheck.log"
+    },
+    "build": {
+      "command": "pnpm run build",
+      "exitCode": 0,
+      "includes": [
+        "locale completeness check: 3 tests",
+        "vue-tsc -b",
+        "vite build"
+      ],
+      "log": "output/kiro-native-20261023/frontend-build.log",
+      "warning": "existing large chunks warning"
+    },
+    "lint": {
+      "command": "pnpm exec eslint <all touched frontend TS/Vue files> --format json",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 1,
+      "existingWarningVerifiedAgainstBase": true,
+      "warningFile": "frontend/src/components/account/EditAccountModal.vue",
+      "warningRule": "@typescript-eslint/no-unused-vars",
+      "log": "output/kiro-native-20261023/frontend-lint.json"
+    }
+  },
+  "embedBuild": {
+    "command": "GOTOOLCHAIN=local GOPROXY=off go build -tags embed -o ../output/kiro-native-20261023/sub2api-test.exe ./cmd/server",
+    "exitCode": 0,
+    "toolchain": "Go 1.27.3 (cached local toolchain)",
+    "platform": "windows/amd64",
+    "artifact": "output/kiro-native-20261023/sub2api-test.exe",
+    "bytes": 185486848,
+    "sha256": "e3903cd0b9966ff926dfbcca18a504a91a5ff922068d1e465cc0dd0b3a4c6205",
+    "log": "output/kiro-native-20261023/backend-embed-build.log",
+    "deployed": false
+  },
+  "referenceTool": {
+    "command": "node --test tools/kiro/check-updates.test.mjs",
+    "pass": 24,
+    "failed": 0,
+    "skipped": 0,
+    "log": "output/kiro-native-20261023/reference-offline.tap",
+    "repositories": 6,
+    "partialAdaptationLedger": "tools/kiro/ports-20261023.json",
+    "wholeUpstreamHeadImported": false,
+    "licenses": [
+      {
+        "repository": "d-kuro/kirocc",
+        "file": "tools/kiro/licenses/kirocc-Apache-2.0.txt",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "byteIdentical": true
+      },
+      {
+        "repository": "ZyphrZero/kiro.rs",
+        "file": "tools/kiro/licenses/kiro-rs-MIT.txt",
+        "sha256": "4b39e6283544cb1f4d8848d610a5e4874d4ddc52e6d4ec134b1b27e789849dd3",
+        "byteIdentical": true
+      }
+    ]
+  },
+  "broadBackendUnit": {
+    "initialCommand": "go test -tags=unit -count=1 -timeout=180s -json ./...",
+    "initialExitCode": 1,
+    "initialFailures": "新增平台旧快照、Windows PATH缺sh、整包180秒时限及两项既有路径；未当作通过",
+    "correctedPackagesCommand": "go test -tags=unit -count=1 -timeout=10m -json ./internal/service ./internal/repository ./internal/server ./internal/model ./internal/pkg/kiro",
+    "correctedPackagesExitCode": 1,
+    "environmentAdjustment": "仅当前测试进程PATH加入现有E:/soft/Git/usr/bin，未改系统环境",
+    "remainingFailures": [
+      "TestCommandCodeGatewayPassesThroughCatalogProtocols",
+      "TestOllamaProbeCallback_StaleLongDoesNotOverrideNewShort"
+    ],
+    "logs": [
+      "output/kiro-native-20261023/backend-unit.jsonl",
+      "output/kiro-native-20261023/backend-unit-rerun.jsonl"
+    ],
+    "claimedAllGreen": false,
+    "baseline": {
+      "source": "git archive cafcd2bac1af98d533b45e19fb3660fb058b940b backend; isolated export under output, current workspace untouched",
+      "commandCodeReproduced": true,
+      "ollamaInitialSingleRun": "passed",
+      "ollamaRepeatCount": 30,
+      "ollamaRepeatFailures": 30,
+      "unmodifiedTestFiles": [
+        {
+          "path": "backend/internal/service/model_protocol_catalog_test.go",
+          "normalizedSha256": "a5bd80ca71ff2e5efd25be6e8a7e18a8dad128562041caf5ca2ddf29fd1d5e9b",
+          "sameAsBase": true
+        },
+        {
+          "path": "backend/internal/service/ratelimit_service_ollama_429_test.go",
+          "normalizedSha256": "2ec7999f1f8480a1a05506d6a310ae806d8cdc9a16a80a4fd50514823f2ead0c",
+          "sameAsBase": true
+        }
+      ],
+      "logs": [
+        "output/kiro-native-20261023/baseline-existing-failures.jsonl",
+        "output/kiro-native-20261023/baseline-ollama-repeat.jsonl"
+      ]
+    },
+    "latestPlatformAndKiroChanges": "通过最后46顶层/119含子项的定向回归另验，未修改两个既有失败测试来掩盖问题"
+  },
+  "executionNotes": [
+    "沙箱阻止Go缓存和esbuild/Node子进程；升级执行后分别记录真实结果，失败日志保留",
+    "首轮平台按钮布局/类型/固定平台快照/凭据替换失败已修复，最终结果来自本轮重新执行",
+    "wire工具离线生成缺少google/subcommands校验项；未修改go.mod/go.sum，wire_gen手动同步并经编译验证",
+    "独立测试容器用完已清理，业务库、业务容器、主题与原有未提交工作未操作"
+  ],
+  "sourceManifest": {
+    "file": "output/kiro-native-20261023/source-manifest.json",
+    "files": 77,
+    "hashScope": "工作树字节及LF归一化SHA256；不等于已发布业务提交"
+  },
+  "limitations": [
+    "没有真实Kiro账号/登录授权/实际可用地区与profile验收",
+    "没有真实工具多轮与原始四项Token/上游账单对账",
+    "max_tokens及采样不是上游硬限制，详细协议边界见deploy/KIRO_NATIVE.md",
+    "未提交/推送/创建分支/fork、未运行本轮同SHA远程CI、未部署本机或生产",
+    "后端全量未全绿，两项既有失败已基线复现，Linux发布门禁仍待核验"
+  ]
+}

@@ -97,6 +97,10 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 	if parsed == nil {
 		return nil, fmt.Errorf("parse request: empty request")
 	}
+	// [CUSTOM] 保留统一鉴权/并发/计费边界，Kiro 不执行 Claude OAuth 伪装。
+	if account != nil && account.Platform == PlatformKiro {
+		return s.forwardCustomKiro(ctx, c, account, parsed.Body.Bytes(), parsed.Model, parsed.Stream, "messages", false, nil)
+	}
 	// API-key mappings and OAuth native IDs are resolved before mimicry.
 	validationModel := parsed.Model
 	if account != nil {

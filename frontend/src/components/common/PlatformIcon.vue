@@ -71,6 +71,8 @@
     <rect x="65.5996" y="44.8008" width="9.6" height="28.8" rx="4.8" />
     <rect x="36.8008" y="44.8008" width="9.6" height="28.8" rx="4.8" />
   </svg>
+  <!-- [CUSTOM] Kiro 官网图标随前端打包，覆盖账号及分组的共用入口。 -->
+  <img v-else-if="platform === 'kiro'" :src="kiroIcon" :class="sizeClass" alt="" aria-hidden="true" />
   <!-- Composite group icon -->
   <svg v-else-if="platform === 'composite'" :class="sizeClass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <circle cx="6" cy="12" r="3" />
@@ -89,6 +91,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { GroupPlatform } from '@/types'
+// [CUSTOM] 图标来源与哈希见 tools/kiro/ui-sources-20261023.json。
+import kiroIcon from '@/custom/kiro/assets/kiro.svg'
 
 interface Props {
   platform?: GroupPlatform

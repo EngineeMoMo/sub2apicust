@@ -36,6 +36,7 @@ type PlatformSpec struct {
 // platformList 的顺序即平台的展示顺序。
 var platformList = []PlatformSpec{
 	{ID: PlatformAnthropic, DisplayName: "Anthropic", Gateway: PlatformGatewayAnthropic, LiteLLMProvider: "anthropic"},
+
 	{ID: PlatformOpenAI, DisplayName: "OpenAI", Gateway: PlatformGatewayOpenAI, LiteLLMProvider: "openai"},
 	{ID: PlatformGemini, DisplayName: "Gemini", Gateway: PlatformGatewayGemini, LiteLLMProvider: "gemini"},
 	{ID: PlatformAntigravity, DisplayName: "Antigravity", Gateway: PlatformGatewayAntigravity, LiteLLMProvider: "anthropic"},
@@ -48,6 +49,8 @@ var platformList = []PlatformSpec{
 	{ID: PlatformTypeSafe, DisplayName: "TypeSafe / Jev", Gateway: PlatformGatewayAnthropic, LiteLLMProvider: "typesafe"},
 	{ID: PlatformCommandCode, DisplayName: "Command Code", Gateway: PlatformGatewayOpenAI},
 	{ID: PlatformCline, DisplayName: "Cline", Gateway: PlatformGatewayOpenAI},
+	// [CUSTOM] 复用 Claude 网关鉴权、调度和计费；保持既有平台的组合优先级。
+	{ID: PlatformKiro, DisplayName: "Kiro", Gateway: PlatformGatewayAnthropic, LiteLLMProvider: "anthropic"},
 }
 
 var platformIndex = func() map[string]int {

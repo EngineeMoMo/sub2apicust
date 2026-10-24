@@ -26,8 +26,11 @@
         <p class="input-hint">{{ t('admin.accounts.notesHint') }}</p>
       </div>
 
+      <!-- [CUSTOM] Kiro 编辑仅提交提供的字段，密钥从不回填。 -->
+      <KiroCredentialsFields v-if="account.platform === 'kiro'" v-model="kiroCredentialsText"
+        :account-type="account.type === 'apikey' ? 'apikey' : 'oauth'" editing />
       <!-- API Key fields (only for apikey type) -->
-      <div v-if="account.type === 'apikey'" class="space-y-4">
+      <div v-if="account.type === 'apikey' && account.platform !== 'kiro'" class="space-y-4">
         <div v-if="!isCNApiKeyAccount || editApiProtocol !== 'adaptive'">
           <label class="input-label">{{ t('admin.accounts.baseUrl') }}</label>
           <input
@@ -2092,7 +2095,7 @@
       </div>
 
       <div
-        v-if="account?.type === 'apikey'"
+        v-if="account?.type === 'apikey' && account.platform !== 'kiro'"
         class="flex items-center justify-between gap-4 border-t border-gray-200 pt-4 dark:border-dark-600"
       >
         <div>
@@ -3227,6 +3230,9 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] Kiro 编辑集中到定制组件，保留服务端密钥。
+import KiroCredentialsFields from '@/custom/kiro/KiroCredentialsFields.vue'
+import { parseKiroCredentials } from '@/custom/kiro/credentials'
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
@@ -3488,6 +3494,8 @@ interface TempUnschedRuleForm {
 
 // State
 const submitting = ref(false)
+const kiroCredentialsText = ref('') // [CUSTOM] 从不回填持久化密钥。
+watch([() => props.show, () => props.account?.id], () => { kiroCredentialsText.value = '' })
 const editBaseUrl = ref('https://api.anthropic.com')
 const editApiKey = ref('')
 
@@ -5354,7 +5362,7 @@ const handleSubmit = async () => {
       updatePayload.load_factor = 0
     }
     updatePayload.auto_pause_on_expired = autoPauseOnExpired.value
-    if (props.account.type === 'apikey') {
+    if (props.account.type === 'apikey' && props.account.platform !== 'kiro') { // [CUSTOM] Kiro 不支持通用远程账单探测。
       updatePayload.upstream_billing_probe_enabled = upstreamBillingAutoProbeEnabled.value
       updatePayload.upstream_billing_rate_sync_enabled = upstreamBillingRateSyncEnabled.value
       if (upstreamBillingRateSyncEnabled.value) {
@@ -5363,7 +5371,11 @@ const handleSubmit = async () => {
     }
 
     // For apikey type, handle credentials update
-    if (props.account.type === 'apikey') {
+    if (props.account.platform === 'kiro') { // [CUSTOM] 仅更新显式填写字段，其余凭据保留。
+      if (kiroCredentialsText.value.trim()) {
+        updatePayload.credentials = { ...props.account.credentials, ...parseKiroCredentials(kiroCredentialsText.value) }
+      }
+    } else if (props.account.type === 'apikey') {
       const currentCredentials = (props.account.credentials as Record<string, unknown>) || {}
       const newBaseUrl = editBaseUrl.value.trim() || defaultBaseUrl.value
       const shouldApplyModelMapping = !(props.account.platform === 'openai' && openaiPassthroughEnabled.value)

@@ -5,7 +5,7 @@
 > - **收工前必更**：更新下方「四、当前状态」「五、待办」；任何新定制同时登记 CUSTOMIZATIONS.md。
 > - 交接一律走本文件——**别把状态只留在会话里**（会话会丢，文件不会）。
 >
-> 最后更新：2026-10-22（Asia/Shanghai）。
+> 最后更新：2026-10-24（Asia/Shanghai）。
 
 ---
 
@@ -38,6 +38,28 @@
 6. 会话上下文超 **200k** 先压缩再继续，压缩后先核对工作树再接着做。
 
 ## 四、当前状态（每次收工更新）
+
+- **2026-10-24 Kiro提交/推送进行中（用户已授权）**：本轮只发布Kiro接入/计量修复/来源工具与文档，日净充值门槛/261及营销素材保留本地。origin/main实取仍cafcd2bac，与提交前HEAD一致；官方upstream/main已至37067e8e340e9440d173a92b4faa05e8ce58368f、VERSION0.2.18，相比已同步基线b0a02a330有47个未纳入提交，本轮仅记录不合并。来源、GitHub fork=false事实、待同步主题和后续人工流程新增deploy/FORK_UPDATE_LOG.md。发布前验证暂存区独立快照，发布后查实际业务SHA的CI/安全/GHCR；不能沿用本地含261的1092d0243ba0镜像当正式提交验收。AccountTestModal新警告回归纳入Makefile关键列表；证据output/kiro-release-20261024。推送/远程门禁终态待后续回执覆盖，生产不部署。
+
+
+- **2026-10-24 Kiro计量兼容已修复并更新本机（覆盖下方仅诊断/旧镜像状态）**：人工巡检六仓全部成功，与锁定SHA均identical、无新增提交/Release变化；参考kirocc既有metadata/metering优先与估算回退，本轮逐项适配，来源tools/kiro/ports-20261024.json。补metering输入/输出Token、metadata优先与快照覆盖；解码与计费分离，连接测试独立报告billing_ready/usage_source及有限事件计数。默认verified继续拒绝正式请求缺用量；只有管理员在编辑账号中显式选择estimated才按本站价格/倍率估算计费，缓存读写0，响应/日志标记来源。未自动修改实号设置。Go41顶层/128含子项、前端5文件152项、变更eslint/类型检查通过；镜像构建含i18n3项、Family3顶层/25含子项、Linux amd64 embed。新版本0.2.17-custom.kiro-usage-20261024-1092d0243ba0，镜像/运行Image均dd27a780e6afd5d367149111324cdf064bf9e21b0ecd6a9191f26e7409880846，三服务healthy；PG/Redis容器、三个卷、281设置摘要、317迁移、业务计数与.env/compose均保持。15:18本机实号testkiro/Sonnet4.5单次返回OK.且test_complete.success=true，同时billing_ready=false、usage_source=missing；有2个正文及各1个context/metadata/metering事件，但未取得可识别的精确Token，原始payload未留存，不推断其他模型/所有Kiro响应。账号仍verified，估算模式真实计费、工具多轮及其他模型权限仍待验收。数据库备份698665字节/pg_restore目录校验通过，回退sub2apicust:before-kiro-usage-20261024保留9c12017f8197；证据output/kiro-usage-fix-20261024/verification.json。未提交推送、同SHA远程CI或生产部署；只人工巡检。
+
+
+- **2026-10-24 Kiro真实测试出现用量阻塞（本轮仅诊断，未修复）：用户截图testkiro/Sonnet4.5已返回OK.后报“未返回可核实的Token用量”；本机原日志14:30:57、14:31:12确认同错，Haiku亦有同错，另三次4.6/Opus4.5为不同的上游连接失败，不混为同一根因。运行仍9c12017f8197/healthy。源码DecodeResponse只认metadataEvent.tokenUsage的uncachedInputTokens/outputTokens，流末HasUsage=false主动报错；测试先发content再报错，正式网关共用解码器，故不只是显示问题。参考kirocc/kiro.rs有context/估算回退，但当前未采用；其作者经验不能当本请求原始事件证据。现有日志未保留事件结构，无法判定本响应未提供精确Token还是解析字段不兼容，不宣称Kiro实号/计费已通过。后续应取最小脱敏事件结构、审阅真实用量口径并区分连通测试与计量就绪，不能擅自启用估算收费。证据output/kiro-usage-diagnosis-20261024/diagnosis.json及observed-tests.json；本轮只读现有日志/源码，未读取账号密钥、未重试付费生成、未改业务/计费规则或重建部署，未提交推送或新建定时任务。**
+
+- **2026-10-23 Kiro图标/凭据获取说明已本机更新：共用PlatformIcon和创建按钮接入官网紫色SVG，表单按OAuth/API Key显示获取路径、官方入口与限制，来源登记tools/kiro/ui-sources-20261023.json。5文件144项定向回归和变更lint通过；新镜像构建含前端类型/生产构建、i18n3项、Family3顶层/25含子项及Linux embed。当前版本0.2.17-custom.kiro-help-20261023-ae5ad68369d1，镜像/容器Image同为9c12017f81977fabbf37694ce1973129e0c2b5b66adb8162cc3195be6bb1be92，三服务healthy、HTTP管理员登录/版本/Kiro筛选200并退出；新HTTP脚本确有帮助/官网链接，内联SVG几何与官网源一致且CSP允许data图。原PG/Redis容器/三个卷、业务计数、281项设置摘要、317项迁移及原.env/compose保持，未新增迁移。备份output/kiro-ui-help-20261023/database.dump为695345字节并通过pg_restore目录校验；回退sub2apicust:before-kiro-help-20261023保留原Kiro镜像，所有旧备份保留。构建后只整理了custom/UPGRADE.md说明位置，4812个其余清单文件不变、运行源码无变化，差异已单列。没有可复用浏览器后台会话，未冒称后台真实视觉验收；真实Kiro账号/运行地区/用量账单仍待。未提交推送或部署生产，参考巡检仅人工。证据output/kiro-ui-help-20261023/verification.json。**
+
+- **2026-10-23 Kiro本机Docker部署完成（仅本地，覆盖下方未部署阶段）**：用户授权“本地docker部署”，沿用sub2apicust-local项目及原.env/override。实际代理预检200并设置构建进程代理；首轮因backend/.gocache含16061文件/11011839130字节而在上下文传输阶段主动中止，.dockerignore排除本机缓存后上下文96.15MB，正式Linux amd64镜像构建成功。版本0.2.17-custom.kiro-local-20261023-661725e62a56，固定本地标签sub2apicust:kiro-local-20261023-661725e62a56；镜像与运行容器Image同为ccf60fd0c6b7f131cf3ade79539585bcfff95756c9d47bed1885c156ab642f39。三服务healthy，health=200/ok；前端类型/生产构建、i18n3项、Linux embed及Family3顶层/25含子项通过。真实管理员HTTP登录、版本/Kiro账号及分组筛选接口200，验收会话已退出；新HTTP入口index-C_D1OzLu.js及AccountsView-iZpbfERm.js的Kiro按钮/JSON/文件字段确认，浏览器登录页与品牌页已观察，未声明浏览器后台操作或真实Kiro调用验收。数据库304→317迁移全部与源码校验和一致，含既有日门槛261（默认关闭，无活动规则），Kiro无独立迁移；原PG/Redis容器ID、三个卷、JWT/TOTP/数据库密钥保留。3用户/0密钥/3分组/0账号/1套餐/0订单/0用量/0订阅/281设置计数保持；仅Claude Code/Codex客户端版本同步两键自动更新，其余279键摘要一致。备份output/kiro-local-docker-20261023/database.dump为668744字节、pg_restore目录校验通过，另有配置/app_data/Redis备份；旧镜像sub2apicust:before-kiro-20261023保留。日志仍有历史价格远程哈希解析0.0.0.0连接失败，本地256模型价格库加载成功；本轮不改该网络配置。完整证据output/kiro-local-docker-20261023/verification.json及source-manifest.json。未提交推送、未操作生产、未启用定时巡检；真实Kiro账号/地区/profile/工具/用量账单及同业务SHA远程CI仍待。
+
+- **2026-10-23 Kiro原生接入（工作树实现，未发布）**：新增原生协议/认证/刷新/账号代理/凭据与代理CAS及调度outbox、Messages/Chat Completions/Responses流式和非流式输出；后台创建/编辑/手动与批量刷新/连接测试和前端Kiro独立JSON/文件导入接线。只使用metadata四项真实Token快照，缺少可信用量报错，不用字符或credits猜账单；max_tokens及采样不作上游硬约束，其他限制见deploy/KIRO_NATIVE.md。真实账号、授权、地区/profile、工具多轮与账单仍未验收。固定6仓与此前34份文件审阅保留，局部适配另记tools/kiro/ports-20261023.json及两份原样许可证，不推进整仓portedCommit。**用户最新要求覆盖此前定时安排：Codex自动化kiro已删除，工作流schedule已移除；只人工巡检，push/PR仅离线回归。** 最终本地验证：Go定向46顶层/119含子项、零失败零跳过（含真实PG 9组CAS）；前端关键70文件998项、类型检查、生产构建和Windows embed通过，巡检工具24项离线回归通过，改动范围eslint零错误/1条原有warning。全量后端复查仍有Command Code/Ollama两项失败，已在未修改cafcd2bac基线复现，未改其他平台业务来掩盖失败。证据output/kiro-native-20261023/verification.json及tools/kiro/native-verification-20261023.json；未提交推送/部署或重建业务容器，无Kiro迁移，既有日净充值门槛261及其他未提交工作保留。下方“尚无接入”均为实施前历史。
+
+- **2026-10-23 其他Kiro代理维护检索（只读调研）**：按用户要求检索GitHub，20个候选地址得到18个不同可读仓库；默认分支最近最多100条提交、可用Release及8份固定SHA的README交叉检查。近期候选为ZyphrZero/kiro.rs（10-22提交，10-19发布v0.9.2，8/9/10月连续发布）、d-kuro/kirocc（Go，北京时间10-05仍有模型/转换更新）、hank9999/kiro.rs（10-08修工具结果图片等）、zhujunsan/kiro-gateway（10-22修参数/思考签名/重试）、dwgx/KiroStudio（10-14发布v1.2.5；10-17仅横幅更新）。ankitcharolia方案走kiro-cli且单账号，不能当账号池；jwadow主分支最新为北京时间05-19，不列本月活跃首选。建议后续优先审阅Go的kirocc与Zyphr多凭据实现，属于适配判断，真实调用/用量准确性均未验收。原始API及规范化统计output/kiro-project-search-20261023/verified-summary.json，方法/边界RESEARCH.md；未改业务、未测试构建/迁入/提交推送/部署，原工作保留。
+
+- **2026-10-23 Kiro 参考项目核查（仅分析，未迁入）**：按用户提供的xiangking/sub2api-kiro查看main，固定9541e0e9fb64718c15581985c84807232536d39b（提交时间2026-05-11T13:21:27Z）；38个下载文件的Git blob SHA-1均与提交树一致。已看到设备／Social授权、Token导入、请求前及401刷新、Claude Messages流式和账号额度查询实现；不是只有平台名称。但每请求Token为字符估算且输入取输出一半，OpenAI Chat Completions的stream=true被转为false，工具历史被文本化，不能直接视为商用计费与完整客户端兼容。迁入须适配本仓统一平台登记、代理／刷新协调／缓存及分组鉴权；实际Kiro登录、模型、工具及计费仍未知，未编译测试、未改业务／提交推送／部署。详细证据与范围output/kiro-reference-20261023/REVIEW.md、source-verification.json；原有未提交工作保留。
+
+- **2026-10-23 Kiro 账号支持核查（仅源码检查）**：当前工作树基于cafcd2bac；backend/internal/domain/platforms.go登记的13个平台及前端内置平台清单均无kiro，创建账号界面无Kiro选项，管理路由未见Kiro授权入口；全量检索backend/internal与frontend/src未发现Kiro专用授权、刷新或转发实现。service/domain_constants.go的PlatformKiro注释明确仅保留给不支持平台的阈值测试与历史账号行；监控名称、测试和兼容透传注释不等于原生接入支持。通用OpenAI／Anthropic API Key支持自定义base_url，但外部Kiro转换服务是否兼容须用实际端点与凭据验证，本轮未实测。仅回答现有代码能力，未实现Kiro接入、未测试构建、未提交推送或部署；原有日净充值门槛等未提交工作保留。
+
+- **2026-10-23 分组日净充值门槛（本地完成，未提交／推送／部署）**：用户明确“是日充值门槛，不是日消费门槛”。开放规则新增日净充值独立开关与最低金额，月门槛可关闭；日／月／余额启用多项时须全部满足。按北京时间自然日00:00至次日00:00的在线余额充值本金统计，剔除赠送／手续费、扣已退比例，退款处理中订单暂不计；兑换码／管理员加余额／订阅购买不计。新迁移261默认关闭日门槛，257不改；保存／读取／复制分组、绑定／可选组／普通与Google鉴权、既有Key／WebSocket及兜底组校验接通。日缓存按用户＋日初隔离且不过零点，原支付monthly通知同时失效日／月；只开日门槛不聚合月充值，失联回源及失败拒绝保护保留。上游仅group_repo.go既有[CUSTOM]复制SQL增加两列；前端仅自有custom/groupAccess，主题未改。Go1.27.3本地定向47个顶层／含子项164个pass、零skip，含专用PG18日边界／部分及全额退款／双实例提交、回滚和恢复／原到期回归；前端4文件39项、i18n3项、类型、eslint、生产构建及Windows embed编译通过。证据output/group-daily-recharge-20261023/verification.json及原始日志，语义见deploy/GROUP_ACCESS_RULES.md。测试容器及临时数据已清理，业务库／本机应用／生产未部署，assets/marketing原未跟踪素材保留；未跑全量unit或本轮Linux CI，不能沿用下方旧镜像宣称新功能上线。后续发布须前后端及261同版并核验对应业务SHA门禁。
 
 - **2026-10-22 单用户分配409发布终态（优先于下方实现阶段记录）**：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。
 
@@ -759,6 +781,32 @@
 
 ## 五、待办 / 下一步
 
+- [ ] **2026-10-24 Kiro发布收口（已获用户提交/推送授权）**：白名单暂存Kiro代码与文档，保留日门槛/261及营销工作，验证独立暂存快照后推origin/main，核验本轮业务SHA的CI/安全/GHCR并记录镜像来源/摘要，补齐发布回执。
+- [ ] **官方v0.2.18后续同步**：本次只fetch/记录47个差异提交，未合并；优先审阅安全依赖、流断开计费、管理员Key与本仓认证接缝，按deploy/FORK_UPDATE_LOG.md及SYNC的人工流程执行，不自动定时同步。
+
+
+- [x] **2026-10-24 Kiro计量兼容与本机修复**：补metering精确字段、metadata优先、连通/计量状态分离及显式estimated选项；默认严格不变。41顶层/128含子项Go与152项前端通过，更新本地Docker并单次实号生成OK.；新版本、备份和数据比对见第四节及output/kiro-usage-fix-20261024/verification.json。来源六仓人工检查无新增变化，局部适配台账tools/kiro/ports-20261024.json。
+- [ ] **Kiro精确用量、估算计费与其他模型验收**：本次实号usage_source=missing/billing_ready=false，原账号保持verified，正式请求仍要求精确Token；若用户接受估算，管理员手动在编辑账号→Token计量方式选择“允许估算计费”并保存，无需重新贴密钥。估算三协议已做隔离模拟回归，尚未实号收费或与Kiro账单对账；图片/工具多轮、其他模型HTTP状态/权限须分别取证，不用一次成功推断全部可用。
+
+- [x] **2026-10-23 Kiro图标与凭据来源说明**：按用户截图补官网图标及表单内获取帮助，已更新本机8080；新镜像/版本/HTTP资源/认证/数据摘要与备份验真，144项定向测试通过，记录见第四节与output/kiro-ui-help-20261023/verification.json。用户后台实际视觉及真实Kiro账号/账单仍待，不宣称端到端可商用。
+
+- [x] **2026-10-23 Kiro本机Docker部署**：当前工作树已在127.0.0.1:8080运行，镜像/版本/三服务健康、迁移、原数据与配置、管理员HTTP登录及Kiro前端资源均验真；证据和备份见第四节与output/kiro-local-docker-20261023/verification.json。未提交推送或部署生产。
+- [ ] **本机价格库远程同步网络**：当前启动日志及升级前备份均有raw.githubusercontent.com解析0.0.0.0:443连接失败；本地256模型价格库已加载。后续用户要求时在本机核对DNS/专用代理路径，本轮未改运行网络配置，不以healthy代替远程价格更新成功。
+
+- [x] **2026-10-23 Kiro核心参考审阅与来源追踪**：6仓固定SHA、3仓核心路径/34份来源文件摘要及24项巡检离线回归已记录；本轮局部适配见tools/kiro/ports-20261023.json，未整仓迁入参考HEAD。原本本地/云端定时安排已由用户取消，仅人工巡检。
+- [x] **Kiro巡检改为人工执行（2026-10-23用户明确要求）**：已删除Codex自动化kiro、移除工作流schedule。用户提出巡检时运行tools/kiro/check-updates.mjs并保存报告；可手动workflow_dispatch，push/PR仅离线测试，不启用任何周期巡检。
+- [x] **Kiro本地接入代码及回归**：JSON/文件导入、OAuth/API Key、统一刷新与账号代理、真实PG CAS/outbox、三协议流式/非流式、DTO脱敏和管理入口已接线；Go46顶层/119含子项、PG9组、前端70文件998项、类型/构建/embed及离线巡检24项通过。全量后端两项基线可复现失败另留证据，不称全量通过。
+- [ ] **Kiro原生接入发布与真实账号验收**：工作树已完成OAuth/API Key导入、刷新/代理/CAS、三协议与前端接线，并已本机Docker部署；本地Linux embed通过，同业务SHA远程CI、真实账号与账单仍待。验证范围及保留失败见两轮verification.json。下一步在用户授权发布后核验同业务SHA Linux CI/embed/镜像；用隔离的真实Kiro账号确认地区/profile、文本/图片/工具多轮及四项Token与上游账单。没有真实证据前不宣称可商用或全部兼容；参考项目只按用户人工要求巡检，逐项审阅修复，不整仓合并。
+
+- [x] **2026-10-23 其他Kiro代理维护检索**：已核验近期提交/发布并整理五个原生代理候选，区分CLI单账号方案、较久未更新的默认分支及机器人横幅提交；证据见本轮RESEARCH.md与verified-summary.json。尚无真实账号兼容、计费和生产可用性结论，本轮未实施接入。
+
+- [x] **2026-10-23 Kiro 参考项目核查**：已固定参考SHA并验证38个文件来源，确认原生实现路径及Token估算／OpenAI流式降级等限制；迁入范围与实际账号验收边界见本轮REVIEW.md。本轮完成参考分析，尚未实施原生Kiro接入。
+
+- [x] **2026-10-23 Kiro 账号支持核查**：已核查平台登记、创建界面、管理路由及Kiro全量引用，结论为当前无原生添加能力；外部转换服务接通尚无实测证据。此项为首次支持能力核查，后续审阅/追踪授权及待办以上方最新记录为准。
+
+- [x] **2026-10-23 日净充值门槛源码及本地验证**：日／月／余额独立开关、北京时间自然日、退款与跨日缓存、分组复制兼容已完成；Go47顶层／含子项164、前端39、i18n3及类型／lint／构建／本机embed通过，详见第四节与本轮验证记录。
+- [ ] **日净充值门槛发布与现场验收**：261已随本机Docker部署应用，现有日门槛规则默认关闭；未提交推送或部署生产；后续发布须核验新业务SHA的CI／安全／GHCR，迁移261与前后端同版，旧镜像不含新功能。用户备份后验“关月、开日”可独立达标、当日累计本金／退款、北京时间零点失去昨日资格、已有Key与WebSocket下一轮重新判断、复制分组保留日门槛；生产由用户自行部署。
+
 - [x] **2026-10-22 单用户分配409源码补修**：管理员单用户支持追加3天；请求键重放/新操作、库存与读取失败回滚、暂停并发保护和前端错误展示已回归，证据见第四节本轮记录。
 - [x] **分配409补丁发布门禁**：业务c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success，registry来源/提交/平台/摘要与embed日志核验通过。新增真实PG三天续期/库存回滚随配置专用DSN的unit仓储包通过，测试日志非-v不逐项列出子测试；证据见第四节及output/subscription-assignment-fix-20261022/release/。
 - [ ] **分配409补丁现场验收（用户操作）**：备份后执行./update.sh sha-c8310ae，前后端同版。验已有30天用户追加3天、库存一次扣减及同键重放，过期从现在起算、暂停不恢复、售罄不延时；生产验收尚未执行，本轮未代部署。沿用可信代理与固定TOTP_ENCRYPTION_KEY等前轮上线前置要求。
@@ -1144,6 +1192,9 @@
 - [x] **升级方式保持Docker + update.sh**：不采用App内在线更新，上游预编译二进制会覆盖定制；普通重启不会还原可写层，镜像重建才会，历史澄清保持有效。
 
 ## 六、文档地图
+- [deploy/KIRO_REFERENCE_TRACKING.md](deploy/KIRO_REFERENCE_TRACKING.md) — Kiro核心参考审阅、固定来源/局部适配台账、仅人工巡检。
+- [deploy/KIRO_NATIVE.md](deploy/KIRO_NATIVE.md) — Kiro账号导入、分组代理、协议范围、计量限制与发布/真实账号验收边界。
+- [tools/kiro/native-verification-20261023.json](tools/kiro/native-verification-20261023.json) — 原生接入本地验证摘要；完整日志在output/kiro-native-20261023。
 - [deploy/DEDICATED_BILLING_PLAN.md](deploy/DEDICATED_BILLING_PLAN.md) — 包号免扣源码证据、共享限制／计量、验证与局限（镜像sha-acd73d7已发布，真实业务待用户更新验收）。
 - [BRAND_IMPLEMENTATION.md](BRAND_IMPLEMENTATION.md) — **最新已批准设计的执行计划**：素材路径、色表、阶段顺序、代码接线、防坑、验收与新对话提示。
 - [CUSTOMIZATIONS.md](CUSTOMIZATIONS.md) — **定制唯一权威清单**（新增文件 / 接线改动 / 行为修改 / 自检清单）。

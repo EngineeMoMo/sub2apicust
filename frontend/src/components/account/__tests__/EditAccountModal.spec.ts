@@ -330,6 +330,25 @@ function mountModal(account = buildAccount(), renderGroupSelector = false) {
 }
 
 describe('EditAccountModal', () => {
+  // [CUSTOM] 编辑 Kiro 时不回填密钥，也不写入通用上游 URL。
+  it('keeps Kiro secrets when editing without new credential JSON', async () => {
+    updateAccountMock.mockReset().mockResolvedValue({})
+    const account = { ...buildAccount(), platform: 'kiro', type: 'oauth', credentials: { runtime_region: 'us-east-1' } }
+    const wrapper = mountModal(account)
+    expect(wrapper.get<HTMLTextAreaElement>('#kiro-credentials-json').element.value).toBe('')
+    await wrapper.get('form').trigger('submit.prevent')
+    expect(updateAccountMock).toHaveBeenCalledTimes(1)
+    expect(updateAccountMock.mock.calls[0]?.[1]?.credentials).toBeUndefined()
+  })
+  it('updates only provided Kiro credential fields', async () => {
+    updateAccountMock.mockReset().mockResolvedValue({})
+    const account = { ...buildAccount(), platform: 'kiro', type: 'apikey', credentials: { runtime_region: 'us-east-1' } }
+    const wrapper = mountModal(account)
+    await wrapper.get('#kiro-credentials-json').setValue('{"api_key":"rotated"}')
+    await wrapper.get('form').trigger('submit.prevent')
+    expect(updateAccountMock.mock.calls[0]?.[1]?.credentials).toEqual({ runtime_region: 'us-east-1', api_key: 'rotated' })
+    expect(updateAccountMock.mock.calls[0]?.[1]).not.toHaveProperty('upstream_billing_probe_enabled')
+  })
   beforeEach(() => {
     authIsSimpleMode.value = true
   })

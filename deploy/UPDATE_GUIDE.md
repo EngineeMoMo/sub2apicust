@@ -1,5 +1,26 @@
 # 日常更新操作手册（定制版 sub2api）
 
+<!-- [CUSTOM] 派生仓发布范围和官方更新记录分开，正式版本须核验业务SHA。 -->
+本次Kiro提交/推送已获用户授权，日净充值门槛/261及营销素材保留本地，生产不代部署。官方v0.2.18仅fetch留档、未合并；当前业务仍基于v0.2.17，来源和后续人工同步见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)。本机1092d0243ba0来自含261的并行工作树，不可作为本次正式提交的全部源码证明。正式更新命令仅在新业务SHA的CI/安全/GHCR及固定镜像来源/摘要核验后给出；后续回执覆盖本段“进行中”。
+
+
+<!-- [CUSTOM] 2026-10-24 Kiro计量兼容已本机部署，覆盖下方仅诊断记录。 -->
+本机8080当前0.2.17-custom.kiro-usage-20261024-1092d0243ba0，Image dd27a780e6af，三服务healthy；原PG/Redis/三个卷、281设置、317迁移、业务计数和.env/compose保持。回退标签sub2apicust:before-kiro-usage-20261024；数据库备份698665字节并通过pg_restore目录校验，完整记录output/kiro-usage-fix-20261024/verification.json。
+
+账号管理→编辑Kiro账号→Token计量方式：默认“保持账号原有计量方式”，原实号仍verified。选择“允许估算计费”并保存才会在缺精确量时按本站模型价格/倍率对估算Token收费，缓存读写按0计；可只更新模式，无需重新粘贴密钥。接受前先看[使用限制](KIRO_NATIVE.md)；连接测试成功独立于计量就绪，本轮Sonnet4.5单次OK.但billing_ready=false，不能据此认为默认精确模式的正式请求已能结算。未提交推送或部署生产，参考仅人工巡检。
+
+
+<!-- [CUSTOM] 2026-10-24 Kiro实号用量缺失，部署健康不等于计量可用。 -->
+用户实号已有返回内容后用量缺失失败现场，正式网关共用严格解码器；原始事件字段未录，尚未完成可计费验收。本轮仅诊断，无新版镜像或计费策略变更，不把旧离线回归/healthy当端到端验收。证据output/kiro-usage-diagnosis-20261024/diagnosis.json，下一步以HANDOFF五为准。
+
+<!-- [CUSTOM] Kiro图标/获取说明的本机版本覆盖下方初版本地部署。 -->
+2026-10-23本机已更新至0.2.17-custom.kiro-help-20261023-ae5ad68369d1：添加Kiro按钮及共用图标、表单内官方API Keys入口/客户端凭据来源帮助已进入实际HTTP资源。三服务healthy、真实HTTP管理员登录和原数据/设置摘要均通过；备份/回退及证据output/kiro-ui-help-20261023/verification.json。无新增迁移、原317项保持；来源tools/kiro/ui-sources-20261023.json。旧本地镜像和生产发布记录须区分，未提交推送/生产部署，真实账号及账单仍待；参考项目巡检只人工触发。
+
+<!-- [CUSTOM] 参考仓巡检的启用与应用发布状态分别记录。 -->
+2026-10-23 Kiro原生接入已在工作树实现并完成本机Docker部署；本机8080版本0.2.17-custom.kiro-local-20261023-661725e62a56，三服务healthy，Linux embed及HTTP管理员登录/新Kiro资源已验证，既有261随同应用。备份/回退及完整证据见HANDOFF最新状态和output/kiro-local-docker-20261023/verification.json。未提交推送或部署生产；旧GHCR发布镜像不包含本轮功能。账号JSON导入、分组/代理、支持协议与用量限制见[KIRO_NATIVE.md](KIRO_NATIVE.md)。发布时前后端须同版，另验同业务SHA的Linux CI/embed及真实账号与账单，不沿用旧CI。本轮无新增Kiro数据库迁移，其他未发布的261属于日净充值工作。参考源仅人工巡检：自动化kiro已删除，独立GitHub工作流无schedule；来源记录与操作见[KIRO_REFERENCE_TRACKING.md](KIRO_REFERENCE_TRACKING.md)。
+
+2026-10-23日净充值门槛（本地完成，尚无发布镜像）：后续新版本启动应用261，旧分组默认关闭日门槛；前后端须同版。分组管理→开放规则可独立开启“日净充值门槛”，关闭月门槛也可用；按北京时间当天在线充值本金累计，退款及零点重新判断资格。升级前沿用既有备份要求；发布后须现场验当日达标、次日重算、退款失去资格及复制分组保留规则。完整语义见GROUP_ACCESS_RULES.md，发布状态见根HANDOFF；下方旧镜像不含此功能。后续已随本机Docker部署应用261，生产仍未部署，以HANDOFF最新状态为准。
+
 2026-10-22 单用户分配409发布终态（覆盖本轮下方未发布记录）：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。
 
 本版修复已有30天订阅再分配3天的validity_days_mismatch：单用户有效订阅追加天数，过期从现在起算，暂停拒绝；请求键重试防重、库存/快照同事务失败回滚。备份数据库/配置/数据目录并记录旧镜像后，在实际部署目录执行：

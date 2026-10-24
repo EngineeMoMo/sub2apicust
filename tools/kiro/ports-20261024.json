@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-24",
+  "localBaseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
+  "localImplementationCommit": null,
+  "status": "本轮局部适配已通过定向回归；本机镜像与实号验证结果见HANDOFF最新状态及output/kiro-usage-fix-20261024/verification.json",
+  "policy": "仅记录下列固定SHA的局部设计适配，不整仓合并，不推进sources.lock.json的reviewedCommit或portedCommit；参考巡检仅人工触发。",
+  "manualWatch": {
+    "checkedAt": "2026-10-24T06:53:15.040Z",
+    "successfulSources": 6,
+    "failedSources": 0,
+    "actionableSources": 0,
+    "comparisons": "六仓与锁定基线均identical；本轮没有新的上游提交或Release变化",
+    "report": "output/kiro-usage-fix-20261024/reference-watch/latest.json"
+  },
+  "ports": [
+    {
+      "id": "kiro-usage-sources-and-explicit-fallback",
+      "sources": [
+        {
+          "repository": "d-kuro/kirocc",
+          "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+          "paths": [
+            "internal/kiroproto/eventstream.go",
+            "internal/respconv/usage.go",
+            "internal/respconv/event_processor.go"
+          ],
+          "license": "tools/kiro/licenses/kirocc-Apache-2.0.txt"
+        },
+        {
+          "repository": "ZyphrZero/kiro.rs",
+          "commit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+          "paths": [
+            "src/token.rs",
+            "src/anthropic/stream.rs"
+          ],
+          "license": "tools/kiro/licenses/kiro-rs-MIT.txt"
+        }
+      ],
+      "issueOrPullRequest": null,
+      "targetFiles": [
+        "backend/internal/pkg/kiro/response.go",
+        "backend/internal/pkg/kiro/credentials.go",
+        "backend/internal/service/custom_kiro_usage.go",
+        "backend/internal/service/custom_kiro_gateway.go",
+        "backend/internal/service/custom_kiro_account.go",
+        "frontend/src/custom/kiro/credentials.ts",
+        "frontend/src/custom/kiro/KiroCredentialsFields.vue",
+        "frontend/src/custom/kiro/messages.ts",
+        "frontend/src/components/account/AccountTestModal.vue"
+      ],
+      "adaptation": "补metering inputTokens/outputTokens；metadata优先且按快照覆盖，credits-only/全零不当精确Token；生成解码与计费策略分开，连接测试独立报告billing_ready/usage_source及有限事件计数。默认verified保持严格；仅管理员显式estimated时复用本站tiktoken输入估算并估算可见输出/思考/工具，缓存读写为0，响应与日志标记来源。不会隐式改现有账号，不换算credits美元，不复制本地CacheMeter/context百分比估算。",
+      "referenceScope": "参考仓在既有版本已提供估算回退，本仓先前有意未采用，不能称本轮发现了新的上游修复；本轮实现按本站计费和协议要求重做，未逐字整体复制参考服务。",
+      "tests": [
+        "TestKiroResponseUsageSources",
+        "TestKiroResponseRejectsMalformedMetering",
+        "TestKiroCredentialsUsageModeRequiresOptIn",
+        "TestCustomKiroUsageModeGatewayProtocols",
+        "TestCustomKiroDefaultUsagePolicyRejectsAllProtocols",
+        "TestCustomKiroEstimatedModeRejectsDamagedStreams",
+        "TestCustomKiroConnectionTestSeparatesBillingReadiness",
+        "TestCustomKiroConnectionFailureReportsHTTPStatus",
+        "TestCustomKiroUsageAnnotationPreservesToolNumbers",
+        "TestCustomKiroUsageModeEditPreservesSecrets"
+      ],
+      "verification": {
+        "backendCommand": "go test -json -tags=unit ./internal/pkg/kiro ./internal/service -run 'Test(Kiro|CustomKiro)' -count=1",
+        "backendTopLevelPassed": 41,
+        "backendIncludingSubtestsPassed": 128,
+        "backendFailed": 0,
+        "frontendFiles": 5,
+        "frontendPassed": 152,
+        "frontendFailed": 0,
+        "changedFrontendEslint": "passed",
+        "vueTypecheck": "passed",
+        "evidenceDirectory": "output/kiro-usage-fix-20261024"
+      },
+      "limitations": [
+        "估算不是Kiro精确Token或实际账单对账",
+        "暂不估算redacted_thinking，CRC/截断/非法计量不能回退成功",
+        "没有精确缓存读写用量时不模拟缓存折扣",
+        "实号工具多轮和其他模型权限/地区仍须单独验收",
+        "未提交推送或部署生产，未运行同SHA远程CI"
+      ]
+    }
+  ]
+}

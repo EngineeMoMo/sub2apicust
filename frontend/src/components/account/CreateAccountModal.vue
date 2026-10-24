@@ -160,6 +160,13 @@
             <PlatformIcon platform="grok" size="sm" />
             Grok
           </button>
+          <!-- [CUSTOM] Kiro 凭据导入复用共用账号、分组和代理字段。 -->
+          <button type="button" data-testid="platform-button-kiro" @click="form.platform = 'kiro'"
+            class="flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all"
+            :class="form.platform === 'kiro' ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'">
+            <PlatformIcon platform="kiro" size="sm" />
+            Kiro
+          </button>
           <button
             type="button"
             @click="selectTypeSafePlatform()"
@@ -246,6 +253,7 @@
             <PlatformIcon platform="opencode_go" size="sm" />
             OpenCode
           </button>
+
           <!-- 没有专属界面的多协议供应商：通用表单（模式 / 协议 / 端点来自 profile） -->
           <button
             v-for="spec in extraMultiProtocolPlatforms"
@@ -265,6 +273,9 @@
           </button>
         </div>
       </div>
+
+      <!-- [CUSTOM] Kiro JSON / 文件导入，无通用 OAuth 的第二步。 -->
+      <KiroCredentialsFields v-if="form.platform === 'kiro'" v-model="kiroCredentialsText" v-model:account-type="kiroAccountType" />
 
       <!-- Account Type Selection (Anthropic) -->
       <div v-if="form.platform === 'anthropic'">
@@ -4112,6 +4123,10 @@
 </template>
 
 <script setup lang="ts">
+// [CUSTOM] Kiro 界面及字段解析集中在定制目录。
+import KiroCredentialsFields from '@/custom/kiro/KiroCredentialsFields.vue'
+import { parseKiroCredentials, type KiroAccountType } from '@/custom/kiro/credentials'
+import { useKiroText } from '@/custom/kiro/messages'
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
@@ -4390,7 +4405,10 @@ interface TempUnschedRuleForm {
 // State
 const step = ref(1)
 const submitting = ref(false)
-const accountCategory = ref<'oauth-based' | 'apikey' | 'bedrock' | 'service_account'>('oauth-based') // UI selection for account category
+const accountCategory = ref<'oauth-based' | 'apikey' | 'bedrock' | 'service_account' | 'kiro'>('oauth-based') // [CUSTOM] Kiro 使用独立凭据表单。
+const kiroCredentialsText = ref('')
+const kiroAccountType = ref<KiroAccountType>('oauth')
+const kiroText = useKiroText()
 const addMethod = ref<AddMethod>('oauth') // For oauth-based: 'oauth' or 'setup-token'
 const apiKeyBaseUrl = ref('https://api.anthropic.com')
 const apiKeyValue = ref('')
@@ -5107,8 +5125,10 @@ watch(
 
 // Sync form.type based on accountCategory, addMethod, and platform-specific type
 watch(
-  [accountCategory, addMethod, antigravityAccountType, () => form.platform],
+  [accountCategory, addMethod, antigravityAccountType, () => form.platform, kiroAccountType],
   ([category, method, agType]) => {
+    // [CUSTOM] Kiro 凭据类型由独立组件选择。
+    if (form.platform === 'kiro') { form.type = kiroAccountType.value; return }
     // Antigravity upstream 类型（实际创建为 apikey）
     if (form.platform === 'antigravity' && agType === 'upstream') {
       form.type = 'apikey'
@@ -5134,6 +5154,10 @@ watch(
 watch(
   () => form.platform,
   (newPlatform) => {
+    // [CUSTOM] 切换平台清除尚未保存的 Kiro 密钥。
+    kiroCredentialsText.value = ''
+    if (newPlatform === 'kiro') accountCategory.value = 'kiro'
+    else if (accountCategory.value === 'kiro') accountCategory.value = 'oauth-based'
     // Reset base URL based on platform
     if (isMultiProtocolApiKeyPlatform(newPlatform)) {
       const mode = newPlatform === 'opencode_go' ? openCodeAccountMode.value : accountMode.value
@@ -5557,7 +5581,7 @@ const submitCreateAccount = async (payload: CreateAccountRequest) => {
   try {
     const account = await adminAPI.accounts.create(withAntigravityConfirmFlag(payload))
     const modelMapping = payload.credentials.model_mapping
-    const hasConcreteMappedTarget = payload.type === 'apikey' &&
+const hasConcreteMappedTarget = payload.platform !== 'kiro' && payload.type === 'apikey' && // [CUSTOM] Kiro 不走通用模型同步。
       typeof modelMapping === 'object' &&
       modelMapping !== null &&
       Object.values(modelMapping).some((target) =>
@@ -5608,6 +5632,8 @@ const submitCreateAccount = async (payload: CreateAccountRequest) => {
 
 // Methods
 const resetForm = () => {
+  kiroCredentialsText.value = '' // [CUSTOM] 关闭后不保留导入密钥。
+  kiroAccountType.value = 'oauth'
   step.value = 1
   form.name = ''
   form.notes = ''
@@ -5938,6 +5964,16 @@ const handleVertexServiceAccountDrop = async (event: DragEvent) => {
 }
 
 const handleSubmit = async () => {
+  // [CUSTOM] 与其他账号共用最终创建请求及分组/代理/倍率字段。
+  if (form.platform === 'kiro') {
+    if (!form.name.trim()) { appStore.showError(t('admin.accounts.pleaseEnterAccountName')); return }
+    if (!kiroCredentialsText.value.trim()) { appStore.showError(kiroText.value.required); return }
+    let credentials: Record<string, unknown>
+    try { credentials = parseKiroCredentials(kiroCredentialsText.value) }
+    catch { appStore.showError(kiroText.value.invalid); return }
+    await createAccountAndFinish('kiro', kiroAccountType.value, credentials)
+    return
+  }
   // For OAuth-based type, handle OAuth flow (goes to step 2)
   if (isOAuthFlow.value) {
     if (!isGrokSSOInputMethod.value && !form.name.trim()) {
@@ -6352,7 +6388,7 @@ const createAccountAndFinish = async (
     expires_at: form.expires_at,
     // 上游倍率探测对全部 API-key 平台开放（antigravity upstream 走本 helper）；
     // 非 apikey 类型（bedrock/oauth）不传，后端不动作。
-    upstream_billing_probe_enabled: type === 'apikey' ? upstreamBillingAutoProbeEnabled.value : undefined,
+upstream_billing_probe_enabled: type === 'apikey' && platform !== 'kiro' ? upstreamBillingAutoProbeEnabled.value : undefined, // [CUSTOM] Kiro 无已验证账单探测。
     auto_pause_on_expired: autoPauseOnExpired.value
   })
 }

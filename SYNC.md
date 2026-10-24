@@ -1,5 +1,25 @@
 # 同步上游 & 构建部署 Runbook
 
+<!-- [CUSTOM] 本仓派生来源、官方更新与逐次发布的持久台账。 -->
+[派生仓更新台账](deploy/FORK_UPDATE_LOG.md)记录本次实际fetch结果：官方main=37067e8e340e9440d173a92b4faa05e8ce58368f/VERSION0.2.18，已同步基线仍b0a02a330/VERSION0.2.17，47个未纳入提交。本轮不合并，只提交用户授权的Kiro相关改动；日门槛/261及营销工作留本地。发布须独立验证暂存区和实际业务SHA的CI/安全/GHCR，不能套用含并行代码的本机镜像。后续同步按台账及本页merge-tree/定制自检流程，仍由用户人工提出。
+
+
+<!-- [CUSTOM] 2026-10-24 Kiro计量兼容的最新本机终态。 -->
+本机8080已更新0.2.17-custom.kiro-usage-20261024-1092d0243ba0（Image dd27a780e6af），三服务healthy，原数据/设置/迁移/配置和PG/Redis保留。参考六仓人工巡检均identical，无新提交/Release；局部适配台账tools/kiro/ports-20261024.json，整仓reviewed/ported基线不推进。升级须保留新custom_kiro_usage、计量枚举和自有凭据选择器，以及AccountTestModal.vue的两处[CUSTOM]status接缝；默认verified与显式estimated政策见deploy/KIRO_NATIVE.md。Go41/128、前端152及类型/构建/Linux embed通过；实号单次OK.但billing_ready=false，不能宣称精确计费或全部模型可用。备份/回退/证据output/kiro-usage-fix-20261024/verification.json；未提交推送、同SHA远程CI或生产部署，不启用定时巡检。
+
+
+<!-- [CUSTOM] 2026-10-24 Kiro实号用量阻塞诊断优先于下方仅部署/离线通过记录。 -->
+当前Kiro实号测试生成后因缺少可识别的精确Token用量报错，正式网关同样受限；尚未完成可计费验收。本轮仅读已有日志/源码，无新调用、业务修改或部署。证据output/kiro-usage-diagnosis-20261024/diagnosis.json及HANDOFF四/五；不要为消除红字直接启用估算收费。
+
+
+<!-- [CUSTOM] Kiro图标/凭据帮助的来源记录与本机更新终态。 -->
+2026-10-23 Kiro UI修正已本机部署：保留PlatformIcon的[CUSTOM]图标分支/导入、创建按钮图标和custom/kiro获取帮助，来源tools/kiro/ui-sources-20261023.json。当前0.2.17-custom.kiro-help-20261023-ae5ad68369d1；镜像与运行容器9c12017f8197一致，三服务healthy，HTTP新资源及管理员登录/数据摘要验证通过。备份和验证output/kiro-ui-help-20261023/verification.json，回退before-kiro-help-20261023；无新增迁移，原317项/配置/业务数据保留。只人工巡检，未提交推送/生产部署；真实账号/账单与后台视觉验收仍待。
+
+<!-- [CUSTOM] Kiro参考源与人工审阅/移植基线的维护入口。 -->
+2026-10-23 Kiro原生接入及人工巡检：保留tools/kiro来源锁定/局部适配台账/许可证、backend/internal/pkg/kiro及custom_kiro服务/仓库、frontend/src/custom/kiro和CUSTOMIZATIONS登记的平台注册/刷新/三协议网关/依赖注入/管理表单接缝。portedCommit不代表局部移植完成度，逐项范围见ports-20261023.json。用户取消定时巡检：自动化kiro已删除，工作流无schedule，远程检查只由workflow_dispatch或用户要求执行命令，push/PR仅离线回归。接入限制deploy/KIRO_NATIVE.md，正式同SHA CI/真实账号/账单仍待验收；已完成本机Docker部署，版本0.2.17-custom.kiro-local-20261023-661725e62a56；本地Linux embed/前端构建及HTTP验收通过，原库/卷/配置保留，261已应用。证据output/kiro-local-docker-20261023/verification.json；未提交推送或部署生产。
+
+2026-10-23日净充值门槛（本地完成，未发布）：同步保留261新迁移、自有groupAccess前后端字段／独立开关／日聚合／跨日缓存及测试，既有group_repo.go的[CUSTOM]事务复制增加日门槛两列。257保持不变，支付monthly通知在新代码中同时失效日／月缓存；旧规则默认关闭日门槛。前后端同版发布，最终验证与待办见HANDOFF及output/group-daily-recharge-20261023/verification.json；未提交推送或部署，必须另验本轮后续业务SHA的CI／安全／GHCR，不能沿用下方历史结果。
+
 2026-10-22 单用户分配409发布终态（覆盖本轮下方未发布记录）：业务提交c8310ae00b38b7a30422caeba2b16ab202ac3cb4已推origin/main；同SHA CI39793098712（Linux unit/integration、专用PostgreSQL/Redis、Go lint0、前端关键回归67文件941项及配方/工坊node测试）、安全39793098725、GHCR39793098684全部success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-c8310ae，linux/amd64，index digest sha256:7139ea3e4111e37cd1acbba7696098bd17db9deb61a50f0629307021237b056f；GHCR原始index/平台manifest/config逐层SHA256、OCI revision/source与正式embed构建日志核验通过。15个源码哈希与本地验证记录一致，22个提交文件范围已核验。无新增迁移/依赖，包含前轮259/260；前后端同版。证据output/subscription-assignment-fix-20261022/release/release-final-verification.json、source-manifest.json及job日志。生产/业务库/本机服务未改，由用户备份后执行./update.sh sha-c8310ae，实际业务验收待完成；assets/marketing未纳入，纯文档[skip ci]提交不改变业务镜像。
 
 同步保留custom_admin_subscription_assignment.go、handler的[CUSTOM]幂等单用户续期接缝、前端subscriptionAssignment.ts/sessionStorage重试键、API的Idempotency-Key、SubscriptionsView接线及中英文单用户库存提示；Makefile三份关键回归不得遗漏。原AssignSubscription及批量语义保持。

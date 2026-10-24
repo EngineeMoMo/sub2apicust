@@ -740,6 +740,10 @@ func (s *AccountTestService) fetchUpstreamModelList(ctx context.Context, account
 	if account == nil {
 		return nil, nil, newUpstreamModelSyncConfigError("Account is required", nil)
 	}
+	// [CUSTOM] Kiro 使用独立默认目录与账号映射，禁止将原生凭据发送给通用模型端点。
+	if account.Platform == PlatformKiro {
+		return nil, nil, &UpstreamModelSyncError{Kind: UpstreamModelSyncErrorUnsupported, Message: "Kiro 暂不支持在线同步模型，请配置账号模型映射"}
+	}
 
 	if account.Platform == PlatformAntigravity && account.Type != AccountTypeAPIKey {
 		return s.fetchAntigravityOAuthUpstreamModels(ctx, account)

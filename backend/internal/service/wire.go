@@ -134,6 +134,7 @@ func ProvideTokenRefreshService(
 	proxyRepo ProxyRepository,
 	refreshAPI *OAuthRefreshAPI,
 	runtimeBlocker AccountRuntimeBlocker,
+	customKiro *CustomKiroService, // [CUSTOM] 统一后台刷新注册。
 ) *TokenRefreshService {
 	svc := NewTokenRefreshService(accountRepo, oauthService, openaiOAuthService, geminiOAuthService, antigravityOAuthService, cacheInvalidator, schedulerCache, cfg, tempUnschedCache, grokOAuthService)
 	// 注入 OpenAI privacy opt-out 依赖
@@ -143,6 +144,8 @@ func ProvideTokenRefreshService(
 	// 调用侧显式注入后台刷新策略，避免策略漂移
 	svc.SetRefreshPolicy(DefaultBackgroundRefreshPolicy())
 	svc.SetAccountRuntimeBlocker(runtimeBlocker)
+	// [CUSTOM] 与请求路径共用执行器、分布式锁及凭据 CAS。
+	svc.registrations = append(svc.registrations, tokenRefreshRegistration{platform: PlatformKiro, refresher: customKiro, executor: customKiro})
 	svc.Start()
 	return svc
 }
@@ -253,6 +256,7 @@ func ProvideAccountUsageService(
 }
 
 func ProvideAccountTestService(
+	customKiro *CustomKiroService, // [CUSTOM] 连接测试及管理员刷新。
 	accountRepo AccountRepository,
 	geminiTokenProvider *GeminiTokenProvider,
 	claudeTokenProvider *ClaudeTokenProvider,
@@ -279,6 +283,7 @@ func ProvideAccountTestService(
 	service.SetOpenAIGatewayService(openAIGatewayService)
 	service.SetSettingService(settingService)
 	service.SetPluginManager(pluginManager)
+	service.customKiro = customKiro // [CUSTOM] Kiro 专用连接测试。
 	return service
 }
 
@@ -880,7 +885,8 @@ var ProviderSet = wire.NewSet(
 	ProvideBillingCacheService,
 	NewAnnouncementService,
 	NewAdminService,
-	NewGatewayService,
+	ProvideCustomKiroGatewayService, // [CUSTOM] 保持原构造器兼容并注入 Kiro。
+	NewCustomKiroService,
 	NewOpenAIGatewayService,
 	ProvideImageStorageSettingService,
 	ProvideImageTaskService,

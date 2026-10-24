@@ -138,6 +138,7 @@ func normalizeGrokAccountTestMode(mode string) string {
 
 // AccountTestService handles account testing operations
 type AccountTestService struct {
+	customKiro                *CustomKiroService // [CUSTOM] 与网关共用 Kiro 认证及协议。
 	accountRepo               AccountRepository
 	geminiTokenProvider       *GeminiTokenProvider
 	claudeTokenProvider       *ClaudeTokenProvider
@@ -369,6 +370,10 @@ func (s *AccountTestService) TestAccountConnection(c *gin.Context, accountID int
 		return s.sendErrorAndEnd(c, "Account not found")
 	}
 	bindAccountTestPlatform(c, account)
+	// [CUSTOM] Kiro 凭据只发送到其运行时，不进入 Claude 上游测试。
+	if account.Platform == PlatformKiro {
+		return s.testCustomKiroConnection(c, account, modelID, prompt)
+	}
 
 	// Synthetic UI load-test accounts exercise the real SSE parsing and modal
 	// interactions, but intentionally do not send their placeholder credentials

@@ -15,6 +15,7 @@ const PROVIDER_BY_PLATFORM: Record<GroupPlatform, KeyGroupProvider> = {
   gemini: 'other',
   grok: 'other',
   antigravity: 'other',
+  kiro: 'other', // [CUSTOM] Kiro 是独立上游平台，归入其他供应商。
   composite: 'other',
   opencode_go: 'other',
   typesafe: 'other',

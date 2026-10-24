@@ -1,5 +1,9 @@
 # 本机 Docker 构建网络故障与防复发清单
 
+**2026-10-23 Kiro图标/获取帮助修正（最新本机）**：代理DockerHub授权200，实际构建进程设置临时代理并恢复；构建成功，版本0.2.17-custom.kiro-help-20261023-ae5ad68369d1，仅应用up --no-deps --no-build，运行Image9c12017f8197与新固定标签一致，三服务healthy/重启0。HTTP共用图标脚本含官网内联SVG且几何相同、账号脚本含获取帮助/官方链接；真实HTTP管理员登录/版本/Kiro筛选通过并退出。PG/Redis容器/三个卷、业务计数/281设置摘要/317迁移/.env/compose不变。当前数据库新备份output/kiro-ui-help-20261023/database.dump为695345字节、SHA256 c6f2f55cad05877e2a1e4d85ff23e08e32b963d7b611b73c2ec21ee79bfcfa33，pg_restore目录通过；回退标签sub2apicust:before-kiro-help-20261023保留前版Kiro镜像，旧备份不覆盖。证据同目录verification.json；没有真实Kiro账号或后台浏览器视觉验收，未生产部署/提交推送，不恢复定时巡检。
+
+**2026-10-23 Kiro本机部署终态（覆盖下方历史镜像）**：实际代理授权200，构建进程使用临时HTTP_PROXY/HTTPS_PROXY/NO_PROXY并在结束恢复。首轮上下文因backend/.gocache为10.26GiB而主动中止，.dockerignore补[CUSTOM]排除本机缓存后上下文96.15MB；Linux amd64构建成功，含前端类型/生产构建、i18n3项、Family3顶层/25含子项及Go embed。固定镜像sub2apicust:kiro-local-20261023-661725e62a56，运行Image与镜像ID同为ccf60fd0c6b7f131cf3ade79539585bcfff95756c9d47bed1885c156ab642f39；8080仅应用重建，原PG/Redis启动且容器ID与三个数据卷保持，三服务healthy、health200。304→317迁移（含既有日门槛261，默认关闭）全部校验和一致，原业务计数保持；两键客户端版本自动同步，其余279设置摘要一致，品牌仍魔法家族/多模型 API 服务。管理员HTTP真实登录/版本/Kiro筛选200，验收会话已退出；新版JS中Kiro导入字段已验证，浏览器登录页/品牌页可打开，不冒称已验真实Kiro账号。数据库备份output/kiro-local-docker-20261023/database.dump为668744字节、pg_restore目录通过，同目录含配置/app_data/Redis备份与verification.json；回退镜像sub2apicust:before-kiro-20261023保留，不自动恢复数据库。日志仍有历史价格远程哈希解析0.0.0.0失败，本地256模型价格库已载入，未改该网络配置。未提交推送/生产部署或恢复巡检定时任务。
+
 2026-10-15正式发布补充：最终794479760已推送，同SHA CI38727724771／安全38727724898／GHCR38727724764全部成功，正式固定sha-7944797及摘要／源码／embed已交叉验真，详见HANDOFF及output/group-access-cache-20261015/verified-release.json。新增缓存类型检查的19项本机专项通过；下方「未生成发布镜像」为早期隔离阶段。用户自行更新，本机8080、业务容器和卷及生产均未代部署，真实业务活动未配置。
 
 2026-10-15最终终态：Linux58包unit及embed退出0，前端50项／构建、后端69项含真实PG双实例和十轮专项通过；临时容器sub2apicust-group-access-cache-20261015已核验ID 9e8420b00b60259ea5318b6ab33bbb8e9788c460f02c5b0a343d72ad27472972后连匿名卷清理。只导出验证产物，未生成本轮业务发布镜像或部署8080／生产。最终证据output/group-access-cache-20261015/verification.json，首次server测试漏参已修并保留失败记录。

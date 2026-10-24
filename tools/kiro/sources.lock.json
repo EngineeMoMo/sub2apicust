@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-23",
+  "timezone": "Asia/Shanghai",
+  "policy": "本文件为受版本控制的来源与人工审阅基线；巡检仅由用户人工触发，只更新 output 中的观察游标，绝不自动推进 reviewedCommit 或 portedCommit。局部适配与测试登记在 ports-20261023.json；portedCommit 为空表示未整仓迁入该HEAD，不代表没有本地实现。",
+  "sources": [
+    {
+      "id": "kirocc",
+      "repository": "d-kuro/kirocc",
+      "role": "primary",
+      "purpose": "Go 认证、模型发现、请求转换与 AWS EventStream；按当前架构重写接缝",
+      "reviewedCommit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidence": "固定提交 LICENSE 文本"
+      },
+      "watchPaths": [
+        "internal/",
+        "go.mod",
+        "go.sum",
+        "cmd/"
+      ],
+      "branch": "main",
+      "observedCommit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+      "observedAt": "2026-10-23T07:41:07.359Z",
+      "portedCommit": null,
+      "observedReleases": []
+    },
+    {
+      "id": "kiro-rs",
+      "repository": "ZyphrZero/kiro.rs",
+      "role": "primary",
+      "purpose": "多凭据调度、代理、令牌轮换、工具与用量兼容修复",
+      "reviewedCommit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+      "license": {
+        "spdx": "MIT",
+        "evidence": "固定提交 LICENSE 文本"
+      },
+      "watchPaths": [
+        "src/",
+        "Cargo.toml",
+        "Cargo.lock",
+        "frontend/",
+        "admin-ui/"
+      ],
+      "branch": "master",
+      "observedCommit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+      "observedAt": "2026-10-23T07:36:33.077Z",
+      "portedCommit": null,
+      "observedReleases": [
+        {
+          "id": 416913422,
+          "tag": "v0.9.2",
+          "publishedAt": "2026-10-19T04:52:54Z",
+          "updatedAt": "2026-10-19T04:52:54Z",
+          "prerelease": false,
+          "bodySha256": "c44d7d9a65163bf4f67622fea614755c8dfdebf29c6d1d5136a74b672a1cea43"
+        },
+        {
+          "id": 406557005,
+          "tag": "v0.9.1",
+          "publishedAt": "2026-10-08T07:43:45Z",
+          "updatedAt": "2026-10-08T07:43:45Z",
+          "prerelease": false,
+          "bodySha256": "7cff444dd32ebebad706391bec6444232b36dfba8a4972f53f0ea5261ae1571d"
+        },
+        {
+          "id": 390548865,
+          "tag": "v0.9.0",
+          "publishedAt": "2026-09-17T08:36:04Z",
+          "updatedAt": "2026-09-17T08:36:04Z",
+          "prerelease": false,
+          "bodySha256": "82a4a9b75e8964debc6c34a4bc683aa7cdc29c925dd2824c5b1838691b02b954"
+        },
+        {
+          "id": 376914431,
+          "tag": "v0.8.0",
+          "publishedAt": "2026-08-26T06:13:16Z",
+          "updatedAt": "2026-08-26T06:13:16Z",
+          "prerelease": false,
+          "bodySha256": "8fb8a06b00748ac5a6b9573f9d3034a2ee32829063dfdda96e6e2dd47548d0b6"
+        },
+        {
+          "id": 369654531,
+          "tag": "v0.7.6",
+          "publishedAt": "2026-08-13T03:45:08Z",
+          "updatedAt": "2026-08-13T03:45:08Z",
+          "prerelease": false,
+          "bodySha256": "3ba8a59016f098a9738e9e27f66567485a82006ec98d9c4bbd880bd71d4dee9a"
+        }
+      ]
+    },
+    {
+      "id": "sub2api-kiro",
+      "repository": "xiangking/sub2api-kiro",
+      "role": "original-reference",
+      "purpose": "用户提供的 sub2api 接入边界、授权 UI 和后台路径；已记录估算及流式限制",
+      "reviewedCommit": "9541e0e9fb64718c15581985c84807232536d39b",
+      "license": {
+        "spdx": null,
+        "evidence": "固定提交 LICENSE 为 GNU LGPL v3 文本；项目授权范围迁入时复核"
+      },
+      "watchPaths": [
+        "backend/",
+        "frontend/"
+      ],
+      "branch": "main",
+      "observedCommit": "9541e0e9fb64718c15581985c84807232536d39b",
+      "observedAt": "2026-10-23T07:12:22.900Z",
+      "portedCommit": null,
+      "observedReleases": []
+    },
+    {
+      "id": "kiro-rs-upstream",
+      "repository": "hank9999/kiro.rs",
+      "role": "watch",
+      "purpose": "Rust 原项目的协议、图片工具与模型更新；尚未做完整代码审阅",
+      "reviewedCommit": null,
+      "license": {
+        "spdx": "MIT",
+        "evidence": "GitHub 仓库元数据，未逐文件审阅"
+      },
+      "watchPaths": [
+        "src/",
+        "Cargo.toml",
+        "Cargo.lock"
+      ],
+      "branch": "master",
+      "observedCommit": "22f36e692ad387c46581a84daf0d563347e330a3",
+      "observedAt": "2026-10-23T07:36:33.077Z",
+      "portedCommit": null,
+      "observedReleases": [
+        {
+          "id": 303156308,
+          "tag": "v2026.3.1",
+          "publishedAt": "2026-03-30T12:23:38Z",
+          "updatedAt": "2026-03-30T12:23:38Z",
+          "prerelease": false,
+          "bodySha256": "33e94ce1fc0e53866face72ca55e1ee2904675651400e0ce9e61bd42f3c18663"
+        },
+        {
+          "id": 290984425,
+          "tag": "v2026.2.7",
+          "publishedAt": "2026-02-26T15:52:14Z",
+          "updatedAt": "2026-02-26T15:52:14Z",
+          "prerelease": false,
+          "bodySha256": "2283d39de5f0231aeb0a1c8276a3849afb03494e57182ee0baff76e55ba2e2cf"
+        },
+        {
+          "id": 288823907,
+          "tag": "v2026.2.6",
+          "publishedAt": "2026-02-20T18:10:16Z",
+          "updatedAt": "2026-02-20T18:11:29Z",
+          "prerelease": false,
+          "bodySha256": "550490b80d1834fbb0ac068e3f916d2f8c9df9829167b0c79aa24000e06c8333"
+        },
+        {
+          "id": 285571775,
+          "tag": "v2026.2.5",
+          "publishedAt": "2026-02-12T07:55:36Z",
+          "updatedAt": "2026-02-12T07:55:36Z",
+          "prerelease": false,
+          "bodySha256": "9bb37c9fbd9077c5cbe61d91aa5ead5f916b1e7a7289169892ebeeba9806f140"
+        },
+        {
+          "id": 284046946,
+          "tag": "v2026.2.4",
+          "publishedAt": "2026-02-07T16:30:15Z",
+          "updatedAt": "2026-02-07T16:30:15Z",
+          "prerelease": false,
+          "bodySha256": "bc7860619d5900eb828387af68bea0f58b9c8ae6993575b59e10459b0aa76bdd"
+        }
+      ]
+    },
+    {
+      "id": "kiro-gateway",
+      "repository": "zhujunsan/kiro-gateway",
+      "role": "watch",
+      "purpose": "参数、思考签名与重试修复线索；尚未做完整代码审阅",
+      "reviewedCommit": null,
+      "license": {
+        "spdx": "AGPL-3.0",
+        "evidence": "GitHub 仓库元数据，未逐文件审阅"
+      },
+      "watchPaths": [
+        "kiro/",
+        "kiro_gateway/",
+        "src/",
+        "app/",
+        "main.py",
+        "requirements.txt",
+        "pyproject.toml",
+        "uv.lock"
+      ],
+      "branch": "main",
+      "observedCommit": "e10ced80c9e33128e867ca584456f6c5fd6000bd",
+      "observedAt": "2026-10-23T07:39:21.504Z",
+      "portedCommit": null,
+      "observedReleases": []
+    },
+    {
+      "id": "kiro-studio",
+      "repository": "dwgx/KiroStudio",
+      "role": "watch",
+      "purpose": "管理与多账号维护线索；横幅更新不能当成功能修复",
+      "reviewedCommit": null,
+      "license": {
+        "spdx": null,
+        "evidence": "GitHub 元数据 NOASSERTION；未审阅许可证，不能据此复制代码"
+      },
+      "watchPaths": [
+        "src/",
+        "src-tauri/",
+        "backend/",
+        "frontend/",
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "Cargo.toml",
+        "Cargo.lock"
+      ],
+      "branch": "master",
+      "observedCommit": "0c40219cabfc13387d34c5e3a22392e69a2aa56b",
+      "observedAt": "2026-10-23T07:36:40.157Z",
+      "portedCommit": null,
+      "observedReleases": [
+        {
+          "id": 412551896,
+          "tag": "v1.2.5",
+          "publishedAt": "2026-10-14T09:41:02Z",
+          "updatedAt": "2026-10-14T09:47:26Z",
+          "prerelease": false,
+          "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": 382505425,
+          "tag": "v1.2.4",
+          "publishedAt": "2026-09-04T05:47:46Z",
+          "updatedAt": "2026-09-04T05:53:14Z",
+          "prerelease": false,
+          "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": 380085098,
+          "tag": "v1.2.3",
+          "publishedAt": "2026-08-31T22:12:24Z",
+          "updatedAt": "2026-08-31T22:18:17Z",
+          "prerelease": false,
+          "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": 380057917,
+          "tag": "v1.2.2",
+          "publishedAt": "2026-08-31T21:18:03Z",
+          "updatedAt": "2026-08-31T21:23:53Z",
+          "prerelease": false,
+          "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "id": 375084721,
+          "tag": "v1.2.1",
+          "publishedAt": "2026-08-23T01:24:46Z",
+          "updatedAt": "2026-08-24T06:04:18Z",
+          "prerelease": false,
+          "bodySha256": "af7bf597f4243d9b2353e7601d11af586dba9546a33d0d91e32310bdbb609b17"
+        }
+      ]
+    }
+  ]
+}

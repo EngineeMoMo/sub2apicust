@@ -24,6 +24,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/kiro" // [CUSTOM] Kiro 连接测试模型。
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
@@ -1481,6 +1482,10 @@ func (h *AccountHandler) refreshSingleAccount(ctx context.Context, account *serv
 				return nil, "", fmt.Errorf("failed to clear account error: %w", clearErr)
 			}
 		}
+	} else if account.Platform == service.PlatformKiro {
+		// [CUSTOM] 手动与批量刷新均走统一锁及条件持久化。
+		updated, refreshErr := h.accountTestService.RefreshCustomKiroAccount(ctx, account)
+		return updated, "", refreshErr
 	} else if account.Platform == service.PlatformGrok {
 		if h.grokOAuthService == nil {
 			return nil, "", fmt.Errorf("grok oauth service is not configured")
@@ -2900,6 +2905,23 @@ func (h *AccountHandler) GetAvailableModels(c *gin.Context) {
 		return
 	}
 
+	// [CUSTOM] Kiro 仅列出明确参考的模型或账号映射，不套用 Anthropic 全目录。
+	if account.Platform == service.PlatformKiro {
+		ids := kiro.DefaultModels()
+		if mapping := account.GetModelMapping(); len(mapping) > 0 {
+			ids = make([]string, 0, len(mapping))
+			for id := range mapping {
+				ids = append(ids, id)
+			}
+			sort.Strings(ids)
+		}
+		models := make([]gin.H, 0, len(ids))
+		for _, id := range ids {
+			models = append(models, gin.H{"id": id, "type": "model", "display_name": id})
+		}
+		response.Success(c, models)
+		return
+	}
 	// Handle Grok accounts
 	if account.Platform == service.PlatformGrok {
 		defaultModels := xai.DefaultModels()

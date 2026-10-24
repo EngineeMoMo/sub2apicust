@@ -265,7 +265,7 @@ func (s *AccountService) Create(ctx context.Context, req CreateAccountRequest) (
 			if err != nil {
 				return nil, err
 			}
-			if g.RequireOAuthOnly && (g.Platform == PlatformOpenAI || g.Platform == PlatformAntigravity || g.Platform == PlatformAnthropic || g.Platform == PlatformGemini || g.Platform == PlatformGrok) {
+			if g.RequireOAuthOnly && (g.Platform == PlatformOpenAI || g.Platform == PlatformAntigravity || g.Platform == PlatformAnthropic || g.Platform == PlatformGemini || g.Platform == PlatformGrok || g.Platform == PlatformKiro) { // [CUSTOM] Kiro 同样遵守仅 OAuth 分组。
 				return nil, fmt.Errorf("分组 [%s] 仅允许 OAuth 账号，apikey 类型账号无法加入", g.Name)
 			}
 		}
@@ -390,7 +390,7 @@ func (s *AccountService) Update(ctx context.Context, id int64, req UpdateAccount
 			if err != nil {
 				return nil, err
 			}
-			if g.RequireOAuthOnly && (g.Platform == PlatformOpenAI || g.Platform == PlatformAntigravity || g.Platform == PlatformAnthropic || g.Platform == PlatformGemini || g.Platform == PlatformGrok) {
+			if g.RequireOAuthOnly && (g.Platform == PlatformOpenAI || g.Platform == PlatformAntigravity || g.Platform == PlatformAnthropic || g.Platform == PlatformGemini || g.Platform == PlatformGrok || g.Platform == PlatformKiro) { // [CUSTOM] Kiro 同样遵守仅 OAuth 分组。
 				return nil, fmt.Errorf("分组 [%s] 仅允许 OAuth 账号，apikey 类型账号无法加入", g.Name)
 			}
 		}
@@ -519,7 +519,7 @@ func (s *AccountService) TestCredentials(ctx context.Context, id int64) error {
 	case PlatformGrok:
 		// Grok OAuth credentials are validated via token exchange/refresh and request-path probes.
 		return nil
-	case PlatformTypeSafe:
+	case PlatformTypeSafe, PlatformKiro: // [CUSTOM] Kiro 实际连接由专用测试路径验证。
 		// TypeSafe credentials are API keys; inference failures drive health and cooldown state.
 		return nil
 	default:

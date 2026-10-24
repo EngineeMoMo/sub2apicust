@@ -38,6 +38,13 @@ func (s *GatewayService) ForwardAsChatCompletions(
 		return nil, dedicatedErr
 	}
 	startTime := time.Now()
+	// [CUSTOM] Kiro 不接受会在通用转换中丢失的多候选或结构化输出语义。
+	if account.Platform == PlatformKiro {
+		if err := validateCustomKiroIngress(body, "chat"); err != nil {
+			customKiroWriteError(c, "chat", http.StatusBadRequest, err.Error())
+			return nil, err
+		}
+	}
 
 	// 1. Parse Chat Completions request
 	var ccReq apicompat.ChatCompletionsRequest
@@ -99,6 +106,10 @@ func (s *GatewayService) ForwardAsChatCompletions(
 		return nil, fmt.Errorf("marshal anthropic request: %w", err)
 	}
 
+	// [CUSTOM] Kiro 复用入站协议转换，独立处理原生上游与输出。
+	if account.Platform == PlatformKiro {
+		return s.forwardCustomKiro(ctx, c, account, anthropicBody, originalModel, clientStream, "chat", gjson.GetBytes(body, "stream_options.include_usage").Bool(), nil)
+	}
 	// 6. Apply Claude Code mimicry for OAuth accounts.
 	// Chat Completions 协议进来的请求永远不是 Claude Code 客户端，所以对 OAuth 账号
 	// 必须完整执行 /v1/messages 主路径上的伪装链路（system 重写 + normalize + metadata 注入），

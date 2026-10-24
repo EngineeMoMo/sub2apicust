@@ -21,5 +21,6 @@ func TestAllPlatformsIncludesEveryConcretePlatform(t *testing.T) {
 		"typesafe",
 		"command_code",
 		"cline",
+		"kiro", // [CUSTOM] 错误规则须覆盖已登记的 Kiro 原生平台。
 	}, AllPlatforms())
 }

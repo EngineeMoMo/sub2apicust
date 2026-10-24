@@ -28,6 +28,20 @@ jobs:
     runs-on: ubuntu-latest
     # [CUSTOM] 包号真实事务／并发回归使用独立空库，缺少DSN不能只靠skip冒充通过。
     services:
+      # [CUSTOM] Kiro 凭据CAS/outbox真实回归使用独立测试库。
+      kiro-postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: kiro_test
+          POSTGRES_PASSWORD: kiro_ci_only
+          POSTGRES_DB: kiro_native_test
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U kiro_test -d kiro_native_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       # [CUSTOM] 分组门槛／跨实例缓存回归使用专用数据库，避免真实PG测试跳过。
       group-access-postgres:
         image: postgres:18-alpine
@@ -95,6 +109,8 @@ jobs:
       - name: Unit tests
         working-directory: backend
         env:
+          # [CUSTOM] 仅连接本job的专用Kiro测试库，不允许静默跳过CAS回归。
+          CUSTOM_KIRO_TEST_DSN: postgres://kiro_test:kiro_ci_only@127.0.0.1:5435/kiro_native_test?sslmode=disable
           CUSTOM_GROUP_ACCESS_TEST_DSN: postgres://group_access_test:group_access_ci_only@127.0.0.1:5434/group_access_test?sslmode=disable
           DEDICATED_TEST_POSTGRES_DSN: postgres://dedicated_test:dedicated_ci_only@127.0.0.1:5432/dedicated_test?sslmode=disable
           AUTH_IP_TEST_POSTGRES_DSN: postgres://auth_ip_test:auth_ip_ci_only@127.0.0.1:5433/auth_ip_test?sslmode=disable

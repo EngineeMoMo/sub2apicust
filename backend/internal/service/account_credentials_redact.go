@@ -5,6 +5,8 @@ package service
 var SensitiveCredentialKeys = []string{
 	// OAuth
 	"access_token", "refresh_token", "id_token", "agent_private_key",
+	// [CUSTOM] Kiro OIDC 注册密钥及导入别名均不可回传前端。
+	"client_secret", "clientSecret", "accessToken", "refreshToken",
 	// API Key 类
 	"api_key", "session_key", "cookie",
 	// Grok Web SSO / password (must never persist or echo after Build OAuth)

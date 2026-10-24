@@ -200,6 +200,41 @@ async function openCodexImportStep(toggleClicks = 0) {
 }
 
 describe('CreateAccountModal OpenAI long-context billing', () => {
+  // [CUSTOM] 验证 Kiro 入口实际发起共用创建请求。
+  it('creates Kiro OAuth accounts from canonicalized JSON and selected groups', async () => {
+    const wrapper = mountModal([{ id: 1, platform: 'kiro' }, { id: 2, platform: 'kiro' }])
+    await wrapper.get('[data-testid="platform-button-kiro"]').trigger('click')
+    await wrapper.get('form#create-account-form input[type="text"]').setValue('Kiro import')
+    await wrapper.get('#kiro-credentials-json').setValue('{"refreshToken":"test-refresh","region":"eu-west-1"}')
+    await wrapper.get('[data-testid="select-pricing-groups"]').trigger('click')
+    await wrapper.get('form#create-account-form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createAccountMock).toHaveBeenCalledTimes(1)
+    expect(createAccountMock.mock.calls[0]?.[0]).toMatchObject({ platform: 'kiro', type: 'oauth', group_ids: [1, 2], credentials: { refresh_token: 'test-refresh', auth_region: 'eu-west-1' } })
+    expect(probeUpstreamBillingMock).not.toHaveBeenCalled()
+  })
+  it('creates Kiro API keys without generic remote billing probes', async () => {
+    const wrapper = mountModal()
+    await wrapper.get('[data-testid="platform-button-kiro"]').trigger('click')
+    await wrapper.get('form#create-account-form input[type="text"]').setValue('Kiro key')
+    await wrapper.get('#kiro-account-type').setValue('apikey')
+    await wrapper.get('#kiro-credentials-json').setValue('{"api_key":"test-key"}')
+    await wrapper.get('form#create-account-form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createAccountMock.mock.calls[0]?.[0]).toMatchObject({ platform: 'kiro', type: 'apikey', credentials: { api_key: 'test-key' } })
+    expect(createAccountMock.mock.calls[0]?.[0]?.upstream_billing_probe_enabled).toBeUndefined()
+    expect(probeUpstreamBillingMock).not.toHaveBeenCalled()
+    expect(syncUpstreamModelsMock).not.toHaveBeenCalled()
+  })
+  it('rejects malformed Kiro JSON before sending an account request', async () => {
+    const wrapper = mountModal()
+    await wrapper.get('[data-testid="platform-button-kiro"]').trigger('click')
+    await wrapper.get('form#create-account-form input[type="text"]').setValue('Kiro invalid')
+    await wrapper.get('#kiro-credentials-json').setValue('{bad')
+    await wrapper.get('form#create-account-form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createAccountMock).not.toHaveBeenCalled()
+  })
   beforeEach(() => {
     authIsSimpleMode.value = true
     createAccountMock.mockReset().mockResolvedValue({ id: 42, platform: 'openai', type: 'apikey' })

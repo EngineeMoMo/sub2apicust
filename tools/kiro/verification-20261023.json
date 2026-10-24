@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-23",
+  "timezone": "Asia/Shanghai",
+  "scope": "最初参考审阅阶段的验证快照；原生接入后续结果见output/kiro-native-20261023/verification.json及ports-20261023.json",
+  "nodeVersion": "v22.9.0",
+  "offlineTests": {
+    "command": "node --test tools/kiro/check-updates.test.mjs",
+    "tests": 24,
+    "pass": 24,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "log": "output/kiro-reference-watch/unit-final.tap",
+    "coverage": [
+      "分页和截断",
+      "300文件限制",
+      "文档与代码分类",
+      "文件改名",
+      "默认分支和仓库迁移",
+      "分叉和回退",
+      "归档恢复",
+      "新Release及正文修订",
+      "失败及损坏游标保护",
+      "观察不推进审阅/移植基线",
+      "完整文件输出和2/0/1状态"
+    ]
+  },
+  "realGithubCheck": {
+    "command": "node tools/kiro/check-updates.mjs",
+    "checkedAt": "2026-10-23T08:44:48.626Z",
+    "repositories": 6,
+    "failed": 0,
+    "actionable": 0,
+    "results": [
+      {
+        "repository": "d-kuro/kirocc",
+        "branch": "main",
+        "head": "7a2ba670286ca16ae89fe792ea935b3751179421",
+        "status": "identical",
+        "error": null
+      },
+      {
+        "repository": "ZyphrZero/kiro.rs",
+        "branch": "master",
+        "head": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+        "status": "identical",
+        "error": null
+      },
+      {
+        "repository": "xiangking/sub2api-kiro",
+        "branch": "main",
+        "head": "9541e0e9fb64718c15581985c84807232536d39b",
+        "status": "identical",
+        "error": null
+      },
+      {
+        "repository": "hank9999/kiro.rs",
+        "branch": "master",
+        "head": "22f36e692ad387c46581a84daf0d563347e330a3",
+        "status": "identical",
+        "error": null
+      },
+      {
+        "repository": "zhujunsan/kiro-gateway",
+        "branch": "main",
+        "head": "e10ced80c9e33128e867ca584456f6c5fd6000bd",
+        "status": "identical",
+        "error": null
+      },
+      {
+        "repository": "dwgx/KiroStudio",
+        "branch": "master",
+        "head": "0c40219cabfc13387d34c5e3a22392e69a2aa56b",
+        "status": "identical",
+        "error": null
+      }
+    ],
+    "reportDirectory": "output/kiro-reference-watch/"
+  },
+  "realCompareSmoke": {
+    "command": "node tools/kiro/check-updates.mjs --manifest output/kiro-reference-watch-smoke/sources.json --out output/kiro-reference-watch-smoke --fail-on-update",
+    "scope": "隔离旧观察基线，不修改正式清单或正式游标",
+    "checkedAt": "2026-10-23T08:46:52.162Z",
+    "failed": 0,
+    "actionable": 1,
+    "results": [
+      {
+        "repository": "d-kuro/kirocc",
+        "base": "0d4443802b138c82d030b127c5c9270ac2508d5c",
+        "head": "7a2ba670286ca16ae89fe792ea935b3751179421",
+        "status": "ahead",
+        "collectedCommits": 2,
+        "totalCommits": 2,
+        "relevance": "code",
+        "incomplete": false
+      }
+    ],
+    "reportDirectory": "output/kiro-reference-watch-smoke/"
+  },
+  "sourceEvidence": {
+    "file": "tools/kiro/review-20261023.json",
+    "filesChecked": 34,
+    "allSha256Match": true,
+    "archivesChecked": 2,
+    "portedItems": 0
+  },
+  "workflow": {
+    "file": ".github/workflows/custom-kiro-reference-watch.yml",
+    "validation": "已移除schedule，远程检查仅workflow_dispatch；push/PR仅离线回归",
+    "schedule": null,
+    "repositoryPermission": "contents: read",
+    "pushed": false,
+    "ciExecuted": false,
+    "cloudScheduleActive": false,
+    "manualRemoteOnly": true
+  },
+  "localAutomation": {
+    "id": "kiro",
+    "name": "Kiro 参考项目更新巡检",
+    "status": "DELETED",
+    "schedule": null,
+    "verifiedBy": "automation_update(mode=delete,id=kiro)返回deleteStatus=deleted",
+    "reason": "用户2026-10-23明确要求仅人工巡检"
+  },
+  "limitations": [
+    "此文件为最初参考审阅阶段的证据，不作为原生业务实现验收",
+    "未进行真实Kiro账号、授权、工具或计费验收",
+    "未提交、推送或部署；同SHA远程CI尚未运行"
+  ],
+  "executionNotes": [
+    "首次沙箱内Node测试因spawn EPERM未执行，获准在沙箱外后最终24项通过",
+    "首次沙箱内GitHub请求失败保留报告；获准只读访问后两次正式六仓检查均零失败",
+    "真实compare烟测发现已知代码差异；退出2语义由完整文件落盘离线回归验证"
+  ],
+  "files": [
+    {
+      "path": "tools/kiro/check-updates.mjs",
+      "sha256": "a85e5c6717daeea39c478985f26c68f41193f63c351ccbfccbd42f65a23a45fb"
+    },
+    {
+      "path": "tools/kiro/check-updates.test.mjs",
+      "sha256": "0c1f35e50d8ff0a315e1c7151a395587474d2b8e58b140776859f470f6cc9c91"
+    },
+    {
+      "path": "tools/kiro/sources.lock.json",
+      "sha256": "53d117377a3dbf52c9c96eca1c29c8ba38259330638fbcc62183cd94ec028588"
+    },
+    {
+      "path": "tools/kiro/review-20261023.json",
+      "sha256": "cb3a42334277b5929b341a9b16facc988c1d43be6e60f66b0d2360023ac360d6"
+    },
+    {
+      "path": ".github/workflows/custom-kiro-reference-watch.yml",
+      "sha256": "9fc353458fdb5e6377c5d5893a8b2d3502002408b2f5d1d9499aac1a170cc7a4"
+    },
+    {
+      "path": "deploy/KIRO_REFERENCE_TRACKING.md",
+      "sha256": "6dbf1e5481336a689de1d5913f87f9a9264aa4f0894b1a1251f884dd9d3d75ea"
+    }
+  ],
+  "fileHashesScope": "以下files为最初审阅完成时的快照哈希，不代表取消定时或后续原生接入后的当前内容"
+}

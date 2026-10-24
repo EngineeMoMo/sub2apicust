@@ -1009,7 +1009,8 @@ func decodeUpstreamBillingProbeSnapshot(extra map[string]any) *UpstreamBillingPr
 // type=apikey by the admin form, so only pre-existing type=upstream rows
 // cannot turn the probe on.
 func IsUpstreamBillingProbeIdentity(platform, accountType string) bool {
-	return accountType == AccountTypeAPIKey && domain.IsConcretePlatform(platform)
+	// [CUSTOM] Kiro 的静态凭据只发往原生 runtime，不参与通用账单探测。
+	return platform != PlatformKiro && accountType == AccountTypeAPIKey && domain.IsConcretePlatform(platform)
 }
 
 func isUpstreamBillingProbeAccount(account *Account) bool {

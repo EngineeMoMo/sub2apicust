@@ -488,6 +488,8 @@ const handleEvent = (event: {
   model?: string
   success?: boolean
   error?: string
+  // [CUSTOM] Kiro 连接成功但计量未就绪时显示独立警告。
+  status?: string
   image_url?: string
   mime_type?: string
 }) => {
@@ -516,7 +518,8 @@ const handleEvent = (event: {
 
     case 'status':
       if (event.text) {
-        addLine(event.text, 'text-cyan-300')
+        // [CUSTOM] 保留连通成功，明确展示缺用量/估算计费提示。
+        addLine(event.text, event.status === 'warning' ? 'text-yellow-400' : 'text-cyan-300')
       }
       break
 

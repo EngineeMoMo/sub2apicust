@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-23",
+  "status": "本地代码已实现；未提交、未推送、未部署、未用真实Kiro账号验收",
+  "localBaseCommit": "cafcd2bac1af98d533b45e19fb3660fb058b940b",
+  "localImplementationCommit": null,
+  "policy": "仅记录下列固定版本文件的局部协议/设计适配，未整仓合并，sources.lock.json 的 portedCommit 不推进整仓 HEAD。人工触发巡检，不创建定时任务。",
+  "ports": [
+    {
+      "id": "kiro-auth-runtime",
+      "sources": [
+        {
+          "repository": "d-kuro/kirocc",
+          "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+          "paths": [
+            "internal/auth/refresh.go",
+            "internal/auth/credentials_parser.go",
+            "internal/kiroclient/client.go"
+          ]
+        },
+        {
+          "repository": "ZyphrZero/kiro.rs",
+          "commit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+          "paths": [
+            "src/kiro/token_manager.rs",
+            "src/kiro/provider.rs",
+            "src/kiro/endpoint/cli.rs"
+          ]
+        }
+      ],
+      "targetFiles": [
+        "backend/internal/pkg/kiro/credentials.go",
+        "backend/internal/service/custom_kiro_service.go",
+        "backend/internal/service/custom_kiro_refresh.go",
+        "backend/internal/repository/custom_kiro_refresh.go"
+      ],
+      "adaptation": "Social/IDC字段、独立地区与runtime端点；复用本仓代理/刷新锁并新增凭据+代理CAS、事务outbox，未复制上游账号池与保存失败策略",
+      "tests": [
+        "TestKiroCredentials",
+        "TestCustomKiroConcurrentRefreshPersistsOnce",
+        "TestCustomKiroRefreshPersistenceFailureDoesNotReturnTokens",
+        "TestCustomKiroRefreshPostgresCAS"
+      ]
+    },
+    {
+      "id": "kiro-eventstream",
+      "sources": [
+        {
+          "repository": "d-kuro/kirocc",
+          "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+          "paths": [
+            "internal/kiroproto/frame.go",
+            "internal/kiroproto/eventstream.go"
+          ]
+        },
+        {
+          "repository": "ZyphrZero/kiro.rs",
+          "commit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+          "paths": [
+            "src/kiro/parser/decoder.rs"
+          ]
+        }
+      ],
+      "targetFiles": [
+        "backend/internal/pkg/kiro/eventstream.go"
+      ],
+      "adaptation": "独立实现CRC及受限帧读取，超限/损坏/异常帧返回错误",
+      "tests": [
+        "TestKiroFramesRejectCorruption",
+        "TestCustomKiroHTTPFailuresAndInvalidStreams"
+      ]
+    },
+    {
+      "id": "kiro-message-conversion",
+      "sources": [
+        {
+          "repository": "d-kuro/kirocc",
+          "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+          "paths": [
+            "internal/reqconv/build_payload.go",
+            "internal/reqconv/content_text.go",
+            "internal/reqconv/cache_points.go"
+          ]
+        }
+      ],
+      "targetFiles": [
+        "backend/internal/pkg/kiro/request.go",
+        "backend/internal/service/custom_kiro_gateway.go"
+      ],
+      "adaptation": "转换为conversationState；独立实现工具匹配和模型别名校验；保留本仓apicompat三协议转换，未移植字符近似截断或上游整套提示重写",
+      "tests": [
+        "TestCustomKiroRealGatewayEntrypoints",
+        "TestKiroMergesAdjacentAssistantToolBlocks",
+        "TestKiroPreservesUnknownDatedModelIDs",
+        "TestCustomKiroRejectsUnsupportedIngressSemantics"
+      ]
+    },
+    {
+      "id": "kiro-response-and-usage",
+      "sources": [
+        {
+          "repository": "d-kuro/kirocc",
+          "commit": "7a2ba670286ca16ae89fe792ea935b3751179421",
+          "paths": [
+            "internal/respconv/accumulator.go",
+            "internal/respconv/event_processor.go",
+            "internal/respconv/usage.go",
+            "internal/respconv/streaming.go",
+            "internal/respconv/nonstreaming.go"
+          ]
+        },
+        {
+          "repository": "ZyphrZero/kiro.rs",
+          "commit": "4cac2a8b887eacf4c8119558d3c1906e43f8cbd4",
+          "paths": [
+            "src/kiro/model/events/metadata.rs",
+            "src/kiro/model/events/metering.rs",
+            "src/anthropic/stream.rs",
+            "src/anthropic/cache_metering.rs"
+          ]
+        }
+      ],
+      "targetFiles": [
+        "backend/internal/pkg/kiro/response.go",
+        "backend/internal/service/custom_kiro_gateway.go"
+      ],
+      "adaptation": "只用metadata四项真实Token快照；未采用参考实现input缓存重叠、估算回退或credits美元换算；复用本站价格及倍率",
+      "tests": [
+        "TestKiroResponseKeepsExclusiveUsageSnapshots",
+        "TestKiroResponseRequiresVerifiedUsage",
+        "TestCustomKiroGatewayProtocols",
+        "TestCustomKiroClientDisconnectStillCollectsRealUsage"
+      ]
+    }
+  ],
+  "reviewOnly": [
+    {
+      "repository": "xiangking/sub2api-kiro",
+      "commit": "9541e0e9fb64718c15581985c84807232536d39b",
+      "scope": "管理员入口与原生适配路径审阅；未移植源码、估算用量、文本化工具或OpenAI流式降级实现"
+    }
+  ],
+  "licenses": [
+    {
+      "repository": "d-kuro/kirocc",
+      "file": "tools/kiro/licenses/kirocc-Apache-2.0.txt"
+    },
+    {
+      "repository": "ZyphrZero/kiro.rs",
+      "file": "tools/kiro/licenses/kiro-rs-MIT.txt",
+      "notice": "原许可证Copyright (c) 2026 hank9999原样保留"
+    }
+  ],
+  "relatedIssuesOrPullRequests": [],
+  "verification": "output/kiro-native-20261023/verification.json",
+  "remaining": [
+    "真实账号、地区/profile、工具多轮和用量账单验收",
+    "Linux同业务SHA CI与embed构建/正式发布",
+    "参考项目后续差异仅在用户人工提出时检查"
+  ]
+}

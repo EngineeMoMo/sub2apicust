@@ -411,6 +411,14 @@ func normalizeOpenAILongContextBillingUpdateExtra(account *Account, input *Updat
 // Grok media eligibility helpers live in account_grok_media_eligibility.go.
 
 func buildAccountForCreate(input *CreateAccountInput, accountExtra map[string]any) (*Account, error) {
+	// [CUSTOM] 创建、复制共用 Kiro 凭据规范化，拒绝不支持的类型。
+	if input.Platform == PlatformKiro {
+		credentials, err := normalizeCustomKiroCredentials(input.Type, input.Credentials)
+		if err != nil {
+			return nil, err
+		}
+		input.Credentials = credentials
+	}
 	if input.Platform == PlatformTypeSafe && input.Type != AccountTypeAPIKey {
 		return nil, errors.New("typesafe accounts only support apikey credentials")
 	}
@@ -650,7 +658,16 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 	} else if len(input.Credentials) > 0 {
 		// 敏感子键采用"incoming 没提供就保留"的合并语义：前端响应已脱敏，
 		// 全对象 PUT 编辑时不会再带回 token，避免覆盖时清空已有凭证。
-		account.Credentials = MergePreservingSensitiveCreds(account.Credentials, input.Credentials)
+		// [CUSTOM] Kiro 先规范化导入别名再逐字段合并，保留地区/IDC配置并清除被替换身份的旧访问令牌。
+		if account.Platform == PlatformKiro {
+			merged, mergeErr := mergeCustomKiroCredentials(account.Credentials, input.Credentials)
+			if mergeErr != nil {
+				return nil, mergeErr
+			}
+			account.Credentials = merged
+		} else {
+			account.Credentials = MergePreservingSensitiveCreds(account.Credentials, input.Credentials)
+		}
 		// 校验并规范化请求头覆写配置（header 名小写化、格式检查）
 		if err := NormalizeHeaderOverrideCredentials(account.Credentials); err != nil {
 			return nil, err
@@ -660,6 +677,14 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 		}
 		// Strip SSO/password residue that must never sit next to OAuth tokens.
 		account.Credentials = SanitizeStoredCredentials(account.Platform, account.Credentials)
+	}
+	// [CUSTOM] 编辑时先合并已脱敏密钥，再验证 Kiro 凭据与类型。
+	if account.Platform == PlatformKiro {
+		credentials, normalizeErr := normalizeCustomKiroCredentials(account.Type, account.Credentials)
+		if normalizeErr != nil {
+			return nil, normalizeErr
+		}
+		account.Credentials = credentials
 	}
 	// Extra 使用 map：需要区分“未提供(nil)”与“显式清空({})”。
 	// 关闭配额限制时前端会删除 quota_* 键并提交 extra:{}，此时也必须落库。

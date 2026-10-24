@@ -118,6 +118,22 @@ describe('AccountTestModal', () => {
     localStorage.clear()
   })
 
+  // [CUSTOM] Kiro 生成成功与计量就绪分别展示。
+  it('keeps missing-usage warnings visible after a successful Kiro connection test', async () => {
+    const chunks = [new TextEncoder().encode('data: {"type":"status","status":"warning","text":"连接成功；缺少精确用量"}\n\ndata: {"type":"test_complete","success":true}\n\n')]
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, body: { getReader: () => ({ read: vi.fn().mockImplementation(() => Promise.resolve(chunks.length ? { done: false, value: chunks.shift() } : { done: true })) }) } } as any)
+    const wrapper = mount(AccountTestModal, {
+      props: { show: true, account: { ...buildAccount(), platform: 'kiro' } },
+      global: { stubs: { BaseDialog: BaseDialogStub, Select: SelectStub, TextArea: TextAreaStub, Icon: true } }
+    })
+    await flushPromises()
+    ;(wrapper.vm as any).selectedModelId = 'claude-sonnet-4-5-20250929'
+    await (wrapper.vm as any).startTest()
+    await flushPromises()
+    expect(wrapper.text()).toContain('连接成功；缺少精确用量')
+    expect(wrapper.findAll('.text-yellow-400').some(line => line.text().includes('缺少精确用量'))).toBe(true)
+  })
+
   it('posts compact mode for OpenAI compact probe', async () => {
     const wrapper = mount(AccountTestModal, {
       props: {
