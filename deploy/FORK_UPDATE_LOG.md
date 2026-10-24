@@ -26,6 +26,8 @@
 
 ## 来源与当前基线（此前观察）
 
+2026-10-24另做Kiro分组可见性只读诊断：生产页面版本徽标为f918f0b90；实际Kiro测试分组为专属，当前管理员未获授权，现有`AllowedGroups`绑定规则不豁免管理员。具体操作与源码依据见[KIRO_NATIVE.md](KIRO_NATIVE.md#创建密钥看不到kiro分组)，证据`output/kiro-group-visibility-20261024/diagnosis.json`。仅补文档，未改生产权限、密钥、运行源码或部署，不生成新业务镜像，也不表示授权后可选/计费已验收；本页当前业务镜像仍为`sha-f918f0b`。
+
 | 项目 | 已核实状态 | 取证方式 |
 | --- | --- | --- |
 | 本仓 origin | https://github.com/EngineeMoMo/sub2apicust ，默认main，公开仓库 | git remote -v及GitHub仓库API |

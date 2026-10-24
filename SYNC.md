@@ -1,5 +1,7 @@
 # 同步上游 & 构建部署 Runbook
 
+2026-10-24 Kiro创建密钥分组排查仅补文档：生产页面徽标f918f0b90，Kiro测试组为专属且当前管理员未授权，须按deploy/KIRO_NATIVE.md给目标用户授权后刷新“其他”。Kiro分类代码已存在，专属组无管理员豁免；未改运行代码/权限/密钥/部署，本轮不生成新业务镜像。实际升级标签仍为下方sha-f918f0b，不能用本轮文档SHA猜镜像。证据output/kiro-group-visibility-20261024/diagnosis.json。
+
 <!-- [CUSTOM] 2026-10-24 DOMPurify局部安全补修，保留完整上游集成基线。 -->
 安全补修业务f918f0b9055a0a23b850e9bf7b6ce9ab4947536f已推；官方828626804的DOMPurify3.4.17依赖/override/锁文件已局部迁入，6项安全回归及独立快照1009项/类型/国际化/生产构建通过，生产审计零漏洞。同SHA CI40097401944/安全40097401948/GHCR40097401950均success，固定ghcr.io/engineemomo/sub2apicust:sha-f918f0b（linux/amd64）的三层摘要及OCI revision/source已核实。来源tools/upstream/dompurify-20261024.json，更新命令与摘要见deploy/FORK_UPDATE_LOG.md及deploy/UPDATE_GUIDE.md。下方sha-4b44237及安全失败是历史记录，回执文档SHA不产生新镜像；官方v0.2.18未整仓合并，原47提交快照作为历史保留。日门槛/261及营销26份并行文件SHA256未变，生产/本机服务未动，只人工巡检。
 

@@ -39,6 +39,8 @@
 
 ## 四、当前状态（每次收工更新）
 
+- **2026-10-24 创建密钥看不到Kiro分组（生产只读诊断）**：通过用户Chrome现有登录页面核实，生产网页版本徽标为0.2.17-custom.f918f0b90（未读取生产容器摘要）。实际平台Kiro的测试分组为标准余额/专属/正常，1个可用账号；当前管理员在“用户管理→更多→分组”中该专属组未勾选。源码keyGroupProviders.ts:18将Kiro归other，KeysView.vue:1545按当前可用组数量禁用厂商；APIKeyService.GetAvailableGroups及User.CanBindGroup对专属组要求用户AllowedGroups，管理员无豁免。因此现有未授权状态足以导致不可选，不能当成Kiro平台注册缺失。处理为仅给目标用户勾选该专属组并保存，再刷新创建密钥→其他；不建议扩大为公开组。已打开当前管理员配置弹窗供用户操作，未勾选/保存权限、未建密钥、未调模型、未改源码/部署。原始/groups/available响应及其他开放规则未读取，不宣称授权后的可选或计费验收已通过。证据output/kiro-group-visibility-20261024/diagnosis.json；说明补充deploy/KIRO_NATIVE.md。
+
 - **2026-10-24 DOMPurify安全补修已推送并发布（覆盖下方待门禁/安全阻塞记录）**：实际业务SHA=f918f0b9055a0a23b850e9bf7b6ce9ab4947536f；局部移植官方828626804的3.4.17及override/锁文件，来源tools/upstream/dompurify-20261024.json，官方npm完整性一致。新增6项回归：旧3.4.16的3项失败在新版全部通过；发布树7e82bd78c1eeb88836766883edcb80b28098b2cd的独立快照72文件1009项、类型/国际化/生产构建通过，ESLint0错误/26既有警告，生产依赖审计各严重度0。相同业务SHA的CI40097401944（Linux unit/integration、专用PG/Redis、Go lint、前端1009和Family176）、安全40097401948、GHCR40097401950均success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-f918f0b，linux/amd64，版本0.2.17-custom.f918f0b90；原始index/platform/config逐层SHA256及OCI revision/source已核实，index=8ebce8ade7df2ed916a11c94d980b5b7050297e8d60c7523abdc01e8c8f9b9f4。证据output/dompurify-fix-20261024/release-verification.json和deploy/FORK_UPDATE_LOG.md。旧sha-4b44237不作为修复版；回执文档SHA不生成业务镜像。26份并行工作逐一SHA256未变，日门槛/261及营销不纳入，未改生产/本机容器或实号计量方式，未调用实号，不创建定时任务；官方v0.2.18未整仓合并，历史47提交观察保留。
 
 - **2026-10-24 Kiro代码/候选镜像已推送验真，安全门禁未过**：origin/main实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48，功能初提交3e19f0391。独立索引快照前端1003项、后端定向524节点及专用PG CAS10节点通过；补修后独立后端523+平台清单1项通过。同SHA CI40079131558完整成功：Linux全量unit/integration、专用PG/Redis、lint0、前端1003、Family176、shell/release-helpers；镜像40079131591成功，固定sha-4b44237（linux/amd64）及原始index/platform/config/OCI来源验真，index摘要15fcefd2bd4b3a6f1065782174797566b894a17098a93d0490656a852b74a9eb；安全40079131565已失败，原有DOMPurify3.4.16的critical/high通告阻塞，依赖锁文件本轮未变、无新增例外。官方v0.2.18/37067e8e3只fetch，47个差异提交未合并。持久记录deploy/FORK_UPDATE_LOG.md，来源固定SHA回填两份ports台账；日门槛/261及营销工作保留本地。当前本机1092d0243ba0含并行261，与发布提交不是完整源码一致；生产未部署，不自动启用估算收费，不设定时任务。下方“未提交推送”为历史，最新以本条及台账为准。
@@ -782,6 +784,9 @@
 - **部署/升级方式（2026-09-26 用户定案：Docker + `deploy/update.sh`）**：日常升级 = 部署目录跑 `./update.sh`（拉 GHCR 定制镜像 `ghcr.io/engineemomo/sub2apicust:latest` → 重建 → 启动自动迁移 → `/health` 自检 → 清旧镜像）；指定版/回滚 = `./update.sh sha-<提交>`（自动切 override 的 image 标签并备份）。首次从现有 0.2.7 平移见 `deploy/DEPLOY_CUSTOM.md` 第七节。**不用 App 内按钮**（原因见「五」）。
 
 ## 五、待办 / 下一步
+
+- [x] **Kiro分组不可选的现场定位**：生产只读UI已确认Kiro测试组为专属、当前管理员未授权，源码无管理员绑定豁免；Kiro归“其他”的实现已存在，本轮仅补文档，不发布新镜像。
+- [ ] **目标用户的Kiro专属组授权及刷新验收（用户操作）**：用户管理→目标用户→更多→分组，勾选对应Kiro专属组并保存，再刷新API密钥页→创建→其他检查可选。本轮未修改生产访问权限；若仍不显示，再现场检查开放规则/订阅/状态与available响应，不能绕过准入条件。Kiro实号计量及账单仍按既有待办验收。
 
 - [x] **2026-10-24 Kiro代码提交推送**：功能3e19f0391、静态补修4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，独立索引快照验证通过；范围排除日门槛/261与营销工作，参考巡检仅人工。
 - [x] **Kiro发布取证与文档回执**：业务SHA4b44237的CI40079131558完整success，GHCR40079131591及固定sha-4b44237的摘要/来源验真；FORK_UPDATE_LOG、官方47提交快照、来源ports与交接已更新，不把文档回执SHA当镜像业务SHA。

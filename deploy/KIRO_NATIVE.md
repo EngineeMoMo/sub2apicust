@@ -2,6 +2,21 @@
 
 2026-10-24最新发布：Kiro原接入业务4b44237之上的安全补修f918f0b9055a0a23b850e9bf7b6ce9ab4947536f已推，DOMPurify升3.4.17；同SHA CI40097401944/安全40097401948/GHCR40097401950全部success，固定镜像`sha-f918f0b`仅linux/amd64，摘要及来源已核实。完整回执及未验边界见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)，部署见[UPDATE_GUIDE.md](UPDATE_GUIDE.md)；下方安全失败/未发布是历史。Kiro固定来源及两份ports的原接入提交保持，安全补修另记tools/upstream/dompurify-20261024.json。未部署生产或本机，未调用实号；原账号verified及实号计量/账单待验边界保持，本机含261镜像不等于正式源码。参考仅人工巡检。
 
+## 创建密钥看不到Kiro分组
+
+2026-10-24通过生产站现有Chrome登录页面只读取证：版本徽标`0.2.17-custom.f918f0b90`；实际平台Kiro的测试分组为“标准（余额）/专属/正常”，1个可用账号；当前管理员在“用户分组配置”中该组未勾选。没有读取容器摘要或原始`/groups/available`响应，也未修改访问权限。
+
+Kiro在创建密钥中归入“其他”，按分组的实际`platform`分类，不按分组名称；名称含Kiro但平台为Anthropic的旧组仍归Anthropic。厂商按钮在当前可用组数量为0时禁用。专属组必须在当前用户`AllowedGroups`内，管理员创建自己的密钥也没有豁免；这与后台能管理分组、账号连接测试成功是不同的准入条件。
+
+操作路径：
+
+1. 后台“用户管理”找到实际需要创建密钥的用户。
+2. 该用户“更多→分组”，在专属分组中勾选对应Kiro分组并保存，保留原有其他授权和倍率。
+3. 刷新“API密钥”页面，打开“创建密钥”，选择“其他”，再选择该Kiro分组。
+4. 若仍不显示，检查分组启用状态、开放规则和该用户实际可用组响应；订阅组还需有效订阅。不能通过改公开范围或绕过准入验证解决。
+
+代码依据：`frontend/src/utils/keyGroupProviders.ts:18`、`frontend/src/views/user/KeysView.vue:1545`、`backend/internal/service/api_key_service.go:1069`/`:1116`、`backend/internal/service/user.go:86`。本轮未勾选/保存生产权限、未创建密钥或调用模型；授权后可选及真实计费仍需现场验收。证据`output/kiro-group-visibility-20261024/diagnosis.json`。本轮无运行代码变更，不产生新业务镜像。
+
 ## 2026-10-24 计量兼容修复（当前状态）
 
 六个参考仓人工巡检均与锁定SHA相同，没有新提交/Release变化；既有kirocc已经提供metering及估算回退设计，本轮局部适配见[来源台账](../tools/kiro/ports-20261024.json)。当前本机版本0.2.17-custom.kiro-usage-20261024-1092d0243ba0，镜像/运行Image dd27a780e6af，三服务healthy。

@@ -1,5 +1,11 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-24 Kiro分组授权排查（仅文档）
+
+- 生产只读UI确认实际Kiro测试组为标准/专属/正常，当前管理员未勾选授权；`frontend/src/utils/keyGroupProviders.ts:18`已将Kiro归`other`，创建密钥按可用组计数禁用空分类。
+- `APIKeyService.GetAvailableGroups`及`User.CanBindGroup`对专属组要求`AllowedGroups`，管理员无绑定豁免；用户操作说明见`deploy/KIRO_NATIVE.md`。只给目标用户授权，不改为公开或绕过开放规则。
+- 本轮未改运行源码，未新增接缝、镜像、生产权限或密钥；既有Kiro来源和计量政策不变。现场证据`output/kiro-group-visibility-20261024/diagnosis.json`，原始available响应、其他规则及授权后结果未验。
+
 ## 2026-10-24 DOMPurify安全补修
 
 - `[CUSTOM] frontend/package.json`与`frontend/pnpm-lock.yaml`局部移植官方8286268047cbbca4e7f5fbb63ff0890c1ea37cf5：DOMPurify直接依赖及override下限由3.4.16升为3.4.17，锁定唯一3.4.17，完整性来自npm官方并与上游锁一致；其他依赖与override保持。JSON及生成锁不写源码注释，以本节登记。
