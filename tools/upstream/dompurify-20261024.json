@@ -3,6 +3,8 @@
   "recordedOn": "2026-10-24",
   "upstreamRepository": "Wei-Shaw/sub2api",
   "sourceCommit": "8286268047cbbca4e7f5fbb63ff0890c1ea37cf5",
+  "implementationCommit": "f918f0b9055a0a23b850e9bf7b6ce9ab4947536f",
+  "portStatus": "selectively_applied_and_verified",
   "scope": "局部移植DOMPurify安全依赖修复；保留本仓其他依赖和override，不代表合入整个v0.2.18。",
   "advisories": [
     "GHSA-cg2g-xh64-v4q7",

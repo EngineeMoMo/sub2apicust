@@ -39,7 +39,7 @@
 
 ## 四、当前状态（每次收工更新）
 
-- **2026-10-24 DOMPurify安全补修（待发布门禁）**：用户要求修复上一版安全阻塞；按官方8286268047cbbca4e7f5fbb63ff0890c1ea37cf5局部移植3.4.17及override下限，同步锁文件，npm官方integrity一致。新增6项回归：3.4.16时3项失败复现两条通告，3.4.17时6项全过；生产依赖审计所有严重度为0，未加例外。来源tools/upstream/dompurify-20261024.json，证据output/dompurify-fix-20261024。最终发布代码验证、同SHA CI/安全/GHCR与摘要仍待；此前sha-4b44237有漏洞，不作为修复版。保留日门槛/261及营销未发布工作，不改本机容器或生产，不调用实号。官方v0.2.18未整体合并，历史47提交观察快照保留。
+- **2026-10-24 DOMPurify安全补修已推送并发布（覆盖下方待门禁/安全阻塞记录）**：实际业务SHA=f918f0b9055a0a23b850e9bf7b6ce9ab4947536f；局部移植官方828626804的3.4.17及override/锁文件，来源tools/upstream/dompurify-20261024.json，官方npm完整性一致。新增6项回归：旧3.4.16的3项失败在新版全部通过；发布树7e82bd78c1eeb88836766883edcb80b28098b2cd的独立快照72文件1009项、类型/国际化/生产构建通过，ESLint0错误/26既有警告，生产依赖审计各严重度0。相同业务SHA的CI40097401944（Linux unit/integration、专用PG/Redis、Go lint、前端1009和Family176）、安全40097401948、GHCR40097401950均success。固定镜像ghcr.io/engineemomo/sub2apicust:sha-f918f0b，linux/amd64，版本0.2.17-custom.f918f0b90；原始index/platform/config逐层SHA256及OCI revision/source已核实，index=8ebce8ade7df2ed916a11c94d980b5b7050297e8d60c7523abdc01e8c8f9b9f4。证据output/dompurify-fix-20261024/release-verification.json和deploy/FORK_UPDATE_LOG.md。旧sha-4b44237不作为修复版；回执文档SHA不生成业务镜像。26份并行工作逐一SHA256未变，日门槛/261及营销不纳入，未改生产/本机容器或实号计量方式，未调用实号，不创建定时任务；官方v0.2.18未整仓合并，历史47提交观察保留。
 
 - **2026-10-24 Kiro代码/候选镜像已推送验真，安全门禁未过**：origin/main实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48，功能初提交3e19f0391。独立索引快照前端1003项、后端定向524节点及专用PG CAS10节点通过；补修后独立后端523+平台清单1项通过。同SHA CI40079131558完整成功：Linux全量unit/integration、专用PG/Redis、lint0、前端1003、Family176、shell/release-helpers；镜像40079131591成功，固定sha-4b44237（linux/amd64）及原始index/platform/config/OCI来源验真，index摘要15fcefd2bd4b3a6f1065782174797566b894a17098a93d0490656a852b74a9eb；安全40079131565已失败，原有DOMPurify3.4.16的critical/high通告阻塞，依赖锁文件本轮未变、无新增例外。官方v0.2.18/37067e8e3只fetch，47个差异提交未合并。持久记录deploy/FORK_UPDATE_LOG.md，来源固定SHA回填两份ports台账；日门槛/261及营销工作保留本地。当前本机1092d0243ba0含并行261，与发布提交不是完整源码一致；生产未部署，不自动启用估算收费，不设定时任务。下方“未提交推送”为历史，最新以本条及台账为准。
 
@@ -785,8 +785,9 @@
 
 - [x] **2026-10-24 Kiro代码提交推送**：功能3e19f0391、静态补修4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，独立索引快照验证通过；范围排除日门槛/261与营销工作，参考巡检仅人工。
 - [x] **Kiro发布取证与文档回执**：业务SHA4b44237的CI40079131558完整success，GHCR40079131591及固定sha-4b44237的摘要/来源验真；FORK_UPDATE_LOG、官方47提交快照、来源ports与交接已更新，不把文档回执SHA当镜像业务SHA。
-- [ ] **DOMPurify补修发布门禁**：用户已要求修复，官方828626804的3.4.17依赖及override已局部迁入；6项本地回归通过，生产依赖审计零漏洞。待发布快照验证、同业务SHA CI/安全/GHCR、摘要及文档回执；旧sha-4b44237安全40079131565失败，不用于本次升级。无新增例外，不部署生产。
-- [ ] **官方v0.2.18后续同步**：本次只fetch/记录47个差异提交，未合并；优先审阅安全依赖、流断开计费、管理员Key与本仓认证接缝，按deploy/FORK_UPDATE_LOG.md及SYNC的人工流程执行，不自动定时同步。
+- [x] **DOMPurify补修发布门禁**：业务f918f0b9055a0a23b850e9bf7b6ce9ab4947536f已推；官方828626804的3.4.17依赖/override/锁文件局部迁入，6项安全回归及发布快照1009项通过，生产审计零漏洞、无新增例外；同SHA CI40097401944/安全40097401948/GHCR40097401950均success，固定sha-f918f0b的三层摘要/来源核实，台账与来源回执已更新。旧sha-4b44237不作为修复版。
+- [ ] **安全补修镜像人工升级（用户操作）**：在实际部署目录备份数据库/记录旧镜像后，以sha-f918f0b按deploy/UPDATE_GUIDE.md更新并检查服务；当前仅发布镜像，未替用户部署生产/本机。Kiro默认verified的实号精确Token/收费、其他模型等既有待验边界保持。
+- [ ] **官方v0.2.18后续同步**：47个差异提交保留历史观察；安全依赖828626804已局部迁入，不代表整仓合并，其余流断开计费、管理员Key等接缝待逐项审阅。按deploy/FORK_UPDATE_LOG.md及SYNC人工流程执行，不自动定时同步。
 
 
 - [x] **2026-10-24 Kiro计量兼容与本机修复**：补metering精确字段、metadata优先、连通/计量状态分离及显式estimated选项；默认严格不变。41顶层/128含子项Go与152项前端通过，更新本地Docker并单次实号生成OK.；新版本、备份和数据比对见第四节及output/kiro-usage-fix-20261024/verification.json。来源六仓人工检查无新增变化，局部适配台账tools/kiro/ports-20261024.json。

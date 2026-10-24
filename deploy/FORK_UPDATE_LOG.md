@@ -2,13 +2,27 @@
 
 最后更新：2026-10-24（Asia/Shanghai）。本页记录官方来源、同步基线及本仓发布；Kiro第三方参考的固定SHA与局部移植另见[KIRO_REFERENCE_TRACKING.md](KIRO_REFERENCE_TRACKING.md)。
 
-## 2026-10-24 DOMPurify安全补修（待发布门禁）
+## 2026-10-24 DOMPurify安全补修（已发布，当前升级版本）
 
 用户要求修复Kiro发布版安全阻塞；局部移植官方`8286268047cbbca4e7f5fbb63ff0890c1ea37cf5`，将DOMPurify直接依赖、override下限和锁文件统一为3.4.17，修复GHSA-cg2g-xh64-v4q7（critical）及GHSA-mrv2-3pqr-j5jr（high）。npm官方元数据与上游锁文件SHA512一致；其他依赖未改，例外仍为空。
 
-新增6项安全回归并纳入Makefile关键清单：旧3.4.16复现3项失败，新3.4.17全部通过，普通富文本保留；本地生产依赖审计所有严重度为0。发布代码快照、实际业务SHA的CI/安全/GHCR及摘要待验，不能把本地结果当远程门禁通过。
+实际业务提交`f918f0b9055a0a23b850e9bf7b6ce9ab4947536f`已推送origin/main。新增6项安全回归并纳入Makefile关键清单：旧3.4.16复现3项失败，新3.4.17全部通过，普通富文本保留；本地生产依赖审计所有严重度为0。发布树`7e82bd78c1eeb88836766883edcb80b28098b2cd`的独立快照72文件1009项、类型/国际化/生产构建通过，ESLint0错误/26既有警告；源码按LF归一化后与实际业务提交逐文件SHA256一致；Makefile/JSON的原始CRLF差异及两侧原始摘要单列留证。
 
-来源台账[dompurify-20261024.json](../tools/upstream/dompurify-20261024.json)，本机证据`output/dompurify-fix-20261024`。这是局部依赖修复，原官方基线v0.2.17和47提交历史观察不变；未整仓合并v0.2.18，未部署生产或本机，未调用实号，日门槛/261及营销保留未发布。
+| 相同业务SHA的正式检查 | 运行ID | 结果 |
+| --- | --- | --- |
+| CI（全部5个job，含Linux unit/integration、专用PG/Redis、Go lint、前端1009及Family176项） | 40097401944 | success |
+| Security Scan（前端生产依赖门禁、后端govulncheck） | 40097401948 | success |
+| Build custom image（前端构建及Linux go build -tags embed） | 40097401950 | success |
+
+当前镜像`ghcr.io/engineemomo/sub2apicust:sha-f918f0b`，仅`linux/amd64`，版本`0.2.17-custom.f918f0b90`：
+
+- Index digest：`sha256:8ebce8ade7df2ed916a11c94d980b5b7050297e8d60c7523abdc01e8c8f9b9f4`。
+- 平台manifest：`sha256:238e80b068a8d467f695c84e115ad6d80655a71cd42a49bd65d283de4c27facc`。
+- Config digest：`sha256:7b029399da663c68f8bc34b54f75746e7c46bd94343bdabff57c2f913d255941`。
+
+已读取GHCR原始index/platform/config逐层验证SHA256、平台及OCI revision/source，并核对正式构建日志确有DOMPurify3.4.17和上述VERSION/COMMIT。完整本机取证`output/dompurify-fix-20261024/release-verification.json`，含原始清单、正式job日志及本地验证；未用本机旧镜像替代发布验证。后续来源/文档回执使用`[skip ci]`，实际升级使用业务镜像标签，不使用回执SHA猜镜像。升级步骤见[UPDATE_GUIDE.md](UPDATE_GUIDE.md)，由用户在实际部署目录备份后执行`./update.sh sha-f918f0b`并验收。
+
+来源台账[dompurify-20261024.json](../tools/upstream/dompurify-20261024.json)。这是局部依赖修复，原官方基线v0.2.17和47提交历史观察不变；未整仓合并v0.2.18，未部署生产或本机、未调用实号，Kiro默认verified及既有实号计量/账单待验边界保持。日门槛/261及营销保留未发布，26份并行工作逐一SHA256未变。此前sha-4b44237的两项安全阻塞已由本次发布解除，下方保留原始历史。
 
 ## 来源与当前基线（此前观察）
 
@@ -24,7 +38,7 @@
 
 本轮仅获取远端引用以核实状态，没有合并官方v0.2.18。当前业务仍以v0.2.17为基线；以新的提交SHA核验本仓CI和镜像，不能使用旧本地镜像或其他提交的成功结果。
 
-## 2026-10-24 Kiro接入发布
+## 2026-10-24 Kiro接入发布（安全补修前历史）
 
 代码已推送origin/main：首个功能提交3e19f039162515b2a89e0f5cfcea3ed99d4d1dd4，两次静态检查补修后的实际业务提交4b44237acb7a7a1da38b9e0cee5a5f29875d5e48。补修仅调整新增Kiro文件的错误前缀、字符串构建器返回值处理和等价角色switch。下方早期“未提交/未发布”属于历史状态，最新发布状态以本节为准；代码推送不代表生产门禁全部通过。
 
@@ -48,9 +62,9 @@
 
 ## 官方待同步项（按提交主题初筛）
 
-下列是最新差异的审阅入口，尚未逐项移植/验证，不能称本仓已获得这些修复：
+下列是2026-10-24观察差异的审阅入口；除明确注明已局部移植的项目外，其余尚未移植/验证，不能称本仓已获得这些修复：
 
-- 828626804：DOMPurify 3.4.17及关联安全通告，后续同步优先审阅依赖/安全检查。
+- 828626804：DOMPurify3.4.17依赖/override/锁文件已在业务f918f0b9055a0a23b850e9bf7b6ce9ab4947536f局部移植并通过门禁；仅此范围，不推进整仓集成基线，见本页当前发布节和来源台账。
 - c591412c4、e068c3d02：OpenAI/Codex overload、预输出事件及安全重试。
 - 94c7d6b02、4355236e0、2b1f12938：Anthropic兼容流/Gemini客户端断开及不完整上游的计费/收尾；同步时须与Kiro流式用量策略逐项回归。
 - e0fa4b94f、47cb84b8b、afbef7c8c、c7bfcd93a：Cloudflare限流判断、Gemini生图开关、DeepSeek图片载荷、工具schema归一化。

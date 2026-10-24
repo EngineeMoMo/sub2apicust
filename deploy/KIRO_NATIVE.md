@@ -1,6 +1,6 @@
 # Kiro 原生接入（本地Docker，精确计量/账单待验收）
 
-2026-10-24发布回执：Kiro实际业务SHA=4b44237acb7a7a1da38b9e0cee5a5f29875d5e48已推origin/main，固定参考SHA及局部移植范围保持，两份ports台账已回填本仓提交。完整门禁/镜像及未验边界见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)；安全门禁因原有DOMPurify漏洞失败，当前不建议生产升级。下方未提交/未发布为历史记录；本机含261镜像与此发布提交须区分。参考更新仅人工巡检。
+2026-10-24最新发布：Kiro原接入业务4b44237之上的安全补修f918f0b9055a0a23b850e9bf7b6ce9ab4947536f已推，DOMPurify升3.4.17；同SHA CI40097401944/安全40097401948/GHCR40097401950全部success，固定镜像`sha-f918f0b`仅linux/amd64，摘要及来源已核实。完整回执及未验边界见[FORK_UPDATE_LOG.md](FORK_UPDATE_LOG.md)，部署见[UPDATE_GUIDE.md](UPDATE_GUIDE.md)；下方安全失败/未发布是历史。Kiro固定来源及两份ports的原接入提交保持，安全补修另记tools/upstream/dompurify-20261024.json。未部署生产或本机，未调用实号；原账号verified及实号计量/账单待验边界保持，本机含261镜像不等于正式源码。参考仅人工巡检。
 
 ## 2026-10-24 计量兼容修复（当前状态）
 
