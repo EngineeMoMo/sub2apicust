@@ -1,5 +1,7 @@
 # 项目规则 — sub2api 定制 fork（本仓专属；通用规则见 ~/.claude/CLAUDE.md）
 
+2026-10-24 DOMPurify补修进行中：官方828626804局部迁入3.4.17，直接依赖/override/锁文件一致，官方npm完整性已核实；新增6项安全回归从旧版3失败变为新版全通过，生产依赖审计零漏洞。最终发布快照及同SHA CI/安全/GHCR待验，下方sha-4b44237安全阻塞属上一版历史；最新以HANDOFF和deploy/FORK_UPDATE_LOG.md为准。日门槛/261与营销保留本地，不部署生产或本机，不调用实号，参考仍只人工巡检。
+
 2026-10-24 Kiro已推送origin/main，实际业务提交4b44237acb7a7a1da38b9e0cee5a5f29875d5e48（功能初提交3e19f0391）；索引独立快照前端1003、后端定向524节点和PG CAS10节点通过，静态补修后后端523+平台清单1项通过。同SHA CI40079131558完整成功，含Linux全量unit/integration、专用PG/Redis、lint0、前端1003与Family176；GHCR40079131591/sha-4b44237成功，原始三层摘要及OCI来源已验真，安全40079131565因原有DOMPurify3.4.16两项critical/high通告失败，依赖文件本轮未变，无新增例外；当前不建议生产升级。最新回执以HANDOFF及deploy/FORK_UPDATE_LOG.md为准，下方未提交状态为历史。日门槛/261及营销素材保留本地，原实号保持verified，不自动估算收费、不部署生产、无定时巡检。官方仅fetch至v0.2.18/37067e8e3，当前共同基线仍v0.2.17/b0a02a330、47提交未合并；GitHub API fork=false，不虚称parent关联。
 
 

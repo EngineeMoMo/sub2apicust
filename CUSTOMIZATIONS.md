@@ -1,5 +1,12 @@
 # CUSTOMIZATIONS — 本 fork 相对上游的所有改动登记
 
+## 2026-10-24 DOMPurify安全补修
+
+- `[CUSTOM] frontend/package.json`与`frontend/pnpm-lock.yaml`局部移植官方8286268047cbbca4e7f5fbb63ff0890c1ea37cf5：DOMPurify直接依赖及override下限由3.4.16升为3.4.17，锁定唯一3.4.17，完整性来自npm官方并与上游锁一致；其他依赖与override保持。JSON及生成锁不写源码注释，以本节登记。
+- 新增自有`frontend/src/custom/__tests__/dompurify-security.spec.ts`：影子根跨节点模板、IN_PLACE钩子移除父/兄弟节点、普通富文本共6项；旧版3项失败、新版全过。`Makefile`的`[CUSTOM]`关键回归清单加入此文件，防止CI漏跑。
+- 新增`tools/upstream/dompurify-20261024.json`记录固定来源、补丁范围和integrity，保留历史官方观察快照；不推进整仓集成基线，不代表合并v0.2.18。
+- 本地生产依赖审计零漏洞、例外清单未改。发布代码快照及同SHA CI/安全/GHCR待验；最终镜像和回执见`deploy/FORK_UPDATE_LOG.md`，原本机服务/生产及实号未动。
+
 ## 2026-10-24 Kiro发布入口与派生仓更新台账
 
 新增tools/upstream/sub2api-20261024.json，持久记录官方观察HEAD/共同基线/版本与完整47个提交，全部ported=false；用于后续人工巡检比对，不自动合并或定时运行。

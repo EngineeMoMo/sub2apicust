@@ -1,7 +1,8 @@
 .PHONY: build build-backend build-frontend test test-backend test-frontend test-frontend-critical
 
-# [CUSTOM] Kiro导入/密钥接入、分组门槛／福利、IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存／单用户分配／兑换错误、工坊投稿与生图授权通道、智力效率、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
+# [CUSTOM] DOMPurify安全、Kiro导入/密钥接入、分组门槛／福利、IP 黑名单、包号、电脑端支付宝 WAP、订阅时间／库存／单用户分配／兑换错误、工坊投稿与生图授权通道、智力效率、版本权限展示及官网动效／首屏分包必须进入前端关键回归。
 FRONTEND_CRITICAL_VITEST := \
+	src/custom/__tests__/dompurify-security.spec.ts \
 	src/custom/kiro/__tests__/credentials.spec.ts \
 	src/custom/kiro/__tests__/KiroCredentialsFields.spec.ts \
 	src/components/account/__tests__/AccountTestModal.spec.ts \

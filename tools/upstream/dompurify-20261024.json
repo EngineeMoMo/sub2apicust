@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-10-24",
+  "upstreamRepository": "Wei-Shaw/sub2api",
+  "sourceCommit": "8286268047cbbca4e7f5fbb63ff0890c1ea37cf5",
+  "scope": "局部移植DOMPurify安全依赖修复；保留本仓其他依赖和override，不代表合入整个v0.2.18。",
+  "advisories": [
+    "GHSA-cg2g-xh64-v4q7",
+    "GHSA-mrv2-3pqr-j5jr"
+  ],
+  "previousVersion": "3.4.16",
+  "patchedVersion": "3.4.17",
+  "registryIntegrity": "sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==",
+  "files": [
+    "frontend/package.json",
+    "frontend/pnpm-lock.yaml"
+  ],
+  "regressionTest": "frontend/src/custom/__tests__/dompurify-security.spec.ts",
+  "evidenceDirectory": "output/dompurify-fix-20261024",
+  "integratedBaseCommitUnchanged": "b0a02a3304a0a78cdd003ddda1dd23ba02c03084",
+  "previousObservation": "tools/upstream/sub2api-20261024.json",
+  "policy": "保留历史观察快照，修复发布SHA、同SHA CI/安全/镜像结果见deploy/FORK_UPDATE_LOG.md；不增加审计例外，仅人工巡检。"
+}

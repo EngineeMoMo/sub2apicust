@@ -2,7 +2,15 @@
 
 最后更新：2026-10-24（Asia/Shanghai）。本页记录官方来源、同步基线及本仓发布；Kiro第三方参考的固定SHA与局部移植另见[KIRO_REFERENCE_TRACKING.md](KIRO_REFERENCE_TRACKING.md)。
 
-## 来源与当前基线
+## 2026-10-24 DOMPurify安全补修（待发布门禁）
+
+用户要求修复Kiro发布版安全阻塞；局部移植官方`8286268047cbbca4e7f5fbb63ff0890c1ea37cf5`，将DOMPurify直接依赖、override下限和锁文件统一为3.4.17，修复GHSA-cg2g-xh64-v4q7（critical）及GHSA-mrv2-3pqr-j5jr（high）。npm官方元数据与上游锁文件SHA512一致；其他依赖未改，例外仍为空。
+
+新增6项安全回归并纳入Makefile关键清单：旧3.4.16复现3项失败，新3.4.17全部通过，普通富文本保留；本地生产依赖审计所有严重度为0。发布代码快照、实际业务SHA的CI/安全/GHCR及摘要待验，不能把本地结果当远程门禁通过。
+
+来源台账[dompurify-20261024.json](../tools/upstream/dompurify-20261024.json)，本机证据`output/dompurify-fix-20261024`。这是局部依赖修复，原官方基线v0.2.17和47提交历史观察不变；未整仓合并v0.2.18，未部署生产或本机，未调用实号，日门槛/261及营销保留未发布。
+
+## 来源与当前基线（此前观察）
 
 | 项目 | 已核实状态 | 取证方式 |
 | --- | --- | --- |
