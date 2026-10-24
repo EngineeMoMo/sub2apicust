@@ -10,7 +10,7 @@ import (
 
 func (r *accountRepository) UpdateKiroOAuthCredentialsIfUnchanged(ctx context.Context, id int64, expectedCredentials map[string]any, expectedProxyID *int64, credentials map[string]any) (bool, error) {
 	if r == nil || r.sql == nil {
-		return false, errors.New("Kiro 账号 SQL 执行器未配置")
+		return false, errors.New("kiro 账号 SQL 执行器未配置")
 	}
 	expectedJSON, err := json.Marshal(normalizeJSONMap(expectedCredentials))
 	if err != nil {
